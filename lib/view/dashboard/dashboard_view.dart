@@ -15,7 +15,7 @@ class DashboardView extends StatelessWidget {
         spacing: 32,
         children: [
           SizedBox(
-            height: 32,
+            height: 8,
           ),
           GreetingCardWidget(
             greeting: "Good morning!",

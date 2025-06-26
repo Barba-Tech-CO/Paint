@@ -15,11 +15,11 @@ class GreetingCardWidget extends StatelessWidget {
     required this.greeting,
     required this.name,
     this.padding = const EdgeInsets.symmetric(horizontal: 32),
-    this.height = 54,
+    this.height = 64,
     this.borderColor = const Color(0XFFE8E8E8),
     this.borderWidth = 1,
     this.borderRadius = 16,
-    this.innerPadding = const EdgeInsets.symmetric(horizontal: 16),
+    this.innerPadding = const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
   });
 
   @override
@@ -42,11 +42,16 @@ class GreetingCardWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(greeting),
+              Text(
+                greeting,
+                style: const TextStyle(
+                  fontSize: 12,
+                ),
+              ),
               Text(
                 name,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
