@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class AppBarPaintWidget extends StatelessWidget implements PreferredSizeWidget {
+class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final Color backgroundColor;
   final Color textColor;
   final double toolbarHeight;
 
-  const AppBarPaintWidget({
+  const AppBarWidget({
     super.key,
     required this.title,
     this.backgroundColor = const Color(0XFF4193FF),
