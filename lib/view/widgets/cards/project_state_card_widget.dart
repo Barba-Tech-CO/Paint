@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
-enum EmptyStateType {
+enum ProjectStateType {
   empty,
   noData,
   error,
   loading,
 }
 
-class EmptyStateCardWidget extends StatelessWidget {
+class ProjectStateCardWidget extends StatelessWidget {
   final String title;
   final String description;
   final String? buttonText;
   final VoidCallback? onButtonPressed;
-  final EmptyStateType state;
+  final ProjectStateType state;
   final EdgeInsets padding;
   final EdgeInsets containerPadding;
   final double titleFontSize;
@@ -25,13 +25,13 @@ class EmptyStateCardWidget extends StatelessWidget {
   final EdgeInsets buttonPadding;
   final Widget? customIcon;
 
-  const EmptyStateCardWidget({
+  const ProjectStateCardWidget({
     super.key,
     required this.title,
     required this.description,
     this.buttonText,
     this.onButtonPressed,
-    this.state = EmptyStateType.empty,
+    this.state = ProjectStateType.empty,
     this.padding = const EdgeInsets.symmetric(horizontal: 32),
     this.containerPadding = const EdgeInsets.symmetric(vertical: 40),
     this.titleFontSize = 18,
@@ -96,7 +96,7 @@ class EmptyStateCardWidget extends StatelessWidget {
                 ),
               ),
             ],
-            if (state == EmptyStateType.loading) ...[
+            if (state == ProjectStateType.loading) ...[
               const SizedBox(height: 24),
               const CircularProgressIndicator(),
             ],

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:paintpro/view/widgets/appbars/app_bar_widget.dart';
-import 'package:paintpro/view/widgets/cards/empty_state_card_widget.dart';
+import 'package:paintpro/view/widgets/cards/project_state_card_widget.dart';
 import 'package:paintpro/view/widgets/cards/greeting_card_widget.dart';
 import 'package:paintpro/view/widgets/cards/stats_card_widget.dart';
 
@@ -93,11 +93,11 @@ class DashboardView extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: 32),
-                  EmptyStateCardWidget(
+                  ProjectStateCardWidget(
                     title: "No projects yet",
                     description: "Create your first project to get started",
                     buttonText: "Create project",
-                    state: EmptyStateType.empty,
+                    state: ProjectStateType.empty,
                     onButtonPressed: () {
                       // Ação do botão
                     },
