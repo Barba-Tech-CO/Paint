@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:paintpro/config/app_colors.dart';
 
 class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -9,8 +11,8 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   const AppBarWidget({
     super.key,
     required this.title,
-    this.backgroundColor = const Color(0XFF4193FF),
-    this.textColor = const Color(0XFFFFFFFF),
+    this.backgroundColor = AppColors.primary,
+    this.textColor = AppColors.textOnPrimary,
     this.toolbarHeight = 126,
   });
 
@@ -19,8 +21,9 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: Text(
         title,
-        style: TextStyle(
+        style: GoogleFonts.albertSans(
           fontSize: 24,
+          fontWeight: FontWeight.w600,
           color: textColor,
         ),
       ),
