@@ -1,4 +1,4 @@
-package com.example.paintpro
+package com.barbatechcompany.paintpro
 
 import io.flutter.embedding.android.FlutterActivity
 
