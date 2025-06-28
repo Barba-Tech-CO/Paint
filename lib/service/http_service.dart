@@ -73,6 +73,24 @@ class HttpService implements IHttpService {
   }
 
   @override
+  Future<Response> patch(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await dio.patch(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+      );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
   Future<Response> delete(
     String path, {
     dynamic data,
