@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:paintpro/config/routes.dart';
 import 'package:paintpro/config/theme.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
   runApp(const PaintProApp());
 }
 
