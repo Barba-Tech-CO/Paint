@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:paintpro/config/app_colors.dart';
 import 'package:paintpro/view/widgets/appbars/app_bar_widget.dart';
 import 'package:paintpro/view/widgets/cards/project_state_card_widget.dart';
 import 'package:paintpro/view/widgets/cards/greeting_card_widget.dart';
@@ -10,7 +12,7 @@ class DashboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0XFFFFFFFF),
+      backgroundColor: AppColors.background,
       appBar: AppBarWidget(title: 'Dashboard'),
       body: SingleChildScrollView(
         child: Column(
@@ -27,41 +29,46 @@ class DashboardView extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Column(
+                spacing: 8,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        StatsCardWidget(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: StatsCardWidget(
                           title: "2",
                           description: "active projects",
                         ),
-                        StatsCardWidget(
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: StatsCardWidget(
                           title: "\$30,050",
                           description: "this month",
-                          backgroundColor: Color(0xFF2D2D2D),
-                          titleColor: Color(0xFF4CAF50),
-                          descriptionColor: Colors.white70,
+                          backgroundColor: AppColors.cardDark,
+                          titleColor: AppColors.success,
+                          descriptionColor: AppColors.textOnDark,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        StatsCardWidget(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: StatsCardWidget(
                           title: "6",
                           description: "completed",
                         ),
-                        StatsCardWidget(
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: StatsCardWidget(
                           title: "85%",
                           description: "conversion",
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -76,18 +83,18 @@ class DashboardView extends StatelessWidget {
                     children: [
                       Text(
                         "Recent Projects",
-                        style: TextStyle(
+                        style: GoogleFonts.albertSans(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       Text(
                         "See all",
-                        style: TextStyle(
+                        style: GoogleFonts.albertSans(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF4193FF),
+                          color: AppColors.primary,
                         ),
                       ),
                     ],
@@ -99,7 +106,7 @@ class DashboardView extends StatelessWidget {
                     buttonText: "Create project",
                     state: ProjectStateType.empty,
                     onButtonPressed: () {
-                      // Ação do botão
+                      // Button action
                     },
                   ),
                 ],
