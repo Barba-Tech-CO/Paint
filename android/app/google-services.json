@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "189575374455",
+    "project_id": "paint-pro-app",
+    "storage_bucket": "paint-pro-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:189575374455:android:f3d3ecdf5f8c8191f68872",
+        "android_client_info": {
+          "package_name": "com.barbatechcompany.paintpro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBeMZpfaHywSfMI565i28gqeXBdQdyvxmM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
