@@ -1,0 +1,9 @@
+// Views
+export 'splash/splash_view.dart';
+export 'auth/auth_view.dart';
+export 'dashboard/dashboard_view.dart';
+export 'projects/projects_view.dart';
+export 'camera/camera_view.dart';
+export 'contacts/contacts_view.dart';
+export 'highlights/highlights_view.dart';
+export 'layout/main_layout.dart';
