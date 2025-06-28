@@ -21,7 +21,7 @@ class StatsCardWidget extends StatelessWidget {
     this.descriptionColor = Colors.grey,
     this.titleFontSize = 24,
     this.descriptionFontSize = 12,
-    this.width = 160,
+    this.width = 180,
     this.height = 95,
     this.borderRadius = 16,
   });
