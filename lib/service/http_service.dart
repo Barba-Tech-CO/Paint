@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'i_http_service.dart';
+import '../config/app_config.dart';
 
 class HttpService implements IHttpService {
   static final HttpService _instance = HttpService._internal();
@@ -12,7 +13,7 @@ class HttpService implements IHttpService {
   HttpService._internal() {
     dio = Dio(
       BaseOptions(
-        baseUrl: 'https://sua-api.com', // Altere para sua URL base
+        baseUrl: AppConfig.baseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
         headers: {
