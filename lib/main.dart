@@ -1,13 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:paintpro/config/routes.dart';
-import 'package:paintpro/config/theme.dart';
+import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'firebase_options.dart';
+import 'config/dependency_injection.dart';
+import 'config/theme.dart';
+import 'config/routes.dart';
+import 'service/navigation_service.dart';
+import 'viewmodel/viewmodels.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+
+  // Inicializa Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Configura Crashlytics
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+  // Configura injeção de dependências
+  setupDependencyInjection();
+
   runApp(const PaintProApp());
 }
 
@@ -16,10 +31,56 @@ class PaintProApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'PaintPro',
-      routerConfig: router,
-      theme: AppTheme.themeData,
+    return MultiProvider(
+      providers: [
+        // Auth ViewModels
+        ChangeNotifierProvider<AuthViewModel>(
+          create: (_) => getIt<AuthViewModel>(),
+        ),
+        ChangeNotifierProvider<ProfileViewModel>(
+          create: (_) => getIt<ProfileViewModel>(),
+        ),
+        // Contact ViewModels
+        ChangeNotifierProvider<ContactListViewModel>(
+          create: (_) => getIt<ContactListViewModel>(),
+        ),
+        ChangeNotifierProvider<ContactDetailViewModel>(
+          create: (_) => getIt<ContactDetailViewModel>(),
+        ),
+        // Estimate ViewModels
+        ChangeNotifierProvider<EstimateListViewModel>(
+          create: (_) => getIt<EstimateListViewModel>(),
+        ),
+        ChangeNotifierProvider<EstimateDetailViewModel>(
+          create: (_) => getIt<EstimateDetailViewModel>(),
+        ),
+        ChangeNotifierProvider<EstimateUploadViewModel>(
+          create: (_) => getIt<EstimateUploadViewModel>(),
+        ),
+        ChangeNotifierProvider<EstimateCalculationViewModel>(
+          create: (_) => getIt<EstimateCalculationViewModel>(),
+        ),
+        // Paint Catalog ViewModels
+        ChangeNotifierProvider<PaintCatalogListViewModel>(
+          create: (_) => getIt<PaintCatalogListViewModel>(),
+        ),
+        ChangeNotifierProvider<PaintCatalogDetailViewModel>(
+          create: (_) => getIt<PaintCatalogDetailViewModel>(),
+        ),
+        // Navigation
+        ChangeNotifierProvider<NavigationViewModel>(
+          create: (_) => getIt<NavigationViewModel>(),
+        ),
+        Provider<NavigationService>(
+          create: (_) => getIt<NavigationService>(),
+        ),
+      ],
+      child: MaterialApp.router(
+        title: 'PaintPro',
+        theme: AppTheme.themeData,
+        routerConfig: router,
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }
