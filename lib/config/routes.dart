@@ -10,7 +10,7 @@ import '../view/contacts/contacts_view.dart';
 import '../view/highlights/highlights_view.dart';
 
 final router = GoRouter(
-  initialLocation: '/contact-details',
+  initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',

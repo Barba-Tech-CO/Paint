@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:paintpro/config/app_colors.dart';
+import 'package:paintpro/view/widgets/appbars/app_bar_widget.dart';
 
 class ContactDetailsView extends StatelessWidget {
   const ContactDetailsView({super.key});
@@ -24,11 +25,7 @@ class ContactDetailsView extends StatelessWidget {
     };
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalhes do Contato'),
-        backgroundColor: theme.primaryColor,
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBarWidget(title: 'Contacts Details'),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
