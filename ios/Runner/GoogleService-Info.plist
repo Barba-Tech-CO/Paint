@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.barbatechcompany.paintpro</string>
+	<string>br.com.barbatechcompany.paintpro</string>
 	<key>PROJECT_ID</key>
 	<string>paint-pro-app</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:189575374455:ios:6ad22ef91aee8369f68872</string>
+	<string>1:189575374455:ios:feff18f9fde99c81f68872</string>
 </dict>
 </plist>
