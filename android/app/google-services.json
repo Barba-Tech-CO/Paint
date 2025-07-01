@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:189575374455:android:d3eba03139a5b517f68872",
+        "android_client_info": {
+          "package_name": "br.com.barbatechcompany.paintpro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBeMZpfaHywSfMI565i28gqeXBdQdyvxmM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:189575374455:android:f3d3ecdf5f8c8191f68872",
         "android_client_info": {
           "package_name": "com.barbatechcompany.paintpro"
