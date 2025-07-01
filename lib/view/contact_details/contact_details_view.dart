@@ -25,7 +25,10 @@ class ContactDetailsView extends StatelessWidget {
     };
 
     return Scaffold(
-      appBar: AppBarWidget(title: 'Contacts Details'),
+      appBar: AppBarWidget(
+        title: 'Contacts Details',
+        toolbarHeight: 90,
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
