@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBeMZpfaHywSfMI565i28gqeXBdQdyvxmM',
-    appId: '1:189575374455:android:f3d3ecdf5f8c8191f68872',
+    appId: '1:189575374455:android:d3eba03139a5b517f68872',
     messagingSenderId: '189575374455',
     projectId: 'paint-pro-app',
     storageBucket: 'paint-pro-app.firebasestorage.app',
@@ -59,10 +59,10 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyA-SAtETl4a7IM60tyX2LyYsQL-5RLtsMA',
-    appId: '1:189575374455:ios:6ad22ef91aee8369f68872',
+    appId: '1:189575374455:ios:feff18f9fde99c81f68872',
     messagingSenderId: '189575374455',
     projectId: 'paint-pro-app',
     storageBucket: 'paint-pro-app.firebasestorage.app',
-    iosBundleId: 'com.barbatechcompany.paintpro',
+    iosBundleId: 'br.com.barbatechcompany.paintpro',
   );
 }
