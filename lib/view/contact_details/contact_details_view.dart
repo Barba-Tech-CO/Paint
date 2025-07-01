@@ -44,6 +44,12 @@ class ContactDetailsView extends StatelessWidget {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Implementar ação de edição ou outra funcionalidade
+        },
+        child: const Icon(Icons.edit),
+      ),
     );
   }
 }
