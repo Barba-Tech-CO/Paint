@@ -22,7 +22,19 @@ class _AuthViewState extends State<AuthView> {
   void initState() {
     super.initState();
     _initializeWebView();
-    _loadAuthorizeUrl();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initializeViewModel());
+  }
+
+  Future<void> _initializeViewModel() async {
+    try {
+      final authViewModel = context.read<AuthViewModel>();
+      await authViewModel.initializeAuth();
+      _loadAuthorizeUrl();
+    } catch (e) {
+      setState(() {
+        _error = 'Erro na inicialização: $e';
+      });
+    }
   }
 
   void _initializeWebView() {
@@ -49,16 +61,23 @@ class _AuthViewState extends State<AuthView> {
 
   Future<void> _loadAuthorizeUrl() async {
     try {
+      setState(() {
+        _isLoading = true;
+      });
+
       final authViewModel = context.read<AuthViewModel>();
       final url = await authViewModel.getAuthorizeUrl();
 
+      debugPrint('URL de autorização: $url');
+
+      // Removido o código de WebView para evitar o uso duplo
       setState(() {
-        _authorizeUrl = url;
+        _isLoading = false; // Desativa loading após abrir navegador
       });
-      _webViewController.loadRequest(Uri.parse(url));
     } catch (e) {
       setState(() {
         _error = 'Erro ao carregar URL de autorização: $e';
+        _isLoading = false;
       });
     }
   }

@@ -10,7 +10,7 @@ class AuthService {
   /// Verifica o status de autenticação
   Future<Result<AuthStatusResponse>> getStatus() async {
     try {
-      final response = await _httpService.get('/auth/status');
+      final response = await _httpService.get('/api/auth/status');
       final authStatus = AuthStatusResponse.fromJson(response.data);
       return Result.ok(authStatus);
     } catch (e) {
@@ -21,9 +21,10 @@ class AuthService {
   /// Obtém a URL de autorização
   Future<Result<String>> getAuthorizeUrl() async {
     try {
-      final response = await _httpService.get('/auth/authorize-url');
-      final url = response.data['authorize_url'] as String;
-      return Result.ok(url);
+      // Remova o prefixo '/api' já que aparentemente o backend não espera isso
+      final response = await _httpService.get('/api/auth/authorize-url');
+
+      return Result.ok(response.data['url']);
     } catch (e) {
       return Result.error(Exception('Erro ao obter URL de autorização: $e'));
     }
@@ -33,7 +34,7 @@ class AuthService {
   Future<Result<AuthRefreshResponse>> processCallback(String code) async {
     try {
       final response = await _httpService.post(
-        '/auth/callback',
+        '/api/auth/callback',
         data: {
           'code': code,
         },
@@ -48,7 +49,7 @@ class AuthService {
   /// Renova o token de acesso
   Future<Result<AuthRefreshResponse>> refreshToken() async {
     try {
-      final response = await _httpService.post('/auth/refresh', data: {});
+      final response = await _httpService.post('/api/auth/refresh', data: {});
       final refreshResponse = AuthRefreshResponse.fromJson(response.data);
       return Result.ok(refreshResponse);
     } catch (e) {
@@ -59,7 +60,7 @@ class AuthService {
   /// Obtém informações de debug
   Future<Result<AuthDebugResponse>> getDebugInfo() async {
     try {
-      final response = await _httpService.get('/auth/debug');
+      final response = await _httpService.get('/api/auth/debug');
       final debugResponse = AuthDebugResponse.fromJson(response.data);
       return Result.ok(debugResponse);
     } catch (e) {
