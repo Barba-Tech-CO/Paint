@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:paintpro/view/contact_details/contact_details_view.dart';
 
 import '../view/splash/splash_view.dart';
 import '../view/auth/auth_view.dart';
@@ -9,7 +10,7 @@ import '../view/contacts/contacts_view.dart';
 import '../view/highlights/highlights_view.dart';
 
 final router = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/contact-details',
   routes: [
     GoRoute(
       path: '/splash',
@@ -38,6 +39,10 @@ final router = GoRouter(
     GoRoute(
       path: '/highlights',
       builder: (context, state) => const HighlightsView(),
+    ),
+    GoRoute(
+      path: '/contact-details',
+      builder: (context, state) => const ContactDetailsView(),
     ),
   ],
 );
