@@ -13,6 +13,8 @@ class NewProjectView extends StatefulWidget {
 
 class _NewProjectViewState extends State<NewProjectView> {
   final TextEditingController _projectNameController = TextEditingController();
+  final TextEditingController _projectDetailsController =
+      TextEditingController();
   final TextEditingController _additionalNotesController =
       TextEditingController();
 
@@ -23,6 +25,7 @@ class _NewProjectViewState extends State<NewProjectView> {
   void dispose() {
     _projectNameController.dispose();
     _additionalNotesController.dispose();
+    _projectDetailsController.dispose();
     super.dispose();
   }
 
@@ -53,7 +56,7 @@ class _NewProjectViewState extends State<NewProjectView> {
               InputCardWidget(
                 title: 'Client Information',
                 description: 'Client Name*',
-                controller: _additionalNotesController,
+                controller: _projectNameController,
                 hintText: 'John',
                 maxLines: 1,
               ),
@@ -61,7 +64,7 @@ class _NewProjectViewState extends State<NewProjectView> {
               InputCardWidget(
                 title: 'Project Details',
                 description: 'Project Name *',
-                controller: _projectNameController,
+                controller: _projectDetailsController,
                 hintText: 'Enter project name',
                 widget: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
