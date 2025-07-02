@@ -23,6 +23,49 @@ class ContactDetailsView extends StatelessWidget {
       'company': 'Pietro e Caroline Ferragens Ltda',
     };
 
+    // Constrói um card de informações
+    Widget _buildInfoCard(ThemeData theme, {required List<Widget> children}) {
+      return Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          ),
+        ),
+      );
+    }
+
+    // Constrói uma linha de informação
+    Widget _buildInfoRow(ThemeData theme, String label, String? value) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 100,
+              child: Text(
+                '$label:',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                value ?? '-',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBarWidget(
         title: 'Contacts Details',
@@ -182,51 +225,6 @@ class ContactDetailsView extends StatelessWidget {
           Icons.edit,
           color: Colors.white,
         ),
-      ),
-    );
-  }
-
-  // Constrói o cabeçalho da seção
-
-  // Constrói um card de informações
-  Widget _buildInfoCard(ThemeData theme, {required List<Widget> children}) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: children,
-        ),
-      ),
-    );
-  }
-
-  // Constrói uma linha de informação
-  Widget _buildInfoRow(ThemeData theme, String label, String? value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              '$label:',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value ?? '-',
-              style: theme.textTheme.bodyMedium,
-            ),
-          ),
-        ],
       ),
     );
   }
