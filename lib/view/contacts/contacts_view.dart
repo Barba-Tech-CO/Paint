@@ -26,7 +26,10 @@ class ContactsView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const AppBarWidget(title: 'Contacts'),
+      appBar: const AppBarWidget(
+        title: 'Contacts',
+        toolbarHeight: 90,
+      ),
       body: mockContacts.isEmpty
           ? Center(
               child: Column(
