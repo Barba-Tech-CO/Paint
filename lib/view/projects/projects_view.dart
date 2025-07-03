@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/widgets/appbars/app_bar_widget.dart';
+import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 
 class ProjectsView extends StatelessWidget {
   const ProjectsView({super.key});

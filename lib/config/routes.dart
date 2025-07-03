@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/contact_details/contact_details_view.dart';
+import 'package:paintpro/view/new_project/new_project_view.dart';
 
 import '../view/splash/splash_view.dart';
 import '../view/auth/auth_view.dart';
@@ -43,6 +44,10 @@ final router = GoRouter(
     GoRoute(
       path: '/contact-details',
       builder: (context, state) => const ContactDetailsView(),
+    ),
+    GoRoute(
+      path: '/new-project',
+      builder: (context, state) => const NewProjectView(),
     ),
   ],
 );

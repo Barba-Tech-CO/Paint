@@ -7,10 +7,14 @@ class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color backgroundColor;
   final Color textColor;
   final double toolbarHeight;
+  final Widget? leading;
+  final double? leadingWidth;
 
   const PaintProAppBar({
     super.key,
     required this.title,
+    this.leading,
+    this.leadingWidth,
     this.backgroundColor = AppColors.primary,
     this.textColor = AppColors.textOnPrimary,
     this.toolbarHeight = 126,
@@ -18,7 +22,20 @@ class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget? paddedLeading;
+    double? finalLeadingWidth;
+
+    if (leading != null) {
+      paddedLeading = Padding(
+        padding: const EdgeInsets.only(left: 8.0),
+        child: leading,
+      );
+      finalLeadingWidth = leadingWidth;
+    }
+
     return AppBar(
+      leading: paddedLeading,
+      leadingWidth: finalLeadingWidth,
       title: Text(
         title,
         style: GoogleFonts.albertSans(

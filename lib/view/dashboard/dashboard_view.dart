@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/widgets/appbars/app_bar_widget.dart';
+import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/view/widgets/cards/project_state_card_widget.dart';
 import 'package:paintpro/view/widgets/cards/greeting_card_widget.dart';
 import 'package:paintpro/view/widgets/cards/stats_card_widget.dart';
@@ -105,9 +106,7 @@ class DashboardView extends StatelessWidget {
                     description: "Create your first project to get started",
                     buttonText: "Create project",
                     state: ProjectStateType.empty,
-                    onButtonPressed: () {
-                      // Button action
-                    },
+                    onButtonPressed: () => context.push('/new-project'),
                   ),
                 ],
               ),

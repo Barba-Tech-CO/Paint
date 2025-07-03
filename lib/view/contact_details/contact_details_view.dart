@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:paintpro/view/widgets/appbars/app_bar_widget.dart';
+import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 
 class ContactDetailsView extends StatelessWidget {
   const ContactDetailsView({super.key});
