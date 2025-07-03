@@ -10,7 +10,7 @@ class HighlightsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const AppBarWidget(title: 'Go High Level'),
+      appBar: const PaintProAppBar(title: 'Go High Level'),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

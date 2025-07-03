@@ -67,7 +67,7 @@ class ContactDetailsView extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBarWidget(
+      appBar: PaintProAppBar(
         title: 'Contacts Details',
         toolbarHeight: 90,
       ),

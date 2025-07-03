@@ -26,7 +26,7 @@ class ContactsView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const AppBarWidget(
+      appBar: const PaintProAppBar(
         title: 'Contacts',
         toolbarHeight: 90,
       ),
