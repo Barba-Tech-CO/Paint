@@ -11,7 +11,7 @@ import '../view/contacts/contacts_view.dart';
 import '../view/highlights/highlights_view.dart';
 
 final router = GoRouter(
-  initialLocation: '/dashboard',
+  initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',
