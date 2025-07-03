@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/widgets/appbars/app_bar_widget.dart';
+import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 
 class HighlightsView extends StatelessWidget {
   const HighlightsView({super.key});
@@ -10,7 +10,7 @@ class HighlightsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const AppBarWidget(title: 'Go High Level'),
+      appBar: const PaintProAppBar(title: 'Go High Level'),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:paintpro/config/app_colors.dart';
 
-class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
+class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final Color backgroundColor;
   final Color textColor;
@@ -10,7 +10,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final Widget? leading;
   final double? leadingWidth;
 
-  const AppBarWidget({
+  const PaintProAppBar({
     super.key,
     required this.title,
     this.leading,

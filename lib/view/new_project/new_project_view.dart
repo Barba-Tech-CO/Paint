@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/widgets/appbars/app_bar_widget.dart';
+import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
 
 class NewProjectView extends StatefulWidget {
@@ -33,7 +33,7 @@ class _NewProjectViewState extends State<NewProjectView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBarWidget(
+      appBar: PaintProAppBar(
         title: 'New Project',
         leading: Row(
           children: [

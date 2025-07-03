@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/widgets/appbars/app_bar_widget.dart';
+import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 
 class ProjectsView extends StatelessWidget {
   const ProjectsView({super.key});
@@ -11,7 +11,7 @@ class ProjectsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const AppBarWidget(title: 'Projects'),
+      appBar: const PaintProAppBar(title: 'Projects'),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
