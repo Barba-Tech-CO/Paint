@@ -10,7 +10,7 @@ class CameraView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const AppBarWidget(title: 'Camera'),
+      appBar: const PaintProAppBar(title: 'Camera'),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

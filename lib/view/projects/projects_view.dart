@@ -11,7 +11,7 @@ class ProjectsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const AppBarWidget(title: 'Projects'),
+      appBar: const PaintProAppBar(title: 'Projects'),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
