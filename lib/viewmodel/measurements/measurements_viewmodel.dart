@@ -56,11 +56,6 @@ class MeasurementsViewModel extends ChangeNotifier {
     });
   }
 
-  // Reset measurements
-  void resetMeasurements() {
-    startRandomCalculation();
-  }
-
   // Métodos de gerenciamento de estado
   void _setLoading(bool loading) {
     _isLoading = loading;

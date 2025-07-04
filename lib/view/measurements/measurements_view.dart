@@ -12,16 +12,44 @@ class MeasurementsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => MeasurementsViewModel(),
-      child: Scaffold(
-        appBar: PaintProAppBar(title: 'Measurements'),
-        body: Consumer<MeasurementsViewModel>(
-          builder: (context, viewModel, child) {
-            return viewModel.isLoading
-                ? const LoadingWidget()
-                : _buildResultsScreen(context, viewModel);
-          },
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldLeave = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Cancelar medição?'),
+            content: const Text(
+              'Se cancelar, os dados preenchidos serão perdidos. Deseja voltar para o início do projeto?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => context.pop(false),
+                child: const Text('Ficar'),
+              ),
+              TextButton(
+                onPressed: () => context.pop(true),
+                child: const Text('Cancelar'),
+              ),
+            ],
+          ),
+        );
+        if (shouldLeave == true) {
+          context.go('/new-project');
+        }
+      },
+      child: ChangeNotifierProvider(
+        create: (context) => MeasurementsViewModel(),
+        child: Scaffold(
+          appBar: PaintProAppBar(title: 'Measurements'),
+          body: Consumer<MeasurementsViewModel>(
+            builder: (context, viewModel, child) {
+              return viewModel.isLoading
+                  ? const LoadingWidget()
+                  : _buildResultsScreen(context, viewModel);
+            },
+          ),
         ),
       ),
     );
@@ -152,9 +180,7 @@ class MeasurementsView extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () {
-                            viewModel.resetMeasurements();
-                          },
+                          onPressed: () => context.pop(),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
