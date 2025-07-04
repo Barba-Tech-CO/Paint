@@ -191,7 +191,7 @@ class MeasurementsView extends StatelessWidget {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            context.go('/paint-selection');
+                            context.push('/room-configuration');
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
