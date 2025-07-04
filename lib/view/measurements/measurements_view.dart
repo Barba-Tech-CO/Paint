@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:paintpro/viewmodel/measurements/measurements_viewmodel.dart';
-import 'package:paintpro/view/widgets/loading/loading_widget.dart';
+import 'package:paintpro/view/measurements/widgets/loading_widget.dart';
 import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
 import 'package:provider/provider.dart';
 
