@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/contact_details/contact_details_view.dart';
 import 'package:paintpro/view/measurements/measurements_view.dart';
 import 'package:paintpro/view/new_project/new_project_view.dart';
+import 'package:paintpro/view/room_configuration/room_configuration_view.dart';
 
 import '../view/splash/splash_view.dart';
 import '../view/auth/auth_view.dart';
@@ -53,6 +54,10 @@ final router = GoRouter(
     GoRoute(
       path: '/measurements',
       builder: (context, state) => const MeasurementsView(),
+    ),
+    GoRoute(
+      path: '/room-configuration',
+      builder: (context, state) => const RoomConfigurationView(),
     ),
   ],
 );

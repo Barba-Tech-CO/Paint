@@ -4,6 +4,7 @@ import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/viewmodel/measurements/measurements_viewmodel.dart';
 import 'package:paintpro/view/measurements/widgets/loading_widget.dart';
 import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
+import 'package:paintpro/view/widgets/cards/stats_card_widget.dart';
 import 'package:provider/provider.dart';
 
 class MeasurementsView extends StatelessWidget {
@@ -75,134 +76,110 @@ class MeasurementsView extends StatelessWidget {
           ),
         ),
 
-        // Lista de resultados
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // Card Room Overview usando InputCardWidget
-              InputCardWidget(
-                title: 'Room Overview',
-                padding: EdgeInsets.zero,
-                widget: Row(
+        // Conteúdo e botões mais próximos
+        Flexible(
+          child: SingleChildScrollView(
+            child: Column(
+              spacing: 12,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Text(
-                            '${results['floorDimensions']}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            'Floor Dimensions',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: StatsCardWidget(
+                        title: results['floorDimensions'] ?? '-',
+                        description: 'Floor Dimensions',
+                        titleFontSize: 18,
+                        descriptionFontSize: 12,
+                        height: 80,
+                        borderRadius: 12,
                       ),
                     ),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Text(
-                            '${results['floorArea']} sq ft',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            'Floor Area',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: StatsCardWidget(
+                        title: '${results['floorArea']} sq ft',
+                        description: 'Floor Area',
+                        titleFontSize: 18,
+                        descriptionFontSize: 12,
+                        height: 80,
+                        borderRadius: 12,
                       ),
                     ),
                   ],
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox.shrink(),
 
-              // Card Surface Areas usando InputCardWidget
-              InputCardWidget(
-                title: 'Surface Areas',
-                padding: EdgeInsets.zero,
-                widget: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Valores de área
-                    _buildSurfaceRow(
-                      'Walls',
-                      '${results['walls']} sq ft',
+                // Card Surface Areas usando InputCardWidget
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: InputCardWidget(
+                    title: 'Surface Areas',
+                    padding: EdgeInsets.zero,
+                    widget: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSurfaceRow(
+                          'Walls',
+                          '${results['walls']} sq ft',
+                        ),
+                        _buildSurfaceRow(
+                          'Ceiling',
+                          '${results['ceiling']} sq ft',
+                        ),
+                        _buildSurfaceRow(
+                          'Trim',
+                          '${results['trim']} linear ft',
+                        ),
+                        const Divider(),
+                        _buildSurfaceRow(
+                          'Total Paintable',
+                          '${results['totalPaintable']} sq ft',
+                          isBold: true,
+                          valueColor: Colors.blue,
+                        ),
+                      ],
                     ),
-                    _buildSurfaceRow(
-                      'Ceiling',
-                      '${results['ceiling']} sq ft',
-                    ),
-                    _buildSurfaceRow(
-                      'Trim',
-                      '${results['trim']} linear ft',
-                    ),
-                    const Divider(),
-                    _buildSurfaceRow(
-                      'Total Paintable',
-                      '${results['totalPaintable']} sq ft',
-                      isBold: true,
-                      valueColor: Colors.blue,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Botões no rodapé
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Botão Adjust
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    // Reiniciar as medições
-                    viewModel.resetMeasurements();
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('Adjust'),
                 ),
-              ),
 
-              const SizedBox(width: 16),
-
-              // Botão Accept
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Navegar para próxima etapa
-                    context.go('/paint-selection');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                // Botões mais próximos do conteúdo
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            viewModel.resetMeasurements();
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: const Text('Adjust'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            context.go('/paint-selection');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: const Text('Accept'),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: const Text('Accept'),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
