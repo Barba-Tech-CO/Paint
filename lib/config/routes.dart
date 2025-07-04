@@ -13,7 +13,7 @@ import '../view/contacts/contacts_view.dart';
 import '../view/highlights/highlights_view.dart';
 
 final router = GoRouter(
-  initialLocation: '/new-project',
+  initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',
