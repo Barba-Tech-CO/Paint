@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:paintpro/viewmodel/viewmodels.dart';
 import '../service/http_service.dart';
 import '../service/auth_service.dart';
 import '../service/contact_service.dart';
@@ -88,5 +89,10 @@ void setupDependencyInjection() {
   // ViewModels - Navigation
   getIt.registerFactory<NavigationViewModel>(
     () => NavigationViewModel(getIt<NavigationService>()),
+  );
+
+  // ViewModels - Measurements
+  getIt.registerFactory<MeasurementsViewModel>(
+    () => MeasurementsViewModel(),
   );
 }

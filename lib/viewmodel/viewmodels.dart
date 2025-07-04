@@ -12,3 +12,6 @@ export 'paint_catalog/paint_catalog_viewmodels.dart';
 
 // Navigation ViewModel
 export 'navigation_viewmodel.dart';
+
+// Measurements ViewModel
+export 'measurements/measurements_viewmodel.dart';

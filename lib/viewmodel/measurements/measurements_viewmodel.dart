@@ -7,6 +7,7 @@ class MeasurementsViewModel extends ChangeNotifier {
   Timer? _timer;
   final _random = Random();
   bool _isLoading = true;
+  String? _error;
 
   // Dados simulados - em produção viriam de um processamento real
   final Map<String, dynamic> _measurementResults = {
@@ -22,6 +23,7 @@ class MeasurementsViewModel extends ChangeNotifier {
   // Getters
   int get randomNumber => _randomNumber;
   bool get isLoading => _isLoading;
+  String? get error => _error;
   Map<String, dynamic> get measurementResults => _measurementResults;
 
   MeasurementsViewModel() {
@@ -35,26 +37,43 @@ class MeasurementsViewModel extends ChangeNotifier {
   }
 
   Future<void> startRandomCalculation() async {
+    _setLoading(true);
+    _clearError();
+
     final random = Random();
-    // Tempo de espera aleatório entre 2 e 5 segundos
     final secondsToWait = random.nextInt(4) + 2;
 
-    // Atualiza o número aleatório a cada 200ms
     _timer = Timer.periodic(const Duration(milliseconds: 200), (_) {
-      _randomNumber = _random.nextInt(100); // Gera um número entre 0 e 99
+      _randomNumber = _random.nextInt(100);
       notifyListeners();
     });
 
     await Future.delayed(Duration(seconds: secondsToWait), () {
-      _timer?.cancel();
-      _isLoading = false; // Muda para tela de resultados
-      notifyListeners();
+      if (_timer?.isActive == true) {
+        _timer?.cancel();
+        _setLoading(false);
+      }
     });
   }
 
+  // Reset measurements
   void resetMeasurements() {
-    _isLoading = true;
-    notifyListeners();
     startRandomCalculation();
+  }
+
+  // Métodos de gerenciamento de estado
+  void _setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
+  }
+
+  void _setError(String error) {
+    _error = error;
+    notifyListeners();
+  }
+
+  void _clearError() {
+    _error = null;
+    notifyListeners();
   }
 }

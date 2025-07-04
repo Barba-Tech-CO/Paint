@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:paintpro/view/measurements/widgets/measurements_viewmodel.dart';
+import 'package:paintpro/viewmodel/measurements/measurements_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class LoadingWidget extends StatelessWidget {

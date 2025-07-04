@@ -1,132 +1,44 @@
-import 'dart:async';
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/config/app_colors.dart';
+import 'package:paintpro/viewmodel/measurements/measurements_viewmodel.dart';
+import 'package:paintpro/view/widgets/loading/loading_widget.dart';
 import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
+import 'package:provider/provider.dart';
 
-class MeasurementsView extends StatefulWidget {
+class MeasurementsView extends StatelessWidget {
   const MeasurementsView({super.key});
 
   @override
-  State<MeasurementsView> createState() => _MeasurementsViewState();
-}
-
-class _MeasurementsViewState extends State<MeasurementsView> {
-  int _randomNumber = 0;
-  Timer? _timer;
-  final _random = Random();
-  bool _isLoading = true;
-
-  // Dados simulados - em produção viriam de um processamento real
-  final Map<String, dynamic> _measurementResults = {
-    'accuracy': 95.8,
-    'floorDimensions': '14\' x 16\'',
-    'floorArea': 224,
-    'walls': 485,
-    'ceiling': 224,
-    'trim': 60,
-    'totalPaintable': 631,
-  };
-
-  @override
-  void initState() {
-    super.initState();
-    _startRandomCalculation();
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _startRandomCalculation() async {
-    final random = Random();
-    // Tempo de espera aleatório entre 2 e 5 segundos
-    final secondsToWait = random.nextInt(4) + 2;
-
-    // Atualiza o número aleatório a cada 200ms
-    _timer = Timer.periodic(const Duration(milliseconds: 200), (_) {
-      setState(() {
-        _randomNumber = _random.nextInt(100); // Gera um número entre 0 e 99
-      });
-    });
-
-    await Future.delayed(Duration(seconds: secondsToWait), () {
-      if (mounted) {
-        _timer?.cancel();
-        setState(() {
-          _isLoading = false; // Muda para tela de resultados
-        });
-      }
-    });
-  }
-
-  Widget _buildLoadingScreen() {
-    return Container(
-      color: Colors.white,
-      child: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Ícone de engrenagem
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: const Icon(Icons.settings, size: 30),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Texto de processamento
-                  const Text(
-                    'Processing Photos',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 5),
-
-                  const Text(
-                    'Calculating measurements...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // Barra de progresso
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: LinearProgressIndicator(
-                      value: _randomNumber / 100,
-                      backgroundColor: Colors.grey.shade200,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Colors.blue,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) => MeasurementsViewModel(),
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios),
+            onPressed: () => context.pop(),
           ),
-        ],
+          title: const Text('Measurements'),
+        ),
+        body: Consumer<MeasurementsViewModel>(
+          builder: (context, viewModel, child) {
+            return viewModel.isLoading
+                ? const LoadingWidget()
+                : _buildResultsScreen(context, viewModel);
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildResultsScreen() {
+  Widget _buildResultsScreen(
+    BuildContext context,
+    MeasurementsViewModel viewModel,
+  ) {
+    final results = viewModel.measurementResults;
+
     return Container(
       color: Colors.grey.shade100,
       child: Column(
@@ -163,7 +75,7 @@ class _MeasurementsViewState extends State<MeasurementsView> {
                 ),
 
                 Text(
-                  'Accuracy: ${_measurementResults['accuracy']}%',
+                  'Accuracy: ${results['accuracy']}%',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey.shade700,
@@ -188,7 +100,7 @@ class _MeasurementsViewState extends State<MeasurementsView> {
                         child: Column(
                           children: [
                             Text(
-                              '${_measurementResults['floorDimensions']}',
+                              '${results['floorDimensions']}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -208,7 +120,7 @@ class _MeasurementsViewState extends State<MeasurementsView> {
                         child: Column(
                           children: [
                             Text(
-                              '${_measurementResults['floorArea']} sq ft',
+                              '${results['floorArea']} sq ft',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -240,20 +152,20 @@ class _MeasurementsViewState extends State<MeasurementsView> {
                       // Valores de área
                       _buildSurfaceRow(
                         'Walls',
-                        '${_measurementResults['walls']} sq ft',
+                        '${results['walls']} sq ft',
                       ),
                       _buildSurfaceRow(
                         'Ceiling',
-                        '${_measurementResults['ceiling']} sq ft',
+                        '${results['ceiling']} sq ft',
                       ),
                       _buildSurfaceRow(
                         'Trim',
-                        '${_measurementResults['trim']} linear ft',
+                        '${results['trim']} linear ft',
                       ),
                       const Divider(),
                       _buildSurfaceRow(
                         'Total Paintable',
-                        '${_measurementResults['totalPaintable']} sq ft',
+                        '${results['totalPaintable']} sq ft',
                         isBold: true,
                         valueColor: Colors.blue,
                       ),
@@ -273,7 +185,8 @@ class _MeasurementsViewState extends State<MeasurementsView> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
-                      // Em produção: lógica para editar medições
+                      // Reiniciar as medições
+                      viewModel.resetMeasurements();
                     },
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -329,22 +242,6 @@ class _MeasurementsViewState extends State<MeasurementsView> {
           ),
         ],
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => context.pop(),
-        ),
-        title: const Text('Measurements'),
-      ),
-      body: _isLoading ? _buildLoadingScreen() : _buildResultsScreen(),
     );
   }
 }
