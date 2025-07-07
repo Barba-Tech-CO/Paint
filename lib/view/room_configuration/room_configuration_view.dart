@@ -11,22 +11,27 @@ class RoomConfigurationView extends StatefulWidget {
 }
 
 class _RoomConfigurationViewState extends State<RoomConfigurationView> {
+  late final TextEditingController notesController;
+
+  final Map<String, bool> elements = {
+    'Walls': true,
+    'Ceiling': true,
+    'Trim': true,
+    'Doors': false,
+    'Windows': false,
+  };
+
+  String wallCondition = 'Good';
+  bool accentWall = false;
+
+  @override
+  void initState() {
+    super.initState();
+    notesController = TextEditingController();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Map<String, bool> elements = {
-      'Walls': true,
-      'Ceiling': true,
-      'Trim': true,
-      'Doors': false,
-      'Windows': false,
-    };
-
-    String wallCondition = 'Good';
-
-    bool accentWall = false;
-
-    final TextEditingController notesController = TextEditingController();
-
     return Scaffold(
       appBar: PaintProAppBar(title: 'Room Configuration'),
       body: SingleChildScrollView(
