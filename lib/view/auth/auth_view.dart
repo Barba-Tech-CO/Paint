@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../viewmodel/auth/auth_viewmodel.dart';
 import '../../service/navigation_service.dart';
-import '../widgets/loading_overlay.dart';
+import '../widgets/overlay/loading_overlay.dart';
 
 class AuthView extends StatefulWidget {
   const AuthView({super.key});
