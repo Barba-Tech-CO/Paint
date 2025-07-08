@@ -9,9 +9,10 @@ import '../view/projects/projects_view.dart';
 import '../view/camera/camera_view.dart';
 import '../view/contacts/contacts_view.dart';
 import '../view/highlights/highlights_view.dart';
+import '../view/select_colors/select_colors_view.dart';
 
 final router = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/select-colors',
   routes: [
     GoRoute(
       path: '/splash',
@@ -48,6 +49,10 @@ final router = GoRouter(
     GoRoute(
       path: '/new-project',
       builder: (context, state) => const NewProjectView(),
+    ),
+    GoRoute(
+      path: '/select-colors',
+      builder: (context, state) => const SelectColorsView(),
     ),
   ],
 );
