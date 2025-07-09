@@ -13,7 +13,7 @@ import '../view/measurements/measurements_view.dart';
 import '../view/room_configuration/room_configuration_view.dart';
 
 final router = GoRouter(
-  initialLocation: '/new-project',
+  initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',
