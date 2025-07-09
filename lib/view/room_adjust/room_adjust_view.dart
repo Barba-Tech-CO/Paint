@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:paintpro/config/app_colors.dart';
+import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
+import 'package:paintpro/view/widgets/buttons/primary_button_widget.dart';
+import 'widgets/widgets.dart';
 
 class RoomAdjustView extends StatefulWidget {
   const RoomAdjustView({super.key});
@@ -31,6 +33,12 @@ class _RoomAdjustViewState extends State<RoomAdjustView> {
   }
 
   @override
+  void dispose() {
+    notesController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PaintProAppBar(title: 'Room Adjust', toolbarHeight: 80),
@@ -44,90 +52,37 @@ class _RoomAdjustViewState extends State<RoomAdjustView> {
 
               InputCardWidget(
                 title: 'Elements to Paint',
-                widget: Column(
-                  children: elements.keys
-                      .map(
-                        (key) => StatefulBuilder(
-                          builder: (context, setState) => CheckboxListTile(
-                            value: elements[key],
-                            onChanged: (val) {
-                              setState(() {
-                                elements[key] = val ?? false;
-                              });
-                            },
-                            title: Text(key),
-                            controlAffinity: ListTileControlAffinity.leading,
-                            contentPadding: EdgeInsets.zero,
-                            dense: true,
-                            activeColor: Colors.blue,
-                          ),
-                        ),
-                      )
-                      .toList(),
+                widget: ElementsToPaintWidget(
+                  elements: elements,
+                  onElementChanged: (key, value) {
+                    setState(() {
+                      elements[key] = value;
+                    });
+                  },
                 ),
               ),
 
               InputCardWidget(
                 title: 'Wall Condition',
-                widget: StatefulBuilder(
-                  builder: (context, setState) => Column(
-                    children: [
-                      RadioListTile<String>(
-                        value: 'Excellent',
-                        contentPadding: EdgeInsets.zero,
-                        groupValue: wallCondition,
-                        onChanged: (val) {
-                          setState(() => wallCondition = val!);
-                        },
-                        title: const Text('Excellent'),
-                      ),
-                      RadioListTile<String>(
-                        value: 'Good',
-                        contentPadding: EdgeInsets.zero,
-                        groupValue: wallCondition,
-                        onChanged: (val) {
-                          setState(() => wallCondition = val!);
-                        },
-                        title: const Text('Good'),
-                      ),
-                      RadioListTile<String>(
-                        value: 'Fair',
-                        contentPadding: EdgeInsets.zero,
-                        groupValue: wallCondition,
-                        onChanged: (val) {
-                          setState(() => wallCondition = val!);
-                        },
-                        title: const Text('Fair'),
-                      ),
-                      RadioListTile<String>(
-                        value: 'Poor',
-                        contentPadding: EdgeInsets.zero,
-                        groupValue: wallCondition,
-                        onChanged: (val) {
-                          setState(() => wallCondition = val!);
-                        },
-                        title: const Text('Poor'),
-                      ),
-                    ],
-                  ),
+                widget: WallConditionWidget(
+                  wallCondition: wallCondition,
+                  onConditionChanged: (condition) {
+                    setState(() {
+                      wallCondition = condition;
+                    });
+                  },
                 ),
               ),
 
               InputCardWidget(
                 title: 'Accent Wall',
-                widget: StatefulBuilder(
-                  builder: (context, setState) => Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Include accent wall'),
-                      Switch(
-                        value: accentWall,
-                        onChanged: (val) {
-                          setState(() => accentWall = val);
-                        },
-                      ),
-                    ],
-                  ),
+                widget: AccentWallWidget(
+                  accentWall: accentWall,
+                  onAccentWallChanged: (value) {
+                    setState(() {
+                      accentWall = value;
+                    });
+                  },
                 ),
               ),
 
@@ -140,33 +95,9 @@ class _RoomAdjustViewState extends State<RoomAdjustView> {
               ),
               const SizedBox(height: 24),
 
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
-                ),
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Futura tela
-                    // context.push('/camera');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.textOnPrimary,
-                    minimumSize: const Size(double.infinity, 48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Create Project',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+              PrimaryButtonWidget(
+                text: 'Create Project',
+                onPressed: () => context.push('/select-colors'),
               ),
             ],
           ),

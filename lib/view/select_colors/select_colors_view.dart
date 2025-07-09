@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:paintpro/view/select_colors/widgets/color_grid_widget.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
+import 'package:paintpro/view/widgets/buttons/primary_button_widget.dart';
+import 'widgets/color_grid_widget.dart';
 
 class SelectColorsView extends StatefulWidget {
   const SelectColorsView({super.key});
@@ -106,25 +107,14 @@ class _SelectColorsViewState extends State<SelectColorsView>
                     .toList(),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  // Generate estimate action
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Generate Estimate',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
+            PrimaryButtonWidget(
+              text: 'Generate Estimate',
+              onPressed: () {
+                // Generate estimate action
+              },
+              backgroundColor: Colors.blue,
+              minimumSize: const Size(double.infinity, 50),
+              borderRadius: 8,
             ),
           ],
         ),
