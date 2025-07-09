@@ -1,9 +1,6 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:paintpro/view/widgets/animation_loading/paint_pro_loading.dart';
-import 'package:provider/provider.dart';
-import 'package:paintpro/viewmodel/measurements/measurements_viewmodel.dart';
 import 'package:paintpro/config/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 
