@@ -3,14 +3,14 @@ import 'package:paintpro/config/app_colors.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
 
-class RoomConfigurationView extends StatefulWidget {
-  const RoomConfigurationView({super.key});
+class RoomAdjustView extends StatefulWidget {
+  const RoomAdjustView({super.key});
 
   @override
-  State<RoomConfigurationView> createState() => _RoomConfigurationViewState();
+  State<RoomAdjustView> createState() => _RoomAdjustViewState();
 }
 
-class _RoomConfigurationViewState extends State<RoomConfigurationView> {
+class _RoomAdjustViewState extends State<RoomAdjustView> {
   late final TextEditingController notesController;
 
   final Map<String, bool> elements = {

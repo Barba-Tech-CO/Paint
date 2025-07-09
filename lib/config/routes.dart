@@ -10,11 +10,11 @@ import '../view/highlights/highlights_view.dart';
 import '../view/contact_details/contact_details_view.dart';
 import '../view/new_project/new_project_view.dart';
 import '../view/measurements/measurements_view.dart';
-import '../view/room_configuration/room_configuration_view.dart';
+import '../view/room_adjust/room_adjust_view.dart';
 import '../view/select_colors/select_colors_view.dart';
 
 final router = GoRouter(
-  initialLocation: '/select-colors',
+  initialLocation: '/room-configuration',
   routes: [
     GoRoute(
       path: '/splash',
@@ -58,7 +58,7 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/room-configuration',
-      builder: (context, state) => const RoomConfigurationView(),
+      builder: (context, state) => const RoomAdjustView(),
     ),
     GoRoute(
       path: '/select-colors',
