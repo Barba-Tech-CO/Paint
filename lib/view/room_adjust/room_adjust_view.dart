@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
 import 'package:paintpro/view/widgets/buttons/primary_button_widget.dart';
-import 'widgets/widgets.dart';
+import 'widgets/simple_checkbox_list_widget.dart';
+import 'widgets/wall_condition_widget.dart';
 
 class RoomAdjustView extends StatefulWidget {
   const RoomAdjustView({super.key});
@@ -52,9 +53,9 @@ class _RoomAdjustViewState extends State<RoomAdjustView> {
 
               InputCardWidget(
                 title: 'Elements to Paint',
-                widget: ElementsToPaintWidget(
-                  elements: elements,
-                  onElementChanged: (key, value) {
+                widget: SimpleCheckboxListWidget(
+                  items: elements,
+                  onItemChanged: (key, value) {
                     setState(() {
                       elements[key] = value;
                     });
@@ -76,13 +77,20 @@ class _RoomAdjustViewState extends State<RoomAdjustView> {
 
               InputCardWidget(
                 title: 'Accent Wall',
-                widget: AccentWallWidget(
-                  accentWall: accentWall,
-                  onAccentWallChanged: (value) {
-                    setState(() {
-                      accentWall = value;
-                    });
-                  },
+                widget: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Include accent wall'),
+                    Checkbox(
+                      value: accentWall,
+                      onChanged: (value) {
+                        setState(() {
+                          accentWall = value ?? false;
+                        });
+                      },
+                      activeColor: Colors.blue,
+                    ),
+                  ],
                 ),
               ),
 
@@ -93,6 +101,7 @@ class _RoomAdjustViewState extends State<RoomAdjustView> {
                 multiline: true,
                 maxLines: 3,
               ),
+
               const SizedBox(height: 24),
 
               PrimaryButtonWidget(
