@@ -19,6 +19,46 @@ class _SelectColorsViewState extends State<SelectColorsView>
     'PP',
   ];
 
+  // Lista de cores para cada marca
+  final List<Map<String, dynamic>> _colors = [
+    {
+      'name': 'White',
+      'code': 'SW6232',
+      'price': '\$52.99/Gal',
+      'color': Colors.grey[200],
+    },
+    {
+      'name': 'Gray',
+      'code': 'SW6233',
+      'price': '\$51.99/Gal',
+      'color': Colors.grey[500],
+    },
+    {
+      'name': 'White Pink',
+      'code': 'SW6235',
+      'price': '\$46.99/Gal',
+      'color': Colors.pink[100],
+    },
+    {
+      'name': 'Pink',
+      'code': 'SW6238',
+      'price': '\$48.99/Gal',
+      'color': Colors.pink[300],
+    },
+    {
+      'name': 'Green',
+      'code': 'SW6232',
+      'price': '\$32.99/Gal',
+      'color': Colors.lightGreen[300],
+    },
+    {
+      'name': 'Aqua',
+      'code': 'SW6232',
+      'price': '\$52.99/Gal',
+      'color': Colors.cyan[200],
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -41,7 +81,7 @@ class _SelectColorsViewState extends State<SelectColorsView>
         indicatorColor: Colors.white,
         labelColor: Colors.white,
         toolbarHeight: 60,
-        unselectedLabelColor: Colors.white.withOpacity(0.7),
+        unselectedLabelColor: Colors.white.withValues(alpha: 0.7),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -51,7 +91,18 @@ class _SelectColorsViewState extends State<SelectColorsView>
               child: TabBarView(
                 controller: _tabController,
                 children: _brands
-                    .map((brand) => _buildColorGrid(brand))
+                    .map(
+                      (brand) => ColorGridWidget(
+                        brand: brand,
+                        colors: _colors,
+                        onColorTap: (colorData) {
+                          // Cor selecionada
+                          print(
+                            'Selected color: ${colorData['name']} for brand: $brand',
+                          );
+                        },
+                      ),
+                    )
                     .toList(),
               ),
             ),
@@ -78,56 +129,6 @@ class _SelectColorsViewState extends State<SelectColorsView>
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildColorGrid(String brand) {
-    final List<Map<String, dynamic>> colors = [
-      {
-        'name': 'White',
-        'code': 'SW6232',
-        'price': '\$52.99/Gal',
-        'color': Colors.grey[200],
-      },
-      {
-        'name': 'Gray',
-        'code': 'SW6233',
-        'price': '\$51.99/Gal',
-        'color': Colors.grey[500],
-      },
-      {
-        'name': 'White Pink',
-        'code': 'SW6235',
-        'price': '\$46.99/Gal',
-        'color': Colors.pink[100],
-      },
-      {
-        'name': 'Pink',
-        'code': 'SW6238',
-        'price': '\$48.99/Gal',
-        'color': Colors.pink[300],
-      },
-      {
-        'name': 'Green',
-        'code': 'SW6232',
-        'price': '\$32.99/Gal',
-        'color': Colors.lightGreen[300],
-      },
-      {
-        'name': 'Aqua',
-        'code': 'SW6232',
-        'price': '\$52.99/Gal',
-        'color': Colors.cyan[200],
-      },
-    ];
-
-    return ColorGridWidget(
-      brand: brand,
-      colors: colors,
-      onColorTap: (colorData) {
-        // Handle color selection
-        print('Selected color: ${colorData['name']} for brand: $brand');
-      },
     );
   }
 }
