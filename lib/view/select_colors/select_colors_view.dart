@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:paintpro/view/select_colors/widgets/color_grid_widget.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
-import 'widgets/widgets.dart';
 
 class SelectColorsView extends StatefulWidget {
   const SelectColorsView({super.key});
