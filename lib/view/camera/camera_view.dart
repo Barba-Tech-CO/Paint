@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:paintpro/config/app_colors.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
@@ -15,21 +16,24 @@ class CameraView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: AppColors.divider,
-                  width: 2,
+            InkWell(
+              onTap: () => context.push('/measurements'),
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.divider,
+                    width: 2,
+                  ),
                 ),
-              ),
-              child: Icon(
-                Icons.add_a_photo_outlined,
-                size: 48,
-                color: AppColors.textSecondary,
+                child: Icon(
+                  Icons.add_a_photo_outlined,
+                  size: 48,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
             const SizedBox(height: 24),
