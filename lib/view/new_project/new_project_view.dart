@@ -137,9 +137,7 @@ class _NewProjectViewState extends State<NewProjectView> {
               Padding(
                 padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Lógica para criar o projeto
-                  },
+                  onPressed: () => context.push('/camera'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: AppColors.textOnPrimary,
