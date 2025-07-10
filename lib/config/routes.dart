@@ -14,7 +14,7 @@ import '../view/room_adjust/room_adjust_view.dart';
 import '../view/select_colors/select_colors_view.dart';
 
 final router = GoRouter(
-  initialLocation: '/room-configuration',
+  initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',
