@@ -11,3 +11,4 @@ export 'measurements/measurements_view.dart';
 export 'new_project/new_project_view.dart';
 export 'room_configuration/room_configuration_view.dart';
 export 'contact_details/contact_details_view.dart';
+export 'new_contact/new_contact_view.dart';
