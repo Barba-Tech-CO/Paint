@@ -59,5 +59,9 @@ final router = GoRouter(
       path: '/room-configuration',
       builder: (context, state) => const RoomConfigurationView(),
     ),
+    GoRoute(
+      path: '/overview-measurements',
+      builder: (context, state) => const RoomConfigurationView(),
+    ),
   ],
 );
