@@ -53,44 +53,89 @@ class _RoomAdjustViewState extends State<RoomAdjustView> {
 
               InputCardWidget(
                 title: 'Elements to Paint',
-                widget: SimpleCheckboxListWidget(
-                  items: elements,
-                  onItemChanged: (key, value) {
-                    setState(() {
-                      elements[key] = value;
-                    });
-                  },
+                widget: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withValues(alpha: 0.15),
+                        spreadRadius: 2,
+                        blurRadius: 8,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: SimpleCheckboxListWidget(
+                    items: elements,
+                    onItemChanged: (key, value) {
+                      setState(() {
+                        elements[key] = value;
+                      });
+                    },
+                  ),
                 ),
               ),
 
               InputCardWidget(
                 title: 'Wall Condition',
-                widget: WallConditionWidget(
-                  wallCondition: wallCondition,
-                  onConditionChanged: (condition) {
-                    setState(() {
-                      wallCondition = condition;
-                    });
-                  },
+                widget: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withValues(alpha: 0.15),
+                        spreadRadius: 2,
+                        blurRadius: 8,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: WallConditionWidget(
+                    wallCondition: wallCondition,
+                    onConditionChanged: (condition) {
+                      setState(() {
+                        wallCondition = condition;
+                      });
+                    },
+                  ),
                 ),
               ),
 
               InputCardWidget(
                 title: 'Accent Wall',
-                widget: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Include accent wall'),
-                    Checkbox(
-                      value: accentWall,
-                      onChanged: (value) {
-                        setState(() {
-                          accentWall = value ?? false;
-                        });
-                      },
-                      activeColor: Colors.blue,
-                    ),
-                  ],
+                widget: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withValues(alpha: 0.15),
+                        spreadRadius: 2,
+                        blurRadius: 8,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Include accent wall'),
+                      Checkbox(
+                        value: accentWall,
+                        onChanged: (value) {
+                          setState(() {
+                            accentWall = value ?? false;
+                          });
+                        },
+                        activeColor: Colors.blue,
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
