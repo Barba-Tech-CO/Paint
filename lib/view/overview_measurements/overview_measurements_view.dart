@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/widgets/widgets.dart';
 
 class OverviewMeasurementsView extends StatelessWidget {
@@ -107,6 +108,36 @@ class OverviewMeasurementsView extends StatelessWidget {
                 ],
               ),
 
+              const SizedBox(height: 24),
+
+              Padding(
+                padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => context.pop(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: const Text('Adjust'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => context.push('/room-configuration'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: const Text('Accept'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
             ],
           ),
