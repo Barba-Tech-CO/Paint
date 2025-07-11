@@ -11,9 +11,10 @@ import '../view/contact_details/contact_details_view.dart';
 import '../view/new_project/new_project_view.dart';
 import '../view/measurements/measurements_view.dart';
 import '../view/room_configuration/room_configuration_view.dart';
+import '../view/overview_measurements/overview_measurements_view.dart';
 
 final router = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/overview-measurements',
   routes: [
     GoRoute(
       path: '/splash',
@@ -61,7 +62,7 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/overview-measurements',
-      builder: (context, state) => const RoomConfigurationView(),
+      builder: (context, state) => const OverviewMeasurementsView(),
     ),
   ],
 );
