@@ -11,6 +11,7 @@ class PrimaryButtonWidget extends StatelessWidget {
   final double borderRadius;
   final bool isLoading;
   final Widget? icon;
+  final TextStyle? textStyle;
 
   const PrimaryButtonWidget({
     super.key,
@@ -27,6 +28,7 @@ class PrimaryButtonWidget extends StatelessWidget {
     this.borderRadius = 12,
     this.isLoading = false,
     this.icon,
+    this.textStyle,
   });
 
   @override
@@ -61,10 +63,12 @@ class PrimaryButtonWidget extends StatelessWidget {
                   ],
                   Text(
                     text,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style:
+                        textStyle ??
+                        const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ],
               ),

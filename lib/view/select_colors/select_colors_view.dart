@@ -114,7 +114,7 @@ class _SelectColorsViewState extends State<SelectColorsView>
               },
               backgroundColor: Colors.blue,
               minimumSize: const Size(double.infinity, 50),
-              borderRadius: 8,
+              borderRadius: 16,
             ),
           ],
         ),
