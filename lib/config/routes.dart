@@ -14,7 +14,7 @@ import '../view/room_configuration/room_configuration_view.dart';
 import '../view/overview_measurements/overview_measurements_view.dart';
 
 final router = GoRouter(
-  initialLocation: '/overview-measurements',
+  initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',
