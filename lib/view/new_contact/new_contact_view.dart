@@ -61,21 +61,9 @@ class _NewContactViewState extends State<NewContactView> {
               _buildSectionTitle('Client Information'),
               const SizedBox(height: 16),
 
-              PaintProFormField.dropdown(
-                label: 'Name:',
-                items: [
-                  const DropdownMenuItem(value: 'John', child: Text('John')),
-                  const DropdownMenuItem(value: 'Sarah', child: Text('Sarah')),
-                  const DropdownMenuItem(
-                    value: 'Michael',
-                    child: Text('Michael'),
-                  ),
-                  const DropdownMenuItem(
-                    value: 'Amanda',
-                    child: Text('Amanda'),
-                  ),
-                ],
-                value: _selectedName,
+              PaintProFormField.text(
+                label: 'Name',
+                hintText: 'Enter client name',
                 onChanged: (value) {
                   setState(() {
                     _selectedName = value;
