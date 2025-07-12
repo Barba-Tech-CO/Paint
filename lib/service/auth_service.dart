@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../utils/result/result.dart';
 import '../model/auth_model.dart';
 import 'http_service.dart';
@@ -21,9 +22,32 @@ class AuthService {
   /// Obtém a URL de autorização
   Future<Result<String>> getAuthorizeUrl() async {
     try {
-      final response = await _httpService.get('/auth/authorize-url');
-      final url = response.data['authorize_url'] as String;
-      return Result.ok(url);
+      final response = await _httpService.get(
+        '/auth/authorize-url',
+        // Opções especiais para esta chamada para não seguir o redirecionamento
+        options: Options(
+          followRedirects: false,
+          validateStatus: (status) {
+            // Aceita qualquer status que não seja um erro de servidor
+            return status != null && status < 500;
+          },
+        ),
+      );
+
+      // Se a resposta for um redirecionamento, pegamos a URL do cabeçalho
+      if (response.statusCode == 302) {
+        final location = response.headers.value('location');
+        if (location != null) {
+          return Result.ok(location);
+        }
+      }
+
+      // Se a resposta não for um redirecionamento, algo está errado
+      return Result.error(
+        Exception(
+          'A resposta do servidor não foi um redirecionamento esperado.',
+        ),
+      );
     } catch (e) {
       return Result.error(Exception('Erro ao obter URL de autorização: $e'));
     }
