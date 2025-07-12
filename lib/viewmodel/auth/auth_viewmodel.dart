@@ -9,7 +9,9 @@ enum AuthState { initial, loading, authenticated, unauthenticated, error }
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService;
 
-  AuthViewModel(this._authService);
+  AuthViewModel(this._authService) {
+    _initializeCommands();
+  }
 
   // State
   AuthState _state = AuthState.initial;
@@ -158,7 +160,6 @@ class AuthViewModel extends ChangeNotifier {
 
   // Public methods
   Future<void> initializeAuth() async {
-    _initializeCommands();
     await _initializeCommand.execute();
   }
 
