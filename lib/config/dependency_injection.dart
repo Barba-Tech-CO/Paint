@@ -7,17 +7,6 @@ import '../service/estimate_service.dart';
 import '../service/paint_catalog_service.dart';
 import '../service/navigation_service.dart';
 import '../service/app_initialization_service.dart';
-import '../viewmodel/auth/auth_viewmodel.dart';
-import '../viewmodel/auth/profile_viewmodel.dart';
-import '../viewmodel/contact/contact_list_viewmodel.dart';
-import '../viewmodel/contact/contact_detail_viewmodel.dart';
-import '../viewmodel/estimate/estimate_list_viewmodel.dart';
-import '../viewmodel/estimate/estimate_detail_viewmodel.dart';
-import '../viewmodel/estimate/estimate_upload_viewmodel.dart';
-import '../viewmodel/estimate/estimate_calculation_viewmodel.dart';
-import '../viewmodel/paint_catalog/paint_catalog_list_viewmodel.dart';
-import '../viewmodel/paint_catalog/paint_catalog_detail_viewmodel.dart';
-import '../viewmodel/navigation_viewmodel.dart';
 
 final GetIt getIt = GetIt.instance;
 
