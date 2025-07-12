@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import '../../viewmodel/auth/auth_viewmodel.dart';
 import '../../service/navigation_service.dart';
 import '../widgets/overlay/loading_overlay.dart';
@@ -13,7 +13,7 @@ class AuthView extends StatefulWidget {
 }
 
 class _AuthViewState extends State<AuthView> {
-  late WebViewController _webViewController;
+  InAppWebViewController? _webViewController;
   String? _authorizeUrl;
   bool _isLoading = true;
   String? _error;
@@ -21,30 +21,8 @@ class _AuthViewState extends State<AuthView> {
   @override
   void initState() {
     super.initState();
-    _initializeWebView();
+    // A URL é carregada primeiro, e o WebView é construído depois no método build.
     _loadAuthorizeUrl();
-  }
-
-  void _initializeWebView() {
-    _webViewController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (String url) {
-            setState(() {
-              _isLoading = true;
-            });
-          },
-          onPageFinished: (String url) {
-            setState(() {
-              _isLoading = false;
-            });
-          },
-          onNavigationRequest: (NavigationRequest request) {
-            return _handleNavigation(request.url);
-          },
-        ),
-      );
   }
 
   Future<void> _loadAuthorizeUrl() async {
@@ -54,40 +32,49 @@ class _AuthViewState extends State<AuthView> {
 
       setState(() {
         _authorizeUrl = url;
+        _isLoading = false; // O loading inicial é para obter a URL
       });
-      _webViewController.loadRequest(Uri.parse(url));
     } catch (e) {
       setState(() {
         _error = 'Erro ao carregar URL de autorização: $e';
+        _isLoading = false;
       });
     }
   }
 
-  NavigationDecision _handleNavigation(String url) {
+  // O InAppWebView usa NavigationActionPolicy na versão 5.7.2+3
+  Future<NavigationActionPolicy> _handleNavigation(Uri? uri) async {
+    if (uri == null) return NavigationActionPolicy.CANCEL;
+
+    final url = uri.toString();
+
     // Verifica se é o callback OAuth2
     if (url.contains('code=')) {
       _handleCallback(url);
-      return NavigationDecision.prevent;
+      return NavigationActionPolicy.CANCEL;
     }
 
     // Verifica se é um erro
     if (url.contains('error=')) {
       _handleError(url);
-      return NavigationDecision.prevent;
+      return NavigationActionPolicy.CANCEL;
     }
 
-    return NavigationDecision.navigate;
+    return NavigationActionPolicy.ALLOW;
   }
 
   Future<void> _handleCallback(String url) async {
     try {
-      // Extrai o código de autorização da URL
       final uri = Uri.parse(url);
       final code = uri.queryParameters['code'];
 
       if (code != null) {
         final authViewModel = context.read<AuthViewModel>();
         final navigationService = context.read<NavigationService>();
+
+        setState(() {
+          _isLoading = true;
+        });
 
         final success = await authViewModel.processCallback(code);
 
@@ -96,12 +83,14 @@ class _AuthViewState extends State<AuthView> {
         } else {
           setState(() {
             _error = 'Erro na autorização. Tente novamente.';
+            _isLoading = false;
           });
         }
       }
     } catch (e) {
       setState(() {
         _error = 'Erro no callback: $e';
+        _isLoading = false;
       });
     }
   }
@@ -119,6 +108,7 @@ class _AuthViewState extends State<AuthView> {
   void _retry() {
     setState(() {
       _error = null;
+      _isLoading = true;
     });
     _loadAuthorizeUrl();
   }
@@ -127,16 +117,71 @@ class _AuthViewState extends State<AuthView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text('Autenticação'),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_forever),
+            tooltip: 'Limpar Cookies e Cache',
+            onPressed: () async {
+              // Limpa todos os cookies do WebView
+              await CookieManager.instance().deleteAllCookies();
+              // Recarrega a página para refletir a limpeza
+              _webViewController?.reload();
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Cache e cookies do WebView limpos!'),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              // Recarrega a página atual do WebView
+              _webViewController?.reload();
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [
           // WebView
           if (_authorizeUrl != null && _error == null)
-            WebViewWidget(controller: _webViewController),
+            InAppWebView(
+              initialUrlRequest: URLRequest(
+                url: WebUri(_authorizeUrl!),
+              ),
+              onWebViewCreated: (controller) {
+                _webViewController = controller;
+              },
+              onLoadStart: (controller, url) {
+                setState(() {
+                  _isLoading = true;
+                });
+              },
+              onLoadStop: (controller, url) {
+                setState(() {
+                  _isLoading = false;
+                });
+              },
+              shouldOverrideUrlLoading: (controller, navigationAction) async {
+                return _handleNavigation(navigationAction.request.url);
+              },
+              onCreateWindow: (controller, createWindowAction) async {
+                // "Tomamos as rédeas" da situação aqui
+                // Carrega a nova janela no WebView principal
+                _webViewController?.loadUrl(
+                  urlRequest: createWindowAction.request,
+                );
+                // Retorna true para indicar que lidamos com a ação
+                return true;
+              },
+            ),
 
           // Loading overlay
           if (_isLoading)
