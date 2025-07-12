@@ -24,7 +24,7 @@ class ContactDetailsView extends StatelessWidget {
     };
 
     // Constrói um card de informações
-    Widget _buildInfoCard(ThemeData theme, {required List<Widget> children}) {
+    Widget buildInfoCard(ThemeData theme, {required List<Widget> children}) {
       return Card(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -39,7 +39,7 @@ class ContactDetailsView extends StatelessWidget {
     }
 
     // Constrói uma linha de informação
-    Widget _buildInfoRow(ThemeData theme, String label, String? value) {
+    Widget buildInfoRow(ThemeData theme, String label, String? value) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 8.0),
         child: Row(
@@ -127,11 +127,11 @@ class ContactDetailsView extends StatelessWidget {
                   ],
                 ),
               ),
-              _buildInfoCard(
+              buildInfoCard(
                 theme,
                 children: [
-                  _buildInfoRow(theme, 'Email', contactData['email']),
-                  _buildInfoRow(theme, 'Telefone', contactData['phone']),
+                  buildInfoRow(theme, 'Email', contactData['email']),
+                  buildInfoRow(theme, 'Telefone', contactData['phone']),
                 ],
               ),
 
@@ -160,14 +160,14 @@ class ContactDetailsView extends StatelessWidget {
                   ],
                 ),
               ),
-              _buildInfoCard(
+              buildInfoCard(
                 theme,
                 children: [
-                  _buildInfoRow(theme, 'Logradouro', contactData['address']),
-                  _buildInfoRow(theme, 'CEP', contactData['zipCode']),
-                  _buildInfoRow(theme, 'Cidade', contactData['city']),
-                  _buildInfoRow(theme, 'Estado', contactData['state']),
-                  _buildInfoRow(theme, 'País', contactData['country']),
+                  buildInfoRow(theme, 'Logradouro', contactData['address']),
+                  buildInfoRow(theme, 'CEP', contactData['zipCode']),
+                  buildInfoRow(theme, 'Cidade', contactData['city']),
+                  buildInfoRow(theme, 'Estado', contactData['state']),
+                  buildInfoRow(theme, 'País', contactData['country']),
                 ],
               ),
 
@@ -196,15 +196,15 @@ class ContactDetailsView extends StatelessWidget {
                   ],
                 ),
               ),
-              _buildInfoCard(
+              buildInfoCard(
                 theme,
                 children: [
-                  _buildInfoRow(
+                  buildInfoRow(
                     theme,
                     'ID de Localização',
                     contactData['locationId'],
                   ),
-                  _buildInfoRow(theme, 'Empresa', contactData['company']),
+                  buildInfoRow(theme, 'Empresa', contactData['company']),
                 ],
               ),
             ],
