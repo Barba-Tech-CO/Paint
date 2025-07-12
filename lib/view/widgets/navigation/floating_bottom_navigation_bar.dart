@@ -34,7 +34,7 @@ class FloatingBottomNavigationBar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primaryDark.withOpacity(0.1),
+                      color: AppColors.primaryDark.withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -177,7 +177,7 @@ class FloatingBottomNavigationBar extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primaryDark.withOpacity(0.1),
+              color: AppColors.primaryDark.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
