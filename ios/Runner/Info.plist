@@ -45,5 +45,28 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>WKAppBoundDomains</key>
+	<array>
+		<string>localhost</string>
+	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+	</dict>
+	<key>WKWebViewConfiguration</key>
+	<dict>
+		<key>allowsInlineMediaPlayback</key>
+		<true/>
+		<key>mediaTypesRequiringUserActionForPlayback</key>
+		<array/>
+	</dict>
 </dict>
 </plist>
