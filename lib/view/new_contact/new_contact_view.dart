@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
-import 'package:paintpro/view/widgets/form_field/paint_pro_form_field.dart';
 import 'package:paintpro/config/app_colors.dart';
+import 'package:paintpro/view/widgets/form_field/paint_pro_number_field.dart';
+import 'package:paintpro/view/widgets/form_field/paint_pro_text_field.dart';
 
 class NewContactView extends StatefulWidget {
   const NewContactView({super.key});
@@ -18,6 +19,8 @@ class _NewContactViewState extends State<NewContactView> {
   final TextEditingController _zipcodeController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _companyNameController = TextEditingController();
+  final TextEditingController _stateController = TextEditingController();
+  final TextEditingController _countryController = TextEditingController();
 
   // Dropdown values
   String? _selectedName;
@@ -32,6 +35,7 @@ class _NewContactViewState extends State<NewContactView> {
     _zipcodeController.dispose();
     _cityController.dispose();
     _companyNameController.dispose();
+    _stateController.dispose();
     super.dispose();
   }
 
@@ -61,7 +65,7 @@ class _NewContactViewState extends State<NewContactView> {
               _buildSectionTitle('Client Information'),
               const SizedBox(height: 16),
 
-              PaintProFormField.text(
+              PaintProTextField(
                 label: 'Name',
                 hintText: 'Enter client name',
                 onChanged: (value) {
@@ -75,13 +79,13 @@ class _NewContactViewState extends State<NewContactView> {
               _buildSectionTitle('Contact'),
               const SizedBox(height: 16),
 
-              PaintProFormField.phone(
+              PaintProNumberField(
                 label: 'Phone:',
                 hintText: '+1 38 785-2948',
                 controller: _phoneController,
               ),
 
-              PaintProFormField.text(
+              PaintProTextField(
                 label: 'Email:',
                 hintText: 'example@mail.com',
                 controller: _emailController,
@@ -91,71 +95,31 @@ class _NewContactViewState extends State<NewContactView> {
               _buildSectionTitle('Location'),
               const SizedBox(height: 16),
 
-              PaintProFormField.text(
+              PaintProTextField(
                 label: 'Address:',
                 hintText: '1243 New orlando',
                 controller: _addressController,
               ),
 
-              PaintProFormField.number(
+              PaintProNumberField(
                 label: 'Zipcode:',
                 hintText: '45859934',
                 controller: _zipcodeController,
               ),
 
-              PaintProFormField.dropdown(
+              PaintProTextField(
                 label: 'Country:',
-                items: [
-                  const DropdownMenuItem(value: 'USA', child: Text('USA')),
-                  const DropdownMenuItem(
-                    value: 'Canada',
-                    child: Text('Canada'),
-                  ),
-                  const DropdownMenuItem(
-                    value: 'Brazil',
-                    child: Text('Brazil'),
-                  ),
-                  const DropdownMenuItem(
-                    value: 'Mexico',
-                    child: Text('Mexico'),
-                  ),
-                ],
-                value: _selectedCountry,
-                hintText: 'USA',
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCountry = value;
-                  });
-                },
+                hintText: 'EUA',
+                controller: _countryController,
               ),
 
-              PaintProFormField.dropdown(
+              PaintProTextField(
                 label: 'State:',
-                items: [
-                  const DropdownMenuItem(value: 'Texas', child: Text('Texas')),
-                  const DropdownMenuItem(
-                    value: 'California',
-                    child: Text('California'),
-                  ),
-                  const DropdownMenuItem(
-                    value: 'New York',
-                    child: Text('New York'),
-                  ),
-                  const DropdownMenuItem(
-                    value: 'Florida',
-                    child: Text('Florida'),
-                  ),
-                ],
-                value: _selectedState,
                 hintText: 'Texas',
-                onChanged: (value) {
-                  setState(() {
-                    _selectedState = value;
-                  });
-                },
+                controller: _stateController,
               ),
 
-              PaintProFormField.text(
+              PaintProTextField(
                 label: 'City:',
                 hintText: 'Dallas',
                 controller: _cityController,
@@ -165,7 +129,7 @@ class _NewContactViewState extends State<NewContactView> {
               _buildSectionTitle('Additional Information'),
               const SizedBox(height: 16),
 
-              PaintProFormField.text(
+              PaintProTextField(
                 label: 'Company Name:',
                 hintText: 'Painter Pro LTDA',
                 controller: _companyNameController,
