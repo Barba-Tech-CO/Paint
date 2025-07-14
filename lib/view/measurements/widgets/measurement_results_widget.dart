@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/view/measurements/widgets/surface_row_widget.dart';
-import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
+import 'package:paintpro/view/measurements/widgets/measurement_header_widget.dart';
+import 'package:paintpro/view/measurements/widgets/room_overview_widget.dart';
+import 'package:paintpro/view/measurements/widgets/surface_areas_widget.dart';
 import 'package:paintpro/view/widgets/buttons/primary_button_widget.dart';
 
 class MeasurementResultsWidget extends StatelessWidget {
@@ -16,50 +17,12 @@ class MeasurementResultsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Cabeçalho verde
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            children: [
-              // Ícone de check
-              Container(
-                height: 56,
-                width: 56,
-                decoration: BoxDecoration(
-                  color: Colors.green[400],
-                  borderRadius: BorderRadius.circular(32),
-                ),
-                padding: const EdgeInsets.all(5),
-                child: const Icon(
-                  Icons.check,
-                  color: Colors.white,
-                  size: 32,
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              const Text(
-                'Measurements Complete!',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-
-              Text(
-                'Accuracy: ${results['accuracy']}%',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade700,
-                ),
-              ),
-            ],
-          ),
+        // TODO(gabri): Ver se esse dado vai bater com a api
+        MeasurementHeaderWidget(
+          accuracy: results['accuracy'] ?? 95,
         ),
 
-        // Conteúdo e botões mais próximos
+        // Conteúdo principal
         Flexible(
           child: SingleChildScrollView(
             child: Padding(
@@ -67,106 +30,18 @@ class MeasurementResultsWidget extends StatelessWidget {
               child: Column(
                 spacing: 12,
                 children: [
-                  InputCardWidget(
-                    title: 'Room Overview',
-                    widget: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withValues(alpha: 0.15),
-                            spreadRadius: 2,
-                            blurRadius: 8,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              children: [
-                                Text(
-                                  '14 X 16',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.blue.shade600,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Floor Dimensions',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              children: [
-                                Text(
-                                  '224 sq ft',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.blue.shade600,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Floor Area',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  // Room Overview separado
+                  RoomOverviewWidget(
+                    floorDimensions:
+                        '${results['width']} X ${results['height']}',
+                    floorArea: '${results['floorArea']} sq ft',
                   ),
 
                   const SizedBox.shrink(),
 
-                  // Card Surface Areas usando InputCardWidget
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: InputCardWidget(
-                      title: 'Surface Areas',
-                      padding: EdgeInsets.zero,
-                      widget: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SurfaceRowWidget(
-                            label: 'Walls',
-                            value: '${results['walls']} sq ft',
-                          ),
-                          SurfaceRowWidget(
-                            label: 'Ceiling',
-                            value: '${results['ceiling']} sq ft',
-                          ),
-                          SurfaceRowWidget(
-                            label: 'Trim',
-                            value: '${results['trim']} linear ft',
-                          ),
-                          const Divider(),
-                          SurfaceRowWidget(
-                            label: 'Total Paintable',
-                            value: '${results['totalPaintable']} sq ft',
-                            isBold: true,
-                            valueColor: Colors.blue,
-                          ),
-                        ],
-                      ),
-                    ),
+                  // Surface Areas separado
+                  SurfaceAreasWidget(
+                    surfaceData: results,
                   ),
 
                   // Botões mais próximos do conteúdo
