@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
 import '../../viewmodel/auth/auth_viewmodel.dart';
-import '../../service/navigation_service.dart';
 import '../widgets/overlay/loading_overlay.dart';
+import '../widgets/webview_popup_screen.dart';
 
 class AuthView extends StatefulWidget {
   const AuthView({super.key});
@@ -13,7 +15,7 @@ class AuthView extends StatefulWidget {
 }
 
 class _AuthViewState extends State<AuthView> {
-  InAppWebViewController? _webViewController;
+  WebViewController? _webViewController;
   String? _authorizeUrl;
   bool _isLoading = true;
   String? _error;
@@ -21,7 +23,6 @@ class _AuthViewState extends State<AuthView> {
   @override
   void initState() {
     super.initState();
-    // A URL é carregada primeiro, e o WebView é construído depois no método build.
     _loadAuthorizeUrl();
   }
 
@@ -29,10 +30,9 @@ class _AuthViewState extends State<AuthView> {
     try {
       final authViewModel = context.read<AuthViewModel>();
       final url = await authViewModel.getAuthorizeUrl();
-
       setState(() {
         _authorizeUrl = url;
-        _isLoading = false; // O loading inicial é para obter a URL
+        _isLoading = false;
       });
     } catch (e) {
       setState(() {
@@ -42,44 +42,51 @@ class _AuthViewState extends State<AuthView> {
     }
   }
 
-  // O InAppWebView usa NavigationActionPolicy na versão 5.7.2+3
-  Future<NavigationActionPolicy> _handleNavigation(Uri? uri) async {
-    if (uri == null) return NavigationActionPolicy.CANCEL;
-
-    final url = uri.toString();
-
-    // Verifica se é o callback OAuth2
+  NavigationDecision _handleNavigation(NavigationRequest request) {
+    final url = request.url;
     if (url.contains('code=')) {
       _handleCallback(url);
-      return NavigationActionPolicy.CANCEL;
+      return NavigationDecision.prevent;
     }
-
-    // Verifica se é um erro
     if (url.contains('error=')) {
       _handleError(url);
-      return NavigationActionPolicy.CANCEL;
+      return NavigationDecision.prevent;
     }
-
-    return NavigationActionPolicy.ALLOW;
+    if (url.startsWith(
+      'https://marketplace.gohighlevel.com/oauth/chooselocation',
+    )) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => FractionallySizedBox(
+          heightFactor: 0.95,
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            child: WebViewPopupScreen(popupUrl: url),
+          ),
+        ),
+      ).then((_) {
+        _webViewController?.reload();
+      });
+      return NavigationDecision.prevent;
+    }
+    return NavigationDecision.navigate;
   }
 
   Future<void> _handleCallback(String url) async {
     try {
       final uri = Uri.parse(url);
       final code = uri.queryParameters['code'];
-
       if (code != null) {
         final authViewModel = context.read<AuthViewModel>();
-        final navigationService = context.read<NavigationService>();
-
         setState(() {
           _isLoading = true;
         });
-
         final success = await authViewModel.processCallback(code);
-
         if (success) {
-          navigationService.navigateToDashboard(context);
+          context.go('/dashboard');
         } else {
           setState(() {
             _error = 'Erro na autorização. Tente novamente.';
@@ -99,7 +106,6 @@ class _AuthViewState extends State<AuthView> {
     final uri = Uri.parse(url);
     final error = uri.queryParameters['error'];
     final errorDescription = uri.queryParameters['error_description'];
-
     setState(() {
       _error = errorDescription ?? error ?? 'Erro na autorização';
     });
@@ -111,6 +117,54 @@ class _AuthViewState extends State<AuthView> {
       _isLoading = true;
     });
     _loadAuthorizeUrl();
+  }
+
+  Future<void> _clearWebViewData() async {
+    final cookieManager = WebViewCookieManager();
+    await cookieManager.clearCookies();
+    await _webViewController?.clearCache();
+    // Limpa localStorage e sessionStorage
+    try {
+      await _webViewController?.runJavaScript(
+        'window.localStorage.clear(); window.sessionStorage.clear();',
+      );
+    } catch (_) {}
+    // Tenta deletar todos os bancos IndexedDB conhecidos
+    try {
+      await _webViewController?.runJavaScript(
+        'if(indexedDB.databases){indexedDB.databases().then(dbs => dbs.forEach(db => indexedDB.deleteDatabase(db.name)));}',
+      );
+    } catch (_) {}
+    _webViewController?.reload();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Cache, cookies e storage do WebView limpos!'),
+      ),
+    );
+  }
+
+  WebViewController _buildWebViewController(String url) {
+    if (_webViewController != null) return _webViewController!;
+    final controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: _handleNavigation,
+          onPageStarted: (url) {
+            setState(() {
+              _isLoading = true;
+            });
+          },
+          onPageFinished: (url) {
+            setState(() {
+              _isLoading = false;
+            });
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(url));
+    _webViewController = controller;
+    return controller;
   }
 
   @override
@@ -126,23 +180,11 @@ class _AuthViewState extends State<AuthView> {
           IconButton(
             icon: const Icon(Icons.delete_forever),
             tooltip: 'Limpar Cookies e Cache',
-            onPressed: () async {
-              // Limpa todos os cookies do WebView
-              await CookieManager.instance().deleteAllCookies();
-              // Recarrega a página para refletir a limpeza
-              _webViewController?.reload();
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Cache e cookies do WebView limpos!'),
-                ),
-              );
-            },
+            onPressed: _clearWebViewData,
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              // Recarrega a página atual do WebView
               _webViewController?.reload();
             },
           ),
@@ -150,47 +192,15 @@ class _AuthViewState extends State<AuthView> {
       ),
       body: Stack(
         children: [
-          // WebView
           if (_authorizeUrl != null && _error == null)
-            InAppWebView(
-              initialUrlRequest: URLRequest(
-                url: WebUri(_authorizeUrl!),
-              ),
-              onWebViewCreated: (controller) {
-                _webViewController = controller;
-              },
-              onLoadStart: (controller, url) {
-                setState(() {
-                  _isLoading = true;
-                });
-              },
-              onLoadStop: (controller, url) {
-                setState(() {
-                  _isLoading = false;
-                });
-              },
-              shouldOverrideUrlLoading: (controller, navigationAction) async {
-                return _handleNavigation(navigationAction.request.url);
-              },
-              onCreateWindow: (controller, createWindowAction) async {
-                // "Tomamos as rédeas" da situação aqui
-                // Carrega a nova janela no WebView principal
-                _webViewController?.loadUrl(
-                  urlRequest: createWindowAction.request,
-                );
-                // Retorna true para indicar que lidamos com a ação
-                return true;
-              },
+            WebViewWidget(
+              controller: _buildWebViewController(_authorizeUrl!),
             ),
-
-          // Loading overlay
           if (_isLoading)
             const LoadingOverlay(
               isLoading: true,
               child: SizedBox.shrink(),
             ),
-
-          // Error overlay
           if (_error != null) _buildErrorOverlay(),
         ],
       ),
