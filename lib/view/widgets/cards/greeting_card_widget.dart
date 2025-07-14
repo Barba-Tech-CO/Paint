@@ -19,7 +19,7 @@ class GreetingCardWidget extends StatelessWidget {
     this.borderColor = const Color(0XFFE8E8E8),
     this.borderWidth = 1,
     this.borderRadius = 16,
-    this.innerPadding = const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+    this.innerPadding = const EdgeInsets.symmetric(horizontal: 16),
   });
 
   @override

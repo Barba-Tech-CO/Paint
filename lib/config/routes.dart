@@ -50,6 +50,10 @@ final router = GoRouter(
       builder: (context, state) => const RoomConfigurationView(),
     ),
     GoRoute(
+      path: '/overview-measurements',
+      builder: (context, state) => const OverviewMeasurementsView(),
+    ),
+    GoRoute(
       path: '/new-contact',
       builder: (context, state) => const NewContactView(),
     ),
