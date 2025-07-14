@@ -22,7 +22,7 @@ class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leadingWidth,
     this.backgroundColor = AppColors.primary,
     this.textColor = AppColors.textOnPrimary,
-    this.toolbarHeight = 126,
+    this.toolbarHeight = 80,
     this.tabs,
     this.controller,
     this.indicatorColor,
