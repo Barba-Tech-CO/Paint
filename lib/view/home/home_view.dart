@@ -109,7 +109,7 @@ class HomeView extends StatelessWidget {
                     description: "Create your first project to get started",
                     buttonText: "Create project",
                     state: ProjectStateType.empty,
-                    onButtonPressed: () => context.push('/new-project'),
+                    onButtonPressed: () => context.push('/create-project'),
                   ),
                 ],
               ),
