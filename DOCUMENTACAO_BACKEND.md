@@ -35,27 +35,66 @@ A integração com o GoHighLevel utiliza OAuth2 para autenticação segura. O ba
 
 ### 🔗 **Tabela de Endpoints do Fluxo OAuth2**
 
-| Método | Endpoint                                         | Descrição                           | Tipo    |
-| ------ | ------------------------------------------------ | ----------------------------------- | ------- |
-| GET    | /api/auth/authorize-url                          | Gera URL de autorização OAuth2      | Externo |
-| GET    | /api/auth/callback                               | Troca code por tokens               | Externo |
-| GET    | /api/auth/status                                 | Verifica status da autenticação     | Externo |
-| POST   | /api/auth/refresh                                | Renova token manual                 | Externo |
-| GET    | /api/auth/debug                                  | Estatísticas e debug dos tokens     | Externo |
-| POST   | https://services.leadconnectorhq.com/oauth/token | Troca code/refresh_token por tokens | Interno |
+| Método | Endpoint                                        | Descrição                           | Tipo    | Cliente |
+| ------ | ----------------------------------------------- | ----------------------------------- | ------- | ------- |
+| GET    | /api/auth/authorize-url                         | Retorna URL de autorização OAuth2   | JSON    | App     |
+| GET    | /api/auth/redirect                              | Redireciona para autorização GHL    | 302     | Browser |
+| GET    | /api/oauth/callback                             | Troca code por tokens               | Misto   | Ambos   |
+| GET    | /api/auth/status                                | Verifica status da autenticação     | JSON    | App     |
+| POST   | /api/auth/refresh                               | Renova token manual                 | JSON    | App     |
+| GET    | /api/auth/debug                                 | Estatísticas e debug dos tokens     | JSON    | App     |
+| DELETE | /api/auth/debug-logout                          | Remove token (logout debug)         | JSON    | Dev     |
+| POST   | https://services.leadconnectorhq.com/auth/token | Troca code/refresh_token por tokens | Interno | -       |
+
+---
+
+#### 🐞 **Rota de Debug: Logout/Invalidar Token**
+
+- **Endpoint:** `DELETE /api/auth/debug-logout`
+- **Descrição:** Remove o token OAuth do usuário referente ao `location_id` informado. Útil para testes de fluxo de login/logout.
+- **Como usar:**
+  - Envie o `location_id` no corpo da requisição como JSON:
+    ```json
+    {
+      "location_id": "SEU_LOCATION_ID"
+    }
+    ```
+  - Ou envie como query param: `/api/auth/debug-logout?location_id=SEU_LOCATION_ID`
+- **Resposta de sucesso:**
+  ```json
+  { "success": true, "message": "Token removido com sucesso" }
+  ```
+- **Se não encontrar token:**
+  ```json
+  {
+    "success": true,
+    "message": "Nenhum token encontrado para este location_id"
+  }
+  ```
+- **Atenção:** Rota apenas para desenvolvimento/debug. Não usar em produção sem proteção!
+
+---
 
 ### 🔐 **Fluxo OAuth2 Completo — Passo a Passo**
 
 1. **Solicitação da URL de Autorização**
 
-   - Frontend chama: `GET /api/auth/authorize-url`
-   - Backend monta a URL do GHL com client_id, redirect_uri, etc.
-   - **Resposta:**
-     ```json
-     {
-       "url": "https://marketplace.gohighlevel.com/oauth/chooselocation?..."
-     }
-     ```
+   - **Para Apps (Flutter/React Native):**
+
+     - App chama: `GET /api/auth/authorize-url`
+     - Backend retorna JSON com a URL de autorização
+     - **Resposta:**
+       ```json
+       {
+         "success": true,
+         "url": "https://marketplace.gohighlevel.com/auth/chooselocation?...",
+         "message": "Authorization URL generated successfully"
+       }
+       ```
+
+   - **Para Browsers (Web):**
+     - Browser chama: `GET /api/auth/redirect`
+     - Backend redireciona diretamente para o GHL (HTTP 302)
 
 2. **Redirecionamento do Usuário**
 
@@ -63,8 +102,25 @@ A integração com o GoHighLevel utiliza OAuth2 para autenticação segura. O ba
    - Usuário faz login e autoriza.
 
 3. **Callback: Envio do Code para o Backend**
-   - Frontend chama: `GET /api/auth/callback?code=...`
-   - Backend recebe o code.
+
+   - **Para Apps (Flutter/React Native):**
+
+     - App chama: `GET /api/oauth/callback?code=...`
+     - Backend processa e retorna JSON com resultado
+     - **Resposta de sucesso:**
+       ```json
+       {
+         "success": true,
+         "expires_at": "2024-08-20T12:00:00.000000Z",
+         "location_id": "LOCATION_ID_FROM_GHL"
+       }
+       ```
+
+   - **Para Browsers (Web):**
+     - Browser é redirecionado para: `GET /api/oauth/callback?code=...`
+     - Backend processa e redireciona para o app via deep link
+     - **Redirecionamento de sucesso:** `paintproapp://auth/success?location_id=...`
+     - **Redirecionamento de erro:** `paintproapp://auth/failure?error=...`
 
 3.1 **Chamada Interna: Troca do Code por Tokens**
 
@@ -206,9 +262,12 @@ A integração com o GoHighLevel utiliza OAuth2 para autenticação segura. O ba
 
 ### 📋 **Resumo de Integração Frontend**
 
+#### **Para Apps Mobile (Flutter/React Native):**
+
 ```javascript
 // 1. Obter URL de autorização
-const { url } = await fetch("/api/auth/authorize-url").then((r) => r.json());
+const response = await fetch("/api/auth/authorize-url");
+const { url } = await response.json();
 
 // 2. Abrir WebView/navegador
 openWebView(url);
@@ -217,12 +276,23 @@ openWebView(url);
 const code = await captureCallbackCode();
 
 // 4. Trocar code por tokens
-const result = await fetch(`/api/auth/callback?code=${code}`).then((r) =>
+const result = await fetch(`/api/oauth/callback?code=${code}`).then((r) =>
   r.json()
 );
 
 // 5. Verificar status
 const status = await fetch("/api/auth/status").then((r) => r.json());
+```
+
+#### **Para Web (Browser):**
+
+```javascript
+// 1. Redirecionar para autorização
+window.location.href = "/api/auth/redirect";
+
+// 2. O callback será processado automaticamente
+// 3. O usuário será redirecionado para o app via deep link
+// 4. O app captura o deep link e processa o resultado
 ```
 
 ---
