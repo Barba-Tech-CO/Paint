@@ -15,7 +15,7 @@ export 'cards/stats_card_widget.dart';
 export 'navigation/floating_bottom_navigation_bar.dart';
 
 // Overlay
-export 'overlay/loading_overlay.dart';
+export 'overlays/loading_overlay.dart';
 
 // Summary
 export 'summary/material_item_row_widget.dart';
