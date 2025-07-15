@@ -14,8 +14,8 @@ final router = GoRouter(
       builder: (context, state) => const AuthView(),
     ),
     GoRoute(
-      path: '/dashboard',
-      builder: (context, state) => const DashboardView(),
+      path: '/home',
+      builder: (context, state) => const HomeView(),
     ),
     GoRoute(
       path: '/projects',

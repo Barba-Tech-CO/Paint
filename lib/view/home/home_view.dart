@@ -7,8 +7,8 @@ import 'package:paintpro/view/widgets/cards/project_state_card_widget.dart';
 import 'package:paintpro/view/widgets/cards/greeting_card_widget.dart';
 import 'package:paintpro/view/widgets/cards/stats_card_widget.dart';
 
-class DashboardView extends StatelessWidget {
-  const DashboardView({super.key});
+class HomeView extends StatelessWidget {
+  const HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -28,7 +28,7 @@ class ContactsView extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: const PaintProAppBar(
         title: 'Contacts',
-        toolbarHeight: 90,
+        toolbarHeight: 126,
       ),
       body: mockContacts.isEmpty
           ? Center(
