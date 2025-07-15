@@ -8,7 +8,13 @@ class OverviewMeasurementsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PaintProAppBar(title: 'Measurements'),
+      appBar: PaintProAppBar(
+        title: 'Measurements',
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -66,8 +66,7 @@ class MeasurementResultsWidget extends StatelessWidget {
                         Expanded(
                           child: PrimaryButtonWidget(
                             text: 'Accept',
-                            onPressed: () =>
-                                context.push('/room-configuration'),
+                            onPressed: () => context.push('/room-adjust'),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                         ),
