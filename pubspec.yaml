@@ -23,6 +23,7 @@ dependencies:
   flutter_svg: ^2.0.10+1
   webview_flutter: ^4.7.0
   roomplan_flutter: ^0.0.8
+  app_links: ^3.5.0
 
 dev_dependencies:
   flutter_test:
