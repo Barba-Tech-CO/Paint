@@ -1,8 +1,12 @@
+import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../config/dependency_injection.dart';
+import '../../service/deep_link_service.dart';
 import '../../viewmodel/auth/auth_viewmodel.dart';
 import '../widgets/overlay/loading_overlay.dart';
 import '../widgets/webview_popup_screen.dart';
@@ -19,42 +23,70 @@ class _AuthViewState extends State<AuthView> {
   String? _authorizeUrl;
   bool _isLoading = true;
   String? _error;
+  late AuthViewModel _authViewModel;
+  late DeepLinkService _deepLinkService;
+  StreamSubscription? _deepLinkSubscription;
 
   @override
   void initState() {
     super.initState();
-    _loadAuthorizeUrl();
+    _authViewModel = context.read<AuthViewModel>();
+    _deepLinkService = getIt<DeepLinkService>();
+    _initializeDeepLinkListener();
+
+    // URL fixa do GHL
+    const ghlAuthorizeUrl =
+        'https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri=https%3A%2F%2Fpaintpro.barbatech.company%2Fapi%2Foauth%2Fcallback&client_id=6845ab8de6772c0d5c8548d7-mbnty1f6&scope=contacts.write+associations.write+associations.readonly+oauth.readonly+oauth.write+invoices%2Festimate.write+invoices%2Festimate.readonly+invoices.readonly+associations%2Frelation.write+associations%2Frelation.readonly+contacts.readonly+invoices.write';
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _authorizeUrl = ghlAuthorizeUrl;
+        _isLoading = false;
+      });
+    });
   }
 
-  Future<void> _loadAuthorizeUrl() async {
-    try {
-      final authViewModel = context.read<AuthViewModel>();
-      final url = await authViewModel.getAuthorizeUrl();
-      setState(() {
-        _authorizeUrl = url;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = 'Erro ao carregar URL de autorização: $e';
-        _isLoading = false;
-      });
-    }
+  void _initializeDeepLinkListener() {
+    _deepLinkSubscription = _deepLinkService.deepLinkStream.listen(
+      (uri) {
+        if (uri.pathSegments.contains('success')) {
+          // Autenticação bem-sucedida via Deep Link
+          context.go('/dashboard');
+        } else if (uri.pathSegments.contains('error')) {
+          final error = uri.queryParameters['error'];
+          setState(() {
+            _error = error ?? 'Erro na autenticação';
+          });
+        }
+      },
+      onError: (error) {
+        setState(() {
+          _error = 'Erro ao processar callback de autenticação';
+        });
+      },
+    );
   }
 
   NavigationDecision _handleNavigation(NavigationRequest request) {
     final url = request.url;
+    log('[AuthView] Navegação para: $url');
+
+    // 1. CONDIÇÃO DE SUCESSO FINAL (Prioridade máxima)
     if (url.contains('code=')) {
+      log('[AuthView] Código de autorização detectado: $url');
       _handleCallback(url);
       return NavigationDecision.prevent;
     }
+
     if (url.contains('error=')) {
+      log('[AuthView] Erro detectado: $url');
       _handleError(url);
       return NavigationDecision.prevent;
     }
-    if (url.startsWith(
-      'https://marketplace.gohighlevel.com/oauth/chooselocation',
-    )) {
+
+    // 2. Se for a URL de nova aba do GHL, abre o modal simulando o popup
+    if (url.startsWith('https://app.gohighlevel.com/?src=marketplace')) {
+      log('[AuthView] Detected GHL new tab URL, abrindo modal: $url');
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -67,11 +99,18 @@ class _AuthViewState extends State<AuthView> {
             child: WebViewPopupScreen(popupUrl: url),
           ),
         ),
-      ).then((_) {
-        _webViewController?.reload();
-      });
+      );
       return NavigationDecision.prevent;
     }
+
+    // 3. Permite navegação para todas as URLs do GoHighLevel
+    if (url.startsWith('https://marketplace.gohighlevel.com') ||
+        url.startsWith('https://app.gohighlevel.com') ||
+        url.startsWith('https://highlevel-backend.firebaseapp.com')) {
+      log('[AuthView] Navegação para GoHighLevel permitida: $url');
+      return NavigationDecision.navigate;
+    }
+
     return NavigationDecision.navigate;
   }
 
@@ -79,22 +118,44 @@ class _AuthViewState extends State<AuthView> {
     try {
       final uri = Uri.parse(url);
       final code = uri.queryParameters['code'];
+      log('[AuthView] Processando callback - URL: $url');
+      log('[AuthView] Código extraído: $code');
+
       if (code != null) {
-        final authViewModel = context.read<AuthViewModel>();
         setState(() {
           _isLoading = true;
         });
-        final success = await authViewModel.processCallback(code);
-        if (success) {
+
+        log('[AuthView] Chamando processCallback com código: $code');
+        await _authViewModel.processCallback(code);
+
+        // Verifica se a autenticação foi bem-sucedida
+        log('[AuthView] Verificando se autenticação foi bem-sucedida...');
+        await _authViewModel.checkAuthStatus();
+
+        if (_authViewModel.isAuthenticated) {
+          log('[AuthView] Autenticação bem-sucedida! Navegando para dashboard');
           context.go('/dashboard');
         } else {
+          log(
+            '[AuthView] Autenticação falhou. Erro: ${_authViewModel.errorMessage}',
+          );
           setState(() {
-            _error = 'Erro na autorização. Tente novamente.';
+            _error =
+                _authViewModel.errorMessage ??
+                'Erro na autorização. Tente novamente.';
             _isLoading = false;
           });
         }
+      } else {
+        log('[AuthView] Nenhum código encontrado na URL de callback');
+        setState(() {
+          _error = 'Código de autorização não encontrado na URL';
+          _isLoading = false;
+        });
       }
     } catch (e) {
+      log('[AuthView] Erro no callback: $e');
       setState(() {
         _error = 'Erro no callback: $e';
         _isLoading = false;
@@ -116,7 +177,7 @@ class _AuthViewState extends State<AuthView> {
       _error = null;
       _isLoading = true;
     });
-    _loadAuthorizeUrl();
+    // Remover o método _loadAuthorizeUrl, pois não será mais usado.
   }
 
   Future<void> _clearWebViewData() async {
@@ -143,10 +204,76 @@ class _AuthViewState extends State<AuthView> {
     );
   }
 
+  /// Mostra informações de debug
+  Future<void> _showDebugInfo() async {
+    try {
+      final debugInfo = await _authViewModel.getDebugInfo();
+      final status = _authViewModel.authStatus;
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Debug Info'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('URL de Autorização: ${_authorizeUrl ?? "Não carregada"}'),
+                const SizedBox(height: 8),
+                Text('Is Loading: $_isLoading'),
+                const SizedBox(height: 8),
+                Text('Is Authenticated: ${_authViewModel.isAuthenticated}'),
+                const SizedBox(height: 8),
+                Text(
+                  'Error Message: ${_authViewModel.errorMessage ?? "Nenhum"}',
+                ),
+                const SizedBox(height: 8),
+                if (status != null) ...[
+                  Text('Auth Status:'),
+                  Text('  - Authenticated: ${status.authenticated}'),
+                  Text('  - Needs Login: ${status.needsLogin}'),
+                  Text('  - Location ID: ${status.locationId ?? "N/A"}'),
+                  Text(
+                    '  - Expires At: ${status.expiresAt?.toIso8601String() ?? "N/A"}',
+                  ),
+                ],
+                const SizedBox(height: 8),
+                if (debugInfo != null) ...[
+                  Text('Debug Info:'),
+                  Text('  - Total Tokens: ${debugInfo.totalTokens}'),
+                  Text('  - Valid: ${debugInfo.valid}'),
+                  Text('  - Expired: ${debugInfo.expired}'),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Fechar'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao obter debug info: $e')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _deepLinkSubscription?.cancel();
+    super.dispose();
+  }
+
   WebViewController _buildWebViewController(String url) {
     if (_webViewController != null) return _webViewController!;
     final controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(Colors.white)
       ..setNavigationDelegate(
         NavigationDelegate(
           onNavigationRequest: _handleNavigation,
@@ -178,6 +305,11 @@ class _AuthViewState extends State<AuthView> {
         elevation: 0,
         actions: [
           IconButton(
+            icon: const Icon(Icons.bug_report),
+            tooltip: 'Debug Info',
+            onPressed: _showDebugInfo,
+          ),
+          IconButton(
             icon: const Icon(Icons.delete_forever),
             tooltip: 'Limpar Cookies e Cache',
             onPressed: _clearWebViewData,
@@ -202,6 +334,39 @@ class _AuthViewState extends State<AuthView> {
               child: SizedBox.shrink(),
             ),
           if (_error != null) _buildErrorOverlay(),
+          // Botão de verificação manual (apenas quando não há erro e não está carregando)
+          if (_error == null && !_isLoading && _authorizeUrl != null)
+            Positioned(
+              bottom: 20,
+              right: 20,
+              child: FloatingActionButton(
+                onPressed: () async {
+                  try {
+                    setState(() {
+                      _isLoading = true;
+                    });
+                    await _authViewModel.checkAuthStatus();
+                    if (_authViewModel.isAuthenticated) {
+                      context.go('/dashboard');
+                    } else {
+                      setState(() {
+                        _error =
+                            _authViewModel.errorMessage ??
+                            'Autenticação não foi completada. Tente novamente.';
+                        _isLoading = false;
+                      });
+                    }
+                  } catch (e) {
+                    setState(() {
+                      _error = 'Erro ao verificar autenticação: $e';
+                      _isLoading = false;
+                    });
+                  }
+                },
+                backgroundColor: Theme.of(context).primaryColor,
+                child: const Icon(Icons.check, color: Colors.white),
+              ),
+            ),
         ],
       ),
     );
