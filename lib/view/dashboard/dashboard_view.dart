@@ -14,7 +14,10 @@ class DashboardView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: PaintProAppBar(title: 'Dashboard'),
+      appBar: PaintProAppBar(
+        title: 'Dashboard',
+        toolbarHeight: 126,
+      ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

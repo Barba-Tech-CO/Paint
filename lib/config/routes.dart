@@ -12,6 +12,7 @@ import '../view/new_project/new_project_view.dart';
 import '../view/measurements/measurements_view.dart';
 import '../view/room_configuration/room_configuration_view.dart';
 import '../view/widgets/webview_popup_screen.dart';
+import '../view/views.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -57,8 +58,16 @@ final router = GoRouter(
       builder: (context, state) => const MeasurementsView(),
     ),
     GoRoute(
-      path: '/room-configuration',
-      builder: (context, state) => const RoomConfigurationView(),
+      path: '/room-adjust',
+      builder: (context, state) => const RoomAdjustView(),
+    ),
+    GoRoute(
+      path: '/select-colors',
+      builder: (context, state) => const SelectColorsView(),
+    ),
+    GoRoute(
+      path: '/overview-measurements',
+      builder: (context, state) => const OverviewMeasurementsView(),
     ),
     GoRoute(
       path: '/webview-popup',
