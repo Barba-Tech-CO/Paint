@@ -1,0 +1,5 @@
+app_identifier("com.barbatechcompany.paintpro") # App Bundle ID
+apple_id("lorenzo.druzi@icloud.com") # Apple ID
+
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile

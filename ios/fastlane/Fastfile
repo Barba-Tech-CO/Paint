@@ -1,0 +1,48 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+# fastlane/Fastfile
+default_platform(:ios)
+
+platform :ios do
+  desc "Build the app and distribute it to Firebase App Distribution"
+  lane :deploy_firebase do |options|
+    # 1. Garante que o ambiente de CI está limpo e com um keychain temporário
+    setup_ci(force: true)
+
+    # 2. Sincroniza certificados e perfis de provisionamento (usando o repo privado)
+    match(
+      type: "development", # ou "development", "adhoc"
+      readonly: true # A CI não deve criar novos perfis/certificados
+    )
+
+    # 3. Compila o projeto e gera o .ipa
+    gym(
+      scheme: "Runner",
+      export_method: "ad-hoc"
+    )
+
+    # 4. Faz o upload para o Firebase
+    firebase_app_distribution(
+      app: ENV["FIREBASE_APP_ID"],
+      firebase_cli_token: ENV["FIREBASE_TOKEN"],
+      release_notes: "Novo build disponível! 🎉",
+      testers: "lorenzo.druzi@icloud.com"
+    )
+
+    # 5. Limpa os arquivos temporários criados pelo setup_ci
+    clean_build_artifacts
+  end
+end
