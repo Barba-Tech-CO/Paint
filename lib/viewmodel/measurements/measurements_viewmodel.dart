@@ -40,20 +40,24 @@ class MeasurementsViewModel extends ChangeNotifier {
     _setLoading(true);
     _clearError();
 
-    final random = Random();
-    final secondsToWait = random.nextInt(4) + 2;
+    try {
+      final random = Random();
+      final secondsToWait = random.nextInt(4) + 2;
 
-    _timer = Timer.periodic(const Duration(milliseconds: 200), (_) {
-      _randomNumber = _random.nextInt(100);
-      notifyListeners();
-    });
+      _timer = Timer.periodic(const Duration(milliseconds: 200), (_) {
+        _randomNumber = _random.nextInt(100);
+        notifyListeners();
+      });
 
-    await Future.delayed(Duration(seconds: secondsToWait), () {
-      if (_timer?.isActive == true) {
-        _timer?.cancel();
-        _setLoading(false);
-      }
-    });
+      await Future.delayed(Duration(seconds: secondsToWait), () {
+        if (_timer?.isActive == true) {
+          _timer?.cancel();
+          _setLoading(false);
+        }
+      });
+    } catch (e) {
+      _setError('Erro ao calcular: $e');
+    }
   }
 
   // Métodos de gerenciamento de estado
