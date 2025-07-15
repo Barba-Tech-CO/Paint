@@ -7,6 +7,7 @@ import '../service/estimate_service.dart';
 import '../service/paint_catalog_service.dart';
 import '../service/navigation_service.dart';
 import '../service/app_initialization_service.dart';
+import '../service/deep_link_service.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -30,10 +31,14 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<NavigationService>(
     () => NavigationService(),
   );
+  getIt.registerLazySingleton<DeepLinkService>(
+    () => DeepLinkService(),
+  );
   getIt.registerLazySingleton<AppInitializationService>(
     () => AppInitializationService(
       getIt<AuthService>(),
       getIt<NavigationService>(),
+      getIt<DeepLinkService>(),
     ),
   );
 
