@@ -1,14 +1,12 @@
 import 'package:flutter/foundation.dart';
 import '../model/navigation_item_model.dart';
-import '../service/navigation_service.dart';
 
 class NavigationViewModel extends ChangeNotifier {
-  final NavigationService _navigationService;
   String _currentRoute = '/';
   final List<NavigationItemModel> _navigationItems =
       NavigationItemModel.defaultItems;
 
-  NavigationViewModel(this._navigationService);
+  NavigationViewModel();
 
   String get currentRoute => _currentRoute;
   List<NavigationItemModel> get navigationItems => _navigationItems;
