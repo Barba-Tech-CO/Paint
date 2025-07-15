@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import '../utils/result/result.dart';
 import '../model/auth_model.dart';
@@ -13,6 +15,7 @@ class AuthService {
     try {
       final response = await _httpService.get('/auth/status');
       final authStatus = AuthStatusResponse.fromJson(response.data);
+      log('AuthStatusResponse: ${authStatus.toString()}');
       return Result.ok(authStatus);
     } catch (e) {
       return Result.error(Exception('Erro ao verificar status: $e'));
@@ -42,10 +45,21 @@ class AuthService {
         }
       }
 
+      // Se a resposta for 200, pode ser que o servidor retorne a URL diretamente
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map<String, dynamic> && data.containsKey('url')) {
+          return Result.ok(data['url']);
+        }
+        if (data is String && data.startsWith('http')) {
+          return Result.ok(data);
+        }
+      }
+
       // Se a resposta não for um redirecionamento, algo está errado
       return Result.error(
         Exception(
-          'A resposta do servidor não foi um redirecionamento esperado.',
+          'A resposta do servidor não foi um redirecionamento esperado. Status: ${response.statusCode}, Data: ${response.data}',
         ),
       );
     } catch (e) {
@@ -56,12 +70,7 @@ class AuthService {
   /// Processa o callback de autorização
   Future<Result<AuthRefreshResponse>> processCallback(String code) async {
     try {
-      final response = await _httpService.post(
-        '/auth/callback',
-        data: {
-          'code': code,
-        },
-      );
+      final response = await _httpService.get('/auth/callback?code=$code');
       final callbackResponse = AuthRefreshResponse.fromJson(response.data);
       return Result.ok(callbackResponse);
     } catch (e) {
