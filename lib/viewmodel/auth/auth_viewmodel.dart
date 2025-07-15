@@ -1,205 +1,193 @@
-import 'package:flutter/foundation.dart';
-import '../../model/auth_model.dart';
+import 'dart:async';
+import 'dart:developer';
+import 'package:flutter/material.dart';
+import '../../config/dependency_injection.dart';
 import '../../service/auth_service.dart';
+import '../../service/deep_link_service.dart';
 import '../../utils/result/result.dart';
-import '../../utils/command/command.dart';
-
-enum AuthState { initial, loading, authenticated, unauthenticated, error }
+import '../../model/auth_model.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService;
+  final DeepLinkService _deepLinkService;
+  StreamSubscription? _deepLinkSubscription;
 
-  AuthViewModel(this._authService) {
-    _initializeCommands();
-  }
-
-  // State
-  AuthState _state = AuthState.initial;
-  AuthState get state => _state;
-
-  // User data
-  AuthStatusResponse? _authStatus;
-  AuthStatusResponse? get authStatus => _authStatus;
-
-  // Error
+  bool _isLoading = false;
+  bool _isAuthenticated = false;
   String? _errorMessage;
+  AuthModel? _authStatus;
+
+  AuthViewModel(this._authService)
+    : _deepLinkService = getIt<DeepLinkService>() {
+    _initializeDeepLinkListener();
+  }
+
+  // Getters
+  bool get isLoading => _isLoading;
+  bool get isAuthenticated => _isAuthenticated;
   String? get errorMessage => _errorMessage;
+  AuthModel? get authStatus => _authStatus;
 
-  // Commands
-  late final Command0<void> _initializeCommand;
-  late final Command0<String> _getAuthorizeUrlCommand;
-  late final Command1<bool, String> _processCallbackCommand;
-  late final Command0<void> _logoutCommand;
-  late final Command0<AuthDebugResponse> _getDebugInfoCommand;
-
-  Command0<void> get initializeCommand => _initializeCommand;
-  Command0<String> get getAuthorizeUrlCommand => _getAuthorizeUrlCommand;
-  Command1<bool, String> get processCallbackCommand => _processCallbackCommand;
-  Command0<void> get logoutCommand => _logoutCommand;
-  Command0<AuthDebugResponse> get getDebugInfoCommand => _getDebugInfoCommand;
-
-  // Computed properties
-  bool get isLoading =>
-      _state == AuthState.loading || _initializeCommand.running;
-  bool get isAuthenticated =>
-      _state == AuthState.authenticated &&
-      _authStatus?.data.authenticated == true;
-  bool get hasError => _state == AuthState.error || _errorMessage != null;
-
-  AuthService get authService => _authService;
-
-  void _initializeCommands() {
-    _initializeCommand = Command0(() async {
-      _setState(AuthState.loading);
-      _clearError();
-
-      try {
-        final result = await _authService.getStatus();
-        return result.when(
-          ok: (status) {
-            _authStatus = status;
-            if (status.data.authenticated && !status.data.needsLogin) {
-              _setState(AuthState.authenticated);
-            } else {
-              _setState(AuthState.unauthenticated);
-            }
-            return Result.ok(null);
-          },
-          error: (error) {
-            _setError(error.toString());
-            _setState(AuthState.unauthenticated);
-            return Result.error(error);
-          },
-        );
-      } catch (e) {
-        _setError(e.toString());
-        _setState(AuthState.error);
-        return Result.error(Exception(e.toString()));
-      }
-    });
-
-    _getAuthorizeUrlCommand = Command0(() async {
-      try {
-        final result = await _authService.getAuthorizeUrl();
-        return result.when(
-          ok: (url) => Result.ok(url),
-          error: (error) => Result.error(error),
-        );
-      } catch (e) {
-        return Result.error(Exception(e.toString()));
-      }
-    });
-
-    _processCallbackCommand = Command1((String code) async {
-      _setState(AuthState.loading);
-      _clearError();
-
-      try {
-        final result = await _authService.processCallback(code);
-        return result.when(
-          ok: (response) {
-            // Atualiza o status após o callback
-            _initializeCommand.execute();
-            return Result.ok(true);
-          },
-          error: (error) {
-            _setError(error.toString());
-            _setState(AuthState.unauthenticated);
-            return Result.ok(false);
-          },
-        );
-      } catch (e) {
-        _setError(e.toString());
-        _setState(AuthState.error);
-        return Result.ok(false);
-      }
-    });
-
-    _logoutCommand = Command0(() async {
-      _setState(AuthState.loading);
-      _clearError();
-
-      try {
-        // Simula logout limpando o status
-        _authStatus = null;
-        _setState(AuthState.unauthenticated);
-        return Result.ok(null);
-      } catch (e) {
-        _setError(e.toString());
-        return Result.error(Exception(e.toString()));
-      }
-    });
-
-    _getDebugInfoCommand = Command0(() async {
-      try {
-        final result = await _authService.getDebugInfo();
-        return result.when(
-          ok: (info) => Result.ok(info),
-          error: (error) => Result.error(error),
-        );
-      } catch (e) {
-        return Result.error(Exception(e.toString()));
-      }
-    });
+  /// Inicializa o listener de Deep Links
+  void _initializeDeepLinkListener() {
+    _deepLinkSubscription = _deepLinkService.deepLinkStream.listen(
+      (uri) {
+        log('[AuthViewModel] Deep Link recebido: $uri');
+        if (uri.pathSegments.contains('success')) {
+          _handleAuthSuccess();
+        } else if (uri.pathSegments.contains('error')) {
+          final error = uri.queryParameters['error'];
+          _handleAuthError(error ?? 'Erro desconhecido na autenticação');
+        }
+      },
+      onError: (error) {
+        log('[AuthViewModel] Erro no Deep Link: $error');
+        _handleAuthError('Erro ao processar callback de autenticação');
+      },
+    );
   }
 
-  void _setState(AuthState state) {
-    _state = state;
+  /// Verifica o status de autenticação
+  Future<void> checkAuthStatus() async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final result = await _authService.getStatus();
+      if (result is Ok) {
+        final status = result.asOk.value;
+        _authStatus = status.data;
+        _isAuthenticated = status.data.authenticated && !status.data.needsLogin;
+        log('[AuthViewModel] Status de autenticação: $_isAuthenticated');
+      } else {
+        _handleAuthError('Erro ao verificar status de autenticação');
+      }
+    } catch (e) {
+      _handleAuthError('Erro ao verificar status: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Obtém a URL de autorização
+  Future<String?> getAuthorizeUrl() async {
+    // Não chama _setLoading aqui para evitar problemas durante o build
+    try {
+      final result = await _authService.getAuthorizeUrl();
+      if (result is Ok) {
+        final url = result.asOk.value;
+        log('[AuthViewModel] URL de autorização obtida: $url');
+        return url;
+      } else {
+        _handleAuthError('Erro ao obter URL de autorização');
+        return null;
+      }
+    } catch (e) {
+      _handleAuthError('Erro ao obter URL de autorização: $e');
+      return null;
+    }
+  }
+
+  /// Processa o callback de autorização
+  Future<void> processCallback(String code) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final result = await _authService.processCallback(code);
+      if (result is Ok) {
+        log('[AuthViewModel] Callback processado com sucesso');
+        await checkAuthStatus(); // Atualiza o status após o callback
+      } else {
+        _handleAuthError('Erro ao processar callback');
+      }
+    } catch (e) {
+      _handleAuthError('Erro ao processar callback: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Renova o token de acesso
+  Future<void> refreshToken() async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final result = await _authService.refreshToken();
+      if (result is Ok) {
+        log('[AuthViewModel] Token renovado com sucesso');
+        await checkAuthStatus(); // Atualiza o status após renovação
+      } else {
+        _handleAuthError('Erro ao renovar token');
+      }
+    } catch (e) {
+      _handleAuthError('Erro ao renovar token: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Verifica se o token está próximo de expirar
+  Future<bool> isTokenExpiringSoon() async {
+    try {
+      final result = await _authService.isTokenExpiringSoon();
+      if (result is Ok) {
+        return result.asOk.value;
+      }
+      return true; // Em caso de erro, assume que está expirando
+    } catch (e) {
+      log('[AuthViewModel] Erro ao verificar expiração do token: $e');
+      return true;
+    }
+  }
+
+  /// Obtém informações de debug
+  Future<AuthDebugData?> getDebugInfo() async {
+    try {
+      final result = await _authService.getDebugInfo();
+      if (result is Ok) {
+        return result.asOk.value.data;
+      }
+      return null;
+    } catch (e) {
+      log('[AuthViewModel] Erro ao obter debug info: $e');
+      return null;
+    }
+  }
+
+  /// Manipula sucesso na autenticação via Deep Link
+  void _handleAuthSuccess() {
+    log('[AuthViewModel] Autenticação bem-sucedida via Deep Link!');
+    _clearError();
+    // Atualiza o status de autenticação
+    checkAuthStatus();
+  }
+
+  /// Manipula erro na autenticação
+  void _handleAuthError(String error) {
+    log('[AuthViewModel] Erro na autenticação: $error');
+    _errorMessage = error;
+    _isAuthenticated = false;
     notifyListeners();
   }
 
-  void _setError(String message) {
-    _errorMessage = message;
+  /// Define o estado de carregamento
+  void _setLoading(bool loading) {
+    _isLoading = loading;
     notifyListeners();
   }
 
+  /// Limpa mensagens de erro
   void _clearError() {
     _errorMessage = null;
     notifyListeners();
   }
 
-  // Public methods
-  Future<void> initializeAuth() async {
-    await _initializeCommand.execute();
-  }
-
-  Future<String> getAuthorizeUrl() async {
-    await _getAuthorizeUrlCommand.execute();
-    final result = _getAuthorizeUrlCommand.result;
-    if (result != null) {
-      return result.when(
-        ok: (url) => url,
-        error: (error) => throw error,
-      );
-    }
-    throw Exception('Failed to get authorize URL');
-  }
-
-  Future<bool> processCallback(String code) async {
-    await _processCallbackCommand.execute(code);
-    final result = _processCallbackCommand.result;
-    if (result != null) {
-      return result.when(
-        ok: (success) => success,
-        error: (error) => false,
-      );
-    }
-    return false;
-  }
-
-  Future<void> logout() async {
-    await _logoutCommand.execute();
-  }
-
-  Future<AuthDebugResponse> getDebugInfo() async {
-    await _getDebugInfoCommand.execute();
-    final result = _getDebugInfoCommand.result;
-    if (result != null) {
-      return result.when(
-        ok: (info) => info,
-        error: (error) => throw error,
-      );
-    }
-    throw Exception('Failed to get debug info');
+  /// Limpa recursos
+  @override
+  void dispose() {
+    _deepLinkSubscription?.cancel();
+    super.dispose();
   }
 }
