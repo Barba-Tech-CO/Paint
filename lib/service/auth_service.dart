@@ -89,17 +89,6 @@ class AuthService {
     }
   }
 
-  /// Obtém informações de debug
-  Future<Result<AuthDebugResponse>> getDebugInfo() async {
-    try {
-      final response = await _httpService.get('/auth/debug');
-      final debugResponse = AuthDebugResponse.fromJson(response.data);
-      return Result.ok(debugResponse);
-    } catch (e) {
-      return Result.error(Exception('Erro ao obter debug info: $e'));
-    }
-  }
-
   /// Verifica se está autenticado
   Future<Result<bool>> isAuthenticated() async {
     try {
