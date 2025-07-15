@@ -8,6 +8,8 @@ import '../service/paint_catalog_service.dart';
 import '../service/navigation_service.dart';
 import '../service/app_initialization_service.dart';
 import '../service/deep_link_service.dart';
+import '../utils/logger/app_logger.dart';
+import '../utils/logger/logger_app_logger_impl.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -41,13 +43,16 @@ void setupDependencyInjection() {
       getIt<DeepLinkService>(),
     ),
   );
+  getIt.registerLazySingleton<AppLogger>(
+    () => LoggerAppLoggerImpl(),
+  );
 
   // ViewModels - Auth
   getIt.registerFactory<AuthViewModel>(
-    () => AuthViewModel(getIt<AuthService>()),
-  );
-  getIt.registerFactory<ProfileViewModel>(
-    () => ProfileViewModel(getIt<AuthService>()),
+    () => AuthViewModel(
+      getIt<AuthService>(),
+      getIt<AppLogger>(),
+    ),
   );
 
   // ViewModels - Contact
@@ -82,7 +87,7 @@ void setupDependencyInjection() {
 
   // ViewModels - Navigation
   getIt.registerFactory<NavigationViewModel>(
-    () => NavigationViewModel(getIt<NavigationService>()),
+    () => NavigationViewModel(),
   );
 
   // ViewModels - Measurements
