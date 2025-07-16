@@ -126,7 +126,7 @@ class OverviewMeasurementsView extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () => context.push('/room-configuration'),
+                        onPressed: () => context.push('/room-adjust'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
