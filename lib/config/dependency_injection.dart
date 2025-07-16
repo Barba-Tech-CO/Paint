@@ -1,13 +1,16 @@
 import 'package:get_it/get_it.dart';
+
 import 'package:paintpro/viewmodel/viewmodels.dart';
-import '../service/http_service.dart';
+
+import '../service/app_initialization_service.dart';
 import '../service/auth_service.dart';
 import '../service/contact_service.dart';
-import '../service/estimate_service.dart';
-import '../service/paint_catalog_service.dart';
-import '../service/navigation_service.dart';
-import '../service/app_initialization_service.dart';
 import '../service/deep_link_service.dart';
+import '../service/estimate_service.dart';
+import '../service/http_service.dart';
+import '../service/navigation_service.dart';
+import '../service/paint_catalog_service.dart';
+import '../use_case/auth/auth_use_cases.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/logger/logger_app_logger_impl.dart';
 
@@ -47,10 +50,30 @@ void setupDependencyInjection() {
     () => LoggerAppLoggerImpl(),
   );
 
+  // UseCases - Auth
+  getIt.registerLazySingleton<AuthOperationsUseCase>(
+    () => AuthOperationsUseCase(getIt<AuthService>()),
+  );
+  getIt.registerLazySingleton<ManageAuthStateUseCase>(
+    () => ManageAuthStateUseCase(),
+  );
+  getIt.registerLazySingleton<HandleDeepLinkUseCase>(
+    () => HandleDeepLinkUseCase(
+      getIt<AuthOperationsUseCase>(),
+      getIt<ManageAuthStateUseCase>(),
+      getIt<AppLogger>(),
+    ),
+  );
+  getIt.registerLazySingleton<HandleWebViewNavigationUseCase>(
+    () => HandleWebViewNavigationUseCase(),
+  );
+
   // ViewModels - Auth
   getIt.registerFactory<AuthViewModel>(
     () => AuthViewModel(
-      getIt<AuthService>(),
+      getIt<AuthOperationsUseCase>(),
+      getIt<HandleDeepLinkUseCase>(),
+      getIt<HandleWebViewNavigationUseCase>(),
       getIt<AppLogger>(),
     ),
   );
