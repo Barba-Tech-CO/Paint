@@ -1,8 +1,7 @@
-import 'dart:developer';
-
 import 'package:dio/dio.dart';
-import '../utils/result/result.dart';
+
 import '../model/auth_model.dart';
+import '../utils/result/result.dart';
 import 'http_service.dart';
 
 class AuthService {
@@ -15,10 +14,11 @@ class AuthService {
     try {
       final response = await _httpService.get('/auth/status');
       final authStatus = AuthStatusResponse.fromJson(response.data);
-      log('AuthStatusResponse: ${authStatus.toString()}');
       return Result.ok(authStatus);
     } catch (e) {
-      return Result.error(Exception('Erro ao verificar status: $e'));
+      return Result.error(
+        Exception('Erro ao verificar status: $e'),
+      );
     }
   }
 
@@ -63,7 +63,9 @@ class AuthService {
         ),
       );
     } catch (e) {
-      return Result.error(Exception('Erro ao obter URL de autorização: $e'));
+      return Result.error(
+        Exception('Erro ao obter URL de autorização: $e'),
+      );
     }
   }
 
@@ -81,7 +83,10 @@ class AuthService {
   /// Renova o token de acesso
   Future<Result<AuthRefreshResponse>> refreshToken() async {
     try {
-      final response = await _httpService.post('/auth/refresh', data: {});
+      final response = await _httpService.post(
+        '/auth/refresh',
+        data: {},
+      );
       final refreshResponse = AuthRefreshResponse.fromJson(response.data);
       return Result.ok(refreshResponse);
     } catch (e) {
@@ -97,10 +102,14 @@ class AuthService {
         final status = statusResult.asOk.value;
         return Result.ok(status.data.authenticated && !status.data.needsLogin);
       } else {
-        return Result.error(Exception('Erro ao verificar autenticação'));
+        return Result.error(
+          Exception('Erro ao verificar autenticação'),
+        );
       }
     } catch (e) {
-      return Result.error(Exception('Erro ao verificar autenticação: $e'));
+      return Result.error(
+        Exception('Erro ao verificar autenticação: $e'),
+      );
     }
   }
 
@@ -120,7 +129,9 @@ class AuthService {
 
         return Result.ok(difference.inMinutes < 60);
       } else {
-        return Result.error(Exception('Erro ao verificar expiração do token'));
+        return Result.error(
+          Exception('Erro ao verificar expiração do token'),
+        );
       }
     } catch (e) {
       return Result.error(
