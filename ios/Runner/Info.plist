@@ -72,8 +72,6 @@
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>
-				<key>CFBundleURLName</key>
-				<string>paintproapp</string>
 				<key>CFBundleURLSchemes</key>
 				<array>
 					<string>paintproapp</string>
