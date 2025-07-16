@@ -3,199 +3,198 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:paintpro/utils/logger/app_logger.dart';
+import 'package:webview_flutter/webview_flutter.dart' as webview;
 
 import '../../config/dependency_injection.dart';
 import '../../model/auth_model.dart';
-import '../../service/auth_service.dart';
+import '../../model/auth_state.dart';
 import '../../service/deep_link_service.dart';
+import '../../use_case/auth/auth_use_cases.dart';
 import '../../utils/result/result.dart';
+import 'auth_view_state.dart';
 
 class AuthViewModel extends ChangeNotifier {
-  final AuthService _authService;
+  final AuthOperationsUseCase _authOperationsUseCase;
+  final HandleDeepLinkUseCase _handleDeepLinkUseCase;
+  final HandleWebViewNavigationUseCase _handleWebViewNavigationUseCase;
   final DeepLinkService _deepLinkService;
   final AppLogger _logger;
   StreamSubscription? _deepLinkSubscription;
 
-  bool _isLoading = false;
-  bool _isAuthenticated = false;
-  String? _errorMessage;
-  AuthModel? _authStatus;
+  AuthViewState _state = AuthViewState.initial();
+  AuthViewState get state => _state;
 
-  AuthViewModel(this._authService, this._logger)
-    : _deepLinkService = getIt<DeepLinkService>() {
+  AuthViewModel(
+    this._authOperationsUseCase,
+    this._handleDeepLinkUseCase,
+    this._handleWebViewNavigationUseCase,
+    this._logger,
+  ) : _deepLinkService = getIt<DeepLinkService>() {
     _initializeDeepLinkListener();
+    _initializeAuth();
   }
 
-  // Getters
-  bool get isLoading => _isLoading;
-  bool get isAuthenticated => _isAuthenticated;
-  String? get errorMessage => _errorMessage;
-  AuthModel? get authStatus => _authStatus;
+  void _updateState(AuthViewState newState) {
+    _state = newState;
+    notifyListeners();
+  }
 
-  /// Inicializa o listener de Deep Links
+  void _initializeAuth() async {
+    final url = await getAuthorizeUrl();
+    _updateState(_state.copyWith(authorizeUrl: url));
+  }
+
   void _initializeDeepLinkListener() {
     _deepLinkSubscription = _deepLinkService.deepLinkStream.listen(
       (uri) {
         _logger.info('[AuthViewModel] Deep Link recebido: $uri');
         if (uri.pathSegments.contains('success')) {
-          _handleAuthSuccess();
+          _handleDeepLinkUseCase.handleSuccess();
         } else if (uri.pathSegments.contains('error')) {
           final error = uri.queryParameters['error'];
-          _handleAuthError(error ?? 'Erro desconhecido na autenticação');
+          _handleDeepLinkUseCase.handleError(
+            error ?? 'Erro desconhecido na autenticação',
+          );
         }
       },
       onError: (error) {
         _logger.error('[AuthViewModel] Erro no Deep Link', error);
-        _handleAuthError('Erro ao processar callback de autenticação');
+        _handleDeepLinkUseCase.handleGenericError();
       },
     );
   }
 
-  /// Verifica o status de autenticação
-  Future<void> checkAuthStatus() async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      final result = await _authService.getStatus();
-      if (result is Ok) {
-        final status = result.asOk.value;
-        _authStatus = status.data;
-        _isAuthenticated = status.data.authenticated && !status.data.needsLogin;
-        _logger.info(
-          '[AuthViewModel] Status de autenticação:  [32m$_isAuthenticated [0m',
+  Future<Result<AuthModel>> checkAuthStatus() async {
+    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+    final result = await _authOperationsUseCase.checkAuthStatus();
+    result.when(
+      ok: (authModel) {
+        final newState = authModel.authenticated && !authModel.needsLogin
+            ? AuthState.authenticated
+            : AuthState.unauthenticated;
+        _updateState(
+          _state.copyWith(
+            authStatus: authModel,
+            state: newState,
+            isLoading: false,
+            errorMessage: null,
+          ),
         );
-      } else {
-        _handleAuthError('Erro ao verificar status de autenticação');
-      }
-    } catch (e, stack) {
-      _logger.error('[AuthViewModel] Erro ao verificar status', e, stack);
-      _handleAuthError('Erro ao verificar status: $e');
-    } finally {
-      _setLoading(false);
-    }
+      },
+      error: (error) {
+        _updateState(
+          _state.copyWith(
+            state: AuthState.error,
+            isLoading: false,
+            errorMessage: error.toString(),
+          ),
+        );
+      },
+    );
+    return result;
   }
 
-  /// Obtém a URL de autorização
   Future<String?> getAuthorizeUrl() async {
-    // Não chama _setLoading aqui para evitar problemas durante o build
-    try {
-      final result = await _authService.getAuthorizeUrl();
-      if (result is Ok) {
-        final url = result.asOk.value;
-        _logger.info('[AuthViewModel] URL de autorização obtida: $url');
-        return url;
-      } else {
-        _handleAuthError('Erro ao obter URL de autorização');
+    final result = await _authOperationsUseCase.getAuthorizeUrl();
+    return result.when(
+      ok: (url) => url,
+      error: (error) {
+        _updateState(
+          _state.copyWith(errorMessage: 'Erro ao obter URL de autorização'),
+        );
         return null;
-      }
-    } catch (e, stack) {
-      _logger.error(
-        '[AuthViewModel] Erro ao obter URL de autorização',
-        e,
-        stack,
-      );
-      _handleAuthError('Erro ao obter URL de autorização: $e');
-      return null;
-    }
+      },
+    );
   }
 
-  /// Processa o callback de autorização
-  Future<void> processCallback(String code) async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      final result = await _authService.processCallback(code);
-      if (result is Ok) {
+  Future<Result<void>> processCallback(String code) async {
+    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+    final result = await _authOperationsUseCase.processCallback(code);
+    result.when(
+      ok: (response) {
         _logger.info('[AuthViewModel] Callback processado com sucesso');
-        await checkAuthStatus(); // Atualiza o status após o callback
-      } else {
-        _handleAuthError('Erro ao processar callback');
-      }
-    } catch (e, stack) {
-      _logger.error('[AuthViewModel] Erro ao processar callback', e, stack);
-      _handleAuthError('Erro ao processar callback: $e');
-    } finally {
-      _setLoading(false);
-    }
+        checkAuthStatus();
+      },
+      error: (error) {
+        _updateState(
+          _state.copyWith(isLoading: false, errorMessage: error.toString()),
+        );
+      },
+    );
+    _updateState(_state.copyWith(isLoading: false));
+    return result;
   }
 
-  /// Renova o token de acesso
-  Future<void> refreshToken() async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      final result = await _authService.refreshToken();
-      if (result is Ok) {
+  Future<Result<void>> refreshToken() async {
+    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+    final result = await _authOperationsUseCase.refreshToken();
+    result.when(
+      ok: (response) {
         _logger.info('[AuthViewModel] Token renovado com sucesso');
-        await checkAuthStatus(); // Atualiza o status após renovação
-      } else {
-        _handleAuthError('Erro ao renovar token');
-      }
-    } catch (e, stack) {
-      _logger.error('[AuthViewModel] Erro ao renovar token', e, stack);
-      _handleAuthError('Erro ao renovar token: $e');
-    } finally {
-      _setLoading(false);
-    }
+        checkAuthStatus();
+      },
+      error: (error) {
+        _updateState(
+          _state.copyWith(isLoading: false, errorMessage: error.toString()),
+        );
+      },
+    );
+    _updateState(_state.copyWith(isLoading: false));
+    return result;
   }
 
-  /// Verifica se o token está próximo de expirar
   Future<bool> isTokenExpiringSoon() async {
-    try {
-      final result = await _authService.isTokenExpiringSoon();
-      if (result is Ok) {
-        return result.asOk.value;
-      }
-      return true; // Em caso de erro, assume que está expirando
-    } catch (e, stack) {
-      _logger.error(
-        '[AuthViewModel] Erro ao verificar expiração do token',
-        e,
-        stack,
-      );
-      return true;
-    }
+    final result = await _authOperationsUseCase.isTokenExpiringSoon();
+    return result.when(
+      ok: (isExpiring) => isExpiring,
+      error: (error) => true,
+    );
   }
 
-  /// Manipula sucesso na autenticação via Deep Link
-  void _handleAuthSuccess() {
-    _logger.info('[AuthViewModel] Autenticação bem-sucedida via Deep Link!');
-    _clearError();
-    // Atualiza o status de autenticação
-    checkAuthStatus();
+  Future<void> setLoading(bool loading) async {
+    _updateState(_state.copyWith(isLoading: loading));
   }
 
-  /// Manipula erro na autenticação
-  void _handleAuthError(String error) {
-    _logger.error('[AuthViewModel] Erro na autenticação: $error');
-    _errorMessage = error;
-    _isAuthenticated = false;
-    notifyListeners();
+  Future<void> setError(String error) async {
+    _updateState(_state.copyWith(errorMessage: error));
   }
 
-  /// Define o estado de carregamento
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
+  Future<void> clearError() async {
+    _updateState(_state.copyWith(errorMessage: null));
   }
 
-  /// Limpa mensagens de erro
-  void _clearError() {
-    _errorMessage = null;
-    notifyListeners();
+  Future<void> handleError(String error) async {
+    _updateState(_state.copyWith(errorMessage: error));
   }
 
-  /// Limpa recursos
+  Future<webview.NavigationDecision> handleWebViewNavigation(String url) async {
+    return await _handleWebViewNavigationUseCase.handleNavigation(
+      url,
+      (error) => handleError(error),
+      (code) => processCallback(code),
+    );
+  }
+
+  void showMarketplacePopup(String url) {
+    _updateState(_state.copyWith(shouldShowPopup: true, popupUrl: url));
+  }
+
+  void closeMarketplacePopup() {
+    _updateState(_state.copyWith(shouldShowPopup: false, popupUrl: null));
+  }
+
+  void updateAuthorizeUrl(String newUrl) {
+    _updateState(_state.copyWith(authorizeUrl: newUrl));
+  }
+
+  Future<Result<AuthState>> reset() async {
+    _updateState(AuthViewState.initial());
+    return Result.ok(AuthState.initial);
+  }
+
   @override
   void dispose() {
     _deepLinkSubscription?.cancel();
     super.dispose();
   }
-
-  void setLoading(bool loading) => _setLoading(loading);
-  void clearError() => _clearError();
-  void handleError(String error) => _handleAuthError(error);
 }
