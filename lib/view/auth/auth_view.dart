@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'package:paintpro/config/app_colors.dart';
+import 'package:paintpro/model/auth_model.dart';
+import 'package:paintpro/utils/command/command_builder.dart';
+import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/view/widgets/overlays/error_overlay.dart';
 
 import '../../viewmodel/auth/auth_viewmodel.dart';
 import '../widgets/overlays/loading_overlay.dart';
 import '../widgets/webview_popup_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class AuthView extends StatefulWidget {
   const AuthView({super.key});
@@ -30,28 +33,47 @@ class _AuthViewState extends State<AuthView> {
             backgroundColor: AppColors.primary,
             toolbarHeight: 60,
           ),
-          body: Stack(
+          body: Column(
             children: [
-              if (viewModel.state.authorizeUrl != null &&
-                  viewModel.state.errorMessage == null)
-                WebViewWidget(
-                  controller: _buildWebViewController(
-                    viewModel.state.authorizeUrl!,
+              Expanded(
+                child: CommandBuilder<AuthModel>(
+                  command: viewModel.checkAuthStatusCommand,
+                  onRunning: () => const LoadingOverlay(
+                    isLoading: true,
+                    child: SizedBox.shrink(),
                   ),
+                  onError: (error) => ErrorOverlay(
+                    error: error.toString(),
+                    onRetry: () {
+                      viewModel.checkAuthStatusCommand.execute();
+                    },
+                  ),
+                  child: (result) {
+                    if (viewModel.state.authorizeUrl != null) {
+                      return WebViewWidget(
+                        controller: _buildWebViewController(
+                          viewModel.state.authorizeUrl!,
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
                 ),
-              if (viewModel.state.isLoading)
-                const LoadingOverlay(
+              ),
+              CommandBuilder<void>(
+                command: viewModel.processCallbackCommand,
+                onRunning: () => const LoadingOverlay(
                   isLoading: true,
                   child: SizedBox.shrink(),
                 ),
-              if (viewModel.state.errorMessage != null)
-                ErrorOverlay(
-                  error: viewModel.state.errorMessage!,
+                onError: (error) => ErrorOverlay(
+                  error: error.toString(),
                   onRetry: () {
-                    viewModel.clearError();
-                    viewModel.setLoading(false);
+                    // Não há retry direto, mas pode-se reexecutar se necessário
                   },
                 ),
+                child: (_) => const SizedBox.shrink(),
+              ),
             ],
           ),
         );
@@ -64,10 +86,16 @@ class _AuthViewState extends State<AuthView> {
 
     final controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.white)
+      ..setBackgroundColor(Colors.transparent)
       ..setNavigationDelegate(
         NavigationDelegate(
           onNavigationRequest: (request) async {
+            // Detecta URL de sucesso do backend
+            if (request.url.contains('/auth/success')) {
+              // Fechar a WebView ou navegar para próxima tela usando GoRouter
+              GoRouter.of(context).pop();
+              return NavigationDecision.prevent;
+            }
             final viewModel = context.read<AuthViewModel>();
             final decision = await viewModel.handleWebViewNavigation(
               request.url,
