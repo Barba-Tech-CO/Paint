@@ -74,11 +74,7 @@ class ContactItemWidget extends StatelessWidget {
         ),
         trailing: IconButton(
           icon: const Icon(Icons.more_vert),
-          onPressed:
-              onMorePressed ??
-              () {
-                // Menu de opções padrão
-              },
+          onPressed: onMorePressed ?? () {},
         ),
         onTap: () => context.push('/contact-details', extra: contact),
       ),
