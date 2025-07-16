@@ -12,6 +12,7 @@ import '../../service/deep_link_service.dart';
 import '../../use_case/auth/auth_use_cases.dart';
 import '../../utils/result/result.dart';
 import 'auth_view_state.dart';
+import '../../utils/command/command.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthOperationsUseCase _authOperationsUseCase;
@@ -23,6 +24,18 @@ class AuthViewModel extends ChangeNotifier {
 
   AuthViewState _state = AuthViewState.initial();
   AuthViewState get state => _state;
+
+  static const String ghlAuthorizeUrl =
+      'https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri=https%3A%2F%2Fpaintpro.barbatech.company%2Fapi%2Foauth%2Fcallback&client_id=6845ab8de6772c0d5c8548d7-mbnty1f6&scope=contacts.write+associations.write+associations.readonly+oauth.readonly+oauth.write+invoices%2Festimate.write+invoices%2Festimate.readonly+invoices.readonly+associations%2Frelation.write+associations%2Frelation.readonly+contacts.readonly+invoices.write';
+
+  // Comandos do Command Builder
+  late final Command0<AuthModel> checkAuthStatusCommand = Command0(
+    _checkAuthStatus,
+  );
+  late final Command1<void, String> processCallbackCommand = Command1(
+    _processCallback,
+  );
+  late final Command0<void> refreshTokenCommand = Command0(_refreshToken);
 
   AuthViewModel(
     this._authOperationsUseCase,
@@ -39,9 +52,10 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _initializeAuth() async {
-    final url = await getAuthorizeUrl();
-    _updateState(_state.copyWith(authorizeUrl: url));
+  void _initializeAuth() {
+    _updateState(_state.copyWith(authorizeUrl: ghlAuthorizeUrl));
+    // Executar o comando para que a tela mostre o conteúdo
+    checkAuthStatusCommand.execute();
   }
 
   void _initializeDeepLinkListener() {
@@ -64,7 +78,8 @@ class AuthViewModel extends ChangeNotifier {
     );
   }
 
-  Future<Result<AuthModel>> checkAuthStatus() async {
+  // Métodos privados para os comandos
+  Future<Result<AuthModel>> _checkAuthStatus() async {
     _updateState(_state.copyWith(isLoading: true, errorMessage: null));
     final result = await _authOperationsUseCase.checkAuthStatus();
     result.when(
@@ -94,6 +109,42 @@ class AuthViewModel extends ChangeNotifier {
     return result;
   }
 
+  Future<Result<void>> _processCallback(String code) async {
+    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+    final result = await _authOperationsUseCase.processCallback(code);
+    result.when(
+      ok: (response) {
+        _logger.info('[AuthViewModel] Callback processado com sucesso');
+        checkAuthStatusCommand.execute();
+      },
+      error: (error) {
+        _updateState(
+          _state.copyWith(isLoading: false, errorMessage: error.toString()),
+        );
+      },
+    );
+    _updateState(_state.copyWith(isLoading: false));
+    return result;
+  }
+
+  Future<Result<void>> _refreshToken() async {
+    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+    final result = await _authOperationsUseCase.refreshToken();
+    result.when(
+      ok: (response) {
+        _logger.info('[AuthViewModel] Token renovado com sucesso');
+        checkAuthStatusCommand.execute();
+      },
+      error: (error) {
+        _updateState(
+          _state.copyWith(isLoading: false, errorMessage: error.toString()),
+        );
+      },
+    );
+    _updateState(_state.copyWith(isLoading: false));
+    return result;
+  }
+
   Future<String?> getAuthorizeUrl() async {
     final result = await _authOperationsUseCase.getAuthorizeUrl();
     return result.when(
@@ -107,40 +158,12 @@ class AuthViewModel extends ChangeNotifier {
     );
   }
 
-  Future<Result<void>> processCallback(String code) async {
-    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
-    final result = await _authOperationsUseCase.processCallback(code);
-    result.when(
-      ok: (response) {
-        _logger.info('[AuthViewModel] Callback processado com sucesso');
-        checkAuthStatus();
-      },
-      error: (error) {
-        _updateState(
-          _state.copyWith(isLoading: false, errorMessage: error.toString()),
-        );
-      },
-    );
-    _updateState(_state.copyWith(isLoading: false));
-    return result;
+  Future<void> processCallback(String code) async {
+    processCallbackCommand.execute(code);
   }
 
-  Future<Result<void>> refreshToken() async {
-    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
-    final result = await _authOperationsUseCase.refreshToken();
-    result.when(
-      ok: (response) {
-        _logger.info('[AuthViewModel] Token renovado com sucesso');
-        checkAuthStatus();
-      },
-      error: (error) {
-        _updateState(
-          _state.copyWith(isLoading: false, errorMessage: error.toString()),
-        );
-      },
-    );
-    _updateState(_state.copyWith(isLoading: false));
-    return result;
+  Future<void> refreshToken() async {
+    refreshTokenCommand.execute();
   }
 
   Future<bool> isTokenExpiringSoon() async {
