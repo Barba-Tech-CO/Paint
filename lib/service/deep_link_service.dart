@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:app_links/app_links.dart';
+import '../config/app_urls.dart';
 
 class DeepLinkService {
   static final DeepLinkService _instance = DeepLinkService._internal();
@@ -18,23 +19,16 @@ class DeepLinkService {
 
   /// Inicializa o serviço de Deep Links
   Future<void> initialize() async {
-    if (kIsWeb) return; // Deep Links não funcionam na web
+    if (kIsWeb) return;
 
     try {
       // Listener para quando o app está em segundo plano e é reaberto pelo link
       _subscription = _appLinks.uriLinkStream.listen(
-        (uri) {
-          log('[DeepLinkService] Deep Link recebido: $uri');
-          _processDeepLink(uri);
-        },
-        onError: (err) {
-          log('[DeepLinkService] Erro ao processar Deep Link: $err');
-        },
+        (uri) => _processDeepLink(uri),
       );
-
-      log('[DeepLinkService] Serviço inicializado com sucesso');
     } catch (e) {
       log('[DeepLinkService] Erro ao inicializar serviço: $e');
+      throw Exception('Erro ao inicializar serviço de Deep Links: $e');
     }
   }
 
@@ -42,7 +36,6 @@ class DeepLinkService {
   void _processDeepLink(Uri uri) {
     if (uri.scheme == 'paintproapp' && uri.host == 'auth') {
       if (uri.pathSegments.contains('success')) {
-        log('[DeepLinkService] Autenticação bem-sucedida via Deep Link!');
         _deepLinkController.add(uri);
       } else if (uri.pathSegments.contains('error')) {
         log('[DeepLinkService] Erro na autenticação via Deep Link');
@@ -53,13 +46,13 @@ class DeepLinkService {
 
   /// Gera URL de callback para Deep Link
   String generateCallbackUrl() {
-    return 'paintproapp://auth/success';
+    return AppUrls.deepLinkSuccess;
   }
 
   /// Gera URL de erro para Deep Link
   String generateErrorUrl([String? error]) {
     final errorParam = error != null ? '?error=$error' : '';
-    return 'paintproapp://auth/error$errorParam';
+    return AppUrls.deepLinkError + errorParam;
   }
 
   /// Dispara um Deep Link para o próprio app (para testes)
