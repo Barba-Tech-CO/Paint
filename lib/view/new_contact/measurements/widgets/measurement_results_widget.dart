@@ -53,7 +53,7 @@ class MeasurementResultsWidget extends StatelessWidget {
                           child: PrimaryButtonWidget(
                             text: 'Adjust',
                             onPressed: () =>
-                                context.push('/room-configuration'),
+                                context.push('/room-adjust'),
                             backgroundColor: Colors.grey[300],
                             textStyle: const TextStyle(
                               color: Colors.black,
@@ -67,7 +67,7 @@ class MeasurementResultsWidget extends StatelessWidget {
                           child: PrimaryButtonWidget(
                             text: 'Accept',
                             onPressed: () =>
-                                context.push('/room-configuration'),
+                                context.push('/room-adjust'),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                         ),
