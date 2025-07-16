@@ -74,6 +74,7 @@ void setupDependencyInjection() {
       getIt<AuthOperationsUseCase>(),
       getIt<HandleDeepLinkUseCase>(),
       getIt<HandleWebViewNavigationUseCase>(),
+      getIt<DeepLinkService>(),
       getIt<AppLogger>(),
     ),
   );
