@@ -1,7 +1,27 @@
 import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 
 import '../view/views.dart';
 import '../view/widgets/webview_popup_screen.dart';
+
+Page<dynamic> slideTransitionPage(Widget child, GoRouterState state) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      var tween = Tween(
+        begin: begin,
+        end: end,
+      ).chain(CurveTween(curve: Curves.ease));
+      return SlideTransition(
+        position: animation.drive(tween),
+        child: child,
+      );
+    },
+  );
+}
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -16,23 +36,33 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/dashboard',
-      builder: (context, state) => const DashboardView(),
+      pageBuilder: (context, state) {
+        return slideTransitionPage(const DashboardView(), state);
+      },
     ),
     GoRoute(
       path: '/projects',
-      builder: (context, state) => const ProjectsView(),
+      pageBuilder: (context, state) {
+        return slideTransitionPage(const ProjectsView(), state);
+      },
     ),
     GoRoute(
       path: '/camera',
-      builder: (context, state) => const CameraView(),
+      pageBuilder: (context, state) {
+        return slideTransitionPage(const CameraView(), state);
+      },
     ),
     GoRoute(
       path: '/contacts',
-      builder: (context, state) => const ContactsView(),
+      pageBuilder: (context, state) {
+        return slideTransitionPage(const ContactsView(), state);
+      },
     ),
     GoRoute(
       path: '/highlights',
-      builder: (context, state) => const HighlightsView(),
+      pageBuilder: (context, state) {
+        return slideTransitionPage(const HighlightsView(), state);
+      },
     ),
     GoRoute(
       path: '/contact-details',
