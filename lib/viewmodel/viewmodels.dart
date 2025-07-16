@@ -1,5 +1,5 @@
 // Auth ViewModels
-export 'auth/auth_viewmodels.dart';
+export 'auth/auth_viewmodel.dart';
 
 // Contact ViewModels
 export 'contact/contact_viewmodels.dart';
