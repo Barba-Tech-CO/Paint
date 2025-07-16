@@ -1,18 +1,42 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-
-import 'package:paintpro/utils/logger/app_logger.dart';
 import 'package:webview_flutter/webview_flutter.dart' as webview;
 
-import '../../config/dependency_injection.dart';
+import 'package:paintpro/utils/logger/app_logger.dart';
+
+import '../../config/app_urls.dart';
 import '../../model/auth_model.dart';
 import '../../model/auth_state.dart';
 import '../../service/deep_link_service.dart';
 import '../../use_case/auth/auth_use_cases.dart';
+import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
 import 'auth_view_state.dart';
-import '../../utils/command/command.dart';
+
+class _DeepLinkHandler {
+  final DeepLinkService _deepLinkService;
+  final AppLogger _logger;
+  final void Function(Uri) onDeepLink;
+  StreamSubscription? _subscription;
+
+  _DeepLinkHandler(
+    this._deepLinkService,
+    this._logger,
+    this.onDeepLink,
+  );
+
+  void initialize() {
+    _subscription = _deepLinkService.deepLinkStream.listen((uri) {
+      _logger.info('[DeepLinkHandler] Deep Link recebido: $uri');
+      onDeepLink(uri);
+    });
+  }
+
+  void dispose() {
+    _subscription?.cancel();
+  }
+}
 
 class AuthViewModel extends ChangeNotifier {
   final AuthOperationsUseCase _authOperationsUseCase;
@@ -20,13 +44,17 @@ class AuthViewModel extends ChangeNotifier {
   final HandleWebViewNavigationUseCase _handleWebViewNavigationUseCase;
   final DeepLinkService _deepLinkService;
   final AppLogger _logger;
-  StreamSubscription? _deepLinkSubscription;
+  late final _DeepLinkHandler _deepLinkHandler;
 
   AuthViewState _state = AuthViewState.initial();
   AuthViewState get state => _state;
 
-  static const String ghlAuthorizeUrl =
-      'https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri=https%3A%2F%2Fpaintpro.barbatech.company%2Fapi%2Foauth%2Fcallback&client_id=6845ab8de6772c0d5c8548d7-mbnty1f6&scope=contacts.write+associations.write+associations.readonly+oauth.readonly+oauth.write+invoices%2Festimate.write+invoices%2Festimate.readonly+invoices.readonly+associations%2Frelation.write+associations%2Frelation.readonly+contacts.readonly+invoices.write';
+  // Flags para navegação e popup
+  bool get shouldNavigateToDashboard =>
+      _state.authStatus?.authenticated == true &&
+      _state.authStatus?.needsLogin == false;
+  bool get shouldShowPopup => _state.shouldShowPopup;
+  String? get popupUrl => _state.popupUrl;
 
   // Comandos do Command Builder
   late final Command0<AuthModel> checkAuthStatusCommand = Command0(
@@ -41,9 +69,15 @@ class AuthViewModel extends ChangeNotifier {
     this._authOperationsUseCase,
     this._handleDeepLinkUseCase,
     this._handleWebViewNavigationUseCase,
+    this._deepLinkService,
     this._logger,
-  ) : _deepLinkService = getIt<DeepLinkService>() {
-    _initializeDeepLinkListener();
+  ) {
+    _deepLinkHandler = _DeepLinkHandler(
+      _deepLinkService,
+      _logger,
+      _onDeepLinkReceived,
+    );
+    _deepLinkHandler.initialize();
     _initializeAuth();
   }
 
@@ -53,29 +87,22 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   void _initializeAuth() {
-    _updateState(_state.copyWith(authorizeUrl: ghlAuthorizeUrl));
+    _updateState(
+      _state.copyWith(authorizeUrl: AppUrls.ghlAuthorizeUrl),
+    );
     // Executar o comando para que a tela mostre o conteúdo
     checkAuthStatusCommand.execute();
   }
 
-  void _initializeDeepLinkListener() {
-    _deepLinkSubscription = _deepLinkService.deepLinkStream.listen(
-      (uri) {
-        _logger.info('[AuthViewModel] Deep Link recebido: $uri');
-        if (uri.pathSegments.contains('success')) {
-          _handleDeepLinkUseCase.handleSuccess();
-        } else if (uri.pathSegments.contains('error')) {
-          final error = uri.queryParameters['error'];
-          _handleDeepLinkUseCase.handleError(
-            error ?? 'Erro desconhecido na autenticação',
-          );
-        }
-      },
-      onError: (error) {
-        _logger.error('[AuthViewModel] Erro no Deep Link', error);
-        _handleDeepLinkUseCase.handleGenericError();
-      },
-    );
+  void _onDeepLinkReceived(Uri uri) {
+    if (uri.pathSegments.contains('success')) {
+      _handleDeepLinkUseCase.handleSuccess();
+    } else if (uri.pathSegments.contains('error')) {
+      final error = uri.queryParameters['error'];
+      _handleDeepLinkUseCase.handleError(
+        error ?? 'Erro desconhecido na autenticação',
+      );
+    }
   }
 
   // Métodos privados para os comandos
@@ -110,21 +137,33 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<Result<void>> _processCallback(String code) async {
-    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
-    final result = await _authOperationsUseCase.processCallback(code);
-    result.when(
-      ok: (response) {
-        _logger.info('[AuthViewModel] Callback processado com sucesso');
-        checkAuthStatusCommand.execute();
-      },
-      error: (error) {
-        _updateState(
-          _state.copyWith(isLoading: false, errorMessage: error.toString()),
-        );
-      },
-    );
-    _updateState(_state.copyWith(isLoading: false));
-    return result;
+    try {
+      _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+      final result = await _authOperationsUseCase.processCallback(code);
+      result.when(
+        ok: (response) {
+          _logger.info('[AuthViewModel] Callback processado com sucesso');
+          checkAuthStatusCommand.execute();
+        },
+        error: (error) {
+          _updateState(
+            _state.copyWith(isLoading: false, errorMessage: error.toString()),
+          );
+        },
+      );
+      _updateState(_state.copyWith(isLoading: false));
+      return result;
+    } catch (e, stack) {
+      _logger.error(
+        '[AuthViewModel] Erro inesperado no processCallback',
+        e,
+        stack,
+      );
+      _updateState(
+        _state.copyWith(isLoading: false, errorMessage: e.toString()),
+      );
+      return Result.error(e is Exception ? e : Exception(e.toString()));
+    }
   }
 
   Future<Result<void>> _refreshToken() async {
@@ -217,7 +256,7 @@ class AuthViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    _deepLinkSubscription?.cancel();
+    _deepLinkHandler.dispose();
     super.dispose();
   }
 }
