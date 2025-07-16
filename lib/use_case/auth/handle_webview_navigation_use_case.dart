@@ -13,10 +13,12 @@ class HandleWebViewNavigationUseCase {
     if (url.contains('code=')) {
       final uri = Uri.parse(url);
       final code = uri.queryParameters['code'];
-      if (code != null) {
+      if (code != null && code.isNotEmpty) {
         await processCallback(code);
       } else {
-        setErrorCallback('Código de autorização não encontrado na URL');
+        setErrorCallback(
+          'Código de autorização não encontrado na URL de callback.',
+        );
       }
       return NavigationDecision.prevent;
     }
