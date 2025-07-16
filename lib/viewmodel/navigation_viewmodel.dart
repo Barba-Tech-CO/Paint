@@ -1,8 +1,10 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
 import '../model/navigation_item_model.dart';
 
 class NavigationViewModel extends ChangeNotifier {
-  String _currentRoute = '/';
+  String _currentRoute = '/dashboard';
   final List<NavigationItemModel> _navigationItems =
       NavigationItemModel.defaultItems;
 
@@ -42,5 +44,19 @@ class NavigationViewModel extends ChangeNotifier {
       return _navigationItems[index];
     }
     return _navigationItems.first;
+  }
+}
+
+extension NavigationViewModelActions on NavigationViewModel {
+  void onCameraTapped(BuildContext context) {
+    updateCurrentRoute('/camera');
+    context.go('/camera');
+  }
+
+  void onItemTapped(BuildContext context, NavigationItemModel item, int index) {
+    if (_currentRoute != item.route) {
+      updateCurrentRoute(item.route);
+      context.go(item.route);
+    }
   }
 }
