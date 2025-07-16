@@ -6,6 +6,8 @@ export 'appbars/paint_pro_app_bar.dart';
 
 // Cards
 export 'cards/greeting_card_widget.dart';
+export 'cards/info_card_widget.dart';
+export 'cards/info_row_widget.dart';
 export 'cards/input_card_widget.dart';
 export 'cards/project_state_card_widget.dart';
 export 'cards/project_summary_card_widget.dart';
