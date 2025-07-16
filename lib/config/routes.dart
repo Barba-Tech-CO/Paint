@@ -35,7 +35,10 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/contact-details',
-      builder: (context, state) => const ContactDetailsView(),
+      builder: (context, state) {
+        final contact = state.extra as Map<String, String>?;
+        return ContactDetailsView(contact: contact);
+      },
     ),
     GoRoute(
       path: '/create-project',

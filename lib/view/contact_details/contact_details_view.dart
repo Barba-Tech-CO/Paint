@@ -1,30 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/view/contact_details/widgets/info_card_widget.dart';
-import 'package:paintpro/view/contact_details/widgets/info_row_widget.dart';
+import 'package:paintpro/view/widgets/widgets.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 
 class ContactDetailsView extends StatelessWidget {
-  const ContactDetailsView({super.key});
+  final Map<String, String>? contact;
+
+  const ContactDetailsView({super.key, this.contact});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Dados mockados - serão substituídos pelo viewmodel posteriormente
-    const contactData = {
-      'name': 'Sebastião Marcos Ferreira',
-      'gender': 'Masculino',
-      'email': 'sebastiao_ferreira@live.com.br',
-      'phone': '(65) 99268-1400',
-      'address': 'Rua Seis',
-      'zipCode': '78055-865',
-      'city': 'Cuiabá',
-      'state': 'Mato Grosso',
-      'country': 'Brasil',
-      'locationId': 'LocationId',
-      'company': 'Pietro e Caroline Ferragens Ltda',
-    };
+    // Usa os dados do contato passado como parâmetro
+    final contactData = contact ?? {};
+    
+    // Dados padrão caso não sejam fornecidos
+    final name = contactData['name'] ?? 'Nome não informado';
+    final phone = contactData['phone'] ?? 'Telefone não informado';
+    final address = contactData['address'] ?? 'Endereço não informado';
 
     return Scaffold(
       appBar: PaintProAppBar(
@@ -45,22 +39,12 @@ class ContactDetailsView extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      contactData['name']!,
+                      name,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    if (contactData['gender'] != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Text(
-                          contactData['gender']!,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -92,8 +76,7 @@ class ContactDetailsView extends StatelessWidget {
               ),
               InfoCardWidget(
                 children: [
-                  InfoRowWidget(label: 'Email', value: contactData['email']),
-                  InfoRowWidget(label: 'Telefone', value: contactData['phone']),
+                  InfoRowWidget(label: 'Telefone', value: phone),
                 ],
               ),
 
@@ -126,49 +109,7 @@ class ContactDetailsView extends StatelessWidget {
                 children: [
                   InfoRowWidget(
                     label: 'Logradouro',
-                    value: contactData['address'],
-                  ),
-                  InfoRowWidget(label: 'CEP', value: contactData['zipCode']),
-                  InfoRowWidget(label: 'Cidade', value: contactData['city']),
-                  InfoRowWidget(label: 'Estado', value: contactData['state']),
-                  InfoRowWidget(label: 'País', value: contactData['country']),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.business,
-                      color: theme.primaryColor,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'Informações Adicionais',
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.primaryColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              InfoCardWidget(
-                children: [
-                  InfoRowWidget(
-                    label: 'ID de Localização',
-                    value: contactData['locationId'],
-                  ),
-                  InfoRowWidget(
-                    label: 'Empresa',
-                    value: contactData['company'],
+                    value: address,
                   ),
                 ],
               ),
