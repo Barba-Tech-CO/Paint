@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:paintpro/view/widgets/navigation/floating_bottom_navigation_bar.dart';
+import 'package:provider/provider.dart';
 import 'package:paintpro/viewmodel/navigation_viewmodel.dart';
 
 class MainLayout extends StatefulWidget {
