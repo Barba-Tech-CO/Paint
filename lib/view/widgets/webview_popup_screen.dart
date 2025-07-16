@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -26,15 +24,6 @@ class _WebViewPopupScreenState extends State<WebViewPopupScreen> {
           onNavigationRequest: (request) {
             return NavigationDecision.navigate;
           },
-          onPageStarted: (url) {
-            log('[WebViewPopupScreen] Início do carregamento: $url');
-          },
-          onPageFinished: (_) {},
-          onWebResourceError: (error) {
-            log(
-              '[WebViewPopupScreen] Erro ao carregar recurso:  ${error.description} - (${error.errorCode})',
-            );
-          },
         ),
       )
       ..loadRequest(Uri.parse(widget.popupUrl));
@@ -58,7 +47,9 @@ class _WebViewPopupScreenState extends State<WebViewPopupScreen> {
           onPressed: () => context.pop(),
         ),
       ),
-      body: WebViewWidget(controller: _popupController),
+      body: WebViewWidget(
+        controller: _popupController,
+      ),
     );
   }
 }
