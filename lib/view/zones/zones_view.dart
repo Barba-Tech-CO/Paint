@@ -24,11 +24,11 @@ class ZonesView extends StatelessWidget {
             ),
             actions: [
               TextButton(
-                onPressed: () => context.pop(false),
-                child: const Text('Ficar'),
+                onPressed: () => context.pop(true),
+                child: const Text('Voltar'),
               ),
               TextButton(
-                onPressed: () => context.pop(true),
+                onPressed: () => context.pop(false),
                 child: const Text('Cancelar'),
               ),
             ],
@@ -46,7 +46,7 @@ class ZonesView extends StatelessWidget {
               return viewModel.isLoading
                   ? const LoadingWidget()
                   : Scaffold(
-                      appBar: PaintProAppBar(title: 'Measurements'),
+                      appBar: PaintProAppBar(title: 'Zones'),
                       body: MeasurementResultsWidget(
                         results: viewModel.measurementResults,
                       ),

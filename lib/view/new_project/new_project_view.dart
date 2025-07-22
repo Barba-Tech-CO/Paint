@@ -20,7 +20,7 @@ class _NewProjectViewState extends State<NewProjectView> {
       TextEditingController();
 
   // Estado para controlar a seleção do tipo de projeto
-  String _selectedProjectType = 'Interior';
+  String _selectedProjectType = '';
 
   bool get _isFormValid {
     return _projectNameController.text.trim().isNotEmpty &&
