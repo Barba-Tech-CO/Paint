@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:paintpro/view/measurements/widgets/surface_row_widget.dart';
+import 'package:paintpro/view/zones/widgets/surface_row_widget.dart';
 import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
 
 class SurfaceAreasWidget extends StatelessWidget {

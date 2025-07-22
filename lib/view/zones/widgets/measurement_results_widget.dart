@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/view/measurements/widgets/measurement_header_widget.dart';
-import 'package:paintpro/view/measurements/widgets/room_overview_widget.dart';
-import 'package:paintpro/view/measurements/widgets/surface_areas_widget.dart';
+import 'package:paintpro/view/zones/widgets/measurement_header_widget.dart';
+import 'package:paintpro/view/zones/widgets/room_overview_widget.dart';
+import 'package:paintpro/view/zones/widgets/surface_areas_widget.dart';
 import 'package:paintpro/view/widgets/buttons/primary_button_widget.dart';
 
 class MeasurementResultsWidget extends StatelessWidget {

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/viewmodel/measurements/measurements_viewmodel.dart';
-import 'package:paintpro/view/measurements/widgets/loading_widget.dart';
-import 'package:paintpro/view/measurements/widgets/measurement_results_widget.dart';
+import 'package:paintpro/view/zones/widgets/loading_widget.dart';
+import 'package:paintpro/view/zones/widgets/measurement_results_widget.dart';
 import 'package:provider/provider.dart';
 
 class MeasurementsView extends StatelessWidget {
