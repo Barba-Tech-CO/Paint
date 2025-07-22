@@ -22,6 +22,11 @@ class _NewProjectViewState extends State<NewProjectView> {
   // Estado para controlar a seleção do tipo de projeto
   String _selectedProjectType = 'Interior';
 
+  bool get _isFormValid {
+    return _projectNameController.text.trim().isNotEmpty &&
+        _projectDetailsController.text.trim().isNotEmpty;
+  }
+
   @override
   void dispose() {
     _projectNameController.dispose();
@@ -137,7 +142,7 @@ class _NewProjectViewState extends State<NewProjectView> {
               ),
               PaintProButton(
                 text: 'Next',
-                onPressed: () => context.push('/camera'),
+                onPressed: !_isFormValid ? null : () => context.push('/camera'),
               ),
             ],
           ),
