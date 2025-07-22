@@ -6,8 +6,8 @@ import 'package:paintpro/view/zones/widgets/loading_widget.dart';
 import 'package:paintpro/view/zones/widgets/measurement_results_widget.dart';
 import 'package:provider/provider.dart';
 
-class MeasurementsView extends StatelessWidget {
-  const MeasurementsView({super.key});
+class ZonesView extends StatelessWidget {
+  const ZonesView({super.key});
 
   @override
   Widget build(BuildContext context) {

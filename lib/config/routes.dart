@@ -42,8 +42,8 @@ final router = GoRouter(
       builder: (context, state) => const NewProjectView(),
     ),
     GoRoute(
-      path: '/measurements',
-      builder: (context, state) => const MeasurementsView(),
+      path: '/zones',
+      builder: (context, state) => const ZonesView(),
     ),
     GoRoute(
       path: '/room-adjust',
@@ -54,8 +54,8 @@ final router = GoRouter(
       builder: (context, state) => const SelectColorsView(),
     ),
     GoRoute(
-      path: '/overview-measurements',
-      builder: (context, state) => const OverviewMeasurementsView(),
+      path: '/overview-zones',
+      builder: (context, state) => const OverviewZonesView(),
     ),
     GoRoute(
       path: '/new-contact',

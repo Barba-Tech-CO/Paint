@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/widgets/widgets.dart';
 
-class OverviewMeasurementsView extends StatelessWidget {
-  const OverviewMeasurementsView({super.key});
+class OverviewZonesView extends StatelessWidget {
+  const OverviewZonesView({super.key});
 
   @override
   Widget build(BuildContext context) {
