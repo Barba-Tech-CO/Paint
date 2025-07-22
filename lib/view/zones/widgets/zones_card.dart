@@ -32,21 +32,77 @@ class ZonesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Obter dimensões da tela
+    final screenWidth = MediaQuery.sizeOf(context).width;
+
+    // Definir valores responsivos baseados no tamanho da tela
+    double cardWidth;
+    double imageSize;
+    double fontSize;
+    double padding;
+    double spacing;
+
+    // Breakpoints para diferentes tamanhos de tela
+    if (screenWidth < 360) {
+      // Tela pequena (celular pequeno)
+      cardWidth = width ?? screenWidth * 0.9;
+      imageSize = 80;
+      fontSize = 13;
+      padding = 8;
+      spacing = 2;
+    } else if (screenWidth < 600) {
+      // Tela média (celular normal)
+      cardWidth = width ?? 364;
+      imageSize = 100;
+      fontSize = 14;
+      padding = 12;
+      spacing = 4;
+    } else {
+      // Tela grande (tablet/desktop)
+      cardWidth = width ?? 380;
+      imageSize = 120;
+      fontSize = 16;
+      padding = 16;
+      spacing = 6;
+    }
+
+    // Ajustar altura da imagem proporcionalmente
+    final actualImageWidth = imageWidth ?? imageSize;
+    final actualImageHeight = imageHeight ?? (imageSize * 0.75);
+
+    // Criar estilos de texto responsivos
+    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.bold,
+      fontSize: fontSize + 2,
+    );
+
+    final bodyStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+      color: Colors.grey[700],
+      fontSize: fontSize,
+    );
+
     return Container(
-      width: width,
-      constraints: const BoxConstraints(
-        minHeight: 120,
+      width: cardWidth,
+      constraints: BoxConstraints(
+        minHeight: height!,
       ),
       margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: .05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Stack(
         children: [
           // Conteúdo principal
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: EdgeInsets.all(padding),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -55,11 +111,11 @@ class ZonesCard extends StatelessWidget {
                   child: Image.asset(
                     image,
                     fit: BoxFit.cover,
-                    width: imageWidth,
-                    height: imageHeight,
+                    width: actualImageWidth,
+                    height: actualImageHeight,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: spacing * 3),
                 Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,31 +123,22 @@ class ZonesCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: titleStyle,
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: spacing),
                       Text(
                         'Floor Dimensions . $valueDimension',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[700],
-                        ),
+                        style: bodyStyle,
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: spacing / 2),
                       Text(
                         'Floor Area . $valueArea',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[700],
-                        ),
+                        style: bodyStyle,
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: spacing / 2),
                       Text(
                         'Paintable . $valuePaintable',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[700],
-                        ),
+                        style: bodyStyle,
                       ),
                     ],
                   ),
@@ -105,9 +152,9 @@ class ZonesCard extends StatelessWidget {
             top: 0,
             right: 0,
             child: IconButton(
-              iconSize: 24,
+              iconSize: screenWidth < 360 ? 20 : 24,
               icon: const Icon(Icons.more_vert),
-              color: Colors.black,
+              color: Colors.grey[700],
               onPressed: onTap,
             ),
           ),
