@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
-import 'package:paintpro/view/widgets/buttons/primary_button_widget.dart';
+import 'package:paintpro/view/widgets/buttons/paint_pro_button.dart';
 import 'widgets/color_grid_widget.dart';
 
 class SelectColorsView extends StatefulWidget {
@@ -107,7 +107,7 @@ class _SelectColorsViewState extends State<SelectColorsView>
                     .toList(),
               ),
             ),
-            PrimaryButtonWidget(
+            PaintProButton(
               text: 'Generate Estimate',
               onPressed: () {
                 // Generate estimate action

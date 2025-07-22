@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:paintpro/config/app_colors.dart';
 
-class PrimaryButtonWidget extends StatelessWidget {
+class PaintProButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final Color? backgroundColor;
@@ -13,7 +13,7 @@ class PrimaryButtonWidget extends StatelessWidget {
   final Widget? icon;
   final TextStyle? textStyle;
 
-  const PrimaryButtonWidget({
+  const PaintProButton({
     super.key,
     required this.text,
     this.onPressed,

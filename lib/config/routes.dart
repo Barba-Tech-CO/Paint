@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/views.dart';
 
 final router = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/dashboard',
   routes: [
     GoRoute(
       path: '/splash',

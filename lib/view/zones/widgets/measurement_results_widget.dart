@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/zones/widgets/measurement_header_widget.dart';
 import 'package:paintpro/view/zones/widgets/room_overview_widget.dart';
 import 'package:paintpro/view/zones/widgets/surface_areas_widget.dart';
-import 'package:paintpro/view/widgets/buttons/primary_button_widget.dart';
+import 'package:paintpro/view/widgets/buttons/paint_pro_button.dart';
 
 class MeasurementResultsWidget extends StatelessWidget {
   final Map<String, dynamic> results;
@@ -50,7 +50,7 @@ class MeasurementResultsWidget extends StatelessWidget {
                     child: Row(
                       children: [
                         Expanded(
-                          child: PrimaryButtonWidget(
+                          child: PaintProButton(
                             text: 'Adjust',
                             onPressed: () =>
                                 context.push('/room-configuration'),
@@ -64,7 +64,7 @@ class MeasurementResultsWidget extends StatelessWidget {
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: PrimaryButtonWidget(
+                          child: PaintProButton(
                             text: 'Accept',
                             onPressed: () =>
                                 context.push('/room-configuration'),
