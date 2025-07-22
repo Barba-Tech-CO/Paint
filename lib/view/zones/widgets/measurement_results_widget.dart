@@ -11,16 +11,19 @@ class MeasurementResultsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ZonesCard(
-          title: 'Kitchen',
-          image: "assets/images/kitchen.png",
-          valueDimension: '14 x 16',
-          valueArea: '224 sq ft',
-          valuePaintable: '631 sq ft',
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          ZonesCard(
+            title: 'Kitchen',
+            image: "assets/images/kitchen.png",
+            valueDimension: '14 x 16',
+            valueArea: '224 sq ft',
+            valuePaintable: '631 sq ft',
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:paintpro/config/app_colors.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/viewmodel/measurements/measurements_viewmodel.dart';
 import 'package:paintpro/view/zones/widgets/loading_widget.dart';
@@ -41,6 +42,7 @@ class ZonesView extends StatelessWidget {
       child: ChangeNotifierProvider(
         create: (context) => MeasurementsViewModel(),
         child: Scaffold(
+          backgroundColor: AppColors.background,
           body: Consumer<MeasurementsViewModel>(
             builder: (context, viewModel, child) {
               return viewModel.isLoading
