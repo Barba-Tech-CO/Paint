@@ -4,7 +4,7 @@ import 'package:paintpro/config/app_colors.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/viewmodel/measurements/measurements_viewmodel.dart';
 import 'package:paintpro/view/zones/widgets/loading_widget.dart';
-import 'package:paintpro/view/zones/widgets/measurement_results_widget.dart';
+import 'package:paintpro/view/zones/widgets/zones_results_widget.dart';
 import 'package:provider/provider.dart';
 
 class ZonesView extends StatelessWidget {
@@ -49,7 +49,7 @@ class ZonesView extends StatelessWidget {
                   ? const LoadingWidget()
                   : Scaffold(
                       appBar: PaintProAppBar(title: 'Zones'),
-                      body: MeasurementResultsWidget(
+                      body: ZonesResultsWidget(
                         results: viewModel.measurementResults,
                       ),
                     );

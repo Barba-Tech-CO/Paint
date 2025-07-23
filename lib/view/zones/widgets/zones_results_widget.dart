@@ -1,0 +1,46 @@
+import 'package:flutter/material.dart';
+import 'package:paintpro/view/zones/widgets/zones_card.dart';
+
+class ZonesResultsWidget extends StatelessWidget {
+  final Map<String, dynamic> results;
+
+  const ZonesResultsWidget({
+    super.key,
+    required this.results,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          const SizedBox(height: 16),
+          ZonesCard(
+            title: 'Kitchen',
+            image: "assets/images/kitchen.png",
+            valueDimension: '14 x 16',
+            valueArea: '224 sq ft',
+            valuePaintable: '631 sq ft',
+          ),
+          const SizedBox(height: 16),
+          ZonesCard(
+            title: 'Kitchen',
+            image: "assets/images/kitchen.png",
+            valueDimension: '14 x 16',
+            valueArea: '224 sq ft',
+            valuePaintable: '631 sq ft',
+          ),
+          const SizedBox(height: 16),
+          ZonesCard(
+            title: 'Kitchen',
+            image: "assets/images/kitchen.png",
+            valueDimension: '14 x 16',
+            valueArea: '224 sq ft',
+            valuePaintable: '631 sq ft',
+          ),
+        ],
+      ),
+    );
+  }
+}
