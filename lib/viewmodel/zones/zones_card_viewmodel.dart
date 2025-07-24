@@ -220,7 +220,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
       ZonesCardModel(
         id: 1,
         title: "Living Room",
-        image: "assets/images/living_room.jpg",
+        image: "assets/images/kitchen.png",
         floorDimensionValue: "14' x 16'",
         floorAreaValue: "224 sq ft",
         areaPaintable: "485 sq ft",
@@ -228,7 +228,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
       ZonesCardModel(
         id: 2,
         title: "Kitchen",
-        image: "assets/images/kitchen.jpg",
+        image: "assets/images/kitchen.png",
         floorDimensionValue: "10' x 12'",
         floorAreaValue: "120 sq ft",
         areaPaintable: "320 sq ft",
@@ -236,7 +236,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
       ZonesCardModel(
         id: 3,
         title: "Bedroom",
-        image: "assets/images/bedroom.jpg",
+        image: "assets/images/kitchen.png",
         floorDimensionValue: "12' x 14'",
         floorAreaValue: "168 sq ft",
         areaPaintable: "420 sq ft",

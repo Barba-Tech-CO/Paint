@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:get_it/get_it.dart';
 import 'package:paintpro/view/widgets/buttons/paint_pro_button.dart';
 import 'package:paintpro/view/zones/widgets/zones_card.dart';
 import 'package:paintpro/view/zones/widgets/zones_summary_card.dart';
+import 'package:paintpro/viewmodel/zones/zones_card_viewmodel.dart';
 
 class ZonesResultsWidget extends StatefulWidget {
   final Map<String, dynamic> results;
@@ -16,81 +19,114 @@ class ZonesResultsWidget extends StatefulWidget {
 }
 
 class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
-  List<Map<String, String>> _zones = [
-    {
-      'title': 'Kitchen',
-      'image': 'assets/images/kitchen.png',
-      'valueDimension': '14 x 16',
-      'valueArea': '224 sq ft',
-      'valuePaintable': '631 sq ft',
-    },
-    {
-      'title': 'Bathroom',
-      'image': 'assets/images/kitchen.png',
-      'valueDimension': '8 x 10',
-      'valueArea': '80 sq ft',
-      'valuePaintable': '200 sq ft',
-    },
-    {
-      'title': 'Living Room',
-      'image': 'assets/images/kitchen.png',
-      'valueDimension': '12 x 15',
-      'valueArea': '180 sq ft',
-      'valuePaintable': '450 sq ft',
-    },
-  ];
+  late ZonesCardViewmodel _viewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = GetIt.instance<ZonesCardViewmodel>();
+    _viewModel.initialize();
+  }
+
+  @override
+  void dispose() {
+    _viewModel.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            ..._zones.asMap().entries.map((entry) {
-              final i = entry.key;
-              final zone = entry.value;
-              return Column(
+    return ChangeNotifierProvider<ZonesCardViewmodel>.value(
+      value: _viewModel,
+      child: Consumer<ZonesCardViewmodel>(
+        builder: (context, viewModel, child) {
+          if (viewModel.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (viewModel.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ZonesCard(
-                    title: zone['title']!,
-                    image: zone['image']!,
-                    valueDimension: zone['valueDimension']!,
-                    valueArea: zone['valueArea']!,
-                    valuePaintable: zone['valuePaintable']!,
-                    onRename: (newName) {
-                      setState(() {
-                        _zones[i]['title'] = newName;
-                      });
-                    },
-                    onDelete: () {
-                      setState(() {
-                        _zones.removeAt(i);
-                      });
-                    },
+                  Text(
+                    'Erro: ${viewModel.errorMessage}',
+                    style: const TextStyle(color: Colors.red),
                   ),
                   const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => viewModel.refresh(),
+                    child: const Text('Tentar novamente'),
+                  ),
                 ],
-              );
-            }),
-            ZonesSummaryCard(
-              avgDimensions: '14 x 16',
-              totalArea: '752 sq ft',
-              totalPaintable: '2031 sq ft',
-              onAdd: () {
-                // ação ao clicar no botão +
-              },
+              ),
+            );
+          }
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
+                  ...viewModel.zones.asMap().entries.map((entry) {
+                    final zone = entry.value;
+                    return Column(
+                      children: [
+                        ZonesCard(
+                          title: zone.title,
+                          image: zone.image,
+                          valueDimension: zone.floorDimensionValue,
+                          valueArea: zone.floorAreaValue,
+                          valuePaintable: zone.areaPaintable,
+                          onRename: (newName) {
+                            viewModel.renameZone(zone.id, newName);
+                          },
+                          onDelete: () {
+                            viewModel.deleteZone(zone.id);
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  }),
+                  if (viewModel.summary != null)
+                    ZonesSummaryCard(
+                      avgDimensions: viewModel.summary!.avgDimensions,
+                      totalArea: viewModel.summary!.totalArea,
+                      totalPaintable: viewModel.summary!.totalPaintable,
+                      onAdd: () {
+                        // TODO: Implementar adição de nova zona
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Funcionalidade de adicionar zona em desenvolvimento',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  const SizedBox(height: 32),
+                  PaintProButton(
+                    text: "Next",
+                    onPressed: () {
+                      // TODO: Implementar navegação para próxima tela
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Navegação para próxima tela em desenvolvimento',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 32),
-            PaintProButton(
-              text: "Next",
-              onPressed: () {
-                // ação ao clicar no botão Next
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
