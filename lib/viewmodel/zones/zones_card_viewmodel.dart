@@ -42,7 +42,10 @@ class ZonesCardViewmodel extends ChangeNotifier {
 
   // Computed properties
   bool get isLoading =>
-      _state == ZonesState.loading || _loadZonesCommand.running;
+      _state == ZonesState.initial ||
+      _state == ZonesState.loading ||
+      _loadZonesCommand.running ||
+      _loadSummaryCommand.running;
   bool get hasError => _state == ZonesState.error || _errorMessage != null;
   bool get hasZones => _zones.isNotEmpty;
   int get zonesCount => _zones.length;
@@ -51,6 +54,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
   void initialize() {
     _initializeCommands();
     loadZones();
+    loadSummary();
   }
 
   void _initializeCommands() {
@@ -112,8 +116,8 @@ class ZonesCardViewmodel extends ChangeNotifier {
       _setState(ZonesState.loading);
       _clearError();
 
-      // Simulando dados enquanto não temos o service
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Simulando dados enquanto não temos o service - 3 segundos para mostrar loading
+      await Future.delayed(const Duration(seconds: 3));
 
       final mockZones = _generateMockZones();
 
@@ -182,8 +186,8 @@ class ZonesCardViewmodel extends ChangeNotifier {
       // Aqui seria a chamada para o service
       // final result = await _zonesService.getSummary();
 
-      // Simulando dados de resumo
-      await Future.delayed(const Duration(milliseconds: 300));
+      // Simulando dados de resumo - delay para mostrar loading junto com zones
+      await Future.delayed(const Duration(seconds: 2));
 
       _summary = ZonesSummaryModel(
         avgDimensions: "12' x 14'",
