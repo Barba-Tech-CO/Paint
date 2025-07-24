@@ -19,14 +19,14 @@ class ZonesView extends StatelessWidget {
         final shouldLeave = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Cancelar medição?'),
+            title: const Text('Exit zones?'),
             content: const Text(
-              'Se cancelar, os dados preenchidos serão perdidos. Deseja voltar para o início do projeto?',
+              'Are you sure you wat to go back? Any unsaved measurements will be lost.',
             ),
             actions: [
               TextButton(
                 onPressed: () => context.pop(true),
-                child: const Text('Voltar'),
+                child: const Text('Yes, go back'),
               ),
               TextButton(
                 onPressed: () => context.pop(false),

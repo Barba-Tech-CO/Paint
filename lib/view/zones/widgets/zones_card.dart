@@ -15,6 +15,8 @@ class ZonesCard extends StatelessWidget {
   final double? imageHeight;
   final double? imageWidth;
   final VoidCallback? onTap;
+  final void Function(String newName)? onRename;
+  final VoidCallback? onDelete;
 
   const ZonesCard({
     super.key,
@@ -28,6 +30,8 @@ class ZonesCard extends StatelessWidget {
     this.imageHeight = 80,
     this.imageWidth = 120,
     this.onTap,
+    this.onRename,
+    this.onDelete,
   });
 
   @override
@@ -151,15 +155,105 @@ class ZonesCard extends StatelessWidget {
           Positioned(
             top: 0,
             right: 0,
-            child: IconButton(
-              iconSize: screenWidth < 360 ? 20 : 24,
-              icon: const Icon(Icons.more_vert),
-              color: Colors.grey[700],
-              onPressed: onTap,
+            child: PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert, color: Colors.grey[700]),
+              onSelected: (value) async {
+                if (value == 'rename') {
+                  final newName = await showDialog<String>(
+                    context: context,
+                    builder: (context) => _RenameZoneDialog(initialName: title),
+                  );
+                  if (newName != null && newName.trim().isNotEmpty) {
+                    onRename?.call(newName.trim());
+                  }
+                } else if (value == 'delete') {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => _DeleteZoneDialog(zoneName: title),
+                  );
+                  if (confirm == true) {
+                    onDelete?.call();
+                  }
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(value: 'rename', child: Text('Rename')),
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Text('Edit'),
+                ), // postergado
+                const PopupMenuItem(value: 'delete', child: Text('Delete')),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RenameZoneDialog extends StatefulWidget {
+  final String initialName;
+  const _RenameZoneDialog({required this.initialName});
+  @override
+  State<_RenameZoneDialog> createState() => _RenameZoneDialogState();
+}
+
+class _RenameZoneDialogState extends State<_RenameZoneDialog> {
+  late TextEditingController _controller;
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialName);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Rename Zone'),
+      content: TextField(
+        controller: _controller,
+        decoration: const InputDecoration(labelText: 'Zone Name'),
+        autofocus: true,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+}
+
+class _DeleteZoneDialog extends StatelessWidget {
+  final String zoneName;
+  const _DeleteZoneDialog({required this.zoneName});
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Delete Zone'),
+      content: Text('Are you sure you want to delete "$zoneName"?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Delete'),
+        ),
+      ],
     );
   }
 }

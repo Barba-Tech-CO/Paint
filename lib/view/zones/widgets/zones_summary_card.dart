@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+enum ZonesSummaryCardState { normal, noZones }
+
 class ZonesSummaryCard extends StatelessWidget {
   final String avgDimensions;
   final String totalArea;
   final String totalPaintable;
   final VoidCallback? onAdd;
+  final ZonesSummaryCardState state;
 
   const ZonesSummaryCard({
     super.key,
@@ -12,10 +15,13 @@ class ZonesSummaryCard extends StatelessWidget {
     required this.totalArea,
     required this.totalPaintable,
     this.onAdd,
+    this.state = ZonesSummaryCardState.normal,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bool showAddButton = state == ZonesSummaryCardState.normal;
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -111,33 +117,34 @@ class ZonesSummaryCard extends StatelessWidget {
             ],
           ),
         ),
-        Positioned(
-          top: 8,
-          right: 8,
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: onAdd,
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A73E8),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.10),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+        if (showAddButton)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: onAdd,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A73E8),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.10),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.add, color: Colors.white, size: 32),
                 ),
-                child: const Icon(Icons.add, color: Colors.white, size: 32),
               ),
             ),
           ),
-        ),
       ],
     );
   }
