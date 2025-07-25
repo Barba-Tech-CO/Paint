@@ -33,11 +33,13 @@ class ZonesCardViewmodel extends ChangeNotifier {
   late final Command0<void> _loadZonesCommand;
   late final Command1<void, int> _deleteZoneCommand;
   late final Command1<void, ZoneRenameData> _renameZoneCommand;
+  late final Command1<void, ZoneAddData> _addZoneCommand;
   late final Command0<void> _loadSummaryCommand;
 
   Command0<void> get loadZonesCommand => _loadZonesCommand;
   Command1<void, int> get deleteZoneCommand => _deleteZoneCommand;
   Command1<void, ZoneRenameData> get renameZoneCommand => _renameZoneCommand;
+  Command1<void, ZoneAddData> get addZoneCommand => _addZoneCommand;
   Command0<void> get loadSummaryCommand => _loadSummaryCommand;
 
   // Computed properties
@@ -70,6 +72,10 @@ class ZonesCardViewmodel extends ChangeNotifier {
       return await _renameZoneData(data.zoneId, data.newName);
     });
 
+    _addZoneCommand = Command1((ZoneAddData data) async {
+      return await _addZoneData(data);
+    });
+
     _loadSummaryCommand = Command0(() async {
       return await _loadSummaryData();
     });
@@ -87,6 +93,24 @@ class ZonesCardViewmodel extends ChangeNotifier {
   Future<void> renameZone(int zoneId, String newName) async {
     await _renameZoneCommand.execute(
       ZoneRenameData(zoneId: zoneId, newName: newName),
+    );
+  }
+
+  Future<void> addZone({
+    required String title,
+    String? image,
+    String? floorDimensionValue,
+    String? floorAreaValue,
+    String? areaPaintable,
+  }) async {
+    await _addZoneCommand.execute(
+      ZoneAddData(
+        title: title,
+        image: image ?? "assets/images/kitchen.png", // Imagem padrão
+        floorDimensionValue: floorDimensionValue ?? "10' x 10'",
+        floorAreaValue: floorAreaValue ?? "100 sq ft",
+        areaPaintable: areaPaintable ?? "280 sq ft",
+      ),
     );
   }
 
@@ -177,6 +201,41 @@ class ZonesCardViewmodel extends ChangeNotifier {
       return Result.ok(null);
     } catch (e) {
       _setError('Erro ao renomear zona: $e');
+      return Result.error(Exception(e.toString()));
+    }
+  }
+
+  Future<Result<void>> _addZoneData(ZoneAddData data) async {
+    try {
+      // Aqui seria a chamada para o service
+      // final result = await _zonesService.addZone(data);
+
+      // Simulando adição
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Gerar novo ID (seria retornado pelo service)
+      final newId = _zones.isNotEmpty
+          ? _zones.map((z) => z.id).reduce((a, b) => a > b ? a : b) + 1
+          : 1;
+
+      final newZone = ZonesCardModel(
+        id: newId,
+        title: data.title,
+        image: data.image,
+        floorDimensionValue: data.floorDimensionValue,
+        floorAreaValue: data.floorAreaValue,
+        areaPaintable: data.areaPaintable,
+      );
+
+      _zones.add(newZone);
+
+      // Atualizar resumo após adicionar zona
+      await _loadSummaryData();
+
+      notifyListeners();
+      return Result.ok(null);
+    } catch (e) {
+      _setError('Erro ao adicionar zona: $e');
       return Result.error(Exception(e.toString()));
     }
   }
@@ -273,5 +332,22 @@ class ZoneRenameData {
   ZoneRenameData({
     required this.zoneId,
     required this.newName,
+  });
+}
+
+// Helper class for add operation
+class ZoneAddData {
+  final String title;
+  final String image;
+  final String floorDimensionValue;
+  final String floorAreaValue;
+  final String areaPaintable;
+
+  ZoneAddData({
+    required this.title,
+    required this.image,
+    required this.floorDimensionValue,
+    required this.floorAreaValue,
+    required this.areaPaintable,
   });
 }

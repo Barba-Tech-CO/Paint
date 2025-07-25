@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:paintpro/view/widgets/buttons/paint_pro_button.dart';
 import 'package:paintpro/view/zones/widgets/zones_card.dart';
 import 'package:paintpro/view/zones/widgets/zones_summary_card.dart';
+import 'package:paintpro/view/zones/widgets/add_zone_dialog.dart';
 import 'package:paintpro/viewmodel/zones/zones_card_viewmodel.dart';
 
 class ZonesResultsWidget extends StatefulWidget {
@@ -18,6 +19,37 @@ class ZonesResultsWidget extends StatefulWidget {
 }
 
 class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
+  void _showAddZoneDialog(BuildContext context, ZonesCardViewmodel viewModel) {
+    showDialog(
+      context: context,
+      builder: (context) => AddZoneDialog(
+        onAdd:
+            ({
+              required String title,
+              String? floorDimensionValue,
+              String? floorAreaValue,
+              String? areaPaintable,
+            }) async {
+              await viewModel.addZone(
+                title: title,
+                floorDimensionValue: floorDimensionValue,
+                floorAreaValue: floorAreaValue,
+                areaPaintable: areaPaintable,
+              );
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Zone "$title" added successfully!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ZonesCardViewmodel>(
@@ -80,16 +112,7 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
                     avgDimensions: viewModel.summary!.avgDimensions,
                     totalArea: viewModel.summary!.totalArea,
                     totalPaintable: viewModel.summary!.totalPaintable,
-                    onAdd: () {
-                      // TODO: Implementar adição de nova zona
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Funcionalidade de adicionar zona em desenvolvimento',
-                          ),
-                        ),
-                      );
-                    },
+                    onAdd: () => _showAddZoneDialog(context, viewModel),
                   ),
                 const SizedBox(height: 32),
                 PaintProButton(
