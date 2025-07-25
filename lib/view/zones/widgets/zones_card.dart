@@ -177,12 +177,36 @@ class ZonesCard extends StatelessWidget {
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(value: 'rename', child: Text('Rename')),
+                const PopupMenuItem(
+                  value: 'rename',
+                  child: Row(
+                    children: [
+                      Icon(Icons.mode_edit_outline),
+                      SizedBox(width: 4),
+                      Text('Rename'),
+                    ],
+                  ),
+                ),
                 const PopupMenuItem(
                   value: 'edit',
-                  child: Text('Edit'),
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit),
+                      SizedBox(width: 4),
+                      Text('Edit'),
+                    ],
+                  ),
                 ), // postergado
-                const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete),
+                      SizedBox(width: 4),
+                      Text('Delete'),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
