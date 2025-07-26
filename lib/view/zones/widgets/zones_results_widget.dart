@@ -6,7 +6,7 @@ import 'package:paintpro/view/zones/widgets/zones_summary_card.dart';
 import 'package:paintpro/view/zones/widgets/add_zone_dialog.dart';
 import 'package:paintpro/viewmodel/zones/zones_card_viewmodel.dart';
 
-class ZonesResultsWidget extends StatefulWidget {
+class ZonesResultsWidget extends StatelessWidget {
   final Map<String, dynamic> results;
 
   const ZonesResultsWidget({
@@ -14,11 +14,6 @@ class ZonesResultsWidget extends StatefulWidget {
     required this.results,
   });
 
-  @override
-  State<ZonesResultsWidget> createState() => _ZonesResultsWidgetState();
-}
-
-class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
   void _showAddZoneDialog(BuildContext context, ZonesCardViewmodel viewModel) {
     showDialog(
       context: context,
@@ -26,25 +21,24 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
         onAdd:
             ({
               required String title,
+              required String zoneType,
               String? floorDimensionValue,
               String? floorAreaValue,
               String? areaPaintable,
-            }) async {
-              await viewModel.addZone(
-                title: title,
-                floorDimensionValue: floorDimensionValue,
-                floorAreaValue: floorAreaValue,
-                areaPaintable: areaPaintable,
-              );
-
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Zone "$title" added successfully!'),
-                    backgroundColor: Colors.green,
-                  ),
+            }) {
+              // Fecha o diálogo imediatamente para atualizar a UI
+              Navigator.of(context).pop();
+              // O AddZoneDialog já navega para /camera
+              // Adicionar a zona após o build/frame
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                final fullTitle = "$title ($zoneType)";
+                viewModel.addZone(
+                  title: fullTitle,
+                  floorDimensionValue: floorDimensionValue ?? "12' x 14'",
+                  floorAreaValue: floorAreaValue ?? "168 sq ft",
+                  areaPaintable: areaPaintable ?? "420 sq ft",
                 );
-              }
+              });
             },
       ),
     );
@@ -112,7 +106,10 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
                     avgDimensions: viewModel.summary!.avgDimensions,
                     totalArea: viewModel.summary!.totalArea,
                     totalPaintable: viewModel.summary!.totalPaintable,
-                    onAdd: () => _showAddZoneDialog(context, viewModel),
+                    onAdd: () => _showAddZoneDialog(
+                      context,
+                      viewModel,
+                    ), // Usar nossa função local
                   ),
                 const SizedBox(height: 32),
                 PaintProButton(

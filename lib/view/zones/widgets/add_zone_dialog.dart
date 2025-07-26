@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:paintpro/config/app_colors.dart';
 
 class AddZoneDialog extends StatefulWidget {
   final Function({
     required String title,
+    required String zoneType,
     String? floorDimensionValue,
     String? floorAreaValue,
     String? areaPaintable,
@@ -43,13 +45,19 @@ class _AddZoneDialogState extends State<AddZoneDialog> {
         return;
       }
 
-      widget.onAdd(
-        title: "${_titleController.text.trim()} ($_selectedZoneType)",
-        floorDimensionValue: null,
-        floorAreaValue: null,
-        areaPaintable: null,
-      );
+      // Fechar o dialog primeiro
       Navigator.of(context).pop();
+
+      // Navegar para a tela da câmera
+      // TODO: Passar os dados da zona para a tela da câmera se necessário
+      // Dados: ${_titleController.text.trim()} ($_selectedZoneType)
+      context.go('/camera');
+
+      // Chamar o callback com os dados coletados
+      widget.onAdd(
+        title: _titleController.text.trim(),
+        zoneType: _selectedZoneType!,
+      );
     }
   }
 

@@ -37,25 +37,30 @@ class ZonesView extends StatelessWidget {
           ),
         );
         if (shouldLeave == true) {
-          context.go('/new-project');
+          if (context.mounted) {
+            context.go('/new-project');
+          }
         }
       },
-      child: ChangeNotifierProvider(
-        create: (context) => GetIt.instance<ZonesCardViewmodel>()..initialize(),
-        child: Scaffold(
-          backgroundColor: AppColors.background,
-          body: Consumer<ZonesCardViewmodel>(
-            builder: (context, viewModel, child) {
-              return viewModel.isLoading
-                  ? const LoadingWidget()
-                  : Scaffold(
-                      appBar: PaintProAppBar(title: 'Zones'),
-                      body: ZonesResultsWidget(
-                        results: const {}, // Não precisa mais passar results
-                      ),
-                    );
-            },
-          ),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: Consumer<ZonesCardViewmodel>(
+          builder: (context, viewModel, child) {
+            // Inicializa o ViewModel apenas uma vez
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (viewModel.state == ZonesState.initial) {
+                viewModel.initialize();
+              }
+            });
+            return viewModel.isLoading
+                ? const LoadingWidget()
+                : Scaffold(
+                    appBar: PaintProAppBar(title: 'Zones'),
+                    body: ZonesResultsWidget(
+                      results: const {},
+                    ),
+                  );
+          },
         ),
       ),
     );
