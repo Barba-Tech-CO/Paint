@@ -155,7 +155,9 @@ class ZonesCard extends StatelessWidget {
           Positioned(
             top: 0,
             right: 0,
-            child: PopupMenuButton<String>(
+            child: PopupMenuButton(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(12),
               icon: Icon(Icons.more_vert, color: Colors.grey[700]),
               onSelected: (value) async {
                 if (value == 'rename') {
@@ -176,38 +178,7 @@ class ZonesCard extends StatelessWidget {
                   }
                 }
               },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'rename',
-                  child: Row(
-                    children: [
-                      Icon(Icons.mode_edit_outline),
-                      SizedBox(width: 4),
-                      Text('Rename'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit),
-                      SizedBox(width: 4),
-                      Text('Edit'),
-                    ],
-                  ),
-                ), // postergado
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete),
-                      SizedBox(width: 4),
-                      Text('Delete'),
-                    ],
-                  ),
-                ),
-              ],
+              itemBuilder: (context) => [],
             ),
           ),
         ],
