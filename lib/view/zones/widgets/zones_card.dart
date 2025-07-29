@@ -178,7 +178,38 @@ class ZonesCard extends StatelessWidget {
                   }
                 }
               },
-              itemBuilder: (context) => [],
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'rename',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit),
+                      SizedBox(width: 8),
+                      Text('Rename'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit),
+                      SizedBox(width: 8),
+                      Text('Edit'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete),
+                      SizedBox(width: 8),
+                      Text('Delete'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -189,13 +220,16 @@ class ZonesCard extends StatelessWidget {
 
 class _RenameZoneDialog extends StatefulWidget {
   final String initialName;
+
   const _RenameZoneDialog({required this.initialName});
+
   @override
   State<_RenameZoneDialog> createState() => _RenameZoneDialogState();
 }
 
 class _RenameZoneDialogState extends State<_RenameZoneDialog> {
   late TextEditingController _controller;
+
   @override
   void initState() {
     super.initState();
@@ -233,7 +267,9 @@ class _RenameZoneDialogState extends State<_RenameZoneDialog> {
 
 class _DeleteZoneDialog extends StatelessWidget {
   final String zoneName;
+
   const _DeleteZoneDialog({required this.zoneName});
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(

@@ -26,14 +26,10 @@ class ZonesResultsWidget extends StatelessWidget {
               String? floorAreaValue,
               String? areaPaintable,
             }) {
-              // Fecha o diálogo imediatamente para atualizar a UI
               Navigator.of(context).pop();
-              // O AddZoneDialog já navega para /camera
-              // Adicionar a zona após o build/frame
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                final fullTitle = "$title ($zoneType)";
                 viewModel.addZone(
-                  title: fullTitle,
+                  title: title, // Remove a formatação com categoria
                   floorDimensionValue: floorDimensionValue ?? "12' x 14'",
                   floorAreaValue: floorAreaValue ?? "168 sq ft",
                   areaPaintable: areaPaintable ?? "420 sq ft",
