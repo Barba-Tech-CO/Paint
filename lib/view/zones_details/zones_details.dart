@@ -8,6 +8,16 @@ class ZonesDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final photoUrls = [
+      "https://i0.wp.com/4uprojetos.com.br/wp-content/uploads/2022/08/rolo.png?fit=747%2C747&ssl=1",
+      "https://i0.wp.com/4uprojetos.com.br/wp-content/uploads/2022/08/rolo.png?fit=747%2C747&ssl=1",
+      "https://i0.wp.com/4uprojetos.com.br/wp-content/uploads/2022/08/rolo.png?fit=747%2C747&ssl=1",
+      "https://i0.wp.com/4uprojetos.com.br/wp-content/uploads/2022/08/rolo.png?fit=747%2C747&ssl=1",
+      "https://i0.wp.com/4uprojetos.com.br/wp-content/uploads/2022/08/rolo.png?fit=747%2C747&ssl=1",
+      "https://i0.wp.com/4uprojetos.com.br/wp-content/uploads/2022/08/rolo.png?fit=747%2C747&ssl=1",
+      "https://i0.wp.com/4uprojetos.com.br/wp-content/uploads/2022/08/rolo.png?fit=747%2C747&ssl=1",
+    ];
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: PaintProAppBar(
@@ -65,6 +75,41 @@ class ZonesDetails extends StatelessWidget {
                 },
                 totalPaintableLabel: 'Total Paintable',
                 totalPaintableValue: '631 sq ft',
+              ),
+
+              const SizedBox(height: 24),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Photos',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  GridView.count(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    children: [
+                      for (final url in photoUrls)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            url,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
