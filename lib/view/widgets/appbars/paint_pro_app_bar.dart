@@ -14,6 +14,7 @@ class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color? indicatorColor;
   final Color? labelColor;
   final Color? unselectedLabelColor;
+  final Widget? actions;
 
   const PaintProAppBar({
     super.key,
@@ -28,6 +29,7 @@ class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.indicatorColor,
     this.labelColor,
     this.unselectedLabelColor,
+    this.actions,
   });
 
   @override
@@ -41,6 +43,16 @@ class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
         child: leading,
       );
       finalLeadingWidth = leadingWidth;
+    }
+
+    List<Widget>? paddedActions;
+    if (actions != null) {
+      paddedActions = [
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: actions,
+        ),
+      ];
     }
 
     if (tabs == null) {
@@ -64,6 +76,7 @@ class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
             bottomRight: Radius.circular(64),
           ),
         ),
+        actions: paddedActions,
       );
     }
 
@@ -88,6 +101,7 @@ class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
           bottomRight: Radius.circular(64),
         ),
       ),
+      actions: paddedActions,
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(48.0),
         child: Container(

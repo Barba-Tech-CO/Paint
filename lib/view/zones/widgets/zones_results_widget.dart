@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:paintpro/view/widgets/buttons/paint_pro_button.dart';
-import 'package:paintpro/view/zones/widgets/zones_card.dart';
+import 'package:paintpro/view/widgets/cards/zones_card.dart';
 import 'package:paintpro/view/zones/widgets/zones_summary_card.dart';
 import 'package:paintpro/view/zones/widgets/add_zone_dialog.dart';
 import 'package:paintpro/viewmodel/zones/zones_card_viewmodel.dart';
