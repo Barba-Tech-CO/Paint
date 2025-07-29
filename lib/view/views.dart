@@ -14,3 +14,4 @@ export 'contact_details/contact_details_view.dart';
 export 'overview_zones/overview_zones_view.dart';
 export 'select_colors/select_colors_view.dart';
 export 'new_contact/new_contact_view.dart';
+export 'zones_details/zones_details.dart';

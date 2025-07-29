@@ -72,57 +72,73 @@ class ZonesResultsWidget extends StatelessWidget {
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(height: 16),
-                ...viewModel.zones.asMap().entries.map((entry) {
-                  final zone = entry.value;
-                  return Column(
+          child: Column(
+            children: [
+              // Área scrollável com as zonas
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
                     children: [
-                      ZonesCard(
-                        title: zone.title,
-                        image: zone.image,
-                        valueDimension: zone.floorDimensionValue,
-                        valueArea: zone.floorAreaValue,
-                        valuePaintable: zone.areaPaintable,
-                        onRename: (newName) {
-                          viewModel.renameZone(zone.id, newName);
-                        },
-                        onDelete: () {
-                          viewModel.deleteZone(zone.id);
-                        },
-                      ),
                       const SizedBox(height: 16),
+                      ...viewModel.zones.asMap().entries.map((entry) {
+                        final zone = entry.value;
+                        return Column(
+                          children: [
+                            ZonesCard(
+                              title: zone.title,
+                              image: zone.image,
+                              valueDimension: zone.floorDimensionValue,
+                              valueArea: zone.floorAreaValue,
+                              valuePaintable: zone.areaPaintable,
+                              onRename: (newName) {
+                                viewModel.renameZone(zone.id, newName);
+                              },
+                              onDelete: () {
+                                viewModel.deleteZone(zone.id);
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        );
+                      }),
+                      const SizedBox(
+                        height: 80,
+                      ), // Espaço extra para não sobrepor o summary
                     ],
-                  );
-                }),
-                if (viewModel.summary != null)
-                  ZonesSummaryCard(
-                    avgDimensions: viewModel.summary!.avgDimensions,
-                    totalArea: viewModel.summary!.totalArea,
-                    totalPaintable: viewModel.summary!.totalPaintable,
-                    onAdd: () => _showAddZoneDialog(
-                      context,
-                      viewModel,
-                    ), // Usar nossa função local
                   ),
-                const SizedBox(height: 32),
-                PaintProButton(
-                  text: "Next",
-                  onPressed: () {
-                    // TODO: Implementar navegação para próxima tela
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Navegação para próxima tela em desenvolvimento',
-                        ),
-                      ),
-                    );
-                  },
                 ),
-              ],
-            ),
+              ),
+              // Área fixa na parte inferior
+              Column(
+                children: [
+                  if (viewModel.summary != null)
+                    ZonesSummaryCard(
+                      avgDimensions: viewModel.summary!.avgDimensions,
+                      totalArea: viewModel.summary!.totalArea,
+                      totalPaintable: viewModel.summary!.totalPaintable,
+                      onAdd: () => _showAddZoneDialog(
+                        context,
+                        viewModel,
+                      ),
+                    ),
+                  const SizedBox(height: 32),
+                  PaintProButton(
+                    text: "Next",
+                    onPressed: () {
+                      // TODO: Implementar navegação para próxima tela
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Navegação para próxima tela em desenvolvimento',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16), // Padding inferior
+                ],
+              ),
+            ],
           ),
         );
       },
