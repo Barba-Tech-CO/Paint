@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/widgets/buttons/paint_pro_button.dart';
 import 'package:paintpro/view/widgets/cards/zones_card.dart';
 import 'package:paintpro/view/zones/widgets/zones_summary_card.dart';
@@ -90,6 +91,9 @@ class ZonesResultsWidget extends StatelessWidget {
                               valueDimension: zone.floorDimensionValue,
                               valueArea: zone.floorAreaValue,
                               valuePaintable: zone.areaPaintable,
+                              onTap: () {
+                                context.push('/zones-details', extra: zone);
+                              },
                               onRename: (newName) {
                                 viewModel.renameZone(zone.id, newName);
                               },
@@ -103,12 +107,11 @@ class ZonesResultsWidget extends StatelessWidget {
                       }),
                       const SizedBox(
                         height: 80,
-                      ), // Espaço extra para não sobrepor o summary
+                      ),
                     ],
                   ),
                 ),
               ),
-              // Área fixa na parte inferior
               Column(
                 children: [
                   if (viewModel.summary != null)
@@ -135,7 +138,7 @@ class ZonesResultsWidget extends StatelessWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: 16), // Padding inferior
+                  const SizedBox(height: 16),
                 ],
               ),
             ],

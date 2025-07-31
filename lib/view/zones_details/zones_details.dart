@@ -18,16 +18,10 @@ class ZonesDetails extends StatelessWidget {
         builder: (context) {
           return Consumer<ZoneDetailViewModel>(
             builder: (context, viewModel, _) {
-              if (viewModel.isLoading) {
-                return const Scaffold(
-                  backgroundColor: AppColors.background,
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
               if (viewModel.zone == null) {
                 return const Scaffold(
                   backgroundColor: AppColors.background,
-                  body: Center(child: Text('Zona não encontrada.')),
+                  body: Center(child: Text('Zone was not found.')),
                 );
               }
               return const _ZonesDetailsContent();
@@ -134,22 +128,25 @@ class _ZonesDetailsContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: 3,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
+        GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+          ),
+          itemCount: photoUrls.length,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          children: [
-            for (final url in photoUrls)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  url,
-                  fit: BoxFit.cover,
-                ),
+          itemBuilder: (context, index) {
+            final url = photoUrls[index];
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                url,
+                fit: BoxFit.cover,
               ),
-          ],
+            );
+          },
         ),
       ],
     );
