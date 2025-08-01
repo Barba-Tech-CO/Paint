@@ -89,4 +89,8 @@ void setupDependencyInjection() {
   getIt.registerFactory<ZonesCardViewmodel>(
     () => ZonesCardViewmodel(),
   );
+
+  getIt.registerFactory<ZoneDetailViewModel>(
+    () => ZoneDetailViewModel(null),
+  );
 }
