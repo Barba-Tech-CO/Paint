@@ -6,6 +6,7 @@ import 'package:paintpro/config/app_colors.dart';
 import 'package:paintpro/view/widgets/widgets.dart';
 import 'package:paintpro/model/zones_card_model.dart';
 import 'package:paintpro/viewmodel/zones/zones_viewmodels.dart';
+import 'package:paintpro/viewmodel/zones/zones_card_viewmodel.dart';
 
 class ZonesDetails extends StatefulWidget {
   final ZonesCardModel? zone;
@@ -159,8 +160,8 @@ class _ZonesDetailsContent extends StatelessWidget {
                 const SizedBox(width: 24),
                 Flexible(
                   child: PaintProButton(
-                    text: 'Rename',
-                    onPressed: () {},
+                    text: 'OK',
+                    onPressed: () => context.pop(),
                   ),
                 ),
               ],
@@ -213,9 +214,28 @@ class _DeleteZoneButton extends StatelessWidget {
           ),
         );
         if (confirm == true) {
-          await viewModel.deleteZone();
-          if (context.mounted) {
-            context.pop();
+          // Primeiro, pegar o ID da zona antes de deletar
+          final zoneId = viewModel.zone?.id;
+          if (zoneId != null) {
+            try {
+              // Usar getIt para acessar a mesma instância singleton
+              final mainViewModel = getIt<ZonesCardViewmodel>();
+
+              await mainViewModel.deleteZone(zoneId);
+
+              // Deletar localmente
+              await viewModel.deleteZone();
+
+              if (context.mounted) {
+                context.pop();
+              }
+            } catch (e) {
+              // Se der erro, só deletar localmente e voltar
+              await viewModel.deleteZone();
+              if (context.mounted) {
+                context.pop();
+              }
+            }
           }
         }
       },

@@ -86,7 +86,7 @@ void setupDependencyInjection() {
   );
 
   // ViewModels - Zones
-  getIt.registerFactory<ZonesCardViewmodel>(
+  getIt.registerLazySingleton<ZonesCardViewmodel>(
     () => ZonesCardViewmodel(),
   );
 
