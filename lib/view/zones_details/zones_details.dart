@@ -6,7 +6,6 @@ import 'package:paintpro/config/app_colors.dart';
 import 'package:paintpro/view/widgets/widgets.dart';
 import 'package:paintpro/model/zones_card_model.dart';
 import 'package:paintpro/viewmodel/zones/zones_viewmodels.dart';
-import 'package:paintpro/viewmodel/zones/zones_card_viewmodel.dart';
 
 class ZonesDetails extends StatefulWidget {
   final ZonesCardModel? zone;
