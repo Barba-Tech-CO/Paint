@@ -78,6 +78,10 @@ class PaintProApp extends StatelessWidget {
         ChangeNotifierProvider<MeasurementsViewModel>(
           create: (_) => getIt<MeasurementsViewModel>(),
         ),
+        // Zones ViewModel
+        ChangeNotifierProvider<ZonesCardViewmodel>(
+          create: (_) => getIt<ZonesCardViewmodel>(),
+        ),
       ],
       child: MaterialApp.router(
         title: 'PaintPro',

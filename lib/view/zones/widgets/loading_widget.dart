@@ -129,8 +129,8 @@ class _LoadingWidgetState extends State<LoadingWidget>
             const SizedBox(height: 32),
             PaintProLoading(
               controller: _rotationController,
-              size: 80,
-              strokeWidth: 6,
+              size: 120,
+              strokeWidth: 8,
               primaryColor: AppColors.primary,
             ),
           ],

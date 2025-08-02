@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
-import 'package:paintpro/view/widgets/buttons/primary_button_widget.dart';
+import 'package:paintpro/view/widgets/buttons/paint_pro_button.dart';
 import 'widgets/simple_checkbox_list_widget.dart';
 import 'widgets/wall_condition_widget.dart';
 
@@ -155,7 +155,7 @@ class _RoomAdjustViewState extends State<RoomAdjustView> {
 
               const SizedBox(height: 24),
 
-              PrimaryButtonWidget(
+              PaintProButton(
                 text: 'Create Project',
                 onPressed: () => context.push('/select-colors'),
               ),

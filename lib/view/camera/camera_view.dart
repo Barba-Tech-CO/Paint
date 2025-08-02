@@ -17,7 +17,7 @@ class CameraView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             InkWell(
-              onTap: () => context.push('/measurements'),
+              onTap: () => context.push('/zones'),
               child: Container(
                 width: 120,
                 height: 120,

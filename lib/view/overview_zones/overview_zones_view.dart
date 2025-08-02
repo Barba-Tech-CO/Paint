@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/view/widgets/buttons/primary_button_widget.dart';
 import 'package:paintpro/view/widgets/widgets.dart';
 
-class OverviewMeasurementsView extends StatelessWidget {
-  const OverviewMeasurementsView({super.key});
+class OverviewZonesView extends StatelessWidget {
+  const OverviewZonesView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +121,7 @@ class OverviewMeasurementsView extends StatelessWidget {
                 child: Row(
                   children: [
                     Flexible(
-                      child: PrimaryButtonWidget(
+                      child: PaintProButton(
                         text: 'Adjust',
                         borderRadius: 16,
                         padding: EdgeInsets.zero,
@@ -130,7 +129,7 @@ class OverviewMeasurementsView extends StatelessWidget {
                     ),
                     const SizedBox(width: 32),
                     Flexible(
-                      child: PrimaryButtonWidget(
+                      child: PaintProButton(
                         text: 'Send Quote',
                         borderRadius: 16,
                         padding: EdgeInsets.zero,

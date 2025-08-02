@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
-import 'package:paintpro/view/widgets/buttons/primary_button_widget.dart';
-import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
+import 'package:paintpro/view/widgets/widgets.dart';
 
 class CreateProjectView extends StatefulWidget {
   const CreateProjectView({super.key});
@@ -20,7 +18,12 @@ class _CreateProjectViewState extends State<CreateProjectView> {
       TextEditingController();
 
   // Estado para controlar a seleção do tipo de projeto
-  String _selectedProjectType = 'Interior';
+  String _selectedProjectType = '';
+
+  bool get _isFormValid {
+    return _projectNameController.text.trim().isNotEmpty &&
+        _projectDetailsController.text.trim().isNotEmpty;
+  }
 
   @override
   void dispose() {
@@ -135,14 +138,10 @@ class _CreateProjectViewState extends State<CreateProjectView> {
                 maxLines: 6,
                 multiline: true,
               ),
-              PrimaryButtonWidget(
-                text: 'Create Project',
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
-                ),
-                onPressed: () => context.push('/camera'),
+
+              PaintProButton(
+                text: 'Next',
+                onPressed: !_isFormValid ? null : () => context.push('/camera'),
               ),
             ],
           ),
