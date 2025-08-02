@@ -64,7 +64,7 @@ class ZonesResultsWidget extends StatelessWidget {
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () => viewModel.refresh(),
-                  child: const Text('Tentar novamente'),
+                  child: const Text('Try Again'),
                 ),
               ],
             ),

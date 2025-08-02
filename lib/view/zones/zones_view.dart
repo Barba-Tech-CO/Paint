@@ -22,7 +22,7 @@ class ZonesView extends StatelessWidget {
           builder: (context) => AlertDialog(
             title: const Text('Exit zones?'),
             content: const Text(
-              'Are you sure you wat to go back? Any unsaved measurements will be lost.',
+              'Are you sure you want to go back? Any unsaved measurements will be lost.',
             ),
             actions: [
               TextButton(
@@ -31,7 +31,7 @@ class ZonesView extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () => context.pop(false),
-                child: const Text('Cancelar'),
+                child: const Text('Cancel'),
               ),
             ],
           ),

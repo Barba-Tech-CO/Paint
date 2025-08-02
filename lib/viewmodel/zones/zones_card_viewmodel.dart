@@ -140,8 +140,8 @@ class ZonesCardViewmodel extends ChangeNotifier {
       _setState(ZonesState.loading);
       _clearError();
 
-      // Simulando dados enquanto não temos o service - 3 segundos para mostrar loading
-      await Future.delayed(const Duration(seconds: 3));
+      // Simulando dados enquanto não temos o service - 1 segundos para mostrar loading
+      await Future.delayed(const Duration(seconds: 1));
 
       final mockZones = _generateMockZones();
 

@@ -57,7 +57,7 @@ class ZonesSummaryCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         const Text(
-                          'Average  Dimensions',
+                          'Average Dimensions',
                           style: TextStyle(
                             color: Colors.black54,
                             fontSize: 13,
