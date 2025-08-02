@@ -9,50 +9,64 @@ import 'package:provider/provider.dart';
 class MeasurementsView extends StatelessWidget {
   const MeasurementsView({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        final shouldLeave = await showDialog<bool>(
+  Future<void> _handleBackPress(BuildContext context) async {
+    final bool shouldPop =
+        await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Cancelar medição?'),
+            title: const Text('Exit Measurements'),
             content: const Text(
-              'Se cancelar, os dados preenchidos serão perdidos. Deseja voltar para o início do projeto?',
+              'Are you sure you want to go back? Any unsaved measurements will be lost.',
             ),
             actions: [
               TextButton(
-                onPressed: () => context.pop(false),
-                child: const Text('Ficar'),
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
               ),
               TextButton(
-                onPressed: () => context.pop(true),
-                child: const Text('Cancelar'),
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Yes, go back'),
               ),
             ],
           ),
-        );
-        if (shouldLeave == true) {
-          context.go('/new-project');
-        }
-      },
-      child: ChangeNotifierProvider(
-        create: (context) => MeasurementsViewModel(),
-        child: Scaffold(
-          body: Consumer<MeasurementsViewModel>(
-            builder: (context, viewModel, child) {
-              return viewModel.isLoading
-                  ? const LoadingWidget()
-                  : Scaffold(
-                      appBar: PaintProAppBar(title: 'Measurements'),
+        ) ??
+        false; // Default to false if dialog is dismissed
+
+    if (shouldPop) {
+      // ignore: use_build_context_synchronously
+      context.pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) => MeasurementsViewModel(),
+      child: Scaffold(
+        body: Consumer<MeasurementsViewModel>(
+          builder: (context, viewModel, child) {
+            return viewModel.isLoading
+                ? const LoadingWidget()
+                : PopScope(
+                    canPop: false, // Prevent default back behavior
+                    onPopInvokedWithResult: (didPop, result) async {
+                      if (didPop) return;
+                      await _handleBackPress(context);
+                    },
+                    child: Scaffold(
+                      appBar: PaintProAppBar(
+                        title: 'Measurements',
+                        leading: IconButton(
+                          icon: const Icon(Icons.arrow_back_ios),
+                          onPressed: () => _handleBackPress(context),
+                        ),
+                      ),
                       body: MeasurementResultsWidget(
                         results: viewModel.measurementResults,
                       ),
-                    );
-            },
-          ),
+                    ),
+                  );
+          },
         ),
       ),
     );

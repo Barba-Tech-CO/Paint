@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:paintpro/view/widgets/buttons/primary_button_widget.dart';
 import 'package:paintpro/view/widgets/widgets.dart';
 
 class OverviewMeasurementsView extends StatelessWidget {
@@ -8,7 +9,13 @@ class OverviewMeasurementsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PaintProAppBar(title: 'Measurements'),
+      appBar: PaintProAppBar(
+        title: 'Measurements',
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -114,25 +121,22 @@ class OverviewMeasurementsView extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => context.pop(),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: const Text('Adjust'),
+                    Flexible(
+                      child: PrimaryButtonWidget(
+                        text: 'Adjust',
+                        borderRadius: 16,
+                        padding: EdgeInsets.zero,
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => context.push('/room-configuration'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: const Text('Accept'),
+                    const SizedBox(width: 32),
+                    Flexible(
+                      child: PrimaryButtonWidget(
+                        text: 'Send Quote',
+                        borderRadius: 16,
+                        padding: EdgeInsets.zero,
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        onPressed: () => context.go('/home'),
                       ),
                     ),
                   ],
