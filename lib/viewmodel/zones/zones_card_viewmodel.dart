@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../../model/zones_card_model.dart';
 import '../../utils/result/result.dart';
 import '../../utils/command/command.dart';
+import '../../helpers/zones/zone_data_classes.dart';
 
 enum ZonesState { initial, loading, loaded, error }
 
@@ -28,6 +29,8 @@ class ZonesCardViewmodel extends ChangeNotifier {
   // Error
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
+
+  ZonesCardViewmodel();
 
   // Commands
   late final Command0<void> _loadZonesCommand;
@@ -322,32 +325,4 @@ class ZonesCardViewmodel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
   }
-}
-
-// Helper class for rename operation
-class ZoneRenameData {
-  final int zoneId;
-  final String newName;
-
-  ZoneRenameData({
-    required this.zoneId,
-    required this.newName,
-  });
-}
-
-// Helper class for add operation
-class ZoneAddData {
-  final String title;
-  final String image;
-  final String floorDimensionValue;
-  final String floorAreaValue;
-  final String areaPaintable;
-
-  ZoneAddData({
-    required this.title,
-    required this.image,
-    required this.floorDimensionValue,
-    required this.floorAreaValue,
-    required this.areaPaintable,
-  });
 }

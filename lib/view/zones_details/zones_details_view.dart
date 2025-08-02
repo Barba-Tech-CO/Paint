@@ -7,15 +7,15 @@ import 'package:paintpro/model/zones_card_model.dart';
 import 'package:paintpro/view/zones_details/widgets/delete_button_widget.dart';
 import 'package:paintpro/viewmodel/zones/zones_viewmodels.dart';
 
-class ZonesDetails extends StatefulWidget {
+class ZonesDetailsView extends StatefulWidget {
   final ZonesCardModel? zone;
-  const ZonesDetails({super.key, this.zone});
+  const ZonesDetailsView({super.key, this.zone});
 
   @override
-  State<ZonesDetails> createState() => _ZonesDetailsState();
+  State<ZonesDetailsView> createState() => _ZonesDetailsViewState();
 }
 
-class _ZonesDetailsState extends State<ZonesDetails> {
+class _ZonesDetailsViewState extends State<ZonesDetailsView> {
   late final ZoneDetailViewModel _detailViewModel;
   late final ZonesListViewModel _listViewModel;
 
@@ -25,9 +25,8 @@ class _ZonesDetailsState extends State<ZonesDetails> {
     _detailViewModel = getIt<ZoneDetailViewModel>();
     _listViewModel = getIt<ZonesListViewModel>();
 
-    // Initialize ViewModels only once (safe for multiple calls)
+    // Initialize ViewModels
     _detailViewModel.initialize();
-    _listViewModel.initialize();
 
     // Set current zone
     if (widget.zone != null) {

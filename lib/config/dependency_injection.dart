@@ -85,12 +85,21 @@ void setupDependencyInjection() {
     () => MeasurementsViewModel(),
   );
 
-  // ViewModels - Zones
-  getIt.registerLazySingleton<ZonesCardViewmodel>(
-    () => ZonesCardViewmodel(),
+  // ViewModels - Zones (Refactored)
+  getIt.registerLazySingleton<ZonesListViewModel>(
+    () => ZonesListViewModel(),
   );
 
-  getIt.registerFactory<ZoneDetailViewModel>(
-    () => ZoneDetailViewModel(null),
+  getIt.registerLazySingleton<ZoneDetailViewModel>(
+    () => ZoneDetailViewModel(),
+  );
+
+  getIt.registerLazySingleton<ZonesSummaryViewModel>(
+    () => ZonesSummaryViewModel(),
+  );
+
+  // ViewModels - Zones (Legacy - keeping for backward compatibility)
+  getIt.registerLazySingleton<ZonesCardViewmodel>(
+    () => ZonesCardViewmodel(),
   );
 }
