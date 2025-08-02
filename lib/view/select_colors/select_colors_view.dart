@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/view/widgets/buttons/paint_pro_button.dart';
 import 'widgets/color_grid_widget.dart';
@@ -83,6 +84,10 @@ class _SelectColorsViewState extends State<SelectColorsView>
         labelColor: Colors.white,
         toolbarHeight: 60,
         unselectedLabelColor: Colors.white.withValues(alpha: 0.7),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -109,9 +114,7 @@ class _SelectColorsViewState extends State<SelectColorsView>
             ),
             PaintProButton(
               text: 'Generate Estimate',
-              onPressed: () {
-                // Generate estimate action
-              },
+              onPressed: () => context.push('/overview-measurements'),
               backgroundColor: Colors.blue,
               minimumSize: const Size(double.infinity, 50),
               borderRadius: 16,

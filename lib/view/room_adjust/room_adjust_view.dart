@@ -42,7 +42,13 @@ class _RoomAdjustViewState extends State<RoomAdjustView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PaintProAppBar(title: 'Room Adjust', toolbarHeight: 80),
+      appBar: PaintProAppBar(
+        title: 'Room Adjust',
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),

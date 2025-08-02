@@ -7,15 +7,15 @@ import 'package:paintpro/view/widgets/cards/project_state_card_widget.dart';
 import 'package:paintpro/view/widgets/cards/greeting_card_widget.dart';
 import 'package:paintpro/view/widgets/cards/stats_card_widget.dart';
 
-class DashboardView extends StatelessWidget {
-  const DashboardView({super.key});
+class HomeView extends StatelessWidget {
+  const HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: PaintProAppBar(
-        title: 'Dashboard',
+        title: 'Home',
         toolbarHeight: 126,
       ),
       body: SingleChildScrollView(
@@ -109,7 +109,7 @@ class DashboardView extends StatelessWidget {
                     description: "Create your first project to get started",
                     buttonText: "Create project",
                     state: ProjectStateType.empty,
-                    onButtonPressed: () => context.push('/new-project'),
+                    onButtonPressed: () => context.push('/create-project'),
                   ),
                 ],
               ),

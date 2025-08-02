@@ -15,8 +15,8 @@ final router = GoRouter(
       builder: (context, state) => const AuthView(),
     ),
     GoRoute(
-      path: '/dashboard',
-      builder: (context, state) => const DashboardView(),
+      path: '/home',
+      builder: (context, state) => const HomeView(),
     ),
     GoRoute(
       path: '/projects',
@@ -39,8 +39,8 @@ final router = GoRouter(
       builder: (context, state) => const ContactDetailsView(),
     ),
     GoRoute(
-      path: '/new-project',
-      builder: (context, state) => const NewProjectView(),
+      path: '/create-project',
+      builder: (context, state) => const CreateProjectView(),
     ),
     GoRoute(
       path: '/zones',
