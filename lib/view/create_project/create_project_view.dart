@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
-<<<<<<< HEAD:lib/view/new_project/new_project_view.dart
-import 'package:paintpro/view/widgets/buttons/paint_pro_button.dart';
-=======
-import 'package:paintpro/view/widgets/buttons/primary_button_widget.dart';
->>>>>>> 96e0f9b58a105602ca2e293fe43a943e4a3f7e9b:lib/view/create_project/create_project_view.dart
-import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
+import 'package:paintpro/view/widgets/widgets.dart';
 
 class CreateProjectView extends StatefulWidget {
   const CreateProjectView({super.key});
@@ -149,7 +143,6 @@ class _CreateProjectViewState extends State<CreateProjectView> {
                 text: 'Next',
                 onPressed: !_isFormValid ? null : () => context.push('/camera'),
               ),
-             
             ],
           ),
         ),
