@@ -11,6 +11,10 @@ export 'cards/project_state_card_widget.dart';
 export 'cards/project_summary_card_widget.dart';
 export 'cards/stats_card_widget.dart';
 
+// Info widgets (reusable components)
+export '../contact_details/widgets/info_card_widget.dart';
+export '../contact_details/widgets/info_row_widget.dart';
+
 // Navigation
 export 'navigation/floating_bottom_navigation_bar.dart';
 
