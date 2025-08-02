@@ -59,26 +59,9 @@ class DeleteZoneButton extends StatelessWidget {
         // Use the new ViewModel delete method
         // The callbacks will handle UI coordination automatically
         await viewModel.deleteZone(zone.id);
-
-        // Show success message
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Zone "${zone.title}" deleted successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
       } catch (e) {
-        // Show error message
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error deleting zone: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        // Log error silently - UI coordination still handled by callbacks
+        debugPrint('Error deleting zone: $e');
       }
     }
   }

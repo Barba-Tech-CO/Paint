@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:paintpro/config/dependency_injection.dart';
 import 'package:paintpro/view/widgets/buttons/paint_pro_button.dart';
 import 'package:paintpro/view/widgets/cards/zones_card.dart';
 import 'package:paintpro/view/zones/widgets/zones_summary_card.dart';
 import 'package:paintpro/view/zones/widgets/add_zone_dialog.dart';
-import 'package:paintpro/viewmodel/zones/zones_card_viewmodel.dart';
+import 'package:paintpro/viewmodel/zones/zones_viewmodels.dart';
 
-class ZonesResultsWidget extends StatelessWidget {
+class ZonesResultsWidget extends StatefulWidget {
   final Map<String, dynamic> results;
 
   const ZonesResultsWidget({
@@ -15,7 +16,39 @@ class ZonesResultsWidget extends StatelessWidget {
     required this.results,
   });
 
-  void _showAddZoneDialog(BuildContext context, ZonesCardViewmodel viewModel) {
+  @override
+  State<ZonesResultsWidget> createState() => _ZonesResultsWidgetState();
+}
+
+class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
+  late final ZonesListViewModel _listViewModel;
+  late final ZonesSummaryViewModel _summaryViewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _listViewModel = getIt<ZonesListViewModel>();
+    _summaryViewModel = getIt<ZonesSummaryViewModel>();
+
+    // Initialize ViewModels
+    _listViewModel.initialize();
+    _summaryViewModel.initialize();
+
+    // Setup listener to update summary when zones list changes
+    _listViewModel.addListener(_updateSummary);
+  }
+
+  @override
+  void dispose() {
+    _listViewModel.removeListener(_updateSummary);
+    super.dispose();
+  }
+
+  void _updateSummary() {
+    _summaryViewModel.updateZonesList(_listViewModel.zones);
+  }
+
+  void _showAddZoneDialog(BuildContext context, ZonesListViewModel viewModel) {
     showDialog(
       context: context,
       builder: (context) => AddZoneDialog(
@@ -27,14 +60,21 @@ class ZonesResultsWidget extends StatelessWidget {
               String? floorAreaValue,
               String? areaPaintable,
             }) {
-              Navigator.of(context).pop();
+              context.pop();
+
+              // Adicionar a zona ao ViewModel
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                viewModel.addZone(
-                  title: title, // Remove a formatação com categoria
-                  floorDimensionValue: floorDimensionValue ?? "12' x 14'",
-                  floorAreaValue: floorAreaValue ?? "168 sq ft",
-                  areaPaintable: areaPaintable ?? "420 sq ft",
-                );
+                if (context.mounted) {
+                  viewModel.addZone(
+                    title: title,
+                    floorDimensionValue: floorDimensionValue ?? "12' x 14'",
+                    floorAreaValue: floorAreaValue ?? "168 sq ft",
+                    areaPaintable: areaPaintable ?? "420 sq ft",
+                  );
+
+                  // Navegar para a tela da câmera
+                  context.go('/camera');
+                }
               });
             },
       ),
@@ -43,108 +83,134 @@ class ZonesResultsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ZonesCardViewmodel>(
-      builder: (context, viewModel, child) {
-        // Se ainda está carregando, retorna apenas o loading
-        if (viewModel.isLoading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ZonesListViewModel>.value(value: _listViewModel),
+        ChangeNotifierProvider<ZonesSummaryViewModel>.value(
+          value: _summaryViewModel,
+        ),
+      ],
+      child: Consumer2<ZonesListViewModel, ZonesSummaryViewModel>(
+        builder: (context, listViewModel, summaryViewModel, child) {
+          // Se ainda está carregando, retorna apenas o loading
+          if (listViewModel.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-        if (viewModel.hasError) {
-          return Center(
+          if (listViewModel.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Erro: ${listViewModel.errorMessage}',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => listViewModel.refresh(),
+                    child: const Text('Try Again'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'Erro: ${viewModel.errorMessage}',
-                  style: const TextStyle(color: Colors.red),
+                // Área scrollável com as zonas
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 16),
+                        ...listViewModel.zones.asMap().entries.map((entry) {
+                          final zone = entry.value;
+                          return Column(
+                            children: [
+                              ZonesCard(
+                                title: zone.title,
+                                image: zone.image,
+                                valueDimension: zone.floorDimensionValue,
+                                valueArea: zone.floorAreaValue,
+                                valuePaintable: zone.areaPaintable,
+                                onTap: () {
+                                  // Select zone when tapping
+                                  listViewModel.selectZone(zone);
+                                  context.push('/zones-details', extra: zone);
+                                },
+                                onRename: (newName) {
+                                  // Use the ZoneDetailViewModel to maintain consistency
+                                  final detailViewModel =
+                                      getIt<ZoneDetailViewModel>();
+                                  detailViewModel.setCurrentZone(zone);
+
+                                  // Setup callback to update list when rename completes
+                                  detailViewModel.onZoneUpdated =
+                                      (updatedZone) {
+                                        listViewModel.updateZone(updatedZone);
+                                      };
+
+                                  detailViewModel.renameZone(zone.id, newName);
+                                },
+                                onDelete: () {
+                                  // Use the ZoneDetailViewModel to maintain consistency
+                                  final detailViewModel =
+                                      getIt<ZoneDetailViewModel>();
+                                  detailViewModel.setCurrentZone(zone);
+
+                                  // Setup callback to update list when delete completes
+                                  detailViewModel.onZoneDeleted =
+                                      (deletedZoneId) {
+                                        listViewModel.removeZone(deletedZoneId);
+                                      };
+
+                                  detailViewModel.deleteZone(zone.id);
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                          );
+                        }),
+                        const SizedBox(
+                          height: 80,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => viewModel.refresh(),
-                  child: const Text('Try Again'),
+                Column(
+                  children: [
+                    if (summaryViewModel.summary != null)
+                      ZonesSummaryCard(
+                        avgDimensions: summaryViewModel.summary!.avgDimensions,
+                        totalArea: summaryViewModel.summary!.totalArea,
+                        totalPaintable:
+                            summaryViewModel.summary!.totalPaintable,
+                        onAdd: () => _showAddZoneDialog(
+                          context,
+                          listViewModel,
+                        ),
+                      ),
+                    const SizedBox(height: 32),
+                    PaintProButton(
+                      text: "Next",
+                      onPressed: () {
+                        // TODO: Implementar navegação para próxima tela
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ),
               ],
             ),
           );
-        }
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              // Área scrollável com as zonas
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 16),
-                      ...viewModel.zones.asMap().entries.map((entry) {
-                        final zone = entry.value;
-                        return Column(
-                          children: [
-                            ZonesCard(
-                              title: zone.title,
-                              image: zone.image,
-                              valueDimension: zone.floorDimensionValue,
-                              valueArea: zone.floorAreaValue,
-                              valuePaintable: zone.areaPaintable,
-                              onTap: () {
-                                context.push('/zones-details', extra: zone);
-                              },
-                              onRename: (newName) {
-                                viewModel.renameZone(zone.id, newName);
-                              },
-                              onDelete: () {
-                                viewModel.deleteZone(zone.id);
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                        );
-                      }),
-                      const SizedBox(
-                        height: 80,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Column(
-                children: [
-                  if (viewModel.summary != null)
-                    ZonesSummaryCard(
-                      avgDimensions: viewModel.summary!.avgDimensions,
-                      totalArea: viewModel.summary!.totalArea,
-                      totalPaintable: viewModel.summary!.totalPaintable,
-                      onAdd: () => _showAddZoneDialog(
-                        context,
-                        viewModel,
-                      ),
-                    ),
-                  const SizedBox(height: 32),
-                  PaintProButton(
-                    text: "Next",
-                    onPressed: () {
-                      // TODO: Implementar navegação para próxima tela
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Navegação para próxima tela em desenvolvimento',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 }

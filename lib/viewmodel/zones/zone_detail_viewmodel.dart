@@ -16,6 +16,9 @@ class ZoneDetailViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  // Internal state
+  bool _disposed = false;
+
   ZoneDetailViewModel();
 
   // Commands
@@ -59,7 +62,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
   void setCurrentZone(ZonesCardModel? zone) {
     _currentZone = zone;
     _clearError();
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   Future<void> deleteZone(int zoneId) async {
@@ -79,7 +82,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
   void clearCurrentZone() {
     _currentZone = null;
     _clearError();
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   // Private methods
@@ -99,7 +102,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
         _currentZone = null;
       }
 
-      notifyListeners();
+      _safeNotifyListeners();
       return Result.ok(null);
     } catch (e) {
       _setError('Erro ao excluir zona: $e');
@@ -123,7 +126,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
         onZoneUpdated?.call(_currentZone!);
       }
 
-      notifyListeners();
+      _safeNotifyListeners();
       return Result.ok(null);
     } catch (e) {
       _setError('Erro ao renomear zona: $e');
@@ -134,17 +137,30 @@ class ZoneDetailViewModel extends ChangeNotifier {
   // Helper methods
   void refresh() {
     _clearError();
-    notifyListeners();
+    _safeNotifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    onZoneDeleted = null;
+    onZoneUpdated = null;
+    super.dispose();
   }
 
   // State management methods
   void _setError(String message) {
     _errorMessage = message;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   void _clearError() {
     _errorMessage = null;
-    notifyListeners();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_disposed) {
+      notifyListeners();
+    }
   }
 }
