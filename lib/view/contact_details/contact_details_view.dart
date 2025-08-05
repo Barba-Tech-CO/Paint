@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/widgets/widgets.dart';
-import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 
 class ContactDetailsView extends StatelessWidget {
   final Map<String, String>? contact;
@@ -14,7 +13,7 @@ class ContactDetailsView extends StatelessWidget {
 
     // Usa os dados do contato passado como parâmetro
     final contactData = contact ?? {};
-    
+
     // Dados padrão caso não sejam fornecidos
     final name = contactData['name'] ?? 'Nome não informado';
     final phone = contactData['phone'] ?? 'Telefone não informado';
