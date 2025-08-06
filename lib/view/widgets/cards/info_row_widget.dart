@@ -13,6 +13,7 @@ class InfoRowWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final displayValue = value?.isNotEmpty == true ? value! : '-';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
@@ -31,8 +32,10 @@ class InfoRowWidget extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              value ?? '-',
-              style: theme.textTheme.bodyMedium,
+              displayValue,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: displayValue == '-' ? Colors.grey[500] : null,
+              ),
             ),
           ),
         ],
