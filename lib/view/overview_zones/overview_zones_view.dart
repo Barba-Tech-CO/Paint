@@ -80,7 +80,7 @@ class OverviewZonesView extends StatelessWidget {
                   ),
                   MaterialItemRowWidget(
                     title: 'Cleanup',
-                    subtitle: '1 hours x \45/hr',
+                    subtitle: '1 hours x 45/hr',
                     price: '\$45.00',
                   ),
                   SummaryTotalRowWidget(

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:paintpro/view/widgets/navigation/floating_bottom_navigation_bar.dart';
+import 'package:provider/provider.dart';
 import 'package:paintpro/viewmodel/navigation_viewmodel.dart';
-import 'package:paintpro/service/navigation_service.dart';
 
 class MainLayout extends StatefulWidget {
   final Widget child;
@@ -24,8 +23,7 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   void initState() {
     super.initState();
-    final navigationService = context.read<NavigationService>();
-    _navigationViewModel = NavigationViewModel(navigationService);
+    _navigationViewModel = NavigationViewModel();
     _navigationViewModel.updateCurrentRoute(widget.currentRoute);
   }
 

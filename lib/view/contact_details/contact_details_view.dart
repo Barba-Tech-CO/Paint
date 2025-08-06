@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/view/contact_details/widgets/info_card_widget.dart';
-import 'package:paintpro/view/contact_details/widgets/info_row_widget.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 
 class ContactDetailsView extends StatelessWidget {
@@ -25,6 +23,49 @@ class ContactDetailsView extends StatelessWidget {
       'locationId': 'LocationId',
       'company': 'Pietro e Caroline Ferragens Ltda',
     };
+
+    // Constrói um card de informações
+    Widget buildInfoCard(ThemeData theme, {required List<Widget> children}) {
+      return Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          ),
+        ),
+      );
+    }
+
+    // Constrói uma linha de informação
+    Widget buildInfoRow(ThemeData theme, String label, String? value) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 100,
+              child: Text(
+                '$label:',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                value ?? '-',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: PaintProAppBar(
@@ -90,10 +131,11 @@ class ContactDetailsView extends StatelessWidget {
                   ],
                 ),
               ),
-              InfoCardWidget(
+              buildInfoCard(
+                theme,
                 children: [
-                  InfoRowWidget(label: 'Email', value: contactData['email']),
-                  InfoRowWidget(label: 'Telefone', value: contactData['phone']),
+                  buildInfoRow(theme, 'Email', contactData['email']),
+                  buildInfoRow(theme, 'Telefone', contactData['phone']),
                 ],
               ),
 
@@ -122,16 +164,14 @@ class ContactDetailsView extends StatelessWidget {
                   ],
                 ),
               ),
-              InfoCardWidget(
+              buildInfoCard(
+                theme,
                 children: [
-                  InfoRowWidget(
-                    label: 'Logradouro',
-                    value: contactData['address'],
-                  ),
-                  InfoRowWidget(label: 'CEP', value: contactData['zipCode']),
-                  InfoRowWidget(label: 'Cidade', value: contactData['city']),
-                  InfoRowWidget(label: 'Estado', value: contactData['state']),
-                  InfoRowWidget(label: 'País', value: contactData['country']),
+                  buildInfoRow(theme, 'Logradouro', contactData['address']),
+                  buildInfoRow(theme, 'CEP', contactData['zipCode']),
+                  buildInfoRow(theme, 'Cidade', contactData['city']),
+                  buildInfoRow(theme, 'Estado', contactData['state']),
+                  buildInfoRow(theme, 'País', contactData['country']),
                 ],
               ),
 
@@ -160,16 +200,15 @@ class ContactDetailsView extends StatelessWidget {
                   ],
                 ),
               ),
-              InfoCardWidget(
+              buildInfoCard(
+                theme,
                 children: [
-                  InfoRowWidget(
-                    label: 'ID de Localização',
-                    value: contactData['locationId'],
+                  buildInfoRow(
+                    theme,
+                    'ID de Localização',
+                    contactData['locationId'],
                   ),
-                  InfoRowWidget(
-                    label: 'Empresa',
-                    value: contactData['company'],
-                  ),
+                  buildInfoRow(theme, 'Empresa', contactData['company']),
                 ],
               ),
             ],

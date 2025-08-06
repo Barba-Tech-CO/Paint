@@ -6,7 +6,7 @@ import '../../service/estimate_service.dart';
 class EstimateUploadViewModel extends ChangeNotifier {
   final EstimateService _estimateService;
 
-  List<File> _selectedPhotos = [];
+  final List<File> _selectedPhotos = [];
   bool _isUploading = false;
   String? _error;
   double _uploadProgress = 0.0;

@@ -48,7 +48,7 @@ class PaintProLoading extends StatelessWidget {
             Colors.transparent,
             Colors.transparent,
             // Transição gradual para a cor principal
-            primaryColor.withOpacity(0.3),
+            primaryColor.withValues(alpha: 0.3),
             primaryColor,
           ],
           // Controla a distribuição das cores

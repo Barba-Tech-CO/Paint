@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'i_http_service.dart';
 import '../config/app_config.dart';
 
@@ -27,11 +28,26 @@ class HttpService implements IHttpService {
   Future<Response> get(
     String path, {
     Map<String, dynamic>? queryParameters,
+    Options? options,
   }) async {
+    final fullPath = '${dio.options.baseUrl}$path';
+    if (kDebugMode) {
+      print('--> GET $fullPath');
+    }
     try {
-      final response = await dio.get(path, queryParameters: queryParameters);
+      final response = await dio.get(
+        path,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      if (kDebugMode) {
+        print('<-- ${response.statusCode} GET $fullPath');
+      }
       return response;
-    } catch (e) {
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print('<-- ${e.response?.statusCode ?? 'ERROR'} GET $fullPath: $e');
+      }
       rethrow;
     }
   }
@@ -41,15 +57,27 @@ class HttpService implements IHttpService {
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
   }) async {
+    final fullPath = '${dio.options.baseUrl}$path';
+    if (kDebugMode) {
+      print('--> POST $fullPath');
+    }
     try {
       final response = await dio.post(
         path,
         data: data,
         queryParameters: queryParameters,
+        options: options,
       );
+      if (kDebugMode) {
+        print('<-- ${response.statusCode} POST $fullPath');
+      }
       return response;
-    } catch (e) {
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print('<-- ${e.response?.statusCode ?? 'ERROR'} POST $fullPath: $e');
+      }
       rethrow;
     }
   }
@@ -59,15 +87,27 @@ class HttpService implements IHttpService {
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
   }) async {
+    final fullPath = '${dio.options.baseUrl}$path';
+    if (kDebugMode) {
+      print('--> PUT $fullPath');
+    }
     try {
       final response = await dio.put(
         path,
         data: data,
         queryParameters: queryParameters,
+        options: options,
       );
+      if (kDebugMode) {
+        print('<-- ${response.statusCode} PUT $fullPath');
+      }
       return response;
-    } catch (e) {
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print('<-- ${e.response?.statusCode ?? 'ERROR'} PUT $fullPath: $e');
+      }
       rethrow;
     }
   }
@@ -77,15 +117,27 @@ class HttpService implements IHttpService {
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
   }) async {
+    final fullPath = '${dio.options.baseUrl}$path';
+    if (kDebugMode) {
+      print('--> PATCH $fullPath');
+    }
     try {
       final response = await dio.patch(
         path,
         data: data,
         queryParameters: queryParameters,
+        options: options,
       );
+      if (kDebugMode) {
+        print('<-- ${response.statusCode} PATCH $fullPath');
+      }
       return response;
-    } catch (e) {
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print('<-- ${e.response?.statusCode ?? 'ERROR'} PATCH $fullPath: $e');
+      }
       rethrow;
     }
   }
@@ -95,15 +147,27 @@ class HttpService implements IHttpService {
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
+    Options? options,
   }) async {
+    final fullPath = '${dio.options.baseUrl}$path';
+    if (kDebugMode) {
+      print('--> DELETE $fullPath');
+    }
     try {
       final response = await dio.delete(
         path,
         data: data,
         queryParameters: queryParameters,
+        options: options,
       );
+      if (kDebugMode) {
+        print('<-- ${response.statusCode} DELETE $fullPath');
+      }
       return response;
-    } catch (e) {
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print('<-- ${e.response?.statusCode ?? 'ERROR'} DELETE $fullPath: $e');
+      }
       rethrow;
     }
   }

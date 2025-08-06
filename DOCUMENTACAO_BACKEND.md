@@ -1,250 +1,298 @@
 # Documentação Completa do Backend - PaintPro API
 
-Este documento detalha a arquitetura, endpoints, e funcionamento do backend do sistema PaintPro. O backend é composto por uma aplicação monolítica em Laravel que orquestra a lógica de negócio e um microserviço em Python especializado em processamento de imagem.
+Este documento detalha a arquitetura, endpoints, e funcionamento do backend do sistema PaintPro. O backend é composto por uma aplicação monolítica em Laravel que orquestra a lógica de negócio.
 
 ## 1. Arquitetura Geral
 
-O sistema é baseado em uma arquitetura de serviços distribuídos:
+O sistema é baseado em uma arquitetura de serviços:
 
-- **API Principal (Backend Laravel)**: Construído com [Laravel 11](https://laravel.com/), serve como o núcleo da aplicação. É responsável pela gestão de orçamentos, lógica de negócio, persistência de dados e atua como um proxy seguro para serviços externos como GoHighLevel (GHL) e o microserviço de IA.
-- **Microserviço de IA (Python)**: Construído com [FastAPI](https://fastapi.tiangolo.com/) e OpenCV, é focado em processamento de imagem, análise fotométrica e segmentação semântica.
+- **API Principal (Backend Laravel)**: Construído com [Laravel 11](https://laravel.com/), serve como o núcleo da aplicação. É responsável pela gestão de orçamentos, lógica de negócio, persistência de dados e atua como um proxy seguro para serviços externos como GoHighLevel (GHL).
 
 ## 2. Como Executar o Ambiente Local
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
-- **API Laravel**: `http://localhost:8000`
-- **Microserviço Python**: `http://localhost:8001`
+- **API Laravel**: `http://localhost:8080`
 
 ## 3. Estrutura dos Endpoints
 
 Os endpoints são agrupados por domínio de negócio:
 
-| Prefixo                 | Módulo                  | Descrição                                       |
-| ----------------------- | ----------------------- | ----------------------------------------------- |
-| `/api/auth`             | GoHighLevel             | Autenticação e autorização OAuth2 com o GHL.    |
-| `/api/contacts`         | GoHighLevel             | CRUD de contatos diretamente na API do GHL.     |
-| `/api/paint-pro`        | PaintPro                | Fluxo principal de criação de orçamentos.       |
-| `/api/paint-catalog`    | PaintCatalog            | Gerenciamento e consulta do catálogo de tintas. |
-| `/api/image-processing` | ImageProcessing (Proxy) | Endpoints de proxy para o microserviço Python.  |
+| Prefixo              | Módulo       | Descrição                                       |
+| -------------------- | ------------ | ----------------------------------------------- |
+| `/api/auth`          | GoHighLevel  | Autenticação e autorização OAuth2 com o GHL.    |
+| `/api/contacts`      | GoHighLevel  | CRUD de contatos diretamente na API do GHL.     |
+| `/api/paint-pro`     | PaintPro     | Fluxo principal de criação de orçamentos.       |
+| `/api/paint-catalog` | PaintCatalog | Gerenciamento e consulta do catálogo de tintas. |
 
 ---
 
 ## 4. Autenticação com GoHighLevel (`/api/auth`)
 
-A integração com o GoHighLevel utiliza OAuth2 para autenticação segura. O sistema gerencia automaticamente tokens de acesso, refresh tokens e renovação preventiva para manter a conexão sempre ativa.
+A integração com o GoHighLevel utiliza OAuth2 para autenticação segura. O backend gerencia tokens de acesso, refresh tokens e renovação automática, garantindo que o app cliente nunca precise lidar diretamente com credenciais sensíveis.
 
-### 🔐 **Fluxo OAuth2 Completo**
+### 🔗 **Tabela de Endpoints do Fluxo OAuth2**
 
-```mermaid
-sequenceDiagram
-    participant App as App Cliente
-    participant Laravel as API Laravel
-    participant GHL as GoHighLevel
-    participant DB as Banco de Dados
+| Método | Endpoint                                        | Descrição                           | Tipo    | Cliente |
+| ------ | ----------------------------------------------- | ----------------------------------- | ------- | ------- |
+| GET    | /api/auth/authorize-url                         | Retorna URL de autorização OAuth2   | JSON    | App     |
+| GET    | /api/auth/redirect                              | Redireciona para autorização GHL    | 302     | Browser |
+| GET    | /api/oauth/callback                             | Troca code por tokens               | Misto   | Ambos   |
+| GET    | /api/auth/status                                | Verifica status da autenticação     | JSON    | App     |
+| POST   | /api/auth/refresh                               | Renova token manual                 | JSON    | App     |
+| GET    | /api/auth/debug                                 | Estatísticas e debug dos tokens     | JSON    | App     |
+| DELETE | /api/auth/debug-logout                          | Remove token (logout debug)         | JSON    | Dev     |
+| POST   | https://services.leadconnectorhq.com/auth/token | Troca code/refresh_token por tokens | Interno | -       |
 
-    App->>Laravel: 1. GET /api/auth/authorize-url
-    Laravel->>App: 2. Retorna URL de autorização
-    App->>GHL: 3. Abre WebView com URL do GHL
-    GHL->>App: 4. Usuário autoriza → code=ABC123
-    App->>Laravel: 5. GET /api/auth/callback?code=ABC123
-    Laravel->>GHL: 6. POST /oauth/token (troca code por tokens)
-    GHL->>Laravel: 7. Retorna access_token + refresh_token
-    Laravel->>DB: 8. Armazena tokens criptografados
-    Laravel->>App: 9. Confirma autenticação
-    Note over Laravel: Renovação automática a cada 23h
-    Laravel->>GHL: 10. POST /oauth/token (refresh)
-    GHL->>Laravel: 11. Novos tokens válidos
-    Laravel->>DB: 12. Atualiza tokens no banco
-```
+---
 
-### 🛡️ **Segurança e Armazenamento**
+#### 🐞 **Rota de Debug: Logout/Invalidar Token**
 
-- **Criptografia**: Tokens são criptografados antes de salvar no banco
-- **Location ID**: Cada token está associado a uma location específica do GHL
-- **Expiração**: Controle automático de expiração com renovação preventiva
-- **Limpeza**: Tokens expirados são removidos automaticamente após 30 dias
-
-### 📱 **Endpoints de Autenticação**
-
-Todas as requisições esperam `Accept: application/json`.
-
-#### `GET /authorize-url`
-
-- **Descrição**: Gera URL de autorização OAuth2 para redirecionar o usuário ao GoHighLevel
-- **Fluxo**: Primeiro passo do processo de autenticação
-- **Requisição**: `GET /api/auth/authorize-url` (chamada pelo app frontend)
-- **Headers**: `Accept: application/json`
-- **Resposta**: Redirecionamento 302 para `https://marketplace.gohighlevel.com/oauth/chooselocation`
-- **Parâmetros OAuth**: `client_id`, `redirect_uri`, `response_type=code`, `scope=contacts`
-- **Uso no App**: App frontend chama este endpoint para obter a URL de autorização e abrir em WebView
-
-#### `GET /callback`
-
-- **Descrição**: Processa o callback do GoHighLevel após autorização do usuário
-- **Fluxo**: Segundo passo - troca código por tokens de acesso
-- **Requisição**: Query parameter `code` (ex: `?code=ABC123_FROM_GHL`)
-- **Processo Interno**:
-  1. Valida o código recebido
-  2. Faz POST para `https://services.leadconnectorhq.com/oauth/token`
-  3. Armazena tokens criptografados no banco
-  4. Associa ao `location_id` retornado pelo GHL
-- **Resposta de Sucesso (200)**:
+- **Endpoint:** `DELETE /api/auth/debug-logout`
+- **Descrição:** Remove o token OAuth do usuário referente ao `location_id` informado. Útil para testes de fluxo de login/logout.
+- **Como usar:**
+  - Envie o `location_id` no corpo da requisição como JSON:
+    ```json
+    {
+      "location_id": "SEU_LOCATION_ID"
+    }
+    ```
+  - Ou envie como query param: `/api/auth/debug-logout?location_id=SEU_LOCATION_ID`
+- **Resposta de sucesso:**
+  ```json
+  { "success": true, "message": "Token removido com sucesso" }
+  ```
+- **Se não encontrar token:**
   ```json
   {
     "success": true,
-    "expires_at": "2024-08-20T12:00:00.000000Z",
+    "message": "Nenhum token encontrado para este location_id"
+  }
+  ```
+- **Atenção:** Rota apenas para desenvolvimento/debug. Não usar em produção sem proteção!
+
+---
+
+### 🔐 **Fluxo OAuth2 Completo — Passo a Passo**
+
+1. **Solicitação da URL de Autorização**
+
+   - **Para Apps (Flutter/React Native):**
+
+     - App chama: `GET /api/auth/authorize-url`
+     - Backend retorna JSON com a URL de autorização
+     - **Resposta:**
+       ```json
+       {
+         "success": true,
+         "url": "https://marketplace.gohighlevel.com/auth/chooselocation?...",
+         "message": "Authorization URL generated successfully"
+       }
+       ```
+
+   - **Para Browsers (Web):**
+     - Browser chama: `GET /api/auth/redirect`
+     - Backend redireciona diretamente para o GHL (HTTP 302)
+
+2. **Redirecionamento do Usuário**
+
+   - Frontend abre a URL recebida.
+   - Usuário faz login e autoriza.
+
+3. **Callback: Envio do Code para o Backend**
+
+   - **Para Apps (Flutter/React Native):**
+
+     - App chama: `GET /api/oauth/callback?code=...`
+     - Backend processa e retorna JSON com resultado
+     - **Resposta de sucesso:**
+       ```json
+       {
+         "success": true,
+         "expires_at": "2024-08-20T12:00:00.000000Z",
+         "location_id": "LOCATION_ID_FROM_GHL"
+       }
+       ```
+
+   - **Para Browsers (Web):**
+     - Browser é redirecionado para: `GET /api/oauth/callback?code=...`
+     - Backend processa e redireciona para o app via deep link
+     - **Redirecionamento de sucesso:** `paintproapp://auth/success?location_id=...`
+     - **Redirecionamento de erro:** `paintproapp://auth/failure?error=...`
+
+3.1 **Chamada Interna: Troca do Code por Tokens**
+
+- Backend faz `POST https://services.leadconnectorhq.com/oauth/token` com:
+  ```http
+  grant_type=authorization_code&client_id=...&client_secret=...&code=...&redirect_uri=...&user_type=Location
+  ```
+- Exemplo de response:
+  ```json
+  {
+    "access_token": "...",
+    "refresh_token": "...",
+    "expires_in": 86400,
+    "token_type": "Bearer",
+    "scope": "contacts",
+    "locationId": "..."
+  }
+  ```
+- Backend armazena tokens criptografados na tabela `ghl_tokens`.
+
+4. **Verificação de Status da Autenticação**
+
+   - Frontend chama: `GET /api/auth/status`
+   - Backend verifica validade do token no banco.
+   - **Resposta autenticado:**
+     ```json
+     {
+       "success": true,
+       "data": {
+         "authenticated": true,
+         "expires_at": "2024-08-20T12:00:00.000000Z",
+         "expires_in_minutes": 1380,
+         "needs_login": false,
+         "location_id": "LOCATION_ID_FROM_GHL",
+         "is_expiring_soon": false
+       }
+     }
+     ```
+   - **Resposta não autenticado:**
+     ```json
+     {
+       "success": true,
+       "data": {
+         "authenticated": false,
+         "needs_login": true
+       }
+     }
+     ```
+
+5. **Renovação Manual do Token**
+   - Frontend chama: `POST /api/auth/refresh`
+
+5.1 **Chamada Interna: Refresh do Token**
+
+- Backend faz `POST https://services.leadconnectorhq.com/oauth/token` com:
+  ```http
+  grant_type=refresh_token&client_id=...&client_secret=...&refresh_token=...&user_type=Location
+  ```
+- Exemplo de response:
+  ```json
+  {
+    "access_token": "...",
+    "refresh_token": "...",
+    "expires_in": 86400,
+    "token_type": "Bearer",
+    "scope": "contacts",
+    "locationId": "..."
+  }
+  ```
+- Backend atualiza o token no banco.
+- **Resposta de sucesso:**
+  ```json
+  {
+    "success": true,
+    "expires_at": "2024-08-21T12:00:00.000000Z",
     "location_id": "LOCATION_ID_FROM_GHL"
   }
   ```
-- **Resposta de Erro (400/500)**:
+- **Resposta de erro:**
   ```json
   {
     "success": false,
-    "message": "Authorization failed on GoHighLevel side.",
-    "error": "invalid_grant"
+    "location_id": "LOCATION_ID_FROM_GHL"
   }
   ```
 
-#### `GET /status`
+6. **Debug e Monitoramento**
+   - Frontend chama: `GET /api/auth/debug`
+   - Backend retorna estatísticas dos tokens.
+   - **Resposta:**
+     ```json
+     {
+       "success": true,
+       "data": {
+         "total_tokens": 5,
+         "valid": 3,
+         "expired": 2,
+         "needs_refresh": 1,
+         "health_percentage": 60.0
+       }
+     }
+     ```
 
-- **Descrição**: Verifica o status atual da autenticação e validade dos tokens
-- **Uso**: Verificar se o usuário está autenticado antes de usar outros endpoints
-- **Requisição**: Nenhuma
-- **Resposta de Sucesso (200)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "authenticated": true,
-      "expires_at": "2024-08-20T12:00:00.000000Z",
-      "expires_in_minutes": 1380,
-      "needs_login": false,
-      "location_id": "LOCATION_ID_FROM_GHL",
-      "is_expiring_soon": false
-    }
-  }
-  ```
-- **Resposta Não Autenticado**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "authenticated": false,
-      "needs_login": true
-    }
-  }
-  ```
+### 🛡️ **Segurança, Middleware e Observações Técnicas**
 
-#### `POST /refresh`
+- **Middlewares:**
+  - `ValidateGhlToken`: Garante que a requisição tem um token válido para a location. Retorna 401 e URL de reautenticação se inválido.
+  - `Authenticate` (Laravel): Usado para rotas protegidas por autenticação padrão.
+- **Tokens criptografados:** Nunca são expostos ao frontend, nem mesmo parcialmente.
+- **O backend suporta múltiplas locations** (um token por location_id).
+- O middleware pode exigir o header `X-GHL-Location-ID` para identificar a location.
+- O backend faz toda a criptografia/descriptografia dos tokens.
+- O fluxo é seguro e preparado para produção, mas recomenda-se proteger os endpoints do backend com autenticação adicional em produção.
 
-- **Descrição**: Renova manualmente o `access_token` usando o `refresh_token` armazenado
-- **Uso**: Renovação sob demanda (além da automática)
-- **Requisição**: Nenhuma (usa tokens armazenados no banco)
-- **Processo**:
-  1. Busca refresh_token válido no banco
-  2. Faz POST para endpoint de refresh do GHL
-  3. Atualiza tokens no banco
-- **Resposta de Sucesso (200)**:
-  ```json
-  {
-    "success": true,
-    "expires_at": "2024-08-21T12:00:00.000000Z"
-  }
-  ```
-- **Resposta de Erro (401)**:
-  ```json
-  {
-    "success": false,
-    "needs_login": true
-  }
-  ```
+### 🗄️ **Models e Migrations**
 
-#### `GET /debug`
+- **Model:** `App\Modules\GoHighLevel\Models\GhlToken`
+  - Campos: location_id, access_token (criptografado), refresh_token (criptografado), expires_in, token_type, scope, additional_data, token_expires_at, timestamps
+- **Migration:** `2025_06_18_145644_create_ghl_tokens_table.php`
 
-- **Descrição**: Retorna estatísticas detalhadas sobre tokens armazenados
-- **Uso**: Monitoramento e troubleshooting da autenticação
-- **Requisição**: Nenhuma
-- **Resposta de Sucesso (200)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "total_tokens": 5,
-      "valid": 3,
-      "expired": 2,
-      "needs_refresh": 1,
-      "health_percentage": 60.0
-    }
-  }
-  ```
+### ⚙️ **Variáveis de Ambiente**
 
-### 🔄 **Renovação Automática**
+- `GHL_CLIENT_ID`
+- `GHL_CLIENT_SECRET`
+- `GHL_REDIRECT_URI`
+- `APP_KEY` (criptografia dos tokens)
 
-O sistema possui um agendador (cron job) que executa automaticamente:
+### 🛠️ **Comando Artisan Relacionado**
 
-- **Frequência**: A cada 23 horas
-- **Comando**: `php artisan ghl:refresh-tokens`
-- **Funcionalidade**:
-  - Identifica tokens que expiram nas próximas 24h
-  - Renova automaticamente usando refresh tokens
-  - Remove tokens expirados há mais de 30 dias
-  - Logs detalhados para monitoramento
+- `php artisan ghl:refresh-tokens` — Renova tokens que estão para expirar (cron job recomendado a cada 23h)
 
-### 📊 **Estrutura do Token no Banco**
+### 📝 **Logs e Tratamento de Erros**
 
-```sql
--- Tabela: ghl_tokens
-location_id        VARCHAR(255)  -- ID da location no GHL
-access_token       TEXT          -- Criptografado
-refresh_token      TEXT          -- Criptografado
-expires_in         INTEGER       -- Segundos até expiração
-token_type         VARCHAR(50)   -- Bearer
-scope              JSON          -- Permissões concedidas
-additional_data    JSON          -- Dados extras do GHL
-token_expires_at   TIMESTAMP     -- Data/hora de expiração
-created_at         TIMESTAMP
-updated_at         TIMESTAMP
-```
+- Todos os erros de integração com o GHL são logados (`Log::error` e `Log::warning`)
+- Respostas de erro padronizadas:
+  - Falha de autorização: `{ "success": false, "message": "Authorization failed on GoHighLevel side.", "error": "..." }`
+  - Token expirado ou inválido: `{ "success": false, "needs_login": true }`
+  - Falha de rede/integridade: Mensagem clara e log detalhado
 
-### 🚨 **Tratamento de Erros**
+### 📋 **Resumo de Integração Frontend**
 
-- **Token Expirado**: Retorna `needs_login: true` para nova autenticação
-- **Refresh Token Inválido**: Força nova autenticação OAuth
-- **Erro de Rede**: Logs detalhados para troubleshooting
-- **Múltiplas Locations**: Suporte a múltiplas locations do GHL
-
-### 🔧 **Configuração Necessária**
-
-```env
-# .env
-GHL_CLIENT_ID=your_client_id
-GHL_CLIENT_SECRET=your_client_secret
-GHL_REDIRECT_URI=http://localhost:3000/oauth/callback/gohighlevel
-```
-
-### 📱 **Integração com App Cliente**
+#### **Para Apps Mobile (Flutter/React Native):**
 
 ```javascript
-// Exemplo de uso no app
-const authFlow = async () => {
-  // 1. Obter URL de autorização
-  const authUrl = await fetch("/api/auth/authorize-url");
+// 1. Obter URL de autorização
+const response = await fetch("/api/auth/authorize-url");
+const { url } = await response.json();
 
-  // 2. Abrir WebView com URL do GHL
-  const webView = openWebView(authUrl);
+// 2. Abrir WebView/navegador
+openWebView(url);
 
-  // 3. Capturar código do callback
-  const code = await captureCallbackCode(webView);
+// 3. Capturar code do callback
+const code = await captureCallbackCode();
 
-  // 4. Trocar código por tokens
-  const result = await fetch(`/api/auth/callback?code=${code}`);
+// 4. Trocar code por tokens
+const result = await fetch(`/api/oauth/callback?code=${code}`).then((r) =>
+  r.json()
+);
 
-  // 5. Verificar status
-  const status = await fetch("/api/auth/status");
-};
+// 5. Verificar status
+const status = await fetch("/api/auth/status").then((r) => r.json());
+```
+
+#### **Para Web (Browser):**
+
+```javascript
+// 1. Redirecionar para autorização
+window.location.href = "/api/auth/redirect";
+
+// 2. O callback será processado automaticamente
+// 3. O usuário será redirecionado para o app via deep link
+// 4. O app captura o deep link e processa o resultado
 ```
 
 ---
@@ -460,30 +508,7 @@ Endpoints do fluxo principal da aplicação. **Prefixo**: `/api/paint-pro`.
 
 #### `POST /estimates/{id}/photos`
 
-- **Descrição**: **Upload e Processamento de Fotos com IA.** Este é o endpoint central para a análise de imagens. Ele orquestra a comunicação com o microserviço Python para obter medições precisas, já descontando áreas de objetos como portas e janelas.
-
-**Fluxo Detalhado do Processamento:**
-
-```mermaid
-sequenceDiagram
-    participant AppCliente as App Cliente
-    participant LaravelAPI as API Laravel </br> (paint-pro)
-    participant PythonIA as Microserviço Python </br> (IA)
-
-    AppCliente->>+LaravelAPI: 1. Envia fotos para </br> POST /api/paint-pro/estimates/{id}/photos
-    LaravelAPI->>+PythonIA: 2. Repassa as imagens para </br> POST /analyze-complete </br> (use_segmentation=true)
-    PythonIA-->>-LaravelAPI: 3. Retorna JSON com as medidas </br> (Área Total - Área de Objetos = Área Pintável)
-    LaravelAPI-->>-AppCliente: 4. Confirma o processamento e retorna </br> o orçamento atualizado com as medidas
-```
-
-**Passo a Passo:**
-
-1. **Envio pelo Cliente**: O app cliente envia as imagens do ambiente para o endpoint do Laravel.
-2. **Orquestração no Laravel**: A API Laravel recebe as fotos e as repassa para o microserviço Python, instruindo-o a usar a segmentação semântica para identificar objetos (`use_segmentation=true`). A lista de objetos a serem descontados (`door, window, person...`) é gerenciada internamente pelo Laravel.
-3. **Análise da IA**: O serviço Python analisa as imagens, calcula a área total e a área dos objetos detectados, e retorna a **área pintável** (área total - área dos objetos).
-4. **Persistência e Resposta**: O Laravel salva essas medidas precisas no banco de dados, associadas ao orçamento, e retorna uma confirmação ao app cliente.
-
-> O cliente final só precisa interagir com este endpoint; toda a complexidade da comunicação entre os serviços é abstraída pelo backend Laravel.
+- **Descrição**: **Upload de Fotos para o Orçamento.** Este endpoint permite o upload das fotos do ambiente para serem anexadas ao orçamento.
 
 - **Requisição**: `POST /api/paint-pro/estimates/{id}/photos` com `Content-Type: multipart/form-data`
 - **Body**: Campo `photos[]` com array de arquivos de imagem (ex: `photos[0]`, `photos[1]`)
@@ -491,17 +516,10 @@ sequenceDiagram
   ```json
   {
     "success": true,
-    "message": "Photos uploaded and processed successfully",
+    "message": "Photos uploaded successfully",
     "data": {
       "id": 1,
-      "total_area": 450,
-      "paintable_area": 380,
-      "objects_detected": {
-        "door": { "count": 2, "area": 35 },
-        "window": { "count": 3, "area": 25 },
-        "person": { "count": 1, "area": 10 }
-      },
-      "photos_processed": 3,
+      "photos_uploaded": 3,
       "status": "photos_uploaded"
     }
   }
@@ -719,251 +737,6 @@ Endpoints para interagir com o catálogo de tintas.
       "total_colors": 2500,
       "popular_brands": [...],
       "recent_additions": [...]
-    }
-  }
-  ```
-
----
-
-## 8. Proxy para Microserviço de Imagem (`/api/image-processing`)
-
-Endpoints que fazem a ponte com o microserviço Python.
-
-#### `GET /health`
-
-- **Descrição**: Verifica o status do microserviço Python
-- **Requisição**: `GET /api/image-processing/health`
-- **Resposta de Sucesso (200)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "status": "healthy",
-      "python_service": "running",
-      "redis_cache": "connected",
-      "model_loaded": true
-    }
-  }
-  ```
-
-#### `GET /processed`
-
-- **Descrição**: Lista imagens processadas que estão no cache (Redis)
-- **Requisição**: `GET /api/image-processing/processed`
-- **Resposta de Sucesso (200)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "cached_images": 15,
-      "cache_size_mb": 45.2,
-      "recent_processing": [...]
-    }
-  }
-  ```
-
-#### `DELETE /cache`
-
-- **Descrição**: Limpa o cache de imagens do Redis
-- **Requisição**: `DELETE /api/image-processing/cache`
-- **Resposta de Sucesso (200)**:
-  ```json
-  {
-    "success": true,
-    "message": "Cache cleared successfully",
-    "data": {
-      "cleared_items": 15,
-      "freed_space_mb": 45.2
-    }
-  }
-  ```
-
----
-
-## 9. Endpoints Diretos do Microserviço Python (IA)
-
-Endpoints acessíveis diretamente no microserviço Python em `http://localhost:8001`.
-
-#### `GET /`
-
-- **Descrição**: Status do serviço e funcionalidades disponíveis
-- **Requisição**: `GET http://localhost:8001/`
-- **Resposta de Sucesso (200)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "status": "running",
-      "version": "2.1.0",
-      "features": ["segmentation", "analysis", "calculation"],
-      "model_info": {
-        "name": "DeepLabV3+ ResNet50",
-        "classes": 67,
-        "accuracy": "95.2%"
-      }
-    }
-  }
-  ```
-
-#### `GET /health`
-
-- **Descrição**: Verificação de saúde detalhada do serviço
-- **Requisição**: `GET http://localhost:8001/health`
-- **Resposta de Sucesso (200)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "status": "healthy",
-      "python_version": "3.11.0",
-      "opencv_version": "4.8.0",
-      "torch_version": "2.0.0",
-      "redis_connected": true,
-      "gpu_available": false,
-      "memory_usage_mb": 512
-    }
-  }
-  ```
-
-#### `POST /analyze-complete`
-
-- **Descrição**: Análise fotométrica completa com ou sem segmentação semântica
-- **Requisição**: `POST http://localhost:8001/analyze-complete` com `Content-Type: multipart/form-data`
-- **Body**:
-  - Campo `file`: Arquivo de imagem (obrigatório)
-  - Campo `use_segmentation`: `true` ou `false` (padrão: `true`)
-  - Campo `segmentation_classes`: String com classes separadas por vírgula (ex: `"door,window,person"`)
-- **Resposta de Sucesso (200)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "filename": "image.jpg",
-      "total_area_pixels": 1923600,
-      "paintable_area_pixels": 1723600,
-      "paintable_area_sqm": 43.09,
-      "segmentation_results": {
-        "door": { "count": 1, "area_pixels": 100000, "area_sqm": 2.5 },
-        "window": { "count": 2, "area_pixels": 80000, "area_sqm": 2.0 },
-        "person": { "count": 1, "area_pixels": 20000, "area_sqm": 0.5 }
-      },
-      "processing_time_ms": 1250,
-      "cache_hit": false
-    }
-  }
-  ```
-
-#### `POST /semantic-segmentation`
-
-- **Descrição**: Executa apenas a segmentação semântica sem cálculos de área
-- **Requisição**: `POST http://localhost:8001/semantic-segmentation` com `Content-Type: multipart/form-data`
-- **Body**:
-  - Campo `file`: Arquivo de imagem (obrigatório)
-- **Resposta de Sucesso (200)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "filename": "image.jpg",
-      "segmentation_mask": "base64_encoded_mask",
-      "detected_classes": ["door", "window", "person"],
-      "processing_time_ms": 850
-    }
-  }
-  ```
-
-#### `GET /segmentation/available-classes`
-
-- **Descrição**: Lista todas as classes que o modelo de IA consegue detectar
-- **Requisição**: `GET http://localhost:8001/segmentation/available-classes`
-- **Resposta de Sucesso (200)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "total_classes": 67,
-      "classes": [
-        "person",
-        "bicycle",
-        "car",
-        "motorcycle",
-        "airplane",
-        "bus",
-        "train",
-        "truck",
-        "boat",
-        "traffic light",
-        "fire hydrant",
-        "stop sign",
-        "parking meter",
-        "bench",
-        "bird",
-        "cat",
-        "dog",
-        "horse",
-        "sheep",
-        "cow",
-        "elephant",
-        "bear",
-        "zebra",
-        "giraffe",
-        "backpack",
-        "umbrella",
-        "handbag",
-        "tie",
-        "suitcase",
-        "frisbee",
-        "skis",
-        "snowboard",
-        "sports ball",
-        "kite",
-        "baseball bat",
-        "baseball glove",
-        "skateboard",
-        "surfboard",
-        "tennis racket",
-        "bottle",
-        "wine glass",
-        "cup",
-        "fork",
-        "knife",
-        "spoon",
-        "bowl",
-        "banana",
-        "apple",
-        "sandwich",
-        "orange",
-        "broccoli",
-        "carrot",
-        "hot dog",
-        "pizza",
-        "donut",
-        "cake",
-        "chair",
-        "couch",
-        "potted plant",
-        "bed",
-        "dining table",
-        "toilet",
-        "tv",
-        "laptop",
-        "mouse",
-        "remote",
-        "keyboard",
-        "cell phone",
-        "microwave",
-        "oven",
-        "toaster",
-        "sink",
-        "refrigerator",
-        "book",
-        "clock",
-        "vase",
-        "scissors",
-        "teddy bear",
-        "hair drier",
-        "toothbrush"
-      ]
     }
   }
   ```
