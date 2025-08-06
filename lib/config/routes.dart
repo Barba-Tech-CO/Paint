@@ -69,12 +69,12 @@ final router = GoRouter(
       builder: (context, state) => const ContactDetailsView(),
     ),
     GoRoute(
-      path: '/new-project',
-      builder: (context, state) => const NewProjectView(),
+      path: '/create-project',
+      builder: (context, state) => const CreateProjectView(),
     ),
     GoRoute(
-      path: '/measurements',
-      builder: (context, state) => const MeasurementsView(),
+      path: '/zones',
+      builder: (context, state) => const ZonesView(),
     ),
     GoRoute(
       path: '/room-adjust',

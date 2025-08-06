@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
-import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
+import 'package:paintpro/view/widgets/widgets.dart';
 
-class NewProjectView extends StatefulWidget {
-  const NewProjectView({super.key});
+class CreateProjectView extends StatefulWidget {
+  const CreateProjectView({super.key});
 
   @override
-  State<NewProjectView> createState() => _NewProjectViewState();
+  State<CreateProjectView> createState() => _CreateProjectViewState();
 }
 
-class _NewProjectViewState extends State<NewProjectView> {
+class _CreateProjectViewState extends State<CreateProjectView> {
   final TextEditingController _projectNameController = TextEditingController();
   final TextEditingController _projectDetailsController =
       TextEditingController();
@@ -19,7 +18,12 @@ class _NewProjectViewState extends State<NewProjectView> {
       TextEditingController();
 
   // Estado para controlar a seleção do tipo de projeto
-  String _selectedProjectType = 'Interior';
+  String _selectedProjectType = '';
+
+  bool get _isFormValid {
+    return _projectNameController.text.trim().isNotEmpty &&
+        _projectDetailsController.text.trim().isNotEmpty;
+  }
 
   @override
   void dispose() {
@@ -134,23 +138,10 @@ class _NewProjectViewState extends State<NewProjectView> {
                 maxLines: 6,
                 multiline: true,
               ),
-              Padding(
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-                child: ElevatedButton(
-                  onPressed: () => context.push('/camera'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.textOnPrimary,
-                    minimumSize: const Size(double.infinity, 48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Create Project',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
+
+              PaintProButton(
+                text: 'Next',
+                onPressed: !_isFormValid ? null : () => context.push('/camera'),
               ),
             ],
           ),

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:paintpro/view/contact_details/widgets/info_card_widget.dart';
+import 'package:paintpro/view/contact_details/widgets/info_row_widget.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 
 class ContactDetailsView extends StatelessWidget {
@@ -69,7 +72,10 @@ class ContactDetailsView extends StatelessWidget {
     return Scaffold(
       appBar: PaintProAppBar(
         title: 'Contacts Details',
-        toolbarHeight: 90,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(

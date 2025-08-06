@@ -10,6 +10,11 @@ export 'cards/input_card_widget.dart';
 export 'cards/project_state_card_widget.dart';
 export 'cards/project_summary_card_widget.dart';
 export 'cards/stats_card_widget.dart';
+export 'cards/surface_areas_widget.dart';
+export 'cards/zones_card.dart';
+
+// Buttons
+export 'buttons/paint_pro_button.dart';
 
 // Navigation
 export 'navigation/floating_bottom_navigation_bar.dart';

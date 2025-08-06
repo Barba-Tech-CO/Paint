@@ -10,39 +10,36 @@ class ProjectsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MainLayout(
-      currentRoute: '/projects',
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: const PaintProAppBar(title: 'Projects'),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.folder_outlined,
-                size: 64,
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: const PaintProAppBar(title: 'Projects'),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.folder_outlined,
+              size: 64,
+              color: AppColors.textSecondary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Projects',
+              style: GoogleFonts.albertSans(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your projects will appear here',
+              style: GoogleFonts.albertSans(
+                fontSize: 16,
                 color: AppColors.textSecondary,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Projects',
-                style: GoogleFonts.albertSans(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Your projects will appear here',
-                style: GoogleFonts.albertSans(
-                  fontSize: 16,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -118,4 +118,13 @@ void setupDependencyInjection() {
   getIt.registerFactory<MeasurementsViewModel>(
     () => MeasurementsViewModel(),
   );
+
+  // ViewModels - Zones
+  getIt.registerLazySingleton<ZonesCardViewmodel>(
+    () => ZonesCardViewmodel(),
+  );
+
+  getIt.registerFactory<ZoneDetailViewModel>(
+    () => ZoneDetailViewModel(null),
+  );
 }
