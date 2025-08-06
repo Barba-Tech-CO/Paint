@@ -74,7 +74,7 @@ class FloatingBottomNavigationBar extends StatelessWidget {
                                     index: index,
                                     onTap: () =>
                                         _onItemTapped(context, item, index),
-                                    semanticsLabel: 'Ir para 24{item.label}',
+                                    semanticsLabel: 'Ir para ${item.label}',
                                   ),
                                 );
                               }),
@@ -97,7 +97,7 @@ class FloatingBottomNavigationBar extends StatelessWidget {
                                     index: index,
                                     onTap: () =>
                                         _onItemTapped(context, item, index),
-                                    semanticsLabel: 'Ir para 24{item.label}',
+                                    semanticsLabel: 'Ir para ${item.label}',
                                   ),
                                 );
                               }),
