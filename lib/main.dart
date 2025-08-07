@@ -37,9 +37,6 @@ class PaintProApp extends StatelessWidget {
         ChangeNotifierProvider<AuthViewModel>(
           create: (_) => getIt<AuthViewModel>(),
         ),
-        ChangeNotifierProvider<ProfileViewModel>(
-          create: (_) => getIt<ProfileViewModel>(),
-        ),
         // Contact ViewModels
         ChangeNotifierProvider<ContactListViewModel>(
           create: (_) => getIt<ContactListViewModel>(),

@@ -5,6 +5,7 @@ import 'package:paintpro/view/contacts/widgets/contacts_list_widget.dart';
 import 'package:paintpro/view/contacts/widgets/empty_state_widget.dart';
 import 'package:paintpro/view/contacts/widgets/search_field_widget.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
+import 'package:paintpro/view/layout/main_layout.dart';
 
 class ContactsView extends StatefulWidget {
   const ContactsView({super.key});
@@ -99,31 +100,26 @@ class _ContactsViewState extends State<ContactsView> {
     // Para testar estado vazio, descomente a linha abaixo:
     // allContacts = [];
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: const PaintProAppBar(
-        title: 'Contacts',
-      ),
-      body: allContacts.isEmpty
-          ? const EmptyStateWidget()
-          : Column(
-              children: [
-                SearchFieldWidget(controller: searchController),
-                Expanded(
-                  child: filteredContacts.isEmpty
-                      ? const EmptyStateWidget()
-                      : ContactsListWidget(
-                          contacts: filteredContacts,
-                          allContacts: allContacts,
-                          avatarColors: avatarColors,
-                        ),
-                ),
-              ],
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/new-contact'),
-        backgroundColor: Theme.of(context).primaryColor,
-        child: const Icon(Icons.add, color: Colors.white),
+    return MainLayout(
+      currentRoute: '/contacts',
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: const PaintProAppBar(
+          title: 'Contacts',
+          toolbarHeight: 90,
+        ),
+        body: ListView.builder(
+          itemCount: mockContacts.length,
+          itemBuilder: (context, index) {
+            final contact = mockContacts[index];
+            return ListTile(
+              leading: const Icon(Icons.person),
+              title: Text(contact['name']!),
+              subtitle: Text(contact['phone']!),
+              onTap: () => context.push('/contact-details'),
+            );
+          },
+        ),
       ),
     );
   }

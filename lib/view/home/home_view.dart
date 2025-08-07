@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'package:paintpro/config/app_colors.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
-import 'package:paintpro/view/widgets/cards/project_state_card_widget.dart';
 import 'package:paintpro/view/widgets/cards/greeting_card_widget.dart';
+import 'package:paintpro/view/widgets/cards/project_state_card_widget.dart';
 import 'package:paintpro/view/widgets/cards/stats_card_widget.dart';
 
 class HomeView extends StatelessWidget {
@@ -114,6 +115,9 @@ class HomeView extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(
+              height: 120,
+            ), // espaço extra para não cobrir a barra
           ],
         ),
       ),

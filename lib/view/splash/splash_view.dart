@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:provider/provider.dart';
-import '../../viewmodel/auth/auth_viewmodel.dart';
+import '../../config/dependency_injection.dart';
 import '../../service/app_initialization_service.dart';
 import '../../service/navigation_service.dart';
 
@@ -71,17 +70,14 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
 
     if (!mounted) return;
 
-    final authViewModel = context.read<AuthViewModel>();
-    final navigationService = context.read<NavigationService>();
-    final appInitService = AppInitializationService(
-      authViewModel.authService,
-      navigationService,
-    );
+    // Usa o serviço de inicialização já configurado na injeção de dependências
+    final appInitService = getIt<AppInitializationService>();
 
     try {
       await appInitService.initializeApp(context);
     } catch (e) {
       // Em caso de erro, vai para autenticação
+      final navigationService = getIt<NavigationService>();
       navigationService.navigateToAuth(context);
     }
   }

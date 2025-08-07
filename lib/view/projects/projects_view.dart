@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:paintpro/config/app_colors.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
+import 'package:paintpro/view/layout/main_layout.dart';
 
 class ProjectsView extends StatelessWidget {
   const ProjectsView({super.key});
@@ -11,10 +12,7 @@ class ProjectsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const PaintProAppBar(
-        title: 'Projects',
-        toolbarHeight: 126,
-      ),
+      appBar: const PaintProAppBar(title: 'Projects'),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
