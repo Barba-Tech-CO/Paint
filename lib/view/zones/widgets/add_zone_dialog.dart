@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:paintpro/config/app_colors.dart';
 
 class AddZoneDialog extends StatefulWidget {
@@ -36,27 +35,17 @@ class _AddZoneDialogState extends State<AddZoneDialog> {
     if (_formKey.currentState!.validate()) {
       // Verificar se um tipo de zona foi selecionado
       if (_selectedZoneType == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a zone type'),
-            backgroundColor: Colors.red,
-          ),
-        );
         return;
       }
 
-      // Fechar o dialog primeiro
-      Navigator.of(context).pop();
-
-      // Navegar para a tela da câmera
-      // TODO: Passar os dados da zona para a tela da câmera se necessário
-      // Dados: ${_titleController.text.trim()} ($_selectedZoneType)
-      context.go('/camera');
+      final title = _titleController.text.trim();
+      final zoneType = _selectedZoneType!;
 
       // Chamar o callback com os dados coletados
+      // O callback é responsável por fechar o dialog e navegar
       widget.onAdd(
-        title: _titleController.text.trim(),
-        zoneType: _selectedZoneType!,
+        title: title,
+        zoneType: zoneType,
       );
     }
   }

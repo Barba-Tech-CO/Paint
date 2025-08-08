@@ -1,27 +1,7 @@
 import 'package:go_router/go_router.dart';
-import 'package:flutter/material.dart';
 
-import '../view/views.dart';
-import '../view/widgets/webview_popup_screen.dart';
-
-Page<dynamic> slideTransitionPage(Widget child, GoRouterState state) {
-  return CustomTransitionPage(
-    key: state.pageKey,
-    child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      const begin = Offset(1.0, 0.0);
-      const end = Offset.zero;
-      var tween = Tween(
-        begin: begin,
-        end: end,
-      ).chain(CurveTween(curve: Curves.ease));
-      return SlideTransition(
-        position: animation.drive(tween),
-        child: child,
-      );
-    },
-  );
-}
+import 'package:paintpro/view/views.dart';
+import 'package:paintpro/model/models.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -35,34 +15,24 @@ final router = GoRouter(
       builder: (context, state) => const AuthView(),
     ),
     GoRoute(
-      path: '/dashboard',
-      pageBuilder: (context, state) {
-        return slideTransitionPage(const DashboardView(), state);
-      },
+      path: '/home',
+      builder: (context, state) => const HomeView(),
     ),
     GoRoute(
       path: '/projects',
-      pageBuilder: (context, state) {
-        return slideTransitionPage(const ProjectsView(), state);
-      },
+      builder: (context, state) => const ProjectsView(),
     ),
     GoRoute(
       path: '/camera',
-      pageBuilder: (context, state) {
-        return slideTransitionPage(const CameraView(), state);
-      },
+      builder: (context, state) => const CameraView(),
     ),
     GoRoute(
       path: '/contacts',
-      pageBuilder: (context, state) {
-        return slideTransitionPage(const ContactsView(), state);
-      },
+      builder: (context, state) => const ContactsView(),
     ),
     GoRoute(
       path: '/highlights',
-      pageBuilder: (context, state) {
-        return slideTransitionPage(const HighlightsView(), state);
-      },
+      builder: (context, state) => const HighlightsView(),
     ),
     GoRoute(
       path: '/contact-details',
@@ -85,14 +55,18 @@ final router = GoRouter(
       builder: (context, state) => const SelectColorsView(),
     ),
     GoRoute(
-      path: '/overview-measurements',
-      builder: (context, state) => const OverviewMeasurementsView(),
+      path: '/overview-zones',
+      builder: (context, state) => const OverviewZonesView(),
     ),
     GoRoute(
-      path: '/webview-popup',
+      path: '/new-contact',
+      builder: (context, state) => const NewContactView(),
+    ),
+    GoRoute(
+      path: '/zones-details',
       builder: (context, state) {
-        final url = state.extra as String;
-        return WebViewPopupScreen(popupUrl: url);
+        final zone = state.extra as ZonesCardModel?;
+        return ZonesDetailsView(zone: zone);
       },
     ),
   ],
