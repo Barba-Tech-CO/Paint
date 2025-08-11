@@ -17,6 +17,7 @@ class ZonesCard extends StatelessWidget {
   final VoidCallback? onTap;
   final void Function(String newName)? onRename;
   final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
 
   const ZonesCard({
     super.key,
@@ -32,6 +33,7 @@ class ZonesCard extends StatelessWidget {
     this.onTap,
     this.onRename,
     this.onDelete,
+    this.onEdit,
   });
 
   @override
@@ -172,6 +174,8 @@ class ZonesCard extends StatelessWidget {
                     if (newName != null && newName.trim().isNotEmpty) {
                       onRename?.call(newName.trim());
                     }
+                  } else if (value == 'edit') {
+                    onEdit?.call();
                   } else if (value == 'delete') {
                     final confirm = await showDialog<bool>(
                       context: context,

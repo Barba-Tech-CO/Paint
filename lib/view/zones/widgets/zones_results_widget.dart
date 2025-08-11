@@ -143,6 +143,10 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
                                   listViewModel.selectZone(zone);
                                   context.push('/zones-details', extra: zone);
                                 },
+                                onEdit: () {
+                                  // Navigate to edit zone page
+                                  context.push('/edit-zone', extra: zone);
+                                },
                                 onRename: (newName) {
                                   // Use the ZoneDetailViewModel to maintain consistency
                                   final detailViewModel =
