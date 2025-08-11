@@ -1,7 +1,9 @@
 import 'package:go_router/go_router.dart';
 
-import 'package:paintpro/view/views.dart';
 import 'package:paintpro/model/models.dart';
+import 'package:paintpro/view/create_project/create_project_view.dart';
+import 'package:paintpro/view/views.dart';
+import 'package:paintpro/view/zones/zones_view.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
