@@ -109,9 +109,9 @@ class _ContactsViewState extends State<ContactsView> {
           toolbarHeight: 90,
         ),
         body: ListView.builder(
-          itemCount: mockContacts.length,
+          itemCount: allContacts.length,
           itemBuilder: (context, index) {
-            final contact = mockContacts[index];
+            final contact = allContacts[index];
             return ListTile(
               leading: const Icon(Icons.person),
               title: Text(contact['name']!),
