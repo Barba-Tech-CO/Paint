@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/contacts/widgets/contacts_list_widget.dart';
-import 'package:paintpro/view/contacts/widgets/empty_state_widget.dart';
-import 'package:paintpro/view/contacts/widgets/search_field_widget.dart';
-import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/view/layout/main_layout.dart';
+import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 
 class ContactsView extends StatefulWidget {
   const ContactsView({super.key});
@@ -109,9 +107,9 @@ class _ContactsViewState extends State<ContactsView> {
           toolbarHeight: 90,
         ),
         body: ListView.builder(
-          itemCount: mockContacts.length,
+          itemCount: allContacts.length,
           itemBuilder: (context, index) {
-            final contact = mockContacts[index];
+            final contact = allContacts[index];
             return ListTile(
               leading: const Icon(Icons.person),
               title: Text(contact['name']!),
