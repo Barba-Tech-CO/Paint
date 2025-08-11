@@ -32,7 +32,7 @@ class AuthView extends StatelessWidget {
   void _handleSideEffects(BuildContext context, AuthViewModel viewModel) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (viewModel.shouldNavigateToDashboard) {
-        context.go('/dashboard');
+        context.go('/home');
       }
       if (viewModel.shouldShowPopup && viewModel.popupUrl != null) {
         MarketplacePopupHelper.show(context, viewModel.popupUrl!, viewModel);
