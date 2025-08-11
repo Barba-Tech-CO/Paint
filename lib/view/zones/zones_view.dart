@@ -6,7 +6,6 @@ import 'package:paintpro/viewmodel/zones/zones_card_viewmodel.dart';
 import 'package:paintpro/view/zones/widgets/loading_widget.dart';
 import 'package:paintpro/view/zones/widgets/zones_results_widget.dart';
 import 'package:provider/provider.dart';
-import 'package:get_it/get_it.dart';
 
 class ZonesView extends StatelessWidget {
   const ZonesView({super.key});

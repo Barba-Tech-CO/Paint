@@ -7,6 +7,10 @@ import '../service/estimate_service.dart';
 import '../service/paint_catalog_service.dart';
 import '../service/navigation_service.dart';
 import '../service/app_initialization_service.dart';
+import '../service/deep_link_service.dart';
+import '../use_case/auth/auth_use_cases.dart';
+import '../utils/logger/app_logger.dart';
+import '../utils/logger/logger_app_logger_impl.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -30,19 +34,48 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<NavigationService>(
     () => NavigationService(),
   );
+  getIt.registerLazySingleton<DeepLinkService>(
+    () => DeepLinkService(),
+  );
+  getIt.registerLazySingleton<AppLogger>(
+    () => LoggerAppLoggerImpl(),
+  );
+
+  // Use Cases
+  getIt.registerLazySingleton<AuthOperationsUseCase>(
+    () => AuthOperationsUseCase(getIt<AuthService>()),
+  );
+  getIt.registerLazySingleton<ManageAuthStateUseCase>(
+    () => ManageAuthStateUseCase(),
+  );
+  getIt.registerLazySingleton<HandleDeepLinkUseCase>(
+    () => HandleDeepLinkUseCase(
+      getIt<AuthOperationsUseCase>(),
+      getIt<ManageAuthStateUseCase>(),
+      getIt<AppLogger>(),
+    ),
+  );
+  getIt.registerLazySingleton<HandleWebViewNavigationUseCase>(
+    () => HandleWebViewNavigationUseCase(),
+  );
+
   getIt.registerLazySingleton<AppInitializationService>(
     () => AppInitializationService(
       getIt<AuthService>(),
       getIt<NavigationService>(),
+      getIt<DeepLinkService>(),
     ),
   );
 
   // ViewModels - Auth
   getIt.registerFactory<AuthViewModel>(
-    () => AuthViewModel(getIt<AuthService>()),
-  );
-  getIt.registerFactory<ProfileViewModel>(
-    () => ProfileViewModel(getIt<AuthService>()),
+    () => AuthViewModel(
+      getIt<AuthOperationsUseCase>(),
+      getIt<HandleDeepLinkUseCase>(),
+      getIt<HandleWebViewNavigationUseCase>(),
+      getIt<DeepLinkService>(),
+      getIt<AppLogger>(),
+    ),
   );
 
   // ViewModels - Contact
@@ -77,7 +110,7 @@ void setupDependencyInjection() {
 
   // ViewModels - Navigation
   getIt.registerFactory<NavigationViewModel>(
-    () => NavigationViewModel(getIt<NavigationService>()),
+    () => NavigationViewModel(),
   );
 
   // ViewModels - Measurements

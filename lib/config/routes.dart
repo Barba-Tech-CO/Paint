@@ -4,7 +4,7 @@ import 'package:paintpro/view/views.dart';
 import 'package:paintpro/model/models.dart';
 
 final router = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/edit-zone',
   routes: [
     GoRoute(
       path: '/splash',
@@ -68,6 +68,10 @@ final router = GoRouter(
         final zone = state.extra as ZonesCardModel?;
         return ZonesDetailsView(zone: zone);
       },
+    ),
+    GoRoute(
+      path: '/edit-zone',
+      builder: (context, state) => const EditZoneView(),
     ),
   ],
 );
