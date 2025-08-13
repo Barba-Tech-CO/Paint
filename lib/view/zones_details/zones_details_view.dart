@@ -4,7 +4,7 @@ import 'package:paintpro/config/dependency_injection.dart';
 import 'package:paintpro/config/app_colors.dart';
 import 'package:paintpro/view/widgets/widgets.dart';
 import 'package:paintpro/model/zones_card_model.dart';
-import 'package:paintpro/view/zones_details/widgets/delete_button_widget.dart';
+import 'package:paintpro/view/widgets/buttons/paint_pro_delete_button.dart';
 import 'package:paintpro/view/zones_details/widgets/rename_zone_dialog.dart';
 import 'package:paintpro/viewmodel/zones/zones_viewmodels.dart';
 
@@ -100,7 +100,16 @@ class _ZonesDetailsContent extends StatelessWidget {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: _buildAppBar(context, zone),
+          appBar: PaintProAppBar(
+            title: zone.title,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios),
+              onPressed: () => context.pop(),
+            ),
+            actions: [
+              PaintProDeleteButton(viewModel: viewModel),
+            ],
+          ),
           body: Stack(
             children: [
               // Conteúdo rolável
@@ -141,6 +150,9 @@ class _ZonesDetailsContent extends StatelessWidget {
                       SurfaceAreasWidget(
                         surfaceData: {
                           'Walls': zone.areaPaintable,
+                          if (zone.ceilingArea != null)
+                            'Ceiling': zone.ceilingArea!,
+                          if (zone.trimLength != null) 'Trim': zone.trimLength!,
                         },
                         totalPaintableLabel: 'Total Paintable',
                         totalPaintableValue: zone.areaPaintable,
@@ -219,19 +231,6 @@ class _ZonesDetailsContent extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(BuildContext context, ZonesCardModel zone) {
-    return PaintProAppBar(
-      title: zone.title,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios),
-        onPressed: () => context.pop(),
-      ),
-      actions: [
-        DeleteZoneButton(viewModel: viewModel),
-      ],
     );
   }
 }

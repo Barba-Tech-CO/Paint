@@ -5,6 +5,8 @@ class ZonesCardModel {
   final String floorDimensionValue;
   final String floorAreaValue;
   final String areaPaintable;
+  final String? ceilingArea;
+  final String? trimLength;
 
   ZonesCardModel({
     required this.id,
@@ -13,6 +15,8 @@ class ZonesCardModel {
     required this.floorDimensionValue,
     required this.floorAreaValue,
     required this.areaPaintable,
+    this.ceilingArea,
+    this.trimLength,
   });
 
   factory ZonesCardModel.fromJson(Map<String, dynamic> json) {
@@ -23,6 +27,8 @@ class ZonesCardModel {
       floorDimensionValue: json['floor_dimension_value'] ?? '',
       floorAreaValue: json['floor_area_value'] ?? '',
       areaPaintable: json['area_paintable'] ?? '',
+      ceilingArea: json['ceiling_area'],
+      trimLength: json['trim_length'],
     );
   }
 
@@ -34,6 +40,8 @@ class ZonesCardModel {
       'floor_dimension_value': floorDimensionValue,
       'floor_area_value': floorAreaValue,
       'area_paintable': areaPaintable,
+      'ceiling_area': ceilingArea,
+      'trim_length': trimLength,
     };
   }
 
@@ -45,6 +53,8 @@ class ZonesCardModel {
     String? floorDimensionValue,
     String? floorAreaValue,
     String? areaPaintable,
+    String? ceilingArea,
+    String? trimLength,
   }) {
     return ZonesCardModel(
       id: id ?? this.id,
@@ -53,6 +63,8 @@ class ZonesCardModel {
       floorDimensionValue: floorDimensionValue ?? this.floorDimensionValue,
       floorAreaValue: floorAreaValue ?? this.floorAreaValue,
       areaPaintable: areaPaintable ?? this.areaPaintable,
+      ceilingArea: ceilingArea ?? this.ceilingArea,
+      trimLength: trimLength ?? this.trimLength,
     );
   }
 

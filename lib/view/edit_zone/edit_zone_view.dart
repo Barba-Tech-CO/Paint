@@ -1,12 +1,13 @@
-// ignore_for_file: file_names
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:paintpro/config/dependency_injection.dart';
 import 'package:paintpro/model/zones_card_model.dart';
 import 'package:paintpro/view/edit_zone/widgets/floor_dimension_widget.dart';
 import 'package:paintpro/view/edit_zone/widgets/photos_gallery_widget.dart';
 import 'package:paintpro/view/edit_zone/widgets/surface_area_display_widget.dart';
+import 'package:paintpro/view/widgets/buttons/paint_pro_delete_button.dart';
 import 'package:paintpro/view/widgets/widgets.dart';
+import 'package:paintpro/viewmodel/zones/zones_viewmodels.dart';
 
 class EditZoneView extends StatefulWidget {
   final ZonesCardModel? zone;
@@ -18,6 +19,7 @@ class EditZoneView extends StatefulWidget {
 }
 
 class _EditZoneViewState extends State<EditZoneView> {
+  late final ZoneDetailViewModel _viewModel;
   late String _zoneTitle;
   late double _width;
   late double _length;
@@ -29,7 +31,58 @@ class _EditZoneViewState extends State<EditZoneView> {
   @override
   void initState() {
     super.initState();
+    _viewModel = getIt<ZoneDetailViewModel>();
+    _viewModel.initialize();
+
+    if (widget.zone != null) {
+      _viewModel.setCurrentZone(widget.zone!);
+    }
+
+    // Setup callbacks for delete action
+    _setupViewModelCallbacks();
+
     _initializeData();
+  }
+
+  void _setupViewModelCallbacks() {
+    // When zone is deleted, navigate back automatically
+    _viewModel.onZoneDeleted = (int zoneId) {
+      if (mounted) {
+        // Also notify the list ViewModel to remove the zone
+        try {
+          final listViewModel = getIt<ZonesListViewModel>();
+          listViewModel.removeZone(zoneId);
+        } catch (e) {
+          debugPrint('Error notifying list ViewModel: $e');
+        }
+
+        // Use WidgetsBinding to ensure safe context usage
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            context.pop();
+          }
+        });
+      }
+    };
+
+    // When zone is updated, we could refresh the data here if needed
+    _viewModel.onZoneUpdated = (ZonesCardModel updatedZone) {
+      if (mounted) {
+        // Also notify the list ViewModel
+        try {
+          final listViewModel = getIt<ZonesListViewModel>();
+          listViewModel.updateZone(updatedZone);
+        } catch (e) {
+          debugPrint('Error notifying list ViewModel: $e');
+        }
+
+        setState(() {
+          // Update local data with new zone info
+          _zoneTitle = updatedZone.title;
+          // Could update other fields if needed
+        });
+      }
+    };
   }
 
   void _initializeData() {
@@ -48,13 +101,17 @@ class _EditZoneViewState extends State<EditZoneView> {
           ? (double.tryParse(dimensions.last) ?? 16.0)
           : 16.0;
 
-      // Parse surface areas from "485 sq ft" format
+      // Parse surface areas from zone fields
       _walls =
           double.tryParse(zone.areaPaintable.replaceAll(" sq ft", "")) ?? 485.0;
-      _ceiling =
-          double.tryParse(zone.floorAreaValue.replaceAll(" sq ft", "")) ??
-          224.0;
-      _trim = 60.0; // Default trim value (could be added to model later)
+      _ceiling = zone.ceilingArea != null
+          ? double.tryParse(zone.ceilingArea!.replaceAll(" sq ft", "")) ?? 224.0
+          : double.tryParse(zone.floorAreaValue.replaceAll(" sq ft", "")) ??
+                224.0;
+      _trim = zone.trimLength != null
+          ? double.tryParse(zone.trimLength!.replaceAll(" linear ft", "")) ??
+                60.0
+          : 60.0;
 
       // Initialize photos with zone image
       _photos = [zone.image];
@@ -80,14 +137,25 @@ class _EditZoneViewState extends State<EditZoneView> {
   }
 
   @override
+  void dispose() {
+    // Clear callbacks to prevent memory leaks
+    _viewModel.onZoneDeleted = null;
+    _viewModel.onZoneUpdated = null;
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PaintProAppBar(
+        title: _zoneTitle,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => context.pop(),
         ),
-        title: _zoneTitle,
+        actions: [
+          PaintProDeleteButton(viewModel: _viewModel),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32.0),

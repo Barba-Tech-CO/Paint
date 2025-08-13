@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:paintpro/viewmodel/zones/zones_viewmodels.dart';
 
-class DeleteZoneButton extends StatelessWidget {
+class PaintProDeleteButton extends StatelessWidget {
   final ZoneDetailViewModel viewModel;
-  const DeleteZoneButton({
+  const PaintProDeleteButton({
     super.key,
     required this.viewModel,
   });
