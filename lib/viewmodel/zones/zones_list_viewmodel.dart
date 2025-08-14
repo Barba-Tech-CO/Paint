@@ -189,6 +189,9 @@ class ZonesListViewModel extends ChangeNotifier {
         floorDimensionValue: data.floorDimensionValue,
         floorAreaValue: data.floorAreaValue,
         areaPaintable: data.areaPaintable,
+        ceilingArea:
+            data.floorAreaValue, // Use floor area as ceiling by default
+        trimLength: "44 linear ft", // Default trim length
       );
 
       _zones.add(newZone);
@@ -211,6 +214,8 @@ class ZonesListViewModel extends ChangeNotifier {
         floorDimensionValue: "14' x 16'",
         floorAreaValue: "224 sq ft",
         areaPaintable: "485 sq ft",
+        ceilingArea: "224 sq ft",
+        trimLength: "60 linear ft",
       ),
       ZonesCardModel(
         id: 2,
@@ -219,6 +224,8 @@ class ZonesListViewModel extends ChangeNotifier {
         floorDimensionValue: "10' x 12'",
         floorAreaValue: "120 sq ft",
         areaPaintable: "320 sq ft",
+        ceilingArea: "120 sq ft",
+        trimLength: "44 linear ft",
       ),
       ZonesCardModel(
         id: 3,
@@ -227,6 +234,8 @@ class ZonesListViewModel extends ChangeNotifier {
         floorDimensionValue: "12' x 14'",
         floorAreaValue: "168 sq ft",
         areaPaintable: "420 sq ft",
+        ceilingArea: "168 sq ft",
+        trimLength: "52 linear ft",
       ),
     ];
   }

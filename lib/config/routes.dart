@@ -69,5 +69,12 @@ final router = GoRouter(
         return ZonesDetailsView(zone: zone);
       },
     ),
+    GoRoute(
+      path: '/edit-zone',
+      builder: (context, state) {
+        final zone = state.extra as ZonesCardModel?;
+        return EditZoneView(zone: zone);
+      },
+    ),
   ],
 );
