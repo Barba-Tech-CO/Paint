@@ -6,7 +6,6 @@ class MaterialModel {
   final String priceUnit;
   final MaterialType type;
   final MaterialQuality quality;
-  final String brand;
   final String? description;
   final String? imageUrl;
   final bool isAvailable;
@@ -19,7 +18,6 @@ class MaterialModel {
     required this.priceUnit,
     required this.type,
     required this.quality,
-    required this.brand,
     this.description,
     this.imageUrl,
     this.isAvailable = true,
@@ -40,7 +38,6 @@ class MaterialModel {
         (e) => e.name == json['quality'],
         orElse: () => MaterialQuality.economic,
       ),
-      brand: json['brand'] ?? '',
       description: json['description'],
       imageUrl: json['image_url'],
       isAvailable: json['is_available'] ?? true,
@@ -56,7 +53,6 @@ class MaterialModel {
       'price_unit': priceUnit,
       'type': type.name,
       'quality': quality.name,
-      'brand': brand,
       'description': description,
       'image_url': imageUrl,
       'is_available': isAvailable,
@@ -84,7 +80,6 @@ class MaterialModel {
       priceUnit: priceUnit ?? this.priceUnit,
       type: type ?? this.type,
       quality: quality ?? this.quality,
-      brand: brand ?? this.brand,
       description: description ?? this.description,
       imageUrl: imageUrl ?? this.imageUrl,
       isAvailable: isAvailable ?? this.isAvailable,

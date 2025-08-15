@@ -73,24 +73,6 @@ class MaterialListViewModel extends ChangeNotifier {
     }
   }
 
-  /// Carrega marcas disponíveis
-  Future<void> loadAvailableBrands() async {
-    try {
-      final result = await _materialService.getAvailableBrands();
-      result.when(
-        ok: (brands) {
-          _availableBrands = brands;
-          notifyListeners();
-        },
-        error: (error) {
-          _setError('Erro ao carregar marcas: ${error.toString()}');
-        },
-      );
-    } catch (e) {
-      _setError('Erro inesperado ao carregar marcas: $e');
-    }
-  }
-
   /// Carrega estatísticas dos materiais
   Future<void> loadStats() async {
     try {
@@ -202,7 +184,6 @@ class MaterialListViewModel extends ChangeNotifier {
   Future<void> initialize() async {
     await Future.wait([
       loadMaterials(),
-      loadAvailableBrands(),
       loadStats(),
     ]);
   }

@@ -42,37 +42,40 @@ class MaterialCardWidget extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Código do material
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      material.code,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[700],
-                      ),
+                  Text(
+                    material.code,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[700],
                     ),
                   ),
-                  // Indicador de seleção
-                  if (isSelected)
+
+                  Text(
+                    '\$${material.price.toStringAsFixed(2)}/${material.priceUnit}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  if (!material.isAvailable)
                     Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
                       ),
-                      child: const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'Indisponível',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.red[700],
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                 ],
@@ -105,65 +108,9 @@ class MaterialCardWidget extends StatelessWidget {
                   // Qualidade
                   _buildInfoChip(
                     material.quality.displayName,
-                    _getQualityColor(material.quality).withOpacity(0.1),
+                    _getQualityColor(material.quality).withAlpha(1),
                     _getQualityColor(material.quality),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Marca
-              Row(
-                children: [
-                  Icon(
-                    Icons.business,
-                    size: 16,
-                    color: Colors.grey[600],
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    material.brand,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[700],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Preço
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '\$${material.price.toStringAsFixed(2)}/${material.priceUnit}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  if (!material.isAvailable)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50],
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        'Indisponível',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.red[700],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ],

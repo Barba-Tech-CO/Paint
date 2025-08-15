@@ -12,7 +12,6 @@ class MaterialService {
       priceUnit: 'Gal',
       type: MaterialType.interior,
       quality: MaterialQuality.economic,
-      brand: 'Benjamin Moore',
       description: 'High-quality interior paint with zero VOC',
       isAvailable: true,
     ),
@@ -24,7 +23,6 @@ class MaterialService {
       priceUnit: 'Gal',
       type: MaterialType.interior,
       quality: MaterialQuality.standard,
-      brand: 'Sherwin-Williams',
       description: 'Premium interior paint with excellent coverage',
       isAvailable: true,
     ),
@@ -36,7 +34,6 @@ class MaterialService {
       priceUnit: 'Gal',
       type: MaterialType.interior,
       quality: MaterialQuality.economic,
-      brand: 'Behr',
       description: 'One-coat coverage interior paint',
       isAvailable: true,
     ),
@@ -48,7 +45,6 @@ class MaterialService {
       priceUnit: 'Gal',
       type: MaterialType.interior,
       quality: MaterialQuality.premium,
-      brand: 'Benjamin Moore',
       description: 'Alkyd paint with latex cleanup',
       isAvailable: true,
     ),
@@ -60,7 +56,7 @@ class MaterialService {
       priceUnit: 'Gal',
       type: MaterialType.exterior,
       quality: MaterialQuality.standard,
-      brand: 'Sherwin-Williams',
+
       description: 'All-weather exterior paint',
       isAvailable: true,
     ),
@@ -72,7 +68,6 @@ class MaterialService {
       priceUnit: 'Gal',
       type: MaterialType.exterior,
       quality: MaterialQuality.high,
-      brand: 'Behr',
       description: 'One-coat hide guaranteed exterior paint',
       isAvailable: true,
     ),
@@ -84,7 +79,6 @@ class MaterialService {
       priceUnit: 'Gal',
       type: MaterialType.interior,
       quality: MaterialQuality.premium,
-      brand: 'Benjamin Moore',
       description: 'The ultimate luxury interior paint',
       isAvailable: true,
     ),
@@ -96,7 +90,7 @@ class MaterialService {
       priceUnit: 'Gal',
       type: MaterialType.interior,
       quality: MaterialQuality.premium,
-      brand: 'Sherwin-Williams',
+
       description: 'Advanced stain-blocking technology',
       isAvailable: true,
     ),
@@ -124,14 +118,6 @@ class MaterialService {
       List<MaterialModel> filteredMaterials = _mockMaterials;
 
       // Aplica filtros
-      if (filter.brand != null && filter.brand!.isNotEmpty) {
-        filteredMaterials = filteredMaterials
-            .where(
-              (material) =>
-                  material.brand.toLowerCase() == filter.brand!.toLowerCase(),
-            )
-            .toList();
-      }
 
       if (filter.type != null) {
         filteredMaterials = filteredMaterials
@@ -163,8 +149,7 @@ class MaterialService {
             .where(
               (material) =>
                   material.name.toLowerCase().contains(searchLower) ||
-                  material.code.toLowerCase().contains(searchLower) ||
-                  material.brand.toLowerCase().contains(searchLower),
+                  material.code.toLowerCase().contains(searchLower),
             )
             .toList();
       }
@@ -193,20 +178,6 @@ class MaterialService {
   }
 
   /// Busca marcas disponíveis
-  Future<Result<List<String>>> getAvailableBrands() async {
-    try {
-      // Simula delay da API
-      await Future.delayed(const Duration(milliseconds: 200));
-
-      final brands =
-          _mockMaterials.map((material) => material.brand).toSet().toList()
-            ..sort();
-
-      return Result.ok(brands);
-    } catch (e) {
-      return Result.error(Exception('Erro ao carregar marcas: $e'));
-    }
-  }
 
   /// Busca estatísticas dos materiais
   Future<Result<MaterialStats>> getMaterialStats() async {
@@ -217,7 +188,7 @@ class MaterialService {
       final stats = MaterialStats(
         totalMaterials: _mockMaterials.length,
         availableMaterials: _mockMaterials.where((m) => m.isAvailable).length,
-        brandsCount: _mockMaterials.map((m) => m.brand).toSet().length,
+
         averagePrice:
             _mockMaterials.fold<double>(
               0,
@@ -244,14 +215,12 @@ class MaterialService {
 class MaterialStats {
   final int totalMaterials;
   final int availableMaterials;
-  final int brandsCount;
   final double averagePrice;
   final MaterialPriceRange priceRange;
 
   MaterialStats({
     required this.totalMaterials,
     required this.availableMaterials,
-    required this.brandsCount,
     required this.averagePrice,
     required this.priceRange,
   });
