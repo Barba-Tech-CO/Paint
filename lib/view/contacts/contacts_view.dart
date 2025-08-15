@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/contacts/widgets/contacts_list_widget.dart';
-import 'package:paintpro/view/contacts/widgets/empty_state_widget.dart';
-import 'package:paintpro/view/contacts/widgets/search_field_widget.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/view/layout/main_layout.dart';
 

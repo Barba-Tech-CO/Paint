@@ -48,7 +48,7 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withAlpha(1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -157,7 +157,7 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
                     );
                   });
                 },
-                selectedColor: AppColors.primary.withOpacity(0.3),
+                selectedColor: AppColors.primary.withAlpha(3),
                 checkmarkColor: AppColors.primary,
               );
             }).toList(),
