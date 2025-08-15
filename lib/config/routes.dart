@@ -4,7 +4,7 @@ import 'package:paintpro/view/views.dart';
 import 'package:paintpro/model/models.dart';
 
 final router = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/select-material',
   routes: [
     GoRoute(
       path: '/splash',
@@ -74,6 +74,12 @@ final router = GoRouter(
       builder: (context, state) {
         final zone = state.extra as ZonesCardModel?;
         return EditZoneView(zone: zone);
+      },
+    ),
+    GoRoute(
+      path: '/select-material',
+      builder: (context, state) {
+        return const SelectMaterialView();
       },
     ),
   ],
