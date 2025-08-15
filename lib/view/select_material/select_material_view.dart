@@ -271,8 +271,12 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
                         color: Colors.grey[600],
                       ),
                     ),
+                    Spacer(),
                     PaintProButton(
                       text: "Next",
+                      padding: EdgeInsets.zero, // Remove o padding padrão
+                      minimumSize: const Size(100, 40), // Tamanho específico
+                      borderRadius: 8,
                       onPressed: _viewModel.selectedCount == 0
                           ? null
                           : () => context.push('/overview-measurements'),
