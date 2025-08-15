@@ -4,7 +4,7 @@ import 'package:paintpro/view/views.dart';
 import 'package:paintpro/model/models.dart';
 
 final router = GoRouter(
-  initialLocation: '/select-material',
+  initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',
