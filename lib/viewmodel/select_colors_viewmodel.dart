@@ -1,0 +1,152 @@
+import 'package:flutter/material.dart';
+import 'base_viewmodel.dart';
+import '../model/paint_catalog_model.dart';
+
+/// ViewModel para a tela de seleção de cores
+/// Implementa o padrão MVVM com logging integrado
+class SelectColorsViewModel extends BaseViewModel {
+  final List<String> _brands = [
+    'Sherwin-Williams',
+    'Benjamin Moore',
+    'Behr',
+    'PP',
+  ];
+
+  final List<Map<String, dynamic>> _colors = [
+    {
+      'name': 'White',
+      'code': 'SW6232',
+      'price': '\$52.99/Gal',
+      'color': Colors.grey[200],
+    },
+    {
+      'name': 'Gray',
+      'code': 'SW6233',
+      'price': '\$51.99/Gal',
+      'color': Colors.grey[500],
+    },
+    {
+      'name': 'White Pink',
+      'code': 'SW6235',
+      'price': '\$46.99/Gal',
+      'color': Colors.pink[100],
+    },
+    {
+      'name': 'Pink',
+      'code': 'SW6238',
+      'price': '\$48.99/Gal',
+      'color': Colors.pink[300],
+    },
+    {
+      'name': 'Green',
+      'code': 'SW6232',
+      'price': '\$32.99/Gal',
+      'color': Colors.lightGreen[300],
+    },
+    {
+      'name': 'Aqua',
+      'code': 'SW6232',
+      'price': '\$52.99/Gal',
+      'color': Colors.cyan[200],
+    },
+  ];
+
+  Map<String, dynamic>? _selectedColor;
+  String? _selectedBrand;
+
+  SelectColorsViewModel(super.logger);
+
+  /// Lista de marcas disponíveis
+  List<String> get brands => _brands;
+
+  /// Lista de cores disponíveis
+  List<Map<String, dynamic>> get colors => _colors;
+
+  /// Cor selecionada atualmente
+  Map<String, dynamic>? get selectedColor => _selectedColor;
+
+  /// Marca selecionada atualmente
+  String? get selectedBrand => _selectedBrand;
+
+  /// Seleciona uma cor
+  void selectColor(Map<String, dynamic> colorData, String brand) {
+    _selectedColor = colorData;
+    _selectedBrand = brand;
+
+    logBusinessOperation(
+      'Color Selected',
+      data: {
+        'colorName': colorData['name'],
+        'colorCode': colorData['code'],
+        'brand': brand,
+        'price': colorData['price'],
+      },
+    );
+
+    notifyListeners();
+  }
+
+  /// Carrega as cores para uma marca específica
+  Future<void> loadColorsForBrand(String brand) async {
+    await executeOperation(
+      () async {
+        logInfo('Carregando cores para a marca: $brand');
+
+        // Simula um delay de carregamento
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        logBusinessOperation(
+          'Colors Loaded',
+          data: {
+            'brand': brand,
+            'colorCount': _colors.length,
+          },
+        );
+
+        return true;
+      },
+      operationName: 'loadColorsForBrand',
+    );
+  }
+
+  /// Gera o orçamento com as cores selecionadas
+  Future<void> generateEstimate() async {
+    if (_selectedColor == null || _selectedBrand == null) {
+      setError('Por favor, selecione uma cor antes de gerar o orçamento');
+      return;
+    }
+
+    await executeOperation(
+      () async {
+        logInfo('Gerando orçamento para cor: ${_selectedColor!['name']}');
+
+        // Simula o processo de geração de orçamento
+        await Future.delayed(const Duration(seconds: 1));
+
+        logBusinessOperation(
+          'Estimate Generated',
+          data: {
+            'selectedColor': _selectedColor!['name'],
+            'selectedBrand': _selectedBrand,
+            'price': _selectedColor!['price'],
+          },
+        );
+
+        return true;
+      },
+      operationName: 'generateEstimate',
+    );
+  }
+
+  /// Limpa a seleção atual
+  void clearSelection() {
+    _selectedColor = null;
+    _selectedBrand = null;
+    logInfo('Seleção de cores limpa');
+    notifyListeners();
+  }
+
+  /// Verifica se pode gerar orçamento
+  bool get canGenerateEstimate =>
+      _selectedColor != null && _selectedBrand != null;
+}
