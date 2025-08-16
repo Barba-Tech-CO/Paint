@@ -1,17 +1,33 @@
 import 'package:get_it/get_it.dart';
 
+// Data Layer
+import '../data/repository/auth_repository_impl.dart';
+import '../data/repository/contact_repository_impl.dart';
+import '../data/repository/estimate_repository_impl.dart';
+import '../data/repository/paint_catalog_repository_impl.dart';
+
+// Domain Layer
+import '../domain/repository/auth_repository.dart';
+import '../domain/repository/contact_repository.dart';
+import '../domain/repository/estimate_repository.dart';
+import '../domain/repository/paint_catalog_repository.dart';
+
+// Service Layer
 import '../service/app_initialization_service.dart';
 import '../service/auth_service.dart';
 import '../service/contact_service.dart';
 import '../service/deep_link_service.dart';
 import '../service/estimate_service.dart';
 import '../service/http_service.dart';
-
 import '../service/navigation_service.dart';
 import '../service/paint_catalog_service.dart';
+
+// Use Case Layer
 import '../use_case/auth/auth_use_cases.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/logger/logger_app_logger_impl.dart';
+
+// ViewModel Layer
 import '../viewmodel/select_colors_viewmodel.dart';
 import '../viewmodel/viewmodels.dart';
 
@@ -42,6 +58,20 @@ void setupDependencyInjection() {
   );
   getIt.registerLazySingleton<AppLogger>(
     () => LoggerAppLoggerImpl(),
+  );
+
+  // Repositories
+  getIt.registerLazySingleton<IAuthRepository>(
+    () => AuthRepository(authService: getIt<AuthService>()),
+  );
+  getIt.registerLazySingleton<IContactRepository>(
+    () => ContactRepository(contactService: getIt<ContactService>()),
+  );
+  getIt.registerLazySingleton<IEstimateRepository>(
+    () => EstimateRepository(estimateService: getIt<EstimateService>()),
+  );
+  getIt.registerLazySingleton<IPaintCatalogRepository>(
+    () => PaintCatalogRepository(paintCatalogService: getIt<PaintCatalogService>()),
   );
 
   // Use Cases
@@ -83,32 +113,32 @@ void setupDependencyInjection() {
 
   // ViewModels - Contact
   getIt.registerFactory<ContactListViewModel>(
-    () => ContactListViewModel(getIt<ContactService>()),
+    () => ContactListViewModel(getIt<IContactRepository>()),
   );
   getIt.registerFactory<ContactDetailViewModel>(
-    () => ContactDetailViewModel(getIt<ContactService>()),
+    () => ContactDetailViewModel(getIt<IContactRepository>()),
   );
 
   // ViewModels - Estimate
   getIt.registerFactory<EstimateListViewModel>(
-    () => EstimateListViewModel(getIt<EstimateService>()),
+    () => EstimateListViewModel(getIt<IEstimateRepository>()),
   );
   getIt.registerFactory<EstimateDetailViewModel>(
-    () => EstimateDetailViewModel(getIt<EstimateService>()),
+    () => EstimateDetailViewModel(getIt<IEstimateRepository>()),
   );
   getIt.registerFactory<EstimateUploadViewModel>(
-    () => EstimateUploadViewModel(getIt<EstimateService>()),
+    () => EstimateUploadViewModel(getIt<IEstimateRepository>()),
   );
   getIt.registerFactory<EstimateCalculationViewModel>(
-    () => EstimateCalculationViewModel(getIt<EstimateService>()),
+    () => EstimateCalculationViewModel(getIt<IEstimateRepository>()),
   );
 
   // ViewModels - Paint Catalog
   getIt.registerFactory<PaintCatalogListViewModel>(
-    () => PaintCatalogListViewModel(getIt<PaintCatalogService>()),
+    () => PaintCatalogListViewModel(getIt<IPaintCatalogRepository>()),
   );
   getIt.registerFactory<PaintCatalogDetailViewModel>(
-    () => PaintCatalogDetailViewModel(getIt<PaintCatalogService>()),
+    () => PaintCatalogDetailViewModel(getIt<IPaintCatalogRepository>()),
   );
 
   // ViewModels - Navigation
