@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../model/material_model.dart' as model;
 import '../../../config/app_colors.dart';
+import 'drop_down_filter_widget.dart';
 
 class MaterialFilterWidget extends StatefulWidget {
   final model.MaterialFilter currentFilter;
@@ -93,7 +94,7 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
           const SizedBox(height: 16),
 
           // Brand Filter
-          _buildDropdownFilter<String>(
+          DropDownFilterWidget<String>(
             label: 'Brand',
             value: _currentFilter.brand,
             items: widget.availableBrands,
@@ -107,7 +108,7 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
           const SizedBox(height: 16),
 
           // Ambient Filter (Type)
-          _buildDropdownFilter<model.MaterialType>(
+          DropDownFilterWidget<model.MaterialType>(
             label: 'Ambient',
             value: _currentFilter.type,
             items: model.MaterialType.values,
@@ -121,7 +122,7 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
           const SizedBox(height: 16),
 
           // Finish Filter
-          _buildDropdownFilter<model.MaterialFinish>(
+          DropDownFilterWidget<model.MaterialFinish>(
             label: 'Finish',
             value: _currentFilter.finish,
             items: model.MaterialFinish.values,
@@ -191,63 +192,6 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDropdownFilter<T>({
-    required String label,
-    required T? value,
-    required List<T> items,
-    required Function(T?) onChanged,
-    required Widget Function(T) itemBuilder,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<T>(
-          value: value,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.primary),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
-            ),
-          ),
-          hint: Text('Select $label'),
-          items: [
-            DropdownMenuItem<T>(
-              value: null,
-              child: Text('All ${label}s'),
-            ),
-            ...items.map(
-              (item) => DropdownMenuItem<T>(
-                value: item,
-                child: itemBuilder(item),
-              ),
-            ),
-          ],
-          onChanged: onChanged,
-        ),
-      ],
     );
   }
 }

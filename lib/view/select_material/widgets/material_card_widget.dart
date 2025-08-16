@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../model/material_model.dart';
 import '../../../config/app_colors.dart';
+import 'build_chip_widget.dart';
 
 class MaterialCardWidget extends StatelessWidget {
   final MaterialModel material;
@@ -15,6 +16,19 @@ class MaterialCardWidget extends StatelessWidget {
     this.onTap,
     this.onLongPress,
   });
+
+  Color _getQualityColor(MaterialQuality quality) {
+    switch (quality) {
+      case MaterialQuality.economic:
+        return Colors.green;
+      case MaterialQuality.standard:
+        return Colors.orange;
+      case MaterialQuality.high:
+        return Colors.purple;
+      case MaterialQuality.premium:
+        return Colors.amber;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,17 +113,19 @@ class MaterialCardWidget extends StatelessWidget {
               Row(
                 children: [
                   // Tipo
-                  _buildInfoChip(
-                    material.type.displayName,
-                    Colors.blue[50]!,
-                    Colors.blue[700]!,
+                  BuildChipWidget(
+                    text: material.type.displayName,
+                    backgroundColor: Colors.blue[50]!,
+                    textColor: Colors.blue[700]!,
                   ),
                   const SizedBox(width: 8),
                   // Qualidade
-                  _buildInfoChip(
-                    material.quality.displayName,
-                    _getQualityColor(material.quality).withAlpha(1),
-                    _getQualityColor(material.quality),
+                  BuildChipWidget(
+                    text: material.quality.displayName,
+                    backgroundColor: _getQualityColor(
+                      material.quality,
+                    ).withAlpha(1),
+                    textColor: _getQualityColor(material.quality),
                   ),
                 ],
               ),
@@ -118,36 +134,5 @@ class MaterialCardWidget extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Widget _buildInfoChip(String text, Color backgroundColor, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: textColor,
-        ),
-      ),
-    );
-  }
-
-  Color _getQualityColor(MaterialQuality quality) {
-    switch (quality) {
-      case MaterialQuality.economic:
-        return Colors.green;
-      case MaterialQuality.standard:
-        return Colors.orange;
-      case MaterialQuality.high:
-        return Colors.purple;
-      case MaterialQuality.premium:
-        return Colors.amber;
-    }
   }
 }

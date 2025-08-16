@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:paintpro/view/widgets/widgets.dart';
-import 'package:paintpro/viewmodel/material/material_list_viewmodel.dart';
-import 'package:paintpro/service/material_service.dart';
+import 'package:paintpro/viewmodel/viewmodels.dart';
+import 'package:paintpro/service/services.dart';
 import 'package:paintpro/config/app_colors.dart';
-import 'widgets/material_card_widget.dart';
-import 'widgets/material_filter_widget.dart';
+import 'widgets/select_material_widgets.dart';
 
 class SelectMaterialView extends StatefulWidget {
   const SelectMaterialView({super.key});
@@ -281,23 +280,6 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
                           ? null
                           : () => context.push('/overview-measurements'),
                     ),
-                    // ElevatedButton(
-                    //   onPressed: _viewModel.selectedCount == 0
-                    //       ? null
-                    //       : () => context.push('/overview-measurements'),
-                    //   style: ElevatedButton.styleFrom(
-                    //     backgroundColor: Colors.grey[600],
-                    //     foregroundColor: Colors.white,
-                    //     shape: RoundedRectangleBorder(
-                    //       borderRadius: BorderRadius.circular(8),
-                    //     ),
-                    //     padding: const EdgeInsets.symmetric(
-                    //       horizontal: 32,
-                    //       vertical: 12,
-                    //     ),
-                    //   ),
-                    //   child: const Text('Next'),
-                    // ),
                   ],
                 );
               },
