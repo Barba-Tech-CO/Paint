@@ -1,15 +1,15 @@
 import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
 import '../../model/estimate_model.dart';
-import '../../service/estimate_service.dart';
+import '../../domain/repository/estimate_repository.dart';
 import '../../utils/command/command.dart';
 
 enum EstimateListState { initial, loading, loaded, error }
 
 class EstimateListViewModel extends ChangeNotifier {
-  final EstimateService _estimateService;
+  final IEstimateRepository _estimateRepository;
 
-  EstimateListViewModel(this._estimateService);
+  EstimateListViewModel(this._estimateRepository);
 
   // State
   EstimateListState _state = EstimateListState.initial;
@@ -60,7 +60,7 @@ class EstimateListViewModel extends ChangeNotifier {
       _currentPage = 0;
 
       try {
-        final result = await _estimateService.getEstimates(
+        final result = await _estimateRepository.getEstimates(
           limit: _pageSize,
           offset: _currentPage * _pageSize,
           status: _statusFilter,
@@ -92,7 +92,7 @@ class EstimateListViewModel extends ChangeNotifier {
       }
 
       try {
-        final result = await _estimateService.getEstimates(
+        final result = await _estimateRepository.getEstimates(
           limit: _pageSize,
           offset: _currentPage * _pageSize,
           status: _statusFilter,
@@ -123,7 +123,7 @@ class EstimateListViewModel extends ChangeNotifier {
       _currentPage = 0;
 
       try {
-        final result = await _estimateService.getEstimates(
+        final result = await _estimateRepository.getEstimates(
           limit: _pageSize,
           offset: 0,
           status: status,
@@ -151,7 +151,7 @@ class EstimateListViewModel extends ChangeNotifier {
 
     _deleteEstimateCommand = Command1((String estimateId) async {
       try {
-        final result = await _estimateService.deleteEstimate(estimateId);
+        final result = await _estimateRepository.deleteEstimate(estimateId);
         return result.when(
           ok: (success) {
             if (success) {
