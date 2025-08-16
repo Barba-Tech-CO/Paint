@@ -4,12 +4,11 @@ import '../service/logger_service.dart';
 /// ViewModel base que implementa o padrão MVVM do Flutter
 /// Fornece funcionalidades comuns como logging e gerenciamento de estado
 abstract class BaseViewModel extends ChangeNotifier {
-  final LoggerService _logger;
   bool _isLoading = false;
   String? _errorMessage;
 
-  BaseViewModel(this._logger) {
-    _logger.logServiceInitialization(runtimeType.toString());
+  BaseViewModel() {
+    LoggerService.info('${runtimeType.toString()} initialized');
   }
 
   /// Indica se o ViewModel está carregando dados
@@ -21,9 +20,8 @@ abstract class BaseViewModel extends ChangeNotifier {
   /// Define o estado de carregamento
   void setLoading(bool loading) {
     _isLoading = loading;
-    _logger.logViewModelState(
-      runtimeType.toString(),
-      loading ? 'Loading' : 'Idle',
+    LoggerService.debug(
+      '${runtimeType.toString()} state: ${loading ? 'Loading' : 'Idle'}',
     );
     notifyListeners();
   }
@@ -32,7 +30,7 @@ abstract class BaseViewModel extends ChangeNotifier {
   void setError(String? error) {
     _errorMessage = error;
     if (error != null) {
-      _logger.logViewModelError(runtimeType.toString(), 'setError', error);
+      LoggerService.error('${runtimeType.toString()}.setError', error);
     }
     notifyListeners();
   }
@@ -59,7 +57,9 @@ abstract class BaseViewModel extends ChangeNotifier {
       final duration = DateTime.now().difference(startTime);
 
       if (operationName != null) {
-        _logger.logPerformance(operationName, duration);
+        LoggerService.info(
+          'Performance: $operationName took ${duration.inMilliseconds}ms',
+        );
       }
 
       clearError();
@@ -68,9 +68,8 @@ abstract class BaseViewModel extends ChangeNotifier {
       final errorMessage =
           'Erro na operação: ${operationName ?? 'desconhecida'}';
       setError(errorMessage);
-      _logger.logViewModelError(
-        runtimeType.toString(),
-        operationName ?? 'executeOperation',
+      LoggerService.error(
+        '${runtimeType.toString()}.${operationName ?? 'executeOperation'}',
         error,
         stackTrace,
       );
@@ -84,7 +83,8 @@ abstract class BaseViewModel extends ChangeNotifier {
 
   /// Log de operação de negócio
   void logBusinessOperation(String operation, {Map<String, dynamic>? data}) {
-    _logger.logBusinessOperation(operation, data: data);
+    final message = data != null ? '$operation - Data: $data' : operation;
+    LoggerService.info('Business Operation: $message');
   }
 
   /// Log de navegação
@@ -93,32 +93,33 @@ abstract class BaseViewModel extends ChangeNotifier {
     String to, {
     Map<String, dynamic>? parameters,
   }) {
-    _logger.logNavigation(from, to, parameters: parameters);
+    final message = parameters != null ? '$from -> $to - Parameters: $parameters' : '$from -> $to';
+    LoggerService.info('Navigation: $message');
   }
 
   /// Log de debug
   void logDebug(String message) {
-    _logger.debug(message);
+    LoggerService.debug(message);
   }
 
   /// Log de informação
   void logInfo(String message) {
-    _logger.info(message);
+    LoggerService.info(message);
   }
 
   /// Log de warning
   void logWarning(String message) {
-    _logger.warning(message);
+    LoggerService.warning(message);
   }
 
   /// Log de erro
   void logError(String message, [dynamic error, StackTrace? stackTrace]) {
-    _logger.error(message, error, stackTrace);
+    LoggerService.error(message, error, stackTrace);
   }
 
   @override
   void dispose() {
-    _logger.info('${runtimeType.toString()} disposed');
+    LoggerService.info('${runtimeType.toString()} disposed');
     super.dispose();
   }
 }

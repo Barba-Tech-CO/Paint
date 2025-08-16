@@ -122,4 +122,10 @@ class SelectColorsViewModel extends ChangeNotifier {
   /// Verifica se pode gerar orçamento
   bool get canGenerateEstimate =>
       _selectedColor != null && _selectedBrand != null;
+
+  /// Indica se está carregando
+  bool get isLoading => false; // Por enquanto sempre false, pode ser implementado depois
+
+  /// Mensagem de erro atual
+  String? get errorMessage => null; // Por enquanto sempre null, pode ser implementado depois
 }
