@@ -36,8 +36,6 @@ class HttpService implements IHttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final fullPath = '${dio.options.baseUrl}$path';
-
     try {
       final startTime = DateTime.now();
       final response = await dio.get(
