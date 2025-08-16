@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:paintpro/config/dependency_injection.dart';
 import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
 import 'package:paintpro/view/widgets/buttons/paint_pro_button.dart';
+import 'package:paintpro/viewmodel/select_colors_viewmodel.dart';
 import 'widgets/color_grid_widget.dart';
 
 class SelectColorsView extends StatefulWidget {
@@ -14,62 +17,22 @@ class SelectColorsView extends StatefulWidget {
 class _SelectColorsViewState extends State<SelectColorsView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<String> _brands = [
-    'Sherwin-Williams',
-    'Benjamin Moore',
-    'Behr',
-    'PP',
-  ];
-
-  // Lista de cores para cada marca
-  final List<Map<String, dynamic>> _colors = [
-    {
-      'name': 'White',
-      'code': 'SW6232',
-      'price': '\$52.99/Gal',
-      'color': Colors.grey[200],
-    },
-    {
-      'name': 'Gray',
-      'code': 'SW6233',
-      'price': '\$51.99/Gal',
-      'color': Colors.grey[500],
-    },
-    {
-      'name': 'White Pink',
-      'code': 'SW6235',
-      'price': '\$46.99/Gal',
-      'color': Colors.pink[100],
-    },
-    {
-      'name': 'Pink',
-      'code': 'SW6238',
-      'price': '\$48.99/Gal',
-      'color': Colors.pink[300],
-    },
-    {
-      'name': 'Green',
-      'code': 'SW6232',
-      'price': '\$32.99/Gal',
-      'color': Colors.lightGreen[300],
-    },
-    {
-      'name': 'Aqua',
-      'code': 'SW6232',
-      'price': '\$52.99/Gal',
-      'color': Colors.cyan[200],
-    },
-  ];
+  late SelectColorsViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _brands.length, vsync: this);
+    _viewModel = getIt<SelectColorsViewModel>();
+    _tabController = TabController(
+      length: _viewModel.brands.length,
+      vsync: this,
+    );
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _viewModel.dispose();
     super.dispose();
   }
 
@@ -78,7 +41,7 @@ class _SelectColorsViewState extends State<SelectColorsView>
     return Scaffold(
       appBar: PaintProAppBar(
         title: 'Select Colors',
-        tabs: _brands.map((brand) => Tab(text: brand)).toList(),
+        tabs: _viewModel.brands.map((brand) => Tab(text: brand)).toList(),
         controller: _tabController,
         indicatorColor: Colors.white,
         labelColor: Colors.white,
@@ -93,28 +56,49 @@ class _SelectColorsViewState extends State<SelectColorsView>
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           children: [
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: _brands
-                    .map(
-                      (brand) => ColorGridWidget(
-                        brand: brand,
-                        colors: _colors,
-                        onColorTap: (colorData) {
-                          // Cor selecionada
-                          print(
-                            'Selected color: ${colorData['name']} for brand: $brand',
-                          );
-                        },
-                      ),
-                    )
-                    .toList(),
+            // Exibir mensagem de erro se houver
+            if (_viewModel.errorMessage != null)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _viewModel.errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
+            Expanded(
+              child: _viewModel.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : TabBarView(
+                      controller: _tabController,
+                      children: _viewModel.brands
+                          .map(
+                            (brand) => ColorGridWidget(
+                              brand: brand,
+                              colors: _viewModel.colors,
+                              onColorTap: (colorData) {
+                                _viewModel.selectColor(colorData, brand);
+                              },
+                            ),
+                          )
+                          .toList(),
+                    ),
             ),
             PaintProButton(
               text: 'Generate Estimate',
-              onPressed: () => context.push('/overview-measurements'),
+              onPressed: _viewModel.canGenerateEstimate
+                  ? () async {
+                      await _viewModel.generateEstimate();
+                      if (_viewModel.errorMessage == null) {
+                        context.push('/overview-measurements');
+                      }
+                    }
+                  : null,
               backgroundColor: Colors.blue,
               minimumSize: const Size(double.infinity, 50),
               borderRadius: 16,
