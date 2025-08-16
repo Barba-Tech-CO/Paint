@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'base_viewmodel.dart';
-import '../model/paint_catalog_model.dart';
+
+import '../service/logger_service.dart';
 
 /// ViewModel para a tela de seleção de cores
 /// Implementa o padrão MVVM com logging integrado
-class SelectColorsViewModel extends BaseViewModel {
+class SelectColorsViewModel extends ChangeNotifier {
   final List<String> _brands = [
     'Sherwin-Williams',
     'Benjamin Moore',
@@ -54,7 +54,7 @@ class SelectColorsViewModel extends BaseViewModel {
   Map<String, dynamic>? _selectedColor;
   String? _selectedBrand;
 
-  SelectColorsViewModel(super.logger);
+  SelectColorsViewModel();
 
   /// Lista de marcas disponíveis
   List<String> get brands => _brands;
@@ -73,14 +73,8 @@ class SelectColorsViewModel extends BaseViewModel {
     _selectedColor = colorData;
     _selectedBrand = brand;
 
-    logBusinessOperation(
-      'Color Selected',
-      data: {
-        'colorName': colorData['name'],
-        'colorCode': colorData['code'],
-        'brand': brand,
-        'price': colorData['price'],
-      },
+    LoggerService.info(
+      'Color Selected: ${colorData['name']} - Brand: $brand - Price: ${colorData['price']}',
     );
 
     notifyListeners();
@@ -88,53 +82,32 @@ class SelectColorsViewModel extends BaseViewModel {
 
   /// Carrega as cores para uma marca específica
   Future<void> loadColorsForBrand(String brand) async {
-    await executeOperation(
-      () async {
-        logInfo('Carregando cores para a marca: $brand');
+    LoggerService.info('Carregando cores para a marca: $brand');
 
-        // Simula um delay de carregamento
-        await Future.delayed(const Duration(milliseconds: 500));
+    // Simula um delay de carregamento
+    await Future.delayed(const Duration(milliseconds: 500));
 
-        logBusinessOperation(
-          'Colors Loaded',
-          data: {
-            'brand': brand,
-            'colorCount': _colors.length,
-          },
-        );
-
-        return true;
-      },
-      operationName: 'loadColorsForBrand',
+    LoggerService.info(
+      'Colors Loaded - Brand: $brand - Color Count: ${_colors.length}',
     );
   }
 
   /// Gera o orçamento com as cores selecionadas
   Future<void> generateEstimate() async {
     if (_selectedColor == null || _selectedBrand == null) {
-      setError('Por favor, selecione uma cor antes de gerar o orçamento');
+      LoggerService.warning('Tentativa de gerar orçamento sem cor selecionada');
       return;
     }
 
-    await executeOperation(
-      () async {
-        logInfo('Gerando orçamento para cor: ${_selectedColor!['name']}');
+    LoggerService.info(
+      'Gerando orçamento para cor: ${_selectedColor!['name']}',
+    );
 
-        // Simula o processo de geração de orçamento
-        await Future.delayed(const Duration(seconds: 1));
+    // Simula o processo de geração de orçamento
+    await Future.delayed(const Duration(seconds: 1));
 
-        logBusinessOperation(
-          'Estimate Generated',
-          data: {
-            'selectedColor': _selectedColor!['name'],
-            'selectedBrand': _selectedBrand,
-            'price': _selectedColor!['price'],
-          },
-        );
-
-        return true;
-      },
-      operationName: 'generateEstimate',
+    LoggerService.info(
+      'Estimate Generated - Color: ${_selectedColor!['name']} - Brand: $_selectedBrand - Price: ${_selectedColor!['price']}',
     );
   }
 
@@ -142,7 +115,7 @@ class SelectColorsViewModel extends BaseViewModel {
   void clearSelection() {
     _selectedColor = null;
     _selectedBrand = null;
-    logInfo('Seleção de cores limpa');
+    LoggerService.info('Seleção de cores limpa');
     notifyListeners();
   }
 
