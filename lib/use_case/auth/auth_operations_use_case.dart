@@ -1,20 +1,47 @@
 import '../../model/auth_model.dart';
 import '../../service/auth_service.dart';
+import '../../service/logger_service.dart';
 import '../../utils/result/result.dart';
 
 /// UseCase unificado para todas as operações de autenticação
 class AuthOperationsUseCase {
   final AuthService _authService;
+  final LoggerService _logger;
 
-  AuthOperationsUseCase(this._authService);
+  AuthOperationsUseCase(this._authService, this._logger);
 
   /// Verifica o status de autenticação
   Future<Result<AuthModel>> checkAuthStatus() async {
-    final result = await _authService.getStatus();
-    return result.when(
-      ok: (status) => Result.ok(status.data),
-      error: (error) => Result.error(error),
-    );
+    _logger.logBusinessOperation('checkAuthStatus');
+
+    try {
+      final result = await _authService.getStatus();
+      return result.when(
+        ok: (status) {
+          _logger.logBusinessOperation(
+            'checkAuthStatus_success',
+            data: {'status': status.data.toString()},
+          );
+          return Result.ok(status.data);
+        },
+        error: (error) {
+          _logger.logServiceError(
+            'AuthOperationsUseCase',
+            'checkAuthStatus',
+            error,
+          );
+          return Result.error(error);
+        },
+      );
+    } catch (error, stackTrace) {
+      _logger.logServiceError(
+        'AuthOperationsUseCase',
+        'checkAuthStatus',
+        error,
+        stackTrace,
+      );
+      return Result.error(Exception(error.toString()));
+    }
   }
 
   /// Obtém a URL de autorização
