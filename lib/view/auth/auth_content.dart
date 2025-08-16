@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:paintpro/model/auth_model.dart';
-import 'package:paintpro/utils/command/command_builder.dart';
-import 'package:paintpro/view/widgets/overlays/error_overlay.dart';
+
+import '../../model/auth_model.dart';
+import '../../utils/command/command_builder.dart';
 import '../../viewmodel/auth/auth_viewmodel.dart';
+import '../widgets/overlays/error_overlay.dart';
 import '../widgets/overlays/loading_overlay.dart';
 import 'auth_webview.dart';
 
