@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:paintpro/config/app_colors.dart';
+
+import '../../../config/app_colors.dart';
 
 class FloorDimensionWidget extends StatefulWidget {
   final double? width;
