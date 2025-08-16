@@ -203,9 +203,7 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
                     const SizedBox(height: 32),
                     PaintProButton(
                       text: "Next",
-                      onPressed: () {
-                        // TODO: Implementar navegação para próxima tela
-                      },
+                      onPressed: () => context.push('/select-material'),
                     ),
                     const SizedBox(height: 16),
                   ],

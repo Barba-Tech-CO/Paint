@@ -7,6 +7,9 @@ export 'contact/contact_viewmodels.dart';
 // Estimate ViewModels
 export 'estimate/estimate_viewmodels.dart';
 
+// Material ViewModels
+export 'material/material_viewmodels.dart';
+
 // Paint Catalog ViewModels
 export 'paint_catalog/paint_catalog_viewmodels.dart';
 

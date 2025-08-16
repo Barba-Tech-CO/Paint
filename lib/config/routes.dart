@@ -76,5 +76,11 @@ final router = GoRouter(
         return EditZoneView(zone: zone);
       },
     ),
+    GoRoute(
+      path: '/select-material',
+      builder: (context, state) {
+        return const SelectMaterialView();
+      },
+    ),
   ],
 );
