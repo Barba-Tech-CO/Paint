@@ -94,7 +94,7 @@ class _SelectColorsViewState extends State<SelectColorsView>
               onPressed: _viewModel.canGenerateEstimate
                   ? () async {
                       await _viewModel.generateEstimate();
-                      if (_viewModel.errorMessage == null) {
+                      if (_viewModel.errorMessage == null && context.mounted) {
                         context.push('/overview-measurements');
                       }
                     }
