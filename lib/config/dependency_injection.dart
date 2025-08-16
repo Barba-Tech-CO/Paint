@@ -1,31 +1,26 @@
 import 'package:get_it/get_it.dart';
 
-import 'package:paintpro/viewmodel/viewmodels.dart';
-import '../viewmodel/select_colors_viewmodel.dart';
-
 import '../service/app_initialization_service.dart';
 import '../service/auth_service.dart';
 import '../service/contact_service.dart';
 import '../service/deep_link_service.dart';
 import '../service/estimate_service.dart';
 import '../service/http_service.dart';
-import '../service/logger_service.dart';
+
 import '../service/navigation_service.dart';
 import '../service/paint_catalog_service.dart';
 import '../use_case/auth/auth_use_cases.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/logger/logger_app_logger_impl.dart';
+import '../viewmodel/select_colors_viewmodel.dart';
+import '../viewmodel/viewmodels.dart';
 
 final GetIt getIt = GetIt.instance;
 
 void setupDependencyInjection() {
   // Serviços
   getIt.registerLazySingleton<HttpService>(
-    () {
-      final httpService = HttpService();
-      httpService.setLogger(getIt<LoggerService>());
-      return httpService;
-    },
+    () => HttpService(),
   );
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(getIt<HttpService>()),
@@ -48,13 +43,10 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AppLogger>(
     () => LoggerAppLoggerImpl(),
   );
-  getIt.registerLazySingleton<LoggerService>(
-    () => LoggerService(getIt<AppLogger>()),
-  );
 
   // Use Cases
   getIt.registerLazySingleton<AuthOperationsUseCase>(
-    () => AuthOperationsUseCase(getIt<AuthService>(), getIt<LoggerService>()),
+    () => AuthOperationsUseCase(getIt<AuthService>()),
   );
   getIt.registerLazySingleton<ManageAuthStateUseCase>(
     () => ManageAuthStateUseCase(),
@@ -149,6 +141,6 @@ void setupDependencyInjection() {
 
   // ViewModels - Select Colors
   getIt.registerFactory<SelectColorsViewModel>(
-    () => SelectColorsViewModel(getIt<LoggerService>()),
+    () => SelectColorsViewModel(),
   );
 }

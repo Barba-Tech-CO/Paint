@@ -6,37 +6,33 @@ import '../../utils/result/result.dart';
 /// UseCase unificado para todas as operações de autenticação
 class AuthOperationsUseCase {
   final AuthService _authService;
-  final LoggerService _logger;
 
-  AuthOperationsUseCase(this._authService, this._logger);
+  AuthOperationsUseCase(this._authService);
 
   /// Verifica o status de autenticação
   Future<Result<AuthModel>> checkAuthStatus() async {
-    _logger.logBusinessOperation('checkAuthStatus');
+    LoggerService.info('checkAuthStatus');
 
     try {
       final result = await _authService.getStatus();
       return result.when(
         ok: (status) {
-          _logger.logBusinessOperation(
-            'checkAuthStatus_success',
-            data: {'status': status.data.toString()},
+          LoggerService.info(
+            'checkAuthStatus_success - status: ${status.data.toString()}',
           );
           return Result.ok(status.data);
         },
         error: (error) {
-          _logger.logServiceError(
-            'AuthOperationsUseCase',
-            'checkAuthStatus',
+          LoggerService.error(
+            'AuthOperationsUseCase.checkAuthStatus error',
             error,
           );
           return Result.error(error);
         },
       );
     } catch (error, stackTrace) {
-      _logger.logServiceError(
-        'AuthOperationsUseCase',
-        'checkAuthStatus',
+      LoggerService.error(
+        'AuthOperationsUseCase.checkAuthStatus exception',
         error,
         stackTrace,
       );
