@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
-import 'package:paintpro/view/layout/main_layout.dart';
+
+import '../../config/app_colors.dart';
+import '../layout/main_layout.dart';
+import '../widgets/appbars/paint_pro_app_bar.dart';
 
 class HighlightsView extends StatelessWidget {
   const HighlightsView({super.key});
