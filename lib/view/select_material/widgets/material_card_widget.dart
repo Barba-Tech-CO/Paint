@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../model/material_model.dart';
+import '../../../model/material_models/material_model.dart';
 import '../../../config/app_colors.dart';
 import 'build_chip_widget.dart';
 

@@ -1,5 +1,5 @@
 import '../utils/result/result.dart';
-import '../model/material_model.dart';
+import '../model/models.dart';
 
 class MaterialService {
   // Mock data para simular a API
@@ -180,12 +180,12 @@ class MaterialService {
   /// Busca marcas disponíveis
 
   /// Busca estatísticas dos materiais
-  Future<Result<MaterialStats>> getMaterialStats() async {
+  Future<Result<MaterialStatsModel>> getMaterialStats() async {
     try {
       // Simula delay da API
       await Future.delayed(const Duration(milliseconds: 400));
 
-      final stats = MaterialStats(
+      final stats = MaterialStatsModel(
         totalMaterials: _mockMaterials.length,
         availableMaterials: _mockMaterials.where((m) => m.isAvailable).length,
 
@@ -195,7 +195,7 @@ class MaterialService {
               (sum, material) => sum + material.price,
             ) /
             _mockMaterials.length,
-        priceRange: MaterialPriceRange(
+        priceRange: MaterialPriceRangeModel(
           min: _mockMaterials
               .map((m) => m.price)
               .reduce((a, b) => a < b ? a : b),
@@ -210,28 +210,4 @@ class MaterialService {
       return Result.error(Exception('Erro ao carregar estatísticas: $e'));
     }
   }
-}
-
-class MaterialStats {
-  final int totalMaterials;
-  final int availableMaterials;
-  final double averagePrice;
-  final MaterialPriceRange priceRange;
-
-  MaterialStats({
-    required this.totalMaterials,
-    required this.availableMaterials,
-    required this.averagePrice,
-    required this.priceRange,
-  });
-}
-
-class MaterialPriceRange {
-  final double min;
-  final double max;
-
-  MaterialPriceRange({
-    required this.min,
-    required this.max,
-  });
 }

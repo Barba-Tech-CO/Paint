@@ -1,17 +1,17 @@
 import 'package:flutter/foundation.dart';
-import '../../model/material_model.dart';
+import '../../model/models.dart';
 import '../../service/material_service.dart';
 
 class MaterialListViewModel extends ChangeNotifier {
   final MaterialService _materialService;
-
+  final List<MaterialModel> _selectedMaterials = [];
+  final List<String> _availableBrands = [];
   List<MaterialModel> _materials = [];
-  List<String> _availableBrands = [];
+
   MaterialFilter _currentFilter = MaterialFilter();
-  MaterialStats? _stats;
+  MaterialStatsModel? _stats;
   bool _isLoading = false;
   String? _error;
-  List<MaterialModel> _selectedMaterials = [];
 
   MaterialListViewModel(this._materialService);
 
@@ -19,7 +19,7 @@ class MaterialListViewModel extends ChangeNotifier {
   List<MaterialModel> get materials => _materials;
   List<String> get availableBrands => _availableBrands;
   MaterialFilter get currentFilter => _currentFilter;
-  MaterialStats? get stats => _stats;
+  MaterialStatsModel? get stats => _stats;
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<MaterialModel> get selectedMaterials => _selectedMaterials;

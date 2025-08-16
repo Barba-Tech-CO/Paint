@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../model/material_model.dart' as model;
+import '../../../model/material_models/material_model.dart' as model;
 import '../../../config/app_colors.dart';
 import 'drop_down_filter_widget.dart';
 
