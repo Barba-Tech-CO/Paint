@@ -1,17 +1,17 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
-import '../../service/estimate_service.dart';
+import '../../domain/repository/estimate_repository.dart';
 
 class EstimateUploadViewModel extends ChangeNotifier {
-  final EstimateService _estimateService;
+  final IEstimateRepository _estimateRepository;
 
   final List<File> _selectedPhotos = [];
   bool _isUploading = false;
   String? _error;
   double _uploadProgress = 0.0;
 
-  EstimateUploadViewModel(this._estimateService);
+  EstimateUploadViewModel(this._estimateRepository);
 
   // Getters
   List<File> get selectedPhotos => _selectedPhotos;
@@ -52,7 +52,7 @@ class EstimateUploadViewModel extends ChangeNotifier {
     _setUploadProgress(0.0);
 
     try {
-      final result = await _estimateService.uploadPhotos(
+      final result = await _estimateRepository.uploadPhotos(
         estimateId,
         _selectedPhotos,
       );
