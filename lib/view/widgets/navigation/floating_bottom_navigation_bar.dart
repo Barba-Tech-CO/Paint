@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/model/navigation_item_model.dart';
-import 'package:paintpro/view/widgets/navigation/floating_camera_button_widget.dart';
-import 'package:paintpro/view/widgets/navigation/navigation_item_widget.dart';
-import 'package:paintpro/view/widgets/navigation/notch_painter.dart';
-import 'package:paintpro/viewmodel/navigation_viewmodel.dart';
+import '../../../config/app_colors.dart';
+import '../../../model/navigation_item_model.dart';
+import '../../../viewmodel/navigation_viewmodel.dart';
+import 'floating_camera_button_widget.dart';
+import 'navigation_item_widget.dart';
+import 'notch_painter.dart';
 
 class FloatingBottomNavigationBar extends StatelessWidget {
   final NavigationViewModel viewModel;
