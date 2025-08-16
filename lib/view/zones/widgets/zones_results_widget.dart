@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/config/dependency_injection.dart';
-import 'package:paintpro/view/widgets/buttons/paint_pro_button.dart';
-import 'package:paintpro/view/widgets/cards/zones_card.dart';
-import 'package:paintpro/view/zones/widgets/zones_summary_card.dart';
-import 'package:paintpro/view/zones/widgets/add_zone_dialog.dart';
-import 'package:paintpro/viewmodel/zones/zones_viewmodels.dart';
+import 'package:provider/provider.dart';
+
+import '../../../config/dependency_injection.dart';
+import '../../../viewmodel/zones/zones_viewmodels.dart';
+import '../../widgets/buttons/paint_pro_button.dart';
+import '../../widgets/cards/zones_card.dart';
+import 'add_zone_dialog.dart';
+import 'zones_summary_card.dart';
 
 class ZonesResultsWidget extends StatefulWidget {
   final Map<String, dynamic> results;
