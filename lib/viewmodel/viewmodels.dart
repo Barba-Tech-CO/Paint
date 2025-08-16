@@ -1,3 +1,6 @@
+// Base ViewModel
+export 'base_viewmodel.dart';
+
 // Auth ViewModels
 export 'auth/auth_viewmodel.dart';
 
