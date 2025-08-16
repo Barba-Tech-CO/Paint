@@ -95,20 +95,31 @@ class SelectColorsViewModel extends ChangeNotifier {
   /// Gera o orçamento com as cores selecionadas
   Future<void> generateEstimate() async {
     if (_selectedColor == null || _selectedBrand == null) {
+      setError('Por favor, selecione uma cor antes de gerar o orçamento');
       LoggerService.warning('Tentativa de gerar orçamento sem cor selecionada');
       return;
     }
 
-    LoggerService.info(
-      'Gerando orçamento para cor: ${_selectedColor!['name']}',
-    );
+    setLoading(true);
+    clearError();
 
-    // Simula o processo de geração de orçamento
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      LoggerService.info(
+        'Gerando orçamento para cor: ${_selectedColor!['name']}',
+      );
 
-    LoggerService.info(
-      'Estimate Generated - Color: ${_selectedColor!['name']} - Brand: $_selectedBrand - Price: ${_selectedColor!['price']}',
-    );
+      // Simula o processo de geração de orçamento
+      await Future.delayed(const Duration(seconds: 1));
+
+      LoggerService.info(
+        'Estimate Generated - Color: ${_selectedColor!['name']} - Brand: $_selectedBrand - Price: ${_selectedColor!['price']}',
+      );
+    } catch (error) {
+      setError('Erro ao gerar orçamento: $error');
+      LoggerService.error('Erro ao gerar orçamento', error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   /// Limpa a seleção atual
@@ -123,9 +134,30 @@ class SelectColorsViewModel extends ChangeNotifier {
   bool get canGenerateEstimate =>
       _selectedColor != null && _selectedBrand != null;
 
+  bool _isLoading = false;
+  String? _errorMessage;
+
   /// Indica se está carregando
-  bool get isLoading => false; // Por enquanto sempre false, pode ser implementado depois
+  bool get isLoading => _isLoading;
 
   /// Mensagem de erro atual
-  String? get errorMessage => null; // Por enquanto sempre null, pode ser implementado depois
+  String? get errorMessage => _errorMessage;
+
+  /// Define o estado de carregamento
+  void setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
+  }
+
+  /// Define uma mensagem de erro
+  void setError(String? error) {
+    _errorMessage = error;
+    notifyListeners();
+  }
+
+  /// Limpa a mensagem de erro
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
 }
