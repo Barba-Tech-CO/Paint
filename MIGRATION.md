@@ -1,7 +1,7 @@
 **Prompt para IA Especialista em Flutter com MVVM:**
 
 **Objective:**
-Migrate the existing codebase to a feature-based MVVM architecture while maintaining the original file structure. Perform the migration **one module/feature at a time**, ensuring that each feature is fully migrated, tested, and refactored before moving on to the next one. Only adjust the necessary imports, without altering the internal structure of the files. After the migration, remove the outdated files and commit the changes accordingly. **Preserve the original names of the features and their components** (e.g., do not rename `Model` to `Entity`).
+Migrate the existing codebase to a feature-based MVVM architecture while maintaining the original file structure. Perform the migration **one module/feature at a time**, ensuring that each feature is fully migrated, tested, and refactored before moving on to the next one. Only adjust the necessary imports, without altering the internal structure of the files. After the migration, remove the outdated files and commit the changes accordingly. **Preserve the original names of the features and their components** (e.g., do not rename `Model` to `Entity`). **Do not create barrel/index files** that export other files.
 
 **Instructions:**
 
@@ -14,7 +14,7 @@ Migrate the existing codebase to a feature-based MVVM architecture while maintai
 
 2. **Migrate One Module at a Time:**
 
-   * **Migrate a Single Module:** Perform the migration **one module at a time**. Do not attempt to migrate multiple features or modules in parallel. Complete the migration of one feature, test it, and ensure it works properly before moving to the next.
+   * **Migrate a Single Module:** Perform the migration **one module at a time**. Do not attempt to migrate multiple features or modules in parallel. Complete the migration of one feature, test it, and ensure it works properly before moving on to the next.
    * **No Internal Structure Change:** **Do not alter the internal structure** of the migrated files. The goal is to migrate the feature to the new feature-based MVVM structure without changing how the internal logic of the files works. Focus only on adjusting imports and restructuring them according to the feature-based organization.
 
 3. **Preserve Original Names:**
@@ -41,13 +41,17 @@ Migrate the existing codebase to a feature-based MVVM architecture while maintai
 
    * **Minimize Redundancies:** Avoid duplicating files, classes, or components during migration. Reuse existing components as much as possible, making sure that each file is organized and structured according to its corresponding feature.
 
-8. **Before Moving to the Next Feature:**
+8. **Avoid Barrel/Index Files:**
+
+   * **Do Not Create Barrel Files:** **Do not create barrel files** (e.g., `index.dart` or files that export all files from a module or feature). Each file should be imported explicitly, ensuring that no unnecessary files are created that just aggregate exports from other files.
+
+9. **Before Moving to the Next Feature:**
 
    * **Full Validation:** Ensure that the feature has passed all tests, works seamlessly with the rest of the app, and is aligned with Flutter’s best practices for MVVM.
    * **Correct Dependencies:** Check for any dependency or state management issues between features. Address any inconsistencies before proceeding to the next feature.
 
-9. **Repeat for Each Feature:**
-   After completing one feature, proceed to the next. Ensure that the migration process is incremental, with each feature being tested and validated before moving forward.
+10. **Repeat for Each Feature:**
+    After completing one feature, proceed to the next. Ensure that the migration process is incremental, with each feature being tested and validated before moving forward.
 
 **Expected Outcome:**
-A clean, maintainable, and modular feature-based MVVM architecture for the entire app, with all features migrated and functioning properly within their respective modules. Each feature will be independent, reusable, and easily maintainable, while maintaining the original file structure, avoiding duplications, and following proper version control practices with commits for each migration. Additionally, the **original names** of the features and components will be preserved, ensuring consistency throughout the migration process.
+A clean, maintainable, and modular feature-based MVVM architecture for the entire app, with all features migrated and functioning properly within their respective modules. Each feature will be independent, reusable, and easily maintainable, while maintaining the original file structure, avoiding duplications, and following proper version control practices with commits for each migration. Additionally, the **original names** of the features and components will be preserved, ensuring consistency throughout the migration process, and **no barrel files** will be created.
