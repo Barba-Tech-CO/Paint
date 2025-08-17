@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
-import '../../model/zones_card_model.dart';
-import '../../utils/result/result.dart';
-import '../../utils/command/command.dart';
-import '../../helpers/zones/zone_data_classes.dart';
+
+import '../../../../helpers/zones/zone_data_classes.dart';
+import '../../../../utils/command/command.dart';
+import '../../../../utils/result/result.dart';
+import '../../infrastructure/models/zones_card_model.dart';
+import '../../infrastructure/models/zones_summary_model.dart';
 
 enum ZonesState { initial, loading, loaded, error }
 
