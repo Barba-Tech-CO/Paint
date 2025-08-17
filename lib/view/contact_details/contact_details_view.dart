@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
+
+import '../widgets/appbars/paint_pro_app_bar.dart';
 
 class ContactDetailsView extends StatelessWidget {
   const ContactDetailsView({super.key});

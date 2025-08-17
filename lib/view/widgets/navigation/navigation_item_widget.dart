@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/model/navigation_item_model.dart';
+
+import '../../../config/app_colors.dart';
+import '../../../model/navigation_item_model.dart';
 
 class NavigationItemWidget extends StatelessWidget {
   final NavigationItemModel item;

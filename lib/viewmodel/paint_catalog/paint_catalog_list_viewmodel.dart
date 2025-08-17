@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
 import '../../model/paint_catalog_model.dart';
-import '../../service/paint_catalog_service.dart';
+import '../../domain/repository/paint_catalog_repository.dart';
 
 class PaintCatalogListViewModel extends ChangeNotifier {
-  final PaintCatalogService _paintCatalogService;
+  final IPaintCatalogRepository _paintCatalogRepository;
 
   List<PaintBrand> _brands = [];
   List<PaintBrand> _popularBrands = [];
@@ -15,7 +15,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
   String? _currentUsage;
   String? _selectedBrandKey;
 
-  PaintCatalogListViewModel(this._paintCatalogService);
+  PaintCatalogListViewModel(this._paintCatalogRepository);
 
   // Getters
   List<PaintBrand> get brands => _brands;
@@ -33,7 +33,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _paintCatalogService.getOverview();
+      final result = await _paintCatalogRepository.getOverview();
       if (result is Ok) {
         _overview = result.asOk.value;
         notifyListeners();
@@ -53,7 +53,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _paintCatalogService.getBrands();
+      final result = await _paintCatalogRepository.getBrands();
       if (result is Ok) {
         _brands = result.asOk.value;
         notifyListeners();
@@ -73,7 +73,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _paintCatalogService.getPopularBrands();
+      final result = await _paintCatalogRepository.getPopularBrands();
       if (result is Ok) {
         _popularBrands = result.asOk.value;
         notifyListeners();
@@ -93,7 +93,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _paintCatalogService.getBrandColors(
+      final result = await _paintCatalogRepository.getBrandColors(
         brandKey,
         usage: usage,
       );
@@ -123,7 +123,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _paintCatalogService.searchColors(
+      final result = await _paintCatalogRepository.searchColors(
         query: query,
         brand: brand,
         limit: limit,
@@ -148,7 +148,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _paintCatalogService.searchColorsByName(searchTerm);
+      final result = await _paintCatalogRepository.searchColorsByName(searchTerm);
       if (result is Ok) {
         _colors = result.asOk.value;
         notifyListeners();
@@ -168,7 +168,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _paintCatalogService.getColorsByUsage(
+      final result = await _paintCatalogRepository.getColorsByUsage(
         brandKey,
         usage,
       );

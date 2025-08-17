@@ -13,7 +13,6 @@ class AppTheme {
       secondary: AppColors.success,
       error: AppColors.error,
       surface: AppColors.surface,
-      background: AppColors.background,
     ),
     textTheme: GoogleFonts.albertSansTextTheme().copyWith(
       displayLarge: GoogleFonts.albertSans(color: AppColors.textPrimary),

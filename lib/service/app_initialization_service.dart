@@ -25,13 +25,19 @@ class AppInitializationService {
     if (authResult is Ok) {
       final authenticated = authResult.asOk.value;
       if (authenticated) {
-        _navigationService.navigateToDashboard(context);
+        if (context.mounted) {
+          _navigationService.navigateToDashboard(context);
+        }
       } else {
-        _navigationService.navigateToAuth(context);
+        if (context.mounted) {
+          _navigationService.navigateToAuth(context);
+        }
       }
     } else {
       // Em caso de erro, vai para autenticação
-      _navigationService.navigateToAuth(context);
+      if (context.mounted) {
+        _navigationService.navigateToAuth(context);
+      }
     }
   }
 

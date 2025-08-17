@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/widgets/widgets.dart';
+
+import '../../config/app_colors.dart';
+import '../widgets/widgets.dart';
 
 class CreateProjectView extends StatefulWidget {
   const CreateProjectView({super.key});

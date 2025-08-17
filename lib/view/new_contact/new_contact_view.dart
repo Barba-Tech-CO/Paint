@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
-import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/widgets/form_field/paint_pro_number_field.dart';
-import 'package:paintpro/view/widgets/form_field/paint_pro_text_field.dart';
+
+import '../../config/app_colors.dart';
+import '../widgets/appbars/paint_pro_app_bar.dart';
+import '../widgets/form_field/paint_pro_number_field.dart';
+import '../widgets/form_field/paint_pro_text_field.dart';
 
 class NewContactView extends StatefulWidget {
   const NewContactView({super.key});
@@ -24,8 +25,8 @@ class _NewContactViewState extends State<NewContactView> {
 
   // Dropdown values
   String? _selectedName;
-  String? _selectedCountry;
-  String? _selectedState;
+  // String? _selectedCountry;
+  // String? _selectedState;
 
   @override
   void dispose() {
