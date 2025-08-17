@@ -1,16 +1,16 @@
 import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
 import '../../model/contact_model.dart';
-import '../../service/contact_service.dart';
+import '../../domain/repository/contact_repository.dart';
 
 class ContactDetailViewModel extends ChangeNotifier {
-  final ContactService _contactService;
+  final IContactRepository _contactRepository;
 
   ContactModel? _selectedContact;
   bool _isLoading = false;
   String? _error;
 
-  ContactDetailViewModel(this._contactService);
+  ContactDetailViewModel(this._contactRepository);
 
   // Getters
   ContactModel? get selectedContact => _selectedContact;
@@ -28,7 +28,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _contactService.createContact(
+      final result = await _contactRepository.createContact(
         firstName: firstName,
         lastName: lastName,
         email: email,
@@ -57,7 +57,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _contactService.getContact(contactId);
+      final result = await _contactRepository.getContact(contactId);
       if (result is Ok) {
         _selectedContact = result.asOk.value;
         notifyListeners();
@@ -83,7 +83,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _contactService.updateContact(
+      final result = await _contactRepository.updateContact(
         contactId,
         firstName: firstName,
         lastName: lastName,
@@ -113,7 +113,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _contactService.deleteContact(contactId);
+      final result = await _contactRepository.deleteContact(contactId);
 
       if (result is Ok && result.asOk.value) {
         if (_selectedContact?.id == contactId) {

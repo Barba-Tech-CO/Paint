@@ -15,9 +15,11 @@ class AuthWebView extends StatefulWidget {
 
 class _AuthWebViewState extends State<AuthWebView> {
   WebViewController? _webViewController;
+  late BuildContext _widgetContext;
 
   @override
   Widget build(BuildContext context) {
+    _widgetContext = context;
     return WebViewWidget(
       controller: _buildWebViewController(widget.url),
     );
@@ -33,10 +35,12 @@ class _AuthWebViewState extends State<AuthWebView> {
         NavigationDelegate(
           onNavigationRequest: (request) async {
             if (request.url.contains('/auth/success')) {
-              GoRouter.of(context).pop();
+              if (mounted) {
+                GoRouter.of(_widgetContext).pop();
+              }
               return NavigationDecision.prevent;
             }
-            final viewModel = context.read<AuthViewModel>();
+            final viewModel = _widgetContext.read<AuthViewModel>();
             final decision = await viewModel.handleWebViewNavigation(
               request.url,
             );
@@ -44,7 +48,13 @@ class _AuthWebViewState extends State<AuthWebView> {
               if (request.url.startsWith(
                 'https://app.gohighlevel.com/?src=marketplace',
               )) {
-                MarketplacePopupHelper.show(context, request.url, viewModel);
+                if (mounted) {
+                  MarketplacePopupHelper.show(
+                    _widgetContext,
+                    request.url,
+                    viewModel,
+                  );
+                }
               }
               return NavigationDecision.prevent;
             }

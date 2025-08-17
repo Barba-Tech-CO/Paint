@@ -3,14 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart' as webview;
 
-import 'package:paintpro/utils/logger/app_logger.dart';
-
 import '../../config/app_urls.dart';
 import '../../model/auth_model.dart';
 import '../../model/auth_state.dart';
 import '../../service/deep_link_service.dart';
 import '../../use_case/auth/auth_use_cases.dart';
 import '../../utils/command/command.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 import 'auth_view_state.dart';
 

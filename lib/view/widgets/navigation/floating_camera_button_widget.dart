@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:paintpro/config/app_colors.dart';
+
+import '../../../config/app_colors.dart';
 
 class FloatingCameraButtonWidget extends StatelessWidget {
   final VoidCallback? onTap;

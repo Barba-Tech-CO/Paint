@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/view/widgets/appbars/paint_pro_app_bar.dart';
-import 'package:paintpro/view/widgets/cards/input_card_widget.dart';
-import 'package:paintpro/view/widgets/buttons/paint_pro_button.dart';
+
+import '../widgets/appbars/paint_pro_app_bar.dart';
+import '../widgets/buttons/paint_pro_button.dart';
+import '../widgets/cards/input_card_widget.dart';
 import 'widgets/simple_checkbox_list_widget.dart';
 import 'widgets/wall_condition_widget.dart';
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/view/widgets/widgets.dart';
+
+import '../widgets/widgets.dart';
 
 class OverviewZonesView extends StatelessWidget {
   const OverviewZonesView({super.key});

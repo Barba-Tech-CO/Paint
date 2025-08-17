@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
 import '../../model/estimate_model.dart';
-import '../../service/estimate_service.dart';
+import '../../domain/repository/estimate_repository.dart';
 
 class EstimateCalculationViewModel extends ChangeNotifier {
-  final EstimateService _estimateService;
+  final IEstimateRepository _estimateRepository;
 
   EstimateModel? _currentEstimate;
   bool _isCalculating = false;
@@ -12,7 +12,7 @@ class EstimateCalculationViewModel extends ChangeNotifier {
   double _totalCost = 0.0;
   double _totalArea = 0.0;
 
-  EstimateCalculationViewModel(this._estimateService);
+  EstimateCalculationViewModel(this._estimateRepository);
 
   // Getters
   EstimateModel? get currentEstimate => _currentEstimate;
@@ -34,7 +34,7 @@ class EstimateCalculationViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _estimateService.selectElements(
+      final result = await _estimateRepository.selectElements(
         estimateId,
         useCatalog: useCatalog,
         brandKey: brandKey,

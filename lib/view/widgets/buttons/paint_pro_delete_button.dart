@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:paintpro/viewmodel/zones/zones_viewmodels.dart';
+
+import '../../../service/logger_service.dart';
+import '../../../viewmodel/zones/zones_viewmodels.dart';
 
 class PaintProDeleteButton extends StatelessWidget {
   final ZoneDetailViewModel viewModel;
+
   const PaintProDeleteButton({
     super.key,
     required this.viewModel,
@@ -14,14 +17,18 @@ class PaintProDeleteButton extends StatelessWidget {
       animation: viewModel,
       builder: (context, child) {
         return IconButton(
-          onPressed: viewModel.isDeleting ? null : () => _handleDelete(context),
+          onPressed: viewModel.isDeleting
+              ? null //
+              : () => _handleDelete(context),
           icon: viewModel.isDeleting
               ? const SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.delete_outline_rounded),
+              : const Icon(
+                  Icons.delete_outline_rounded,
+                ),
         );
       },
     );
@@ -61,7 +68,7 @@ class PaintProDeleteButton extends StatelessWidget {
         await viewModel.deleteZone(zone.id);
       } catch (e) {
         // Log error silently - UI coordination still handled by callbacks
-        debugPrint('Error deleting zone: $e');
+        LoggerService.error('Error deleting zone: $e');
       }
     }
   }
