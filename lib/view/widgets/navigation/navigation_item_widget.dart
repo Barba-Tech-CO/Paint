@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../config/app_colors.dart';
-import '../../../model/navigation_item_model.dart';
+import '../../../features/navigation/infrastructure/models/navigation_item_model.dart';
 
 class NavigationItemWidget extends StatelessWidget {
   final NavigationItemModel item;

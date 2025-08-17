@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../config/app_colors.dart';
-import '../../../model/navigation_item_model.dart';
-import '../../../viewmodel/navigation_viewmodel.dart';
+import '../../../features/navigation/infrastructure/models/navigation_item_model.dart';
+import '../../../features/navigation/presentation/viewmodels/navigation_viewmodel.dart';
 import 'floating_camera_button_widget.dart';
 import 'navigation_item_widget.dart';
 import 'notch_painter.dart';
