@@ -1,16 +1,16 @@
 import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
 import '../../model/estimate_model.dart';
-import '../../service/estimate_service.dart';
+import '../../domain/repository/estimate_repository.dart';
 
 class EstimateDetailViewModel extends ChangeNotifier {
-  final EstimateService _estimateService;
+  final IEstimateRepository _estimateRepository;
 
   EstimateModel? _selectedEstimate;
   bool _isLoading = false;
   String? _error;
 
-  EstimateDetailViewModel(this._estimateService);
+  EstimateDetailViewModel(this._estimateRepository);
 
   // Getters
   EstimateModel? get selectedEstimate => _selectedEstimate;
@@ -23,7 +23,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _estimateService.getEstimate(estimateId);
+      final result = await _estimateRepository.getEstimate(estimateId);
       if (result is Ok) {
         _selectedEstimate = result.asOk.value.data;
         notifyListeners();
@@ -47,7 +47,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _estimateService.createEstimate(
+      final result = await _estimateRepository.createEstimate(
         projectName: projectName,
         clientName: clientName,
         projectType: projectType,
@@ -80,7 +80,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _estimateService.updateEstimate(
+      final result = await _estimateRepository.updateEstimate(
         estimateId,
         projectName: projectName,
         clientName: clientName,
@@ -109,7 +109,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _estimateService.deleteEstimate(estimateId);
+      final result = await _estimateRepository.deleteEstimate(estimateId);
 
       if (result is Ok && result.asOk.value) {
         if (_selectedEstimate?.id == estimateId) {
@@ -138,7 +138,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _estimateService.updateEstimateStatus(
+      final result = await _estimateRepository.updateEstimateStatus(
         estimateId,
         status,
       );
@@ -165,7 +165,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _estimateService.completeEstimate(estimateId);
+      final result = await _estimateRepository.completeEstimate(estimateId);
 
       if (result is Ok && result.asOk.value.data != null) {
         _selectedEstimate = result.asOk.value.data;
@@ -189,7 +189,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _estimateService.sendToGHL(estimateId);
+      final result = await _estimateRepository.sendToGHL(estimateId);
 
       if (result is Ok && result.asOk.value) {
         // Atualiza o status para enviado

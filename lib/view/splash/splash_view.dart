@@ -77,8 +77,10 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
       await appInitService.initializeApp(context);
     } catch (e) {
       // Em caso de erro, vai para autenticação
-      final navigationService = getIt<NavigationService>();
-      navigationService.navigateToAuth(context);
+      if (mounted) {
+        final navigationService = getIt<NavigationService>();
+        navigationService.navigateToAuth(context);
+      }
     }
   }
 

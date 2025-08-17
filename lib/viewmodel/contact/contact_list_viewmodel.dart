@@ -1,15 +1,15 @@
 import 'package:flutter/foundation.dart';
 import '../../model/contact_model.dart';
-import '../../service/contact_service.dart';
+import '../../domain/repository/contact_repository.dart';
 import '../../utils/result/result.dart';
 import '../../utils/command/command.dart';
 
 enum ContactListState { initial, loading, loaded, error }
 
 class ContactListViewModel extends ChangeNotifier {
-  final ContactService _contactService;
+  final IContactRepository _contactRepository;
 
-  ContactListViewModel(this._contactService);
+  ContactListViewModel(this._contactRepository);
 
   // State
   ContactListState _state = ContactListState.initial;
@@ -57,7 +57,7 @@ class ContactListViewModel extends ChangeNotifier {
       _currentPage = 0;
 
       try {
-        final result = await _contactService.getContacts(
+        final result = await _contactRepository.getContacts(
           limit: _pageSize,
           offset: _currentPage * _pageSize,
         );
@@ -88,7 +88,7 @@ class ContactListViewModel extends ChangeNotifier {
       }
 
       try {
-        final result = await _contactService.getContacts(
+        final result = await _contactRepository.getContacts(
           limit: _pageSize,
           offset: _currentPage * _pageSize,
         );
@@ -118,7 +118,7 @@ class ContactListViewModel extends ChangeNotifier {
       _currentPage = 0;
 
       try {
-        final result = await _contactService.searchContacts(query);
+        final result = await _contactRepository.searchContacts(query);
         return result.when(
           ok: (response) {
             _contacts = response.contacts;

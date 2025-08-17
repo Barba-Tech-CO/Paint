@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
 import '../../model/paint_catalog_model.dart';
-import '../../service/paint_catalog_service.dart';
+import '../../domain/repository/paint_catalog_repository.dart';
 
 class PaintCatalogDetailViewModel extends ChangeNotifier {
-  final PaintCatalogService _paintCatalogService;
+  final IPaintCatalogRepository _paintCatalogRepository;
 
   PaintBrand? _selectedBrand;
   PaintColor? _selectedColor;
@@ -13,7 +13,7 @@ class PaintCatalogDetailViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
-  PaintCatalogDetailViewModel(this._paintCatalogService);
+  PaintCatalogDetailViewModel(this._paintCatalogRepository);
 
   // Getters
   PaintBrand? get selectedBrand => _selectedBrand;
@@ -33,7 +33,7 @@ class PaintCatalogDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _paintCatalogService.getColorDetail(
+      final result = await _paintCatalogRepository.getColorDetail(
         brandKey,
         colorKey,
         usage,
@@ -62,7 +62,7 @@ class PaintCatalogDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _paintCatalogService.calculatePaintNeeds(
+      final result = await _paintCatalogRepository.calculatePaintNeeds(
         brandKey: brandKey,
         colorKey: colorKey,
         usage: usage,

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/config/dependency_injection.dart';
-import 'package:paintpro/model/zones_card_model.dart';
-import 'package:paintpro/view/edit_zone/widgets/floor_dimension_widget.dart';
-import 'package:paintpro/view/edit_zone/widgets/photos_gallery_widget.dart';
-import 'package:paintpro/view/edit_zone/widgets/surface_area_display_widget.dart';
-import 'package:paintpro/view/widgets/buttons/paint_pro_delete_button.dart';
-import 'package:paintpro/view/widgets/widgets.dart';
-import 'package:paintpro/viewmodel/zones/zones_viewmodels.dart';
+
+import '../../config/dependency_injection.dart';
+import '../../model/zones_card_model.dart';
+import '../../viewmodel/zones/zones_viewmodels.dart';
+import '../widgets/buttons/paint_pro_delete_button.dart';
+import '../widgets/widgets.dart';
+import 'widgets/floor_dimension_widget.dart';
+import 'widgets/photos_gallery_widget.dart';
+import 'widgets/surface_area_display_widget.dart';
 
 class EditZoneView extends StatefulWidget {
   final ZonesCardModel? zone;

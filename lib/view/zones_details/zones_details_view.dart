@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/config/dependency_injection.dart';
-import 'package:paintpro/config/app_colors.dart';
-import 'package:paintpro/view/widgets/widgets.dart';
-import 'package:paintpro/model/zones_card_model.dart';
-import 'package:paintpro/view/widgets/buttons/paint_pro_delete_button.dart';
-import 'package:paintpro/view/zones_details/widgets/rename_zone_dialog.dart';
-import 'package:paintpro/viewmodel/zones/zones_viewmodels.dart';
+
+import '../../config/app_colors.dart';
+import '../../config/dependency_injection.dart';
+import '../../model/zones_card_model.dart';
+import '../../viewmodel/zones/zones_viewmodels.dart';
+import '../widgets/buttons/paint_pro_delete_button.dart';
+import '../widgets/widgets.dart';
+import 'widgets/rename_zone_dialog.dart';
 
 class ZonesDetailsView extends StatefulWidget {
   final ZonesCardModel? zone;
