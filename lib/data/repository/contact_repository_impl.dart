@@ -1,12 +1,12 @@
-import '../../domain/repository/contact_repository.dart';
-import '../../model/contact_model.dart';
+import '../../features/contacts/domain/repositories/contact_repository.dart';
+import '../../features/contacts/domain/entities/contact_entity.dart';
 import '../../service/contact_service.dart';
 import '../../utils/result/result.dart';
 
 class ContactRepository implements IContactRepository {
   final ContactService _contactService;
 
-  ContactRepository({required ContactService contactService}) 
+  ContactRepository({required ContactService contactService})
     : _contactService = contactService;
 
   @override

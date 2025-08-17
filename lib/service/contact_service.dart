@@ -1,5 +1,5 @@
+import '../features/contacts/domain/entities/contact_entity.dart';
 import '../utils/result/result.dart';
-import '../model/contact_model.dart';
 import 'http_service.dart';
 
 class ContactService {
