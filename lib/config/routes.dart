@@ -1,6 +1,5 @@
 import 'package:go_router/go_router.dart';
 
-import '../model/models.dart';
 import '../view/views.dart';
 import '../features/auth/presentation/views/auth_view.dart';
 
@@ -62,20 +61,6 @@ final router = GoRouter(
     GoRoute(
       path: '/new-contact',
       builder: (context, state) => const NewContactView(),
-    ),
-    GoRoute(
-      path: '/zones-details',
-      builder: (context, state) {
-        final zone = state.extra as ZonesCardModel?;
-        return ZonesDetailsView(zone: zone);
-      },
-    ),
-    GoRoute(
-      path: '/edit-zone',
-      builder: (context, state) {
-        final zone = state.extra as ZonesCardModel?;
-        return EditZoneView(zone: zone);
-      },
     ),
   ],
 );

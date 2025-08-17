@@ -14,17 +14,10 @@ import 'firebase_options.dart';
 import 'service/navigation_service.dart';
 
 // Viewmodels
-import 'viewmodel/contact/contact_detail_viewmodel.dart';
-import 'viewmodel/contact/contact_list_viewmodel.dart';
-import 'viewmodel/estimate/estimate_calculation_viewmodel.dart';
-import 'viewmodel/estimate/estimate_detail_viewmodel.dart';
-import 'viewmodel/estimate/estimate_list_viewmodel.dart';
-import 'viewmodel/estimate/estimate_upload_viewmodel.dart';
-import 'viewmodel/measurements/measurements_viewmodel.dart';
-import 'viewmodel/navigation_viewmodel.dart';
-import 'viewmodel/paint_catalog/paint_catalog_detail_viewmodel.dart';
-import 'viewmodel/paint_catalog/paint_catalog_list_viewmodel.dart';
-import 'viewmodel/zones/zones_card_viewmodel.dart';
+import 'features/contacts/presentation/viewmodels/contact_list_viewmodel.dart';
+import 'features/contacts/presentation/viewmodels/contact_detail_viewmodel.dart';
+import 'features/measurements/presentation/viewmodels/measurements_viewmodel.dart';
+import 'features/navigation/presentation/viewmodels/navigation_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,26 +54,7 @@ class PaintProApp extends StatelessWidget {
         ChangeNotifierProvider<ContactDetailViewModel>(
           create: (_) => getIt<ContactDetailViewModel>(),
         ),
-        // Estimate ViewModels
-        ChangeNotifierProvider<EstimateListViewModel>(
-          create: (_) => getIt<EstimateListViewModel>(),
-        ),
-        ChangeNotifierProvider<EstimateDetailViewModel>(
-          create: (_) => getIt<EstimateDetailViewModel>(),
-        ),
-        ChangeNotifierProvider<EstimateUploadViewModel>(
-          create: (_) => getIt<EstimateUploadViewModel>(),
-        ),
-        ChangeNotifierProvider<EstimateCalculationViewModel>(
-          create: (_) => getIt<EstimateCalculationViewModel>(),
-        ),
-        // Paint Catalog ViewModels
-        ChangeNotifierProvider<PaintCatalogListViewModel>(
-          create: (_) => getIt<PaintCatalogListViewModel>(),
-        ),
-        ChangeNotifierProvider<PaintCatalogDetailViewModel>(
-          create: (_) => getIt<PaintCatalogDetailViewModel>(),
-        ),
+
         // Navigation
         ChangeNotifierProvider<NavigationViewModel>(
           create: (_) => getIt<NavigationViewModel>(),
@@ -92,10 +66,7 @@ class PaintProApp extends StatelessWidget {
         ChangeNotifierProvider<MeasurementsViewModel>(
           create: (_) => getIt<MeasurementsViewModel>(),
         ),
-        // Zones ViewModel
-        ChangeNotifierProvider<ZonesCardViewmodel>(
-          create: (_) => getIt<ZonesCardViewmodel>(),
-        ),
+
       ],
       child: MaterialApp.router(
         title: 'PaintPro',

@@ -1,17 +1,15 @@
 // Contact ViewModels
-export 'contact/contact_viewmodels.dart';
+export '../features/contacts/presentation/viewmodels/contact_list_viewmodel.dart';
+export '../features/contacts/presentation/viewmodels/contact_detail_viewmodel.dart';
 
 // Estimate ViewModels
-export 'estimate/estimate_viewmodels.dart';
 
 // Paint Catalog ViewModels
-export 'paint_catalog/paint_catalog_viewmodels.dart';
 
 // Navigation ViewModel
-export 'navigation_viewmodel.dart';
+export '../features/navigation/presentation/viewmodels/navigation_viewmodel.dart';
 
 // Measurements ViewModel
-export 'measurements/measurements_viewmodel.dart';
+export '../features/measurements/presentation/viewmodels/measurements_viewmodel.dart';
 
 // Zones ViewModels
-export 'zones/zones_viewmodels.dart';
