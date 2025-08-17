@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../model/navigation_item_model.dart';
+import '../../infrastructure/models/navigation_item_model.dart';
 
 class NavigationViewModel extends ChangeNotifier {
   String _currentRoute = '/dashboard';
