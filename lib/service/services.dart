@@ -1,6 +1,5 @@
 // Services
 export 'http_service.dart';
-export 'auth_service.dart';
 export 'contact_service.dart';
 export 'estimate_service.dart';
 export 'paint_catalog_service.dart';
