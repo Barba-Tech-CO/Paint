@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../config/dependency_injection.dart';
-import '../../viewmodel/select_colors_viewmodel.dart';
-import '../widgets/appbars/paint_pro_app_bar.dart';
-import '../widgets/buttons/paint_pro_button.dart';
+import '../../../../config/dependency_injection.dart';
+import '../viewmodels/select_colors_viewmodel.dart';
+import '../../../../view/widgets/appbars/paint_pro_app_bar.dart';
+import '../../../../view/widgets/buttons/paint_pro_button.dart';
 import 'widgets/color_grid_widget.dart';
 
 class SelectColorsView extends StatefulWidget {
