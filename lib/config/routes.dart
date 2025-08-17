@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../model/models.dart';
 import '../view/views.dart';
+import '../features/auth/presentation/views/auth_view.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
