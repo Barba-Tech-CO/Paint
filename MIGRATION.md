@@ -1,57 +1,64 @@
 **Prompt para IA Especialista em Flutter com MVVM:**
 
 **Objective:**
-Migrate the existing codebase to a feature-based MVVM architecture while maintaining the original file structure. Perform the migration **one module/feature at a time**, ensuring that each feature is fully migrated, tested, and refactored before moving on to the next one. Only adjust the necessary imports, without altering the internal structure of the files. After the migration, remove the outdated files and commit the changes accordingly. **Preserve the original names of the features and their components** (e.g., do not rename `Model` to `Entity`). **Do not create barrel/index files** that export other files.
+Migrate the existing codebase to a feature-based MVVM architecture while maintaining the original file structure. Perform the migration **one module/feature at a time**, ensuring that each feature is fully migrated, tested, and refactored before moving on to the next one. Once the migration is complete, delete the outdated files and create commits following the specified format. Afterward, prompt the user to select the next module/feature to migrate.
 
 **Instructions:**
 
-1. **Migration to Feature-Based MVVM Architecture:**
+1. **Choose a Module for Migration:**
+
+   * **Pick One Module:** Choose one module or feature from the codebase to migrate first. Ensure the migration is complete for that module before moving to the next.
+
+2. **Migration to Feature-Based MVVM Architecture:**
 
    * **Organize by Features:** Create separate feature directories for each module (e.g., `auth`, `profile`, `dashboard`) and structure them with the MVVM architecture in mind. Each feature should have its own `Model`, `ViewModel`, and `View`.
    * **Model:** Ensure that each feature has a data model that represents the business logic and data structure for that specific feature.
    * **ViewModel:** Implement a `ViewModel` for each feature that exposes data and business logic to the `View` and interacts with the `Model`.
    * **View:** Structure the UI of each feature to communicate with the `ViewModel`, ensuring a clean separation of concerns. Use `StreamBuilder` or `FutureBuilder` as necessary for reactive UI updates.
 
-2. **Migrate One Module at a Time:**
+3. **No Internal Structure Change:**
 
-   * **Migrate a Single Module:** Perform the migration **one module at a time**. Do not attempt to migrate multiple features or modules in parallel. Complete the migration of one feature, test it, and ensure it works properly before moving on to the next.
-   * **No Internal Structure Change:** **Do not alter the internal structure** of the migrated files. The goal is to migrate the feature to the new feature-based MVVM structure without changing how the internal logic of the files works. Focus only on adjusting imports and restructuring them according to the feature-based organization.
-
-3. **Preserve Original Names:**
-
-   * **Keep Feature Names Consistent:** **Do not change the original names** of the components of each feature. For example, do not rename `Model` to `Entity`, or change any other component names. Keep the original naming conventions for each feature to ensure consistency across the codebase.
+   * **Do Not Alter Internal Logic:** Do not change the internal structure of the migrated files. The focus should be solely on adjusting imports and restructuring them according to the feature-based organization without altering the business logic.
 
 4. **Adjust Imports:**
 
-   * **Update Imports Only:** The only changes to be made to the migrated files should be to **adjust the imports** so they point to the new feature-based structure. Ensure that all imports are correctly updated to reflect the new directory structure without duplicating or moving internal code logic.
+   * **Update Imports Only:** The only changes to be made to the migrated files should be to **adjust the imports** so they point to the new feature-based structure.
 
 5. **Remove Old Files:**
 
-   * **Delete Outdated Files:** Once a feature has been migrated and validated, **remove the old implementation** of that feature that no longer fits the new feature-based structure.
+   * **Delete Outdated Files:** After a feature has been migrated and validated, **remove the old implementation** that no longer fits the feature-based MVVM structure.
 
 6. **Commits:**
 
-   * **Commit Process:** After each migration, create commits in the following way:
+   * **Follow Conventional Commits Format:** After each migration, create commits following the **conventional commits** format:
 
-     * For each commit, include **two files**: the old file that was deleted and the new file that replaced it in the feature-based MVVM structure.
-     * Ensure the commit message clearly indicates the change (e.g., "Migrated `auth.dart` to feature-based MVVM structure, deleted old `auth.dart`").
-   * **Commit Frequency:** Commit after each successful migration of one module/feature, ensuring clarity and tracking of changes.
+     * **Commit Type**: Use appropriate commit types like `feat`, `fix`, `refactor`, etc.
+     * **Commit Message Format**: Each commit message should be clear and concise, following the pattern:
 
-7. **Avoid Duplications:**
+       ```
+       <type>(<scope>): <short message>
+       ```
+     * **Commit Content:** For each commit, include **two files**: the old file that was deleted and the new file that replaced it in the feature-based MVVM structure.
+     * Example commit message:
 
-   * **Minimize Redundancies:** Avoid duplicating files, classes, or components during migration. Reuse existing components as much as possible, making sure that each file is organized and structured according to its corresponding feature.
+       ```
+       feat(auth): migrate to feature-based MVVM structure, delete old auth.dart
+       ```
 
-8. **Avoid Barrel/Index Files:**
+7. **Ask for the Next Module:**
 
-   * **Do Not Create Barrel Files:** **Do not create barrel files** (e.g., `index.dart` or files that export all files from a module or feature). Each file should be imported explicitly, ensuring that no unnecessary files are created that just aggregate exports from other files.
+   * **Prompt the User:** After completing the migration for a feature and committing the changes, **ask the user for the next module/feature to migrate**. Provide a list of remaining features that have not been migrated yet.
 
-9. **Before Moving to the Next Feature:**
+     * **Example question:**
+       "Which module/feature would you like to migrate next? Here are the remaining options:
 
-   * **Full Validation:** Ensure that the feature has passed all tests, works seamlessly with the rest of the app, and is aligned with Flutter’s best practices for MVVM.
-   * **Correct Dependencies:** Check for any dependency or state management issues between features. Address any inconsistencies before proceeding to the next feature.
+       * `profile`
+       * `settings`
+       * `dashboard`"
 
-10. **Repeat for Each Feature:**
-    After completing one feature, proceed to the next. Ensure that the migration process is incremental, with each feature being tested and validated before moving forward.
+8. **Repeat the Process:**
+
+   * After completing the migration of one module, proceed to the next as directed by the user. Ensure that each module is fully migrated, tested, and validated before moving on to the next one.
 
 **Expected Outcome:**
-A clean, maintainable, and modular feature-based MVVM architecture for the entire app, with all features migrated and functioning properly within their respective modules. Each feature will be independent, reusable, and easily maintainable, while maintaining the original file structure, avoiding duplications, and following proper version control practices with commits for each migration. Additionally, the **original names** of the features and components will be preserved, ensuring consistency throughout the migration process, and **no barrel files** will be created.
+A clean, maintainable, and modular feature-based MVVM architecture for the entire app, with all features migrated and functioning properly within their respective modules. Each feature will be independent, reusable, and easily maintainable, while maintaining the original file structure, avoiding duplications, and following proper version control practices with commits for each migration. After each migration, the user will be prompted to choose the next feature/module to migrate.
