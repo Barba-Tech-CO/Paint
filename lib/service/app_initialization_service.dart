@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/result/result.dart';
-import 'auth_service.dart';
+import '../features/auth/infrastructure/services/auth_service_impl.dart';
 import 'navigation_service.dart';
 import 'deep_link_service.dart';
 
