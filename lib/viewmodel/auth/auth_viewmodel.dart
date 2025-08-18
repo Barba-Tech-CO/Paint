@@ -95,7 +95,10 @@ class AuthViewModel extends ChangeNotifier {
 
   void _onDeepLinkReceived(Uri uri) {
     if (uri.pathSegments.contains('success')) {
-      _handleDeepLinkUseCase.handleSuccess();
+      _handleDeepLinkUseCase.handleSuccess().then((_) {
+        // After handling success, check auth status to update navigation flags
+        checkAuthStatusCommand.execute();
+      });
     } else if (uri.pathSegments.contains('error')) {
       final error = uri.queryParameters['error'];
       _handleDeepLinkUseCase.handleError(
@@ -142,6 +145,7 @@ class AuthViewModel extends ChangeNotifier {
       result.when(
         ok: (response) {
           _logger.info('[AuthViewModel] Callback processado com sucesso');
+          // After successful callback, check auth status to update navigation flags
           checkAuthStatusCommand.execute();
         },
         error: (error) {
@@ -150,7 +154,6 @@ class AuthViewModel extends ChangeNotifier {
           );
         },
       );
-      _updateState(_state.copyWith(isLoading: false));
       return result;
     } catch (e, stack) {
       _logger.error(
@@ -179,7 +182,6 @@ class AuthViewModel extends ChangeNotifier {
         );
       },
     );
-    _updateState(_state.copyWith(isLoading: false));
     return result;
   }
 
@@ -246,6 +248,11 @@ class AuthViewModel extends ChangeNotifier {
 
   void updateAuthorizeUrl(String newUrl) {
     _updateState(_state.copyWith(authorizeUrl: newUrl));
+  }
+
+  /// Triggers a deep link success callback for testing or manual triggering
+  void triggerDeepLinkSuccess() {
+    _deepLinkService.triggerSuccessCallback();
   }
 
   Future<Result<AuthState>> reset() async {
