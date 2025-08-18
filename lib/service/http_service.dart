@@ -7,7 +7,6 @@ import 'logger_service.dart';
 class HttpService implements IHttpService {
   static final HttpService _instance = HttpService._internal();
   late final Dio dio;
-  late final LoggerService _logger;
 
   factory HttpService() {
     return _instance;
@@ -26,10 +25,6 @@ class HttpService implements IHttpService {
     );
   }
 
-  void setLogger(LoggerService logger) {
-    _logger = logger;
-  }
-
   @override
   Future<Response> get(
     String path, {
@@ -45,24 +40,12 @@ class HttpService implements IHttpService {
       );
       final duration = DateTime.now().difference(startTime);
 
-      _logger.logApiCall(
-        path,
-        'GET',
-        requestData: queryParameters,
-        responseData: response.data,
-        statusCode: response.statusCode,
-      );
-
-      _logger.logPerformance('HTTP GET $path', duration);
+      LoggerService.info('API Call: GET $path - Status: ${response.statusCode}');
+      LoggerService.info('Performance: HTTP GET $path took ${duration.inMilliseconds}ms');
 
       return response;
     } on DioException catch (e) {
-      _logger.logServiceError(
-        'HttpService',
-        'GET $path',
-        e,
-        e.stackTrace,
-      );
+      LoggerService.error('Service Error: HttpService.GET $path', e, e.stackTrace);
       rethrow;
     }
   }
