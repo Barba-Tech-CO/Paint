@@ -6,6 +6,7 @@ import '../features/auth/presentation/views/auth_view.dart';
 import '../features/splash/presentation/viewmodels/splash_viewmodel.dart';
 import '../features/home/presentation/viewmodels/home_viewmodel.dart';
 import '../features/projects/presentation/viewmodels/projects_viewmodel.dart';
+import '../features/highlights/presentation/viewmodels/highlights_viewmodel.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -45,7 +46,10 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/highlights',
-      builder: (context, state) => const HighlightsView(),
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => HighlightsViewmodel(),
+        child: const HighlightsView(),
+      ),
     ),
     GoRoute(
       path: '/contact-details',

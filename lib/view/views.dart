@@ -5,7 +5,7 @@ export '../features/camera/presentation/views/camera_view.dart';
 export '../features/contacts/presentation/views/contact_details_view.dart';
 export 'create_project/create_project_view.dart';
 
-export 'highlights/highlights_view.dart';
+export '../features/highlights/presentation/views/highlights_view.dart';
 export '../features/home/presentation/views/home_view.dart';
 export 'layout/main_layout.dart';
 export '../features/new_contact/presentation/views/new_contact_view.dart';
