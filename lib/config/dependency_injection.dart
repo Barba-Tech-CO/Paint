@@ -18,6 +18,7 @@ import '../domain/repository/paint_catalog_repository.dart';
 import '../service/app_initialization_service.dart';
 import '../service/auth_service.dart';
 import '../service/contact_service.dart';
+import '../service/contact_database_service.dart';
 import '../service/deep_link_service.dart';
 import '../service/estimate_service.dart';
 import '../service/http_service.dart';
@@ -27,8 +28,6 @@ import '../service/paint_catalog_service.dart';
 
 // Use Case Layer
 import '../use_case/auth/auth_use_cases.dart';
-import '../utils/logger/app_logger.dart';
-import '../utils/logger/logger_app_logger_impl.dart';
 
 // ViewModel Layer
 import '../viewmodel/select_colors_viewmodel.dart';
@@ -41,11 +40,15 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<HttpService>(
     () => HttpService(),
   );
+
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(getIt<HttpService>()),
   );
   getIt.registerLazySingleton<ContactService>(
     () => ContactService(getIt<HttpService>()),
+  );
+  getIt.registerLazySingleton<ContactDatabaseService>(
+    () => ContactDatabaseService(),
   );
   getIt.registerLazySingleton<EstimateService>(
     () => EstimateService(getIt<HttpService>()),
@@ -62,16 +65,17 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<DeepLinkService>(
     () => DeepLinkService(),
   );
-  getIt.registerLazySingleton<AppLogger>(
-    () => LoggerAppLoggerImpl(),
-  );
 
   // Repositories
   getIt.registerLazySingleton<IAuthRepository>(
     () => AuthRepository(authService: getIt<AuthService>()),
   );
   getIt.registerLazySingleton<IContactRepository>(
-    () => ContactRepository(contactService: getIt<ContactService>()),
+    () => ContactRepository(
+      contactService: getIt<ContactService>(),
+      databaseService: getIt<ContactDatabaseService>(),
+      authService: getIt<AuthService>(),
+    ),
   );
   getIt.registerLazySingleton<IEstimateRepository>(
     () => EstimateRepository(estimateService: getIt<EstimateService>()),
@@ -80,7 +84,9 @@ void setupDependencyInjection() {
     () => MaterialRepository(materialService: getIt<MaterialService>()),
   );
   getIt.registerLazySingleton<IPaintCatalogRepository>(
-    () => PaintCatalogRepository(paintCatalogService: getIt<PaintCatalogService>()),
+    () => PaintCatalogRepository(
+      paintCatalogService: getIt<PaintCatalogService>(),
+    ),
   );
 
   // Use Cases
@@ -94,7 +100,6 @@ void setupDependencyInjection() {
     () => HandleDeepLinkUseCase(
       getIt<AuthOperationsUseCase>(),
       getIt<ManageAuthStateUseCase>(),
-      getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<HandleWebViewNavigationUseCase>(
@@ -116,7 +121,6 @@ void setupDependencyInjection() {
       getIt<HandleDeepLinkUseCase>(),
       getIt<HandleWebViewNavigationUseCase>(),
       getIt<DeepLinkService>(),
-      getIt<AppLogger>(),
     ),
   );
 
