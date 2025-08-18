@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/config/app_colors.dart';
-import '../../../../view/layout/main_layout.dart';
+import '../../../../config/app_colors.dart';
 import '../../../../view/widgets/appbars/paint_pro_app_bar.dart';
-import '../viewmodels/highlights_viewmodel.dart';
+import '../../../layout/presentation/views/main_layout.dart';
 import '../../domain/entities/highlights_state.dart';
+import '../viewmodels/highlights_viewmodel.dart';
 
 class HighlightsView extends StatefulWidget {
   const HighlightsView({super.key});

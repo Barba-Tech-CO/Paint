@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/config/app_colors.dart';
+import '../../../../config/app_colors.dart';
 import '../../../../view/widgets/widgets.dart';
 import '../viewmodels/create_project_viewmodel.dart';
 import '../../domain/entities/create_project_state.dart';

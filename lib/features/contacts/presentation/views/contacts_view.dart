@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/config/app_colors.dart';
-import '../../../../view/layout/main_layout.dart';
+import '../../../../config/app_colors.dart';
 import '../../../../view/widgets/appbars/paint_pro_app_bar.dart';
+import '../../../layout/presentation/views/main_layout.dart';
 
 class ContactsView extends StatefulWidget {
   const ContactsView({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../core/config/app_colors.dart';
+import '../../../config/app_colors.dart';
 
 class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;

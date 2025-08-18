@@ -1,8 +1,8 @@
-import '../../domain/repository/auth_repository.dart';
-import '../../features/auth/infrastructure/services/auth_service_impl.dart';
-import '../../features/auth/domain/entities/auth_status_response_entity.dart';
-import '../../features/auth/domain/entities/auth_refresh_response_entity.dart';
-import '../../utils/result/result.dart';
+import '../../../../domain/repository/auth_repository.dart';
+import '../services/auth_service_impl.dart';
+import '../../domain/entities/auth_status_response_entity.dart';
+import '../../domain/entities/auth_refresh_response_entity.dart';
+import '../../../../utils/result/result.dart';
 
 class AuthRepository implements IAuthRepository {
   final AuthService _authService;

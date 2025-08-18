@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart' as webview;
 
-import '../../../../core/config/app_urls.dart';
+import '../../../../config/app_urls.dart';
 import '../../../../service/deep_link_service.dart';
 import '../../domain/usecases/auth_operations_usecase.dart';
 import '../../domain/usecases/handle_deep_link_usecase.dart';

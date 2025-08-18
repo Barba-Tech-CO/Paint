@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:app_links/app_links.dart';
-import '../core/config/app_urls.dart';
+import '../config/app_urls.dart';
 
 class DeepLinkService {
   static final DeepLinkService _instance = DeepLinkService._internal();

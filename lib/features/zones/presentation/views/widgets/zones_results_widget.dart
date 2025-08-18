@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../../core/config/dependency_injection.dart';
+import '../../../../../config/dependency_injection.dart';
 import '../../../../../viewmodel/viewmodels.dart';
 import '../../../../../view/widgets/buttons/paint_pro_button.dart';
 import '../../../../../view/widgets/cards/zones_card.dart';

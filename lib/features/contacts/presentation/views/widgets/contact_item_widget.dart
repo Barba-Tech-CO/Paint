@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../core/config/app_colors.dart';
+import '../../../../../config/app_colors.dart';
 
 class ContactItemWidget extends StatelessWidget {
   final Map<String, String> contact;

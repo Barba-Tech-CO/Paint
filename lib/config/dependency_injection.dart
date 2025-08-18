@@ -1,33 +1,33 @@
 import 'package:get_it/get_it.dart';
 
 // Data Layer
-import '../../data/repository/auth_repository_impl.dart';
-import '../../data/repository/contact_repository_impl.dart';
+import '../features/auth/infrastructure/repositories/auth_repository_impl.dart';
+import '../features/contacts/infrastructure/repositories/contact_repository_impl.dart';
 
 // Domain Layer
-import '../../domain/repository/auth_repository.dart';
-import '../../features/contacts/domain/repositories/contact_repository.dart';
+import '../domain/repository/auth_repository.dart';
+import '../features/contacts/domain/repositories/contact_repository.dart';
 
 // Service Layer
-import '../../service/app_initialization_service.dart';
-import '../../features/auth/infrastructure/services/auth_service_impl.dart';
-import '../../service/contact_service.dart';
-import '../../service/deep_link_service.dart';
-import '../../service/http_service.dart';
-import '../../service/navigation_service.dart';
+import '../service/app_initialization_service.dart';
+import '../features/auth/infrastructure/services/auth_service_impl.dart';
+import '../service/contact_service.dart';
+import '../service/deep_link_service.dart';
+import '../service/http_service.dart';
+import '../service/navigation_service.dart';
 
 // Use Case Layer
-import '../../features/auth/domain/usecases/auth_operations_usecase.dart';
-import '../../features/auth/domain/usecases/manage_auth_state_usecase.dart';
-import '../../features/auth/domain/usecases/handle_deep_link_usecase.dart';
-import '../../features/auth/domain/usecases/handle_webview_navigation_usecase.dart';
-import '../../utils/logger/app_logger.dart';
-import '../../utils/logger/logger_app_logger_impl.dart';
+import '../features/auth/domain/usecases/auth_operations_usecase.dart';
+import '../features/auth/domain/usecases/manage_auth_state_usecase.dart';
+import '../features/auth/domain/usecases/handle_deep_link_usecase.dart';
+import '../features/auth/domain/usecases/handle_webview_navigation_usecase.dart';
+import '../utils/logger/app_logger.dart';
+import '../utils/logger/logger_app_logger_impl.dart';
 
 // ViewModel Layer
-import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
-import '../../features/select_colors/presentation/viewmodels/select_colors_viewmodel.dart';
-import '../../viewmodel/viewmodels.dart';
+import '../features/auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../features/select_colors/presentation/viewmodels/select_colors_viewmodel.dart';
+import '../viewmodel/viewmodels.dart';
 
 final GetIt getIt = GetIt.instance;
 

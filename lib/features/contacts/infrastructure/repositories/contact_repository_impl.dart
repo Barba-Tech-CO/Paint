@@ -1,7 +1,7 @@
-import '../../features/contacts/domain/repositories/contact_repository.dart';
-import '../../features/contacts/domain/entities/contact_entity.dart';
-import '../../service/contact_service.dart';
-import '../../utils/result/result.dart';
+import '../../domain/repositories/contact_repository.dart';
+import '../../domain/entities/contact_entity.dart';
+import '../../../../service/contact_service.dart';
+import '../../../../utils/result/result.dart';
 
 class ContactRepository implements IContactRepository {
   final ContactService _contactService;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/config/app_colors.dart';
+import '../../../config/app_colors.dart';
 
 class NotchPainter extends CustomPainter {
   @override

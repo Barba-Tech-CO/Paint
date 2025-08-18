@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/config/app_colors.dart';
+import '../../../../config/app_colors.dart';
 import '../../../../view/widgets/appbars/paint_pro_app_bar.dart';
 
 class CameraView extends StatelessWidget {

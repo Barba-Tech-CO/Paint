@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/config/app_colors.dart';
+import '../../../../config/app_colors.dart';
 import '../../../../view/widgets/appbars/paint_pro_app_bar.dart';
 import '../../../../view/widgets/form_field/paint_pro_number_field.dart';
 import '../../../../view/widgets/form_field/paint_pro_text_field.dart';

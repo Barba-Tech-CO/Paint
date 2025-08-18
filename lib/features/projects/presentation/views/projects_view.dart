@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/config/app_colors.dart';
+import '../../../../config/app_colors.dart';
 import '../../../../view/widgets/appbars/paint_pro_app_bar.dart';
 import '../viewmodels/projects_viewmodel.dart';
 import '../../domain/entities/projects_state.dart';
