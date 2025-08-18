@@ -7,6 +7,7 @@ import '../features/splash/presentation/viewmodels/splash_viewmodel.dart';
 import '../features/home/presentation/viewmodels/home_viewmodel.dart';
 import '../features/projects/presentation/viewmodels/projects_viewmodel.dart';
 import '../features/highlights/presentation/viewmodels/highlights_viewmodel.dart';
+import '../features/create_project/presentation/viewmodels/create_project_viewmodel.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -57,7 +58,10 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/create-project',
-      builder: (context, state) => const CreateProjectView(),
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => CreateProjectViewmodel(),
+        child: const CreateProjectView(),
+      ),
     ),
     GoRoute(
       path: '/zones',
