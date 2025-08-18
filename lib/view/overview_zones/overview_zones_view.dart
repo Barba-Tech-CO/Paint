@@ -7,8 +7,13 @@ import '../widgets/widgets.dart';
 
 class OverviewZonesView extends StatefulWidget {
   final List<MaterialModel>? selectedMaterials;
+  final List<ZonesCardModel>? selectedZones;
 
-  const OverviewZonesView({super.key, this.selectedMaterials});
+  const OverviewZonesView({
+    super.key,
+    this.selectedMaterials,
+    this.selectedZones,
+  });
 
   @override
   State<OverviewZonesView> createState() => _OverviewZonesViewState();
@@ -27,6 +32,42 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
         widget.selectedMaterials!.isNotEmpty) {
       _viewModel.setSelectedMaterials(widget.selectedMaterials!);
     }
+
+    // Se zonas foram passadas, configurá-las no ViewModel
+    if (widget.selectedZones != null && widget.selectedZones!.isNotEmpty) {
+      _viewModel.setSelectedZones(widget.selectedZones!);
+    } else {
+      // Se não há zonas passadas, criar zonas de exemplo
+      _loadDefaultZones();
+    }
+  }
+
+  void _loadDefaultZones() {
+    // Criar zonas de exemplo para mostrar na tela
+    final defaultZones = [
+      ZonesCardModel(
+        id: 1,
+        title: "Kitchen Zone",
+        image: "assets/images/kitchen.png",
+        floorDimensionValue: "10' x 12'",
+        floorAreaValue: "34 sq ft",
+        areaPaintable: "120 sq ft",
+        ceilingArea: "34 sq ft",
+        trimLength: "16 linear ft",
+      ),
+      ZonesCardModel(
+        id: 2,
+        title: "Living Room",
+        image: "assets/images/kitchen.png",
+        floorDimensionValue: "14' x 16'",
+        floorAreaValue: "224 sq ft",
+        areaPaintable: "485 sq ft",
+        ceilingArea: "224 sq ft",
+        trimLength: "60 linear ft",
+      ),
+    ];
+
+    _viewModel.setSelectedZones(defaultZones);
   }
 
   @override
@@ -61,9 +102,74 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                         label: 'Total Area',
                         value: _viewModel.totalArea,
                       ),
-                      SummaryInfoRowWidget(
-                        label: 'Rooms',
-                        value: _viewModel.rooms,
+                      // Widget customizado para exibir as zonas
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Zones:',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            // Debug: Verificar se há zonas
+                            if (_viewModel.selectedZones.isEmpty)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'No zones selected',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[500],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Zones count: ${_viewModel.zonesCount}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.red[400],
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              ..._viewModel.formattedZones.map(
+                                (zone) => Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 8,
+                                    top: 2,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 4,
+                                        height: 4,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.grey,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        zone,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                       SummaryInfoRowWidget(
                         label: 'Paint Type',
