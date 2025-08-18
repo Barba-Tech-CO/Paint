@@ -9,25 +9,23 @@ import '../../model/auth_state.dart';
 import '../../service/deep_link_service.dart';
 import '../../use_case/auth/auth_use_cases.dart';
 import '../../utils/command/command.dart';
-import '../../utils/logger/app_logger.dart';
+import '../../service/logger_service.dart';
 import '../../utils/result/result.dart';
 import 'auth_view_state.dart';
 
 class _DeepLinkHandler {
   final DeepLinkService _deepLinkService;
-  final AppLogger _logger;
   final void Function(Uri) onDeepLink;
   StreamSubscription? _subscription;
 
   _DeepLinkHandler(
     this._deepLinkService,
-    this._logger,
     this.onDeepLink,
   );
 
   void initialize() {
     _subscription = _deepLinkService.deepLinkStream.listen((uri) {
-      _logger.info('[DeepLinkHandler] Deep Link recebido: $uri');
+      LoggerService.info('[DeepLinkHandler] Deep Link recebido: $uri');
       onDeepLink(uri);
     });
   }
@@ -42,7 +40,6 @@ class AuthViewModel extends ChangeNotifier {
   final HandleDeepLinkUseCase _handleDeepLinkUseCase;
   final HandleWebViewNavigationUseCase _handleWebViewNavigationUseCase;
   final DeepLinkService _deepLinkService;
-  final AppLogger _logger;
   late final _DeepLinkHandler _deepLinkHandler;
 
   AuthViewState _state = AuthViewState.initial();
@@ -69,11 +66,9 @@ class AuthViewModel extends ChangeNotifier {
     this._handleDeepLinkUseCase,
     this._handleWebViewNavigationUseCase,
     this._deepLinkService,
-    this._logger,
   ) {
     _deepLinkHandler = _DeepLinkHandler(
       _deepLinkService,
-      _logger,
       _onDeepLinkReceived,
     );
     _deepLinkHandler.initialize();
@@ -109,18 +104,18 @@ class AuthViewModel extends ChangeNotifier {
 
   // Métodos privados para os comandos
   Future<Result<AuthModel>> _checkAuthStatus() async {
-    _logger.info('[AuthViewModel] Checking auth status...');
+    LoggerService.info('[AuthViewModel] Checking auth status...');
     _updateState(_state.copyWith(isLoading: true, errorMessage: null));
     final result = await _authOperationsUseCase.checkAuthStatus();
     result.when(
       ok: (authModel) {
-        _logger.info(
+        LoggerService.info(
           '[AuthViewModel] Auth status received: authenticated=${authModel.authenticated}, needsLogin=${authModel.needsLogin}',
         );
         final newState = authModel.authenticated && !authModel.needsLogin
             ? AuthState.authenticated
             : AuthState.unauthenticated;
-        _logger.info('[AuthViewModel] New auth state: $newState');
+        LoggerService.info('[AuthViewModel] New auth state: $newState');
         _updateState(
           _state.copyWith(
             authStatus: authModel,
@@ -129,12 +124,12 @@ class AuthViewModel extends ChangeNotifier {
             errorMessage: null,
           ),
         );
-        _logger.info(
+        LoggerService.info(
           '[AuthViewModel] State updated. shouldNavigateToDashboard: $shouldNavigateToDashboard',
         );
       },
       error: (error) {
-        _logger.error('[AuthViewModel] Error checking auth status: $error');
+        LoggerService.error('[AuthViewModel] Error checking auth status: $error');
         _updateState(
           _state.copyWith(
             state: AuthState.error,
@@ -149,18 +144,18 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<Result<void>> _processCallback(String code) async {
     try {
-      _logger.info('[AuthViewModel] Processing callback with code: $code');
+      LoggerService.info('[AuthViewModel] Processing callback with code: $code');
       _updateState(_state.copyWith(isLoading: true, errorMessage: null));
       final result = await _authOperationsUseCase.processCallback(code);
       result.when(
         ok: (response) {
-          _logger.info('[AuthViewModel] Callback processado com sucesso');
+          LoggerService.info('[AuthViewModel] Callback processado com sucesso');
           // After successful callback, check auth status to update navigation flags
-          _logger.info('[AuthViewModel] Executing checkAuthStatusCommand...');
+          LoggerService.info('[AuthViewModel] Executing checkAuthStatusCommand...');
           checkAuthStatusCommand.execute();
         },
         error: (error) {
-          _logger.error('[AuthViewModel] Error processing callback: $error');
+          LoggerService.error('[AuthViewModel] Error processing callback: $error');
           _updateState(
             _state.copyWith(isLoading: false, errorMessage: error.toString()),
           );
@@ -168,7 +163,7 @@ class AuthViewModel extends ChangeNotifier {
       );
       return result;
     } catch (e, stack) {
-      _logger.error(
+      LoggerService.error(
         '[AuthViewModel] Erro inesperado no processCallback',
         e,
         stack,
@@ -185,7 +180,7 @@ class AuthViewModel extends ChangeNotifier {
     final result = await _authOperationsUseCase.refreshToken();
     result.when(
       ok: (response) {
-        _logger.info('[AuthViewModel] Token renovado com sucesso');
+        LoggerService.info('[AuthViewModel] Token renovado com sucesso');
         checkAuthStatusCommand.execute();
       },
       error: (error) {
@@ -269,7 +264,7 @@ class AuthViewModel extends ChangeNotifier {
 
   /// Forces navigation to home after successful authentication
   void forceNavigateToHome() {
-    _logger.info('[AuthViewModel] Force navigating to home');
+    LoggerService.info('[AuthViewModel] Force navigating to home');
     // Create a new authenticated auth status to trigger navigation
     final newAuthStatus = AuthModel(
       authenticated: true,
