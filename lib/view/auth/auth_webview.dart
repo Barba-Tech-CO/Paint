@@ -63,14 +63,50 @@ class _AuthWebViewState extends State<AuthWebView> {
                   WidgetsBinding.instance.addPostFrameCallback((_) async {
                     if (mounted && !_isDisposed) {
                       try {
+                        LoggerService.info(
+                          '[AuthWebView] Processing callback...',
+                        );
                         await viewModel.processCallback(code);
+
+                        LoggerService.info(
+                          '[AuthWebView] Callback processed, checking auth status...',
+                        );
                         // Wait a bit for the state to update, then check auth status
                         await Future.delayed(const Duration(milliseconds: 500));
+
                         // Force a refresh of auth status
                         await viewModel.checkAuthStatusCommand.execute();
+
+                        LoggerService.info(
+                          '[AuthWebView] Auth status updated, closing webview...',
+                        );
                         // Close the webview after processing
                         if (mounted && !_isDisposed) {
-                          GoRouter.of(_widgetContext).pop();
+                          LoggerService.info(
+                            '[AuthWebView] Triggering force navigation to home',
+                          );
+                          // Use the view model to force navigation
+                          viewModel.forceNavigateToHome();
+
+                          // Also try to close the webview directly
+                          try {
+                            LoggerService.info(
+                              '[AuthWebView] Closing webview...',
+                            );
+                            GoRouter.of(_widgetContext).pop();
+                          } catch (e) {
+                            LoggerService.error(
+                              '[AuthWebView] Error closing webview: $e',
+                            );
+                            // If pop fails, navigate to home
+                            try {
+                              GoRouter.of(_widgetContext).go('/home');
+                            } catch (e2) {
+                              LoggerService.error(
+                                '[AuthWebView] Error navigating to home: $e2',
+                              );
+                            }
+                          }
                         }
                       } catch (e) {
                         LoggerService.error(
@@ -80,7 +116,15 @@ class _AuthWebViewState extends State<AuthWebView> {
                           viewModel.handleError(
                             'Error processing callback: $e',
                           );
-                          GoRouter.of(_widgetContext).pop();
+                          // Try to close webview even on error
+                          try {
+                            GoRouter.of(_widgetContext).pop();
+                          } catch (e) {
+                            LoggerService.error(
+                              '[AuthWebView] Error closing webview: $e',
+                            );
+                            GoRouter.of(_widgetContext).go('/home');
+                          }
                         }
                       }
                     }

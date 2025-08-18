@@ -267,6 +267,27 @@ class AuthViewModel extends ChangeNotifier {
     _deepLinkService.triggerSuccessCallback();
   }
 
+  /// Forces navigation to home after successful authentication
+  void forceNavigateToHome() {
+    _logger.info('[AuthViewModel] Force navigating to home');
+    // Create a new authenticated auth status to trigger navigation
+    final newAuthStatus = AuthModel(
+      authenticated: true,
+      needsLogin: false,
+      expiresAt: _state.authStatus?.expiresAt,
+      locationId: _state.authStatus?.locationId,
+      expiresInMinutes: _state.authStatus?.expiresInMinutes,
+      isExpiringSoon: _state.authStatus?.isExpiringSoon,
+    );
+
+    // Update state to trigger navigation
+    _updateState(
+      _state.copyWith(
+        authStatus: newAuthStatus,
+      ),
+    );
+  }
+
   Future<Result<AuthState>> reset() async {
     _updateState(AuthViewState.initial());
     return Result.ok(AuthState.initial);
