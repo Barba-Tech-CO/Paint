@@ -9,7 +9,7 @@ export '../features/highlights/presentation/views/highlights_view.dart';
 export '../features/home/presentation/views/home_view.dart';
 export 'layout/main_layout.dart';
 export '../features/new_contact/presentation/views/new_contact_view.dart';
-export 'overview_zones/overview_zones_view.dart';
+export '../features/overview_zones/presentation/views/overview_zones_view.dart';
 export '../features/projects/presentation/views/projects_view.dart';
 export 'room_adjust/room_adjust_view.dart';
 export '../features/splash/presentation/views/splash_view.dart';

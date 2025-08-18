@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../service/logger_service.dart';
-import '../../../viewmodel/zones/zones_viewmodels.dart';
+import '../../../viewmodel/viewmodels.dart';
 
 class PaintProDeleteButton extends StatelessWidget {
   final ZoneDetailViewModel viewModel;
