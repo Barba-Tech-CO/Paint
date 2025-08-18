@@ -1,43 +1,55 @@
-import '../utils/logger/app_logger.dart';
-import '../utils/logger/logger_app_logger_impl.dart';
+import 'dart:developer';
 
 class LoggerService {
-  final AppLogger _logger;
   static LoggerService? _instance;
 
-  LoggerService(this._logger);
+  LoggerService();
+
+  static void initialize() {
+    _instance = LoggerService();
+  }
 
   static LoggerService get instance {
-    _instance ??= LoggerService(LoggerAppLoggerImpl());
+    _instance ??= LoggerService();
     return _instance!;
   }
 
   void _debug(String message, [dynamic error, StackTrace? stackTrace]) {
-    _logger.debug(message, error, stackTrace);
+    log('[DEBUG] $message');
+    if (error != null) log('Error: $error');
+    if (stackTrace != null) log('StackTrace: $stackTrace');
   }
 
   void _info(String message, [dynamic error, StackTrace? stackTrace]) {
-    _logger.info(message, error, stackTrace);
+    log('[INFO] $message');
+    if (error != null) log('Error: $error');
+    if (stackTrace != null) log('StackTrace: $stackTrace');
   }
 
   void _warning(String message, [dynamic error, StackTrace? stackTrace]) {
-    _logger.warning(message, error, stackTrace);
+    log('[WARNING] $message');
+    if (error != null) log('Error: $error');
+    if (stackTrace != null) log('StackTrace: $stackTrace');
   }
 
   void _error(String message, [dynamic error, StackTrace? stackTrace]) {
-    _logger.error(message, error, stackTrace);
+    log('[ERROR] $message');
+    if (error != null) log('Error: $error');
+    if (stackTrace != null) log('StackTrace: $stackTrace');
   }
 
   void _fatal(String message, [dynamic error, StackTrace? stackTrace]) {
-    _logger.fatal(message, error, stackTrace);
+    log('[FATAL] $message');
+    if (error != null) log('Error: $error');
+    if (stackTrace != null) log('StackTrace: $stackTrace');
   }
 
   void logBusinessOperation(String operation, {Map<String, dynamic>? data}) {
     final logMessage = 'Business Operation: $operation';
     if (data != null) {
-      _logger.info('$logMessage - Data: $data');
+      _info('$logMessage - Data: $data');
     } else {
-      _logger.info(logMessage);
+      _info(logMessage);
     }
   }
 
@@ -48,9 +60,9 @@ class LoggerService {
   }) {
     final logMessage = 'Navigation: $from -> $to';
     if (parameters != null) {
-      _logger.info('$logMessage - Parameters: $parameters');
+      _info('$logMessage - Parameters: $parameters');
     } else {
-      _logger.info(logMessage);
+      _info(logMessage);
     }
   }
 
@@ -69,18 +81,18 @@ class LoggerService {
     };
 
     if (details.isNotEmpty) {
-      _logger.info('$logMessage - Details: $details');
+      _info('$logMessage - Details: $details');
     } else {
-      _logger.info(logMessage);
+      _info(logMessage);
     }
   }
 
   void logPerformance(String operation, Duration duration) {
-    _logger.info('Performance: $operation took ${duration.inMilliseconds}ms');
+    _info('Performance: $operation took ${duration.inMilliseconds}ms');
   }
 
   void logViewModelState(String viewModelName, String state) {
-    _logger.debug('ViewModel State: $viewModelName -> $state');
+    _debug('ViewModel State: $viewModelName -> $state');
   }
 
   void logViewModelError(
@@ -89,7 +101,7 @@ class LoggerService {
     dynamic error, [
     StackTrace? stackTrace,
   ]) {
-    _logger.error(
+    _error(
       'ViewModel Error: $viewModelName.$operation',
       error,
       stackTrace,
@@ -97,7 +109,7 @@ class LoggerService {
   }
 
   void logServiceInitialization(String serviceName) {
-    _logger.info('Service Initialized: $serviceName');
+    _info('Service Initialized: $serviceName');
   }
 
   void logServiceError(
@@ -106,7 +118,7 @@ class LoggerService {
     dynamic error, [
     StackTrace? stackTrace,
   ]) {
-    _logger.error('Service Error: $serviceName.$operation', error, stackTrace);
+    _error('Service Error: $serviceName.$operation', error, stackTrace);
   }
 
   // Métodos estáticos para uso simples
