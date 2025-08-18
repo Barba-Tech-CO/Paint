@@ -4,7 +4,7 @@ import '../model/models.dart';
 import '../view/views.dart';
 
 final router = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/select-material',
   routes: [
     GoRoute(
       path: '/splash',
@@ -56,7 +56,10 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/overview-zones',
-      builder: (context, state) => const OverviewZonesView(),
+      builder: (context, state) {
+        final selectedMaterials = state.extra as List<MaterialModel>?;
+        return OverviewZonesView(selectedMaterials: selectedMaterials);
+      },
     ),
     GoRoute(
       path: '/new-contact',
