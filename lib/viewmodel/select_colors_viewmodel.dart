@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 
 import '../service/logger_service.dart';
+import '../domain/repository/paint_catalog_repository.dart';
 
 /// ViewModel para a tela de seleção de cores
 /// Implementa o padrão MVVM com logging integrado
 class SelectColorsViewModel extends ChangeNotifier {
-  final List<String> _brands = [
+  final IPaintCatalogRepository _paintCatalogRepository;
+  
+  // Temporary fallback data while integrating with repository
+  final List<String> _fallbackBrands = [
     'Sherwin-Williams',
     'Benjamin Moore',
     'Behr',
     'PP',
   ];
 
-  final List<Map<String, dynamic>> _colors = [
+  final List<Map<String, dynamic>> _fallbackColors = [
     {
       'name': 'White',
       'code': 'SW6232',
@@ -51,16 +55,53 @@ class SelectColorsViewModel extends ChangeNotifier {
     },
   ];
 
+  List<String> _brands = [];
+  List<Map<String, dynamic>> _colors = [];
   Map<String, dynamic>? _selectedColor;
   String? _selectedBrand;
 
-  SelectColorsViewModel();
+  SelectColorsViewModel(this._paintCatalogRepository) {
+    _initializeData();
+  }
+
+  /// Inicializa os dados carregando marcas
+  Future<void> _initializeData() async {
+    await loadBrands();
+  }
+
+  /// Carrega as marcas disponíveis
+  Future<void> loadBrands() async {
+    setLoading(true);
+    clearError();
+
+    try {
+      final result = await _paintCatalogRepository.getBrands();
+      result.when(
+        ok: (brands) {
+          _brands = brands.map((brand) => brand.name).toList();
+          notifyListeners();
+          LoggerService.info('Brands loaded: ${_brands.length}');
+        },
+        error: (error) {
+          setError('Erro ao carregar marcas: $error');
+          LoggerService.error('Erro ao carregar marcas', error);
+          _brands = []; // Will fall back to fallback brands
+        },
+      );
+    } catch (e) {
+      setError('Erro inesperado ao carregar marcas: $e');
+      LoggerService.error('Erro inesperado ao carregar marcas', e);
+      _brands = [];
+    } finally {
+      setLoading(false);
+    }
+  }
 
   /// Lista de marcas disponíveis
-  List<String> get brands => _brands;
+  List<String> get brands => _brands.isNotEmpty ? _brands : _fallbackBrands;
 
   /// Lista de cores disponíveis
-  List<Map<String, dynamic>> get colors => _colors;
+  List<Map<String, dynamic>> get colors => _colors.isNotEmpty ? _colors : _fallbackColors;
 
   /// Cor selecionada atualmente
   Map<String, dynamic>? get selectedColor => _selectedColor;
@@ -83,13 +124,39 @@ class SelectColorsViewModel extends ChangeNotifier {
   /// Carrega as cores para uma marca específica
   Future<void> loadColorsForBrand(String brand) async {
     LoggerService.info('Carregando cores para a marca: $brand');
+    setLoading(true);
+    clearError();
 
-    // Simula um delay de carregamento
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    LoggerService.info(
-      'Colors Loaded - Brand: $brand - Color Count: ${_colors.length}',
-    );
+    try {
+      final result = await _paintCatalogRepository.getBrandColors(brand);
+      result.when(
+        ok: (colors) {
+          // Convert PaintColor to Map for compatibility
+          _colors = colors.map((color) => {
+            'name': color.name,
+            'code': color.key,
+            'price': '\$${color.price?.toStringAsFixed(2) ?? "N/A"}/Gal',
+            'color': Colors.grey[200], // Default color representation
+          }).toList();
+          notifyListeners();
+          LoggerService.info(
+            'Colors Loaded - Brand: $brand - Color Count: ${_colors.length}',
+          );
+        },
+        error: (error) {
+          setError('Erro ao carregar cores: $error');
+          LoggerService.error('Erro ao carregar cores para $brand', error);
+          // Fall back to using fallback colors
+          _colors = [];
+        },
+      );
+    } catch (e) {
+      setError('Erro inesperado ao carregar cores: $e');
+      LoggerService.error('Erro inesperado ao carregar cores para $brand', e);
+      _colors = [];
+    } finally {
+      setLoading(false);
+    }
   }
 
   /// Gera o orçamento com as cores selecionadas
