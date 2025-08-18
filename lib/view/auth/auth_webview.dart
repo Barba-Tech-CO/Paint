@@ -36,6 +36,9 @@ class _AuthWebViewState extends State<AuthWebView> {
           onNavigationRequest: (request) async {
             if (request.url.contains('/auth/success')) {
               if (mounted) {
+                // Trigger the deep link success callback
+                final viewModel = _widgetContext.read<AuthViewModel>();
+                viewModel.triggerDeepLinkSuccess();
                 GoRouter.of(_widgetContext).pop();
               }
               return NavigationDecision.prevent;
