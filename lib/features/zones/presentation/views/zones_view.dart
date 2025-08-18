@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../config/app_colors.dart';
+import '../../../../core/config/app_colors.dart';
 import '../viewmodels/zones_card_viewmodel.dart';
 import '../../../../view/widgets/appbars/paint_pro_app_bar.dart';
 import 'widgets/loading_widget.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import '../../../../config/dependency_injection.dart';
+import '../../../../core/config/dependency_injection.dart';
 import '../../../../service/app_initialization_service.dart';
 import '../../../../service/navigation_service.dart';
 

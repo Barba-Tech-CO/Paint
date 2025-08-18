@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../config/app_colors.dart';
+import '../../../../core/config/app_colors.dart';
 import '../../../../view/widgets/appbars/paint_pro_app_bar.dart';
 import '../../../../view/widgets/cards/greeting_card_widget.dart';
 import '../../../../view/widgets/cards/project_state_card_widget.dart';

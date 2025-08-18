@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'i_http_service.dart';
-import '../config/app_config.dart';
+import '../core/config/app_config.dart';
 import 'logger_service.dart';
 
 class HttpService implements IHttpService {

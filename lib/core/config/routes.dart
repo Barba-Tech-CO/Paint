@@ -1,14 +1,14 @@
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../view/views.dart';
-import '../features/auth/presentation/views/auth_view.dart';
-import '../features/splash/presentation/viewmodels/splash_viewmodel.dart';
-import '../features/home/presentation/viewmodels/home_viewmodel.dart';
-import '../features/projects/presentation/viewmodels/projects_viewmodel.dart';
-import '../features/highlights/presentation/viewmodels/highlights_viewmodel.dart';
-import '../features/create_project/presentation/viewmodels/create_project_viewmodel.dart';
-import '../features/zones/presentation/viewmodels/zones_card_viewmodel.dart';
+import '../../view/views.dart';
+import '../../features/auth/presentation/views/auth_view.dart';
+import '../../features/splash/presentation/viewmodels/splash_viewmodel.dart';
+import '../../features/home/presentation/viewmodels/home_viewmodel.dart';
+import '../../features/projects/presentation/viewmodels/projects_viewmodel.dart';
+import '../../features/highlights/presentation/viewmodels/highlights_viewmodel.dart';
+import '../../features/create_project/presentation/viewmodels/create_project_viewmodel.dart';
+import '../../features/zones/presentation/viewmodels/zones_card_viewmodel.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',

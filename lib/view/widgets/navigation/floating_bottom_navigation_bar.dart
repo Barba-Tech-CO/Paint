@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../config/app_colors.dart';
+import '../../../core/config/app_colors.dart';
 import '../../../features/navigation/infrastructure/models/navigation_item_model.dart';
 import '../../../features/navigation/presentation/viewmodels/navigation_viewmodel.dart';
 import 'floating_camera_button_widget.dart';

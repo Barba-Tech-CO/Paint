@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 // Configs
-import 'config/dependency_injection.dart';
-import 'config/routes.dart';
-import 'config/theme.dart';
+import 'core/config/dependency_injection.dart';
+import 'core/config/routes.dart';
+import 'core/config/theme.dart';
 
 // Features
 import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
