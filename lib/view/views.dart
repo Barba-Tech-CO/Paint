@@ -7,7 +7,7 @@ export '../features/create_project/presentation/views/create_project_view.dart';
 
 export '../features/highlights/presentation/views/highlights_view.dart';
 export '../features/home/presentation/views/home_view.dart';
-export 'layout/main_layout.dart';
+export '../features/layout/presentation/views/main_layout.dart';
 export '../features/new_contact/presentation/views/new_contact_view.dart';
 export '../features/overview_zones/presentation/views/overview_zones_view.dart';
 export '../features/projects/presentation/views/projects_view.dart';
