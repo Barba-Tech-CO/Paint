@@ -6,18 +6,19 @@ import 'http_service.dart';
 
 class AuthService {
   final HttpService _httpService;
+  static const String _baseUrl = '/auth';
 
   AuthService(this._httpService);
 
   /// Verifica o status de autenticação
   Future<Result<AuthStatusResponse>> getStatus() async {
     try {
-      final response = await _httpService.get('/auth/status');
+      final response = await _httpService.get('$_baseUrl/status');
       final authStatus = AuthStatusResponse.fromJson(response.data);
       return Result.ok(authStatus);
     } catch (e) {
       return Result.error(
-        Exception('Erro ao verificar status: $e'),
+        Exception('Error checking authentication status: $e'),
       );
     }
   }
@@ -26,7 +27,7 @@ class AuthService {
   Future<Result<String>> getAuthorizeUrl() async {
     try {
       final response = await _httpService.get(
-        '/auth/authorize-url',
+        '$_baseUrl/authorize-url',
         // Opções especiais para esta chamada para não seguir o redirecionamento
         options: Options(
           followRedirects: false,
@@ -59,12 +60,12 @@ class AuthService {
       // Se a resposta não for um redirecionamento, algo está errado
       return Result.error(
         Exception(
-          'A resposta do servidor não foi um redirecionamento esperado. Status: ${response.statusCode}, Data: ${response.data}',
+          'Server response was not the expected redirect. Status: ${response.statusCode}, Data: ${response.data}',
         ),
       );
     } catch (e) {
       return Result.error(
-        Exception('Erro ao obter URL de autorização: $e'),
+        Exception('Error getting authorization URL: $e'),
       );
     }
   }
@@ -72,11 +73,11 @@ class AuthService {
   /// Processa o callback de autorização
   Future<Result<AuthRefreshResponse>> processCallback(String code) async {
     try {
-      final response = await _httpService.get('/auth/callback?code=$code');
+      final response = await _httpService.get('$_baseUrl/callback?code=$code');
       final callbackResponse = AuthRefreshResponse.fromJson(response.data);
       return Result.ok(callbackResponse);
     } catch (e) {
-      return Result.error(Exception('Erro no callback: $e'));
+      return Result.error(Exception('Error processing callback: $e'));
     }
   }
 
@@ -84,13 +85,13 @@ class AuthService {
   Future<Result<AuthRefreshResponse>> refreshToken() async {
     try {
       final response = await _httpService.post(
-        '/auth/refresh',
+        '$_baseUrl/refresh',
         data: {},
       );
       final refreshResponse = AuthRefreshResponse.fromJson(response.data);
       return Result.ok(refreshResponse);
     } catch (e) {
-      return Result.error(Exception('Erro ao renovar token: $e'));
+      return Result.error(Exception('Error refreshing token: $e'));
     }
   }
 
@@ -103,12 +104,12 @@ class AuthService {
         return Result.ok(status.data.authenticated && !status.data.needsLogin);
       } else {
         return Result.error(
-          Exception('Erro ao verificar autenticação'),
+          Exception('Error checking authentication'),
         );
       }
     } catch (e) {
       return Result.error(
-        Exception('Erro ao verificar autenticação: $e'),
+        Exception('Error checking authentication: $e'),
       );
     }
   }
@@ -123,6 +124,12 @@ class AuthService {
           return Result.ok(true);
         }
 
+        // Use the isExpiringSoon field from the API response if available
+        if (status.data.isExpiringSoon != null) {
+          return Result.ok(status.data.isExpiringSoon!);
+        }
+
+        // Fallback to manual calculation
         final now = DateTime.now();
         final expiresAt = status.data.expiresAt!;
         final difference = expiresAt.difference(now);
@@ -130,12 +137,31 @@ class AuthService {
         return Result.ok(difference.inMinutes < 60);
       } else {
         return Result.error(
-          Exception('Erro ao verificar expiração do token'),
+          Exception('Error checking token expiration'),
         );
       }
     } catch (e) {
       return Result.error(
-        Exception('Erro ao verificar expiração do token: $e'),
+        Exception('Error checking token expiration: $e'),
+      );
+    }
+  }
+
+  /// Obtém o location_id atual
+  Future<Result<String?>> getCurrentLocationId() async {
+    try {
+      final statusResult = await getStatus();
+      if (statusResult is Ok) {
+        final status = statusResult.asOk.value;
+        return Result.ok(status.data.locationId);
+      } else {
+        return Result.error(
+          Exception('Error getting location_id'),
+        );
+      }
+    } catch (e) {
+      return Result.error(
+        Exception('Error getting location_id: $e'),
       );
     }
   }
