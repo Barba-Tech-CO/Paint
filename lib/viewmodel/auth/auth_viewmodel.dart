@@ -109,13 +109,18 @@ class AuthViewModel extends ChangeNotifier {
 
   // Métodos privados para os comandos
   Future<Result<AuthModel>> _checkAuthStatus() async {
+    _logger.info('[AuthViewModel] Checking auth status...');
     _updateState(_state.copyWith(isLoading: true, errorMessage: null));
     final result = await _authOperationsUseCase.checkAuthStatus();
     result.when(
       ok: (authModel) {
+        _logger.info(
+          '[AuthViewModel] Auth status received: authenticated=${authModel.authenticated}, needsLogin=${authModel.needsLogin}',
+        );
         final newState = authModel.authenticated && !authModel.needsLogin
             ? AuthState.authenticated
             : AuthState.unauthenticated;
+        _logger.info('[AuthViewModel] New auth state: $newState');
         _updateState(
           _state.copyWith(
             authStatus: authModel,
@@ -124,8 +129,12 @@ class AuthViewModel extends ChangeNotifier {
             errorMessage: null,
           ),
         );
+        _logger.info(
+          '[AuthViewModel] State updated. shouldNavigateToDashboard: $shouldNavigateToDashboard',
+        );
       },
       error: (error) {
+        _logger.error('[AuthViewModel] Error checking auth status: $error');
         _updateState(
           _state.copyWith(
             state: AuthState.error,
@@ -140,15 +149,18 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<Result<void>> _processCallback(String code) async {
     try {
+      _logger.info('[AuthViewModel] Processing callback with code: $code');
       _updateState(_state.copyWith(isLoading: true, errorMessage: null));
       final result = await _authOperationsUseCase.processCallback(code);
       result.when(
         ok: (response) {
           _logger.info('[AuthViewModel] Callback processado com sucesso');
           // After successful callback, check auth status to update navigation flags
+          _logger.info('[AuthViewModel] Executing checkAuthStatusCommand...');
           checkAuthStatusCommand.execute();
         },
         error: (error) {
+          _logger.error('[AuthViewModel] Error processing callback: $error');
           _updateState(
             _state.copyWith(isLoading: false, errorMessage: error.toString()),
           );
