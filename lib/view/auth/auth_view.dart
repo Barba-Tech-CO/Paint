@@ -30,10 +30,13 @@ class AuthView extends StatelessWidget {
 
   void _handleSideEffects(BuildContext context, AuthViewModel viewModel) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      print('[AuthView] Side effects handler called. shouldNavigateToDashboard: ${viewModel.shouldNavigateToDashboard}');
       if (viewModel.shouldNavigateToDashboard) {
+        print('[AuthView] Navigating to /home');
         context.go('/home');
       }
       if (viewModel.shouldShowPopup && viewModel.popupUrl != null) {
+        print('[AuthView] Showing marketplace popup');
         MarketplacePopupHelper.show(context, viewModel.popupUrl!, viewModel);
       }
     });
