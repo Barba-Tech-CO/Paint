@@ -1,8 +1,8 @@
-import 'package:dio/dio.dart';
-
 import '../model/auth_model.dart';
 import '../utils/result/result.dart';
+import '../config/app_urls.dart';
 import 'http_service.dart';
+import 'logger_service.dart';
 
 class AuthService {
   final HttpService _httpService;
@@ -17,6 +17,7 @@ class AuthService {
       final authStatus = AuthStatusResponse.fromJson(response.data);
       return Result.ok(authStatus);
     } catch (e) {
+      LoggerService.error('Error checking authentication status: $e');
       return Result.error(
         Exception('Error checking authentication status: $e'),
       );
@@ -26,46 +27,14 @@ class AuthService {
   /// Obtém a URL de autorização
   Future<Result<String>> getAuthorizeUrl() async {
     try {
-      final response = await _httpService.get(
-        '$_baseUrl/authorize-url',
-        // Opções especiais para esta chamada para não seguir o redirecionamento
-        options: Options(
-          followRedirects: false,
-          validateStatus: (status) {
-            // Aceita qualquer status que não seja um erro de servidor
-            return status != null && status < 500;
-          },
-        ),
+      LoggerService.info(
+        'Authorization URL generated: ${AppUrls.goHighLevelAuthorizeUrl}',
       );
-
-      // Se a resposta for um redirecionamento, pegamos a URL do cabeçalho
-      if (response.statusCode == 302) {
-        final location = response.headers.value('location');
-        if (location != null) {
-          return Result.ok(location);
-        }
-      }
-
-      // Se a resposta for 200, pode ser que o servidor retorne a URL diretamente
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('url')) {
-          return Result.ok(data['url']);
-        }
-        if (data is String && data.startsWith('http')) {
-          return Result.ok(data);
-        }
-      }
-
-      // Se a resposta não for um redirecionamento, algo está errado
-      return Result.error(
-        Exception(
-          'Server response was not the expected redirect. Status: ${response.statusCode}, Data: ${response.data}',
-        ),
-      );
+      return Result.ok(AppUrls.goHighLevelAuthorizeUrl);
     } catch (e) {
+      LoggerService.error('Error generating authorization URL: $e');
       return Result.error(
-        Exception('Error getting authorization URL: $e'),
+        Exception('Error generating authorization URL: $e'),
       );
     }
   }
@@ -77,7 +46,10 @@ class AuthService {
       final callbackResponse = AuthRefreshResponse.fromJson(response.data);
       return Result.ok(callbackResponse);
     } catch (e) {
-      return Result.error(Exception('Error processing callback: $e'));
+      LoggerService.error('Error processing callback: $e');
+      return Result.error(
+        Exception('Error processing callback: $e'),
+      );
     }
   }
 
@@ -91,7 +63,10 @@ class AuthService {
       final refreshResponse = AuthRefreshResponse.fromJson(response.data);
       return Result.ok(refreshResponse);
     } catch (e) {
-      return Result.error(Exception('Error refreshing token: $e'));
+      LoggerService.error('Error refreshing token: $e');
+      return Result.error(
+        Exception('Error refreshing token: $e'),
+      );
     }
   }
 
