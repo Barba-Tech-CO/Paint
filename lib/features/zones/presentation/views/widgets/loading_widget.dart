@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../config/app_colors.dart';
-import '../../widgets/animation_loading/paint_pro_loading.dart';
+import '../../../../../config/app_colors.dart';
+import '../../../../../view/widgets/animation_loading/paint_pro_loading.dart';
 
 class LoadingWidget extends StatefulWidget {
   const LoadingWidget({super.key});

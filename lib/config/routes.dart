@@ -8,6 +8,7 @@ import '../features/home/presentation/viewmodels/home_viewmodel.dart';
 import '../features/projects/presentation/viewmodels/projects_viewmodel.dart';
 import '../features/highlights/presentation/viewmodels/highlights_viewmodel.dart';
 import '../features/create_project/presentation/viewmodels/create_project_viewmodel.dart';
+import '../features/zones/presentation/viewmodels/zones_card_viewmodel.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -65,7 +66,10 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/zones',
-      builder: (context, state) => const ZonesView(),
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => ZonesCardViewmodel(),
+        child: const ZonesView(),
+      ),
     ),
     GoRoute(
       path: '/room-adjust',
