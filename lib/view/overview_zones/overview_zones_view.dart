@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../config/dependency_injection.dart';
 import '../../model/models.dart';
 import '../../viewmodel/viewmodels.dart';
+import '../../viewmodel/zones/zones_viewmodels.dart';
 import '../widgets/widgets.dart';
 
 class OverviewZonesView extends StatefulWidget {
@@ -21,11 +23,16 @@ class OverviewZonesView extends StatefulWidget {
 
 class _OverviewZonesViewState extends State<OverviewZonesView> {
   late OverviewZonesViewModel _viewModel;
+  late ZonesListViewModel _zonesListViewModel;
 
   @override
   void initState() {
     super.initState();
     _viewModel = OverviewZonesViewModel();
+    _zonesListViewModel = getIt<ZonesListViewModel>();
+
+    // Inicializar o ZonesListViewModel
+    _zonesListViewModel.initialize();
 
     // Se materiais foram passados, configurá-los no ViewModel
     if (widget.selectedMaterials != null &&
@@ -37,41 +44,38 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
     if (widget.selectedZones != null && widget.selectedZones!.isNotEmpty) {
       _viewModel.setSelectedZones(widget.selectedZones!);
     } else {
-      // Se não há zonas passadas, criar zonas de exemplo
-      _loadDefaultZones();
+      // Se não há zonas passadas, usar as zonas reais do ZonesListViewModel
+      _loadRealZones();
     }
   }
 
-  void _loadDefaultZones() {
-    // Criar zonas de exemplo para mostrar na tela
-    final defaultZones = [
-      ZonesCardModel(
-        id: 1,
-        title: "Kitchen Zone",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "10' x 12'",
-        floorAreaValue: "34 sq ft",
-        areaPaintable: "120 sq ft",
-        ceilingArea: "34 sq ft",
-        trimLength: "16 linear ft",
-      ),
-      ZonesCardModel(
-        id: 2,
-        title: "Living Room",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "14' x 16'",
-        floorAreaValue: "224 sq ft",
-        areaPaintable: "485 sq ft",
-        ceilingArea: "224 sq ft",
-        trimLength: "60 linear ft",
-      ),
-    ];
+  void _loadRealZones() {
+    // Adicionar listener para quando as zonas forem carregadas
+    _zonesListViewModel.addListener(_onZonesLoaded);
 
-    _viewModel.setSelectedZones(defaultZones);
+    // Se já existem zonas carregadas, usá-las imediatamente
+    if (_zonesListViewModel.zones.isNotEmpty) {
+      _viewModel.setSelectedZones(_zonesListViewModel.zones);
+    } else {
+      // Se não há zonas carregadas ainda, aguardar um pouco e tentar novamente
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (_zonesListViewModel.zones.isNotEmpty) {
+          _viewModel.setSelectedZones(_zonesListViewModel.zones);
+        }
+      });
+    }
+  }
+
+  void _onZonesLoaded() {
+    if (_zonesListViewModel.zones.isNotEmpty &&
+        _viewModel.selectedZones.isEmpty) {
+      _viewModel.setSelectedZones(_zonesListViewModel.zones);
+    }
   }
 
   @override
   void dispose() {
+    _zonesListViewModel.removeListener(_onZonesLoaded);
     _viewModel.dispose();
     super.dispose();
   }
@@ -131,10 +135,17 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                                     ),
                                   ),
                                   Text(
-                                    'Zones count: ${_viewModel.zonesCount}',
+                                    'ViewModel zones: ${_viewModel.zonesCount}',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: Colors.red[400],
+                                    ),
+                                  ),
+                                  Text(
+                                    'Real zones available: ${_zonesListViewModel.zones.length}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.blue[400],
                                     ),
                                   ),
                                 ],
