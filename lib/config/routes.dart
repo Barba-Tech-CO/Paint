@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../view/views.dart';
 import '../features/auth/presentation/views/auth_view.dart';
 import '../features/splash/presentation/viewmodels/splash_viewmodel.dart';
+import '../features/home/presentation/viewmodels/home_viewmodel.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -21,7 +22,10 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/home',
-      builder: (context, state) => const HomeView(),
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => HomeViewmodel(),
+        child: const HomeView(),
+      ),
     ),
     GoRoute(
       path: '/projects',
