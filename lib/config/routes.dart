@@ -1,14 +1,19 @@
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../view/views.dart';
 import '../features/auth/presentation/views/auth_view.dart';
+import '../features/splash/presentation/viewmodels/splash_viewmodel.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',
-      builder: (context, state) => const SplashView(),
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => SplashViewmodel(),
+        child: const SplashView(),
+      ),
     ),
     GoRoute(
       path: '/auth',

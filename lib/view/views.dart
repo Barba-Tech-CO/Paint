@@ -12,6 +12,6 @@ export '../features/new_contact/presentation/views/new_contact_view.dart';
 export 'overview_zones/overview_zones_view.dart';
 export 'projects/projects_view.dart';
 export 'room_adjust/room_adjust_view.dart';
-export 'splash/splash_view.dart';
+export '../features/splash/presentation/views/splash_view.dart';
 export 'zones/zones_view.dart';
 
