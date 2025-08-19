@@ -3,9 +3,7 @@ import 'package:provider/provider.dart';
 import '../../config/app_colors.dart';
 import '../../viewmodel/viewmodels.dart';
 import '../widgets/widgets.dart';
-import 'widgets/quote_card_widget.dart';
-import 'widgets/search_bar_widget.dart';
-import 'widgets/try_again_widget.dart';
+import 'widgets/widgets.dart';
 
 class QuotesView extends StatefulWidget {
   const QuotesView({super.key});
