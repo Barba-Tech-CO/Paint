@@ -15,6 +15,7 @@ import '../domain/repository/paint_catalog_repository.dart';
 // Service Layer
 import '../service/app_initialization_service.dart';
 import '../service/auth_service.dart';
+import '../service/auth_persistence_service.dart';
 import '../service/contact_service.dart';
 import '../service/deep_link_service.dart';
 import '../service/estimate_service.dart';
@@ -39,27 +40,40 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<HttpService>(
     () {
       final httpService = HttpService();
-      httpService.setLogger(getIt<LoggerService>());
+      httpService.setLogger(
+        getIt<LoggerService>(),
+      );
       return httpService;
     },
   );
   getIt.registerLazySingleton<AuthService>(
-    () => AuthService(getIt<HttpService>()),
+    () => AuthService(
+      getIt<HttpService>(),
+    ),
   );
   getIt.registerLazySingleton<ContactService>(
-    () => ContactService(getIt<HttpService>()),
+    () => ContactService(
+      getIt<HttpService>(),
+    ),
   );
   getIt.registerLazySingleton<EstimateService>(
-    () => EstimateService(getIt<HttpService>()),
+    () => EstimateService(
+      getIt<HttpService>(),
+    ),
   );
   getIt.registerLazySingleton<PaintCatalogService>(
-    () => PaintCatalogService(getIt<HttpService>()),
+    () => PaintCatalogService(
+      getIt<HttpService>(),
+    ),
   );
   getIt.registerLazySingleton<NavigationService>(
     () => NavigationService(),
   );
   getIt.registerLazySingleton<DeepLinkService>(
     () => DeepLinkService(),
+  );
+  getIt.registerLazySingleton<AuthPersistenceService>(
+    () => AuthPersistenceService(),
   );
   getIt.registerLazySingleton<LoggerService>(
     () => LoggerService.instance,
@@ -70,13 +84,19 @@ void setupDependencyInjection() {
 
   // Repositories
   getIt.registerLazySingleton<IAuthRepository>(
-    () => AuthRepository(authService: getIt<AuthService>()),
+    () => AuthRepository(
+      authService: getIt<AuthService>(),
+    ),
   );
   getIt.registerLazySingleton<IContactRepository>(
-    () => ContactRepository(contactService: getIt<ContactService>()),
+    () => ContactRepository(
+      contactService: getIt<ContactService>(),
+    ),
   );
   getIt.registerLazySingleton<IEstimateRepository>(
-    () => EstimateRepository(estimateService: getIt<EstimateService>()),
+    () => EstimateRepository(
+      estimateService: getIt<EstimateService>(),
+    ),
   );
   getIt.registerLazySingleton<IPaintCatalogRepository>(
     () => PaintCatalogRepository(
@@ -86,7 +106,10 @@ void setupDependencyInjection() {
 
   // Use Cases
   getIt.registerLazySingleton<AuthOperationsUseCase>(
-    () => AuthOperationsUseCase(getIt<AuthService>(), getIt<AppLogger>()),
+    () => AuthOperationsUseCase(
+      getIt<AuthService>(),
+      getIt<AppLogger>(),
+    ),
   );
   getIt.registerLazySingleton<ManageAuthStateUseCase>(
     () => ManageAuthStateUseCase(),
@@ -117,38 +140,55 @@ void setupDependencyInjection() {
       getIt<HandleDeepLinkUseCase>(),
       getIt<HandleWebViewNavigationUseCase>(),
       getIt<DeepLinkService>(),
+      getIt<AuthPersistenceService>(),
       getIt<AppLogger>(),
     ),
   );
 
   // ViewModels - Contact
   getIt.registerFactory<ContactListViewModel>(
-    () => ContactListViewModel(getIt<IContactRepository>()),
+    () => ContactListViewModel(
+      getIt<IContactRepository>(),
+    ),
   );
   getIt.registerFactory<ContactDetailViewModel>(
-    () => ContactDetailViewModel(getIt<IContactRepository>()),
+    () => ContactDetailViewModel(
+      getIt<IContactRepository>(),
+    ),
   );
 
   // ViewModels - Estimate
   getIt.registerFactory<EstimateListViewModel>(
-    () => EstimateListViewModel(getIt<IEstimateRepository>()),
+    () => EstimateListViewModel(
+      getIt<IEstimateRepository>(),
+    ),
   );
   getIt.registerFactory<EstimateDetailViewModel>(
-    () => EstimateDetailViewModel(getIt<IEstimateRepository>()),
+    () => EstimateDetailViewModel(
+      getIt<IEstimateRepository>(),
+    ),
   );
   getIt.registerFactory<EstimateUploadViewModel>(
-    () => EstimateUploadViewModel(getIt<IEstimateRepository>()),
+    () => EstimateUploadViewModel(
+      getIt<IEstimateRepository>(),
+    ),
   );
   getIt.registerFactory<EstimateCalculationViewModel>(
-    () => EstimateCalculationViewModel(getIt<IEstimateRepository>()),
+    () => EstimateCalculationViewModel(
+      getIt<IEstimateRepository>(),
+    ),
   );
 
   // ViewModels - Paint Catalog
   getIt.registerFactory<PaintCatalogListViewModel>(
-    () => PaintCatalogListViewModel(getIt<IPaintCatalogRepository>()),
+    () => PaintCatalogListViewModel(
+      getIt<IPaintCatalogRepository>(),
+    ),
   );
   getIt.registerFactory<PaintCatalogDetailViewModel>(
-    () => PaintCatalogDetailViewModel(getIt<IPaintCatalogRepository>()),
+    () => PaintCatalogDetailViewModel(
+      getIt<IPaintCatalogRepository>(),
+    ),
   );
 
   // ViewModels - Navigation
