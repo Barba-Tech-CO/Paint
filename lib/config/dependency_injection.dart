@@ -71,7 +71,9 @@ void setupDependencyInjection() {
     () => EstimateRepository(estimateService: getIt<EstimateService>()),
   );
   getIt.registerLazySingleton<IPaintCatalogRepository>(
-    () => PaintCatalogRepository(paintCatalogService: getIt<PaintCatalogService>()),
+    () => PaintCatalogRepository(
+      paintCatalogService: getIt<PaintCatalogService>(),
+    ),
   );
 
   // Use Cases
@@ -113,60 +115,94 @@ void setupDependencyInjection() {
 
   // ViewModels - Contact
   getIt.registerFactory<ContactListViewModel>(
-    () => ContactListViewModel(getIt<IContactRepository>()),
+    () => ContactListViewModel(
+      getIt<IContactRepository>(),
+      getIt<AppLogger>(),
+    ),
   );
   getIt.registerFactory<ContactDetailViewModel>(
-    () => ContactDetailViewModel(getIt<IContactRepository>()),
+    () => ContactDetailViewModel(
+      getIt<IContactRepository>(),
+      getIt<AppLogger>(),
+    ),
   );
 
   // ViewModels - Estimate
   getIt.registerFactory<EstimateListViewModel>(
-    () => EstimateListViewModel(getIt<IEstimateRepository>()),
+    () => EstimateListViewModel(
+      getIt<IEstimateRepository>(),
+      getIt<AppLogger>(),
+    ),
   );
   getIt.registerFactory<EstimateDetailViewModel>(
-    () => EstimateDetailViewModel(getIt<IEstimateRepository>()),
+    () => EstimateDetailViewModel(
+      getIt<IEstimateRepository>(),
+      getIt<AppLogger>(),
+    ),
   );
   getIt.registerFactory<EstimateUploadViewModel>(
-    () => EstimateUploadViewModel(getIt<IEstimateRepository>()),
+    () => EstimateUploadViewModel(
+      getIt<IEstimateRepository>(),
+      getIt<AppLogger>(),
+    ),
   );
   getIt.registerFactory<EstimateCalculationViewModel>(
-    () => EstimateCalculationViewModel(getIt<IEstimateRepository>()),
+    () => EstimateCalculationViewModel(
+      getIt<IEstimateRepository>(),
+      getIt<AppLogger>(),
+    ),
   );
 
   // ViewModels - Paint Catalog
   getIt.registerFactory<PaintCatalogListViewModel>(
-    () => PaintCatalogListViewModel(getIt<IPaintCatalogRepository>()),
+    () => PaintCatalogListViewModel(
+      getIt<IPaintCatalogRepository>(),
+      getIt<AppLogger>(),
+    ),
   );
   getIt.registerFactory<PaintCatalogDetailViewModel>(
-    () => PaintCatalogDetailViewModel(getIt<IPaintCatalogRepository>()),
+    () => PaintCatalogDetailViewModel(
+      getIt<IPaintCatalogRepository>(),
+      getIt<AppLogger>(),
+    ),
   );
 
   // ViewModels - Navigation
   getIt.registerFactory<NavigationViewModel>(
-    () => NavigationViewModel(),
+    () => NavigationViewModel(
+      getIt<AppLogger>(),
+    ),
   );
 
   // ViewModels - Measurements
   getIt.registerFactory<MeasurementsViewModel>(
-    () => MeasurementsViewModel(),
+    () => MeasurementsViewModel(
+      getIt<AppLogger>(),
+    ),
   );
 
   // ViewModels - Zones (Refactored)
   getIt.registerLazySingleton<ZonesListViewModel>(
-    () => ZonesListViewModel(),
+    () => ZonesListViewModel(getIt<AppLogger>()),
   );
 
   getIt.registerLazySingleton<ZoneDetailViewModel>(
-    () => ZoneDetailViewModel(),
+    () => ZoneDetailViewModel(
+      getIt<AppLogger>(),
+    ),
   );
 
   getIt.registerLazySingleton<ZonesSummaryViewModel>(
-    () => ZonesSummaryViewModel(),
+    () => ZonesSummaryViewModel(
+      getIt<AppLogger>(),
+    ),
   );
 
   // ViewModels - Zones (Legacy - keeping for backward compatibility)
   getIt.registerLazySingleton<ZonesCardViewmodel>(
-    () => ZonesCardViewmodel(),
+    () => ZonesCardViewmodel(
+      getIt<AppLogger>(),
+    ),
   );
 
   // ViewModels - Select Colors
