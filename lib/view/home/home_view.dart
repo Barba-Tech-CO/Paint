@@ -17,7 +17,7 @@ class HomeView extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: PaintProAppBar(
         title: 'Home',
-        toolbarHeight: 126,
+        toolbarHeight: 80,
       ),
       body: SingleChildScrollView(
         child: Column(

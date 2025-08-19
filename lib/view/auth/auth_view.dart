@@ -24,7 +24,7 @@ class AuthView extends StatelessWidget {
           appBar: PaintProAppBar(
             title: 'Authentication',
             backgroundColor: AppColors.primary,
-            toolbarHeight: 60,
+            toolbarHeight: 80,
           ),
           body: const AuthContent(),
         );
