@@ -9,6 +9,7 @@ class AppUrls {
   static const String authRefreshUrl = '$authBaseUrl/refresh';
 
   // Deep Link URLs
+  static const String deepLinkBaseUrl = 'paintproapp://auth';
   static const String deepLinkSuccess = 'paintproapp://auth/success';
   static const String deepLinkError = 'paintproapp://auth/error';
 
