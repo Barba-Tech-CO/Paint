@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart' as webview;
 import '../../config/app_urls.dart';
 import '../../model/auth_model.dart';
 import '../../model/auth_state.dart';
+import '../../service/auth_persistence_service.dart';
 import '../../service/deep_link_service.dart';
 import '../../use_case/auth/auth_use_cases.dart';
 import '../../utils/command/command.dart';
@@ -40,6 +41,8 @@ class AuthViewModel extends ChangeNotifier {
   final HandleDeepLinkUseCase _handleDeepLinkUseCase;
   final HandleWebViewNavigationUseCase _handleWebViewNavigationUseCase;
   final DeepLinkService _deepLinkService;
+  final AuthPersistenceService _authPersistenceService;
+  final AppLogger _logger;
   late final _DeepLinkHandler _deepLinkHandler;
 
   AuthViewState _state = AuthViewState.initial();
@@ -66,13 +69,16 @@ class AuthViewModel extends ChangeNotifier {
     this._handleDeepLinkUseCase,
     this._handleWebViewNavigationUseCase,
     this._deepLinkService,
+    this._authPersistenceService,
+    this._logger,
   ) {
     _deepLinkHandler = _DeepLinkHandler(
       _deepLinkService,
       _onDeepLinkReceived,
     );
     _deepLinkHandler.initialize();
-    _initializeAuth();
+    // Use microtask to handle async initialization
+    Future.microtask(() => _initializeAuth());
   }
 
   void _updateState(AuthViewState newState) {
@@ -80,12 +86,44 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _initializeAuth() {
+  void _initializeAuth() async {
+    _logger.info('[AuthViewModel] Initializing authentication...');
     _updateState(
       _state.copyWith(authorizeUrl: AppUrls.goHighLevelAuthorizeUrl),
     );
-    // Executar o comando para que a tela mostre o conteúdo
-    checkAuthStatusCommand.execute();
+
+    // First check if user is already authenticated from persisted state
+    _logger.info('[AuthViewModel] Checking persisted authentication state...');
+    final isAuthenticated = await _authPersistenceService.isUserAuthenticated();
+    _logger.info(
+      '[AuthViewModel] Persisted auth check result: $isAuthenticated',
+    );
+
+    if (isAuthenticated) {
+      _logger.info('[AuthViewModel] User authenticated from persisted state');
+      final persistedState = await _authPersistenceService.loadAuthState();
+      _logger.info('[AuthViewModel] Loaded persisted state: $persistedState');
+
+      _updateState(
+        _state.copyWith(
+          authStatus: AuthModel(
+            authenticated: persistedState['authenticated'] as bool,
+            needsLogin: persistedState['needsLogin'] as bool,
+            expiresAt: persistedState['expiresAt'] as DateTime?,
+            locationId: persistedState['locationId'] as String?,
+          ),
+          state: AuthState.authenticated,
+          isLoading: false,
+        ),
+      );
+      _logger.info(
+        '[AuthViewModel] State updated to authenticated from persistence',
+      );
+    } else {
+      _logger.info('[AuthViewModel] No persisted auth, checking backend...');
+      // Check backend status if no persisted authentication
+      checkAuthStatusCommand.execute();
+    }
   }
 
   void _onDeepLinkReceived(Uri uri) {
@@ -114,20 +152,30 @@ class AuthViewModel extends ChangeNotifier {
     final result = await _authOperationsUseCase.checkAuthStatus();
     result.when(
       ok: (authModel) {
-        LoggerService.info(
-          '[AuthViewModel] Auth status: authenticated=${authModel.authenticated}, needsLogin=${authModel.needsLogin}',
+        _logger.info(
+          '[AuthViewModel] Auth status from backend: authenticated=${authModel.authenticated}, needsLogin=${authModel.needsLogin}',
         );
-        final newState = authModel.authenticated && !authModel.needsLogin
-            ? AuthState.authenticated
-            : AuthState.unauthenticated;
-        _updateState(
-          _state.copyWith(
-            authStatus: authModel,
-            state: newState,
-            isLoading: false,
-            errorMessage: null,
-          ),
-        );
+
+        // Only update state if user is not already authenticated locally
+        // This prevents backend from overriding successful OAuth authentication
+        if (_state.authStatus?.authenticated != true) {
+          final newState = authModel.authenticated && !authModel.needsLogin
+              ? AuthState.authenticated
+              : AuthState.unauthenticated;
+          _updateState(
+            _state.copyWith(
+              authStatus: authModel,
+              state: newState,
+              isLoading: false,
+              errorMessage: null,
+            ),
+          );
+        } else {
+          _logger.info(
+            '[AuthViewModel] User already authenticated locally, keeping current state',
+          );
+          _updateState(_state.copyWith(isLoading: false));
+        }
       },
       error: (error) {
         LoggerService.error(
@@ -155,11 +203,50 @@ class AuthViewModel extends ChangeNotifier {
       final result = await _authOperationsUseCase.processCallback(code);
 
       result.when(
-        ok: (response) {
-          LoggerService.info('[AuthViewModel] Callback processed successfully');
+        ok: (response) async {
+          _logger.info('[AuthViewModel] Callback processado com sucesso');
 
-          // After successful callback, check auth status to update navigation flags
-          checkAuthStatusCommand.execute();
+          // After successful OAuth callback, force local authentication state
+          // This prevents infinite login loops while backend processes the authentication
+          final newAuthStatus = AuthModel(
+            authenticated: true,
+            needsLogin: false,
+            // Set expiration to 30 days from now instead of using backend's incorrect date
+            expiresAt: DateTime.now().add(const Duration(days: 30)),
+            locationId: _state.authStatus?.locationId,
+          );
+
+          _updateState(
+            _state.copyWith(
+              authStatus: newAuthStatus,
+              state: AuthState.authenticated,
+              isLoading: false,
+              errorMessage: null,
+            ),
+          );
+
+          // Save authentication state to persistence
+          await _authPersistenceService.saveAuthState(
+            authenticated: true,
+            needsLogin: false,
+            expiresAt: newAuthStatus.expiresAt,
+            locationId: newAuthStatus.locationId,
+          );
+
+          // Also check backend status after a delay to sync with server
+          // But only if user is not already authenticated locally
+          Future.delayed(const Duration(milliseconds: 1000), () {
+            if (_state.authStatus?.authenticated == true) {
+              _logger.info(
+                '[AuthViewModel] User already authenticated, skipping backend sync',
+              );
+            } else {
+              _logger.info(
+                '[AuthViewModel] Syncing with backend auth status...',
+              );
+              checkAuthStatusCommand.execute();
+            }
+          });
         },
         error: (error) {
           LoggerService.error(

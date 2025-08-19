@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
 
 import '../config/app_config.dart';
-import 'i_http_service.dart';
-import 'logger_service.dart';
+import '../utils/logger/app_logger.dart';
 
 class HttpService implements IHttpService {
   static final HttpService _instance = HttpService._internal();
   late final Dio dio;
+  late final AppLogger _logger;
 
   factory HttpService() {
     return _instance;
@@ -25,6 +25,10 @@ class HttpService implements IHttpService {
     );
   }
 
+  void setLogger(AppLogger logger) {
+    _logger = logger;
+  }
+
   @override
   Future<Response> get(
     String path, {
@@ -40,20 +44,18 @@ class HttpService implements IHttpService {
       );
       final duration = DateTime.now().difference(startTime);
 
-      LoggerService.info(
-        'API Call: GET $path - Status: ${response.statusCode}',
-      );
-      LoggerService.info(
+      _logger.info('API Call: GET $path - Status: ${response.statusCode}');
+      if (queryParameters != null) {
+        _logger.info('Request Data: $queryParameters');
+      }
+      _logger.info('Response Data: ${response.data}');
+      _logger.info(
         'Performance: HTTP GET $path took ${duration.inMilliseconds}ms',
       );
 
       return response;
     } on DioException catch (e) {
-      LoggerService.error(
-        'Service Error: HttpService.GET $path',
-        e,
-        e.stackTrace,
-      );
+      _logger.error('HttpService Error: GET $path', e, e.stackTrace);
       rethrow;
     }
   }

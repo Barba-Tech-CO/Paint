@@ -27,7 +27,6 @@ dependencies:
   app_links: ^3.5.0
   logger: ^2.6.0
   sqflite: ^2.4.2
-  path: ^1.9.0
 
 dev_dependencies:
   flutter_test:

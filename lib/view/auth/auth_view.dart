@@ -32,7 +32,6 @@ class AuthView extends StatelessWidget {
   void _handleSideEffects(BuildContext context, AuthViewModel viewModel) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (viewModel.shouldNavigateToDashboard) {
-        LoggerService.info('[AuthView] Navigating to /home');
         context.go('/home');
       }
 
