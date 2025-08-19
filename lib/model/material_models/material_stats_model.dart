@@ -1,4 +1,4 @@
-import 'package:paintpro/model/material_models/material_price_range_model.dart';
+import 'material_price_range_model.dart';
 
 class MaterialStatsModel {
   final int totalMaterials;
