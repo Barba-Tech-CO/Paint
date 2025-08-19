@@ -3,13 +3,15 @@ import '../../model/contact_model.dart';
 import '../../domain/repository/contact_repository.dart';
 import '../../utils/result/result.dart';
 import '../../utils/command/command.dart';
+import '../../utils/logger/app_logger.dart';
 
 enum ContactListState { initial, loading, loaded, error }
 
 class ContactListViewModel extends ChangeNotifier {
   final IContactRepository _contactRepository;
+  final AppLogger _logger;
 
-  ContactListViewModel(this._contactRepository);
+  ContactListViewModel(this._contactRepository, this._logger);
 
   // State
   ContactListState _state = ContactListState.initial;
@@ -76,6 +78,7 @@ class ContactListViewModel extends ChangeNotifier {
           },
         );
       } catch (e) {
+        _logger.error('Erro ao carregar contatos: $e');
         _setError(e.toString());
         _setState(ContactListState.error);
         return Result.error(Exception(e.toString()));
@@ -106,8 +109,11 @@ class ContactListViewModel extends ChangeNotifier {
           },
         );
       } catch (e) {
+        _logger.error('Erro ao carregar mais contatos: $e');
         _setError(e.toString());
-        return Result.error(Exception(e.toString()));
+        return Result.error(
+          Exception(e.toString()),
+        );
       }
     });
 
@@ -134,6 +140,7 @@ class ContactListViewModel extends ChangeNotifier {
           },
         );
       } catch (e) {
+        _logger.error('Erro ao pesquisar contatos: $e');
         _setError(e.toString());
         _setState(ContactListState.error);
         return Result.error(Exception(e.toString()));
