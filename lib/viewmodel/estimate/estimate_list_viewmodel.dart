@@ -27,8 +27,8 @@ class EstimateListViewModel extends ChangeNotifier {
   static const int _pageSize = 20;
 
   // Filters
-  EstimateStatus? _statusFilter;
-  EstimateStatus? get statusFilter => _statusFilter;
+  String? _statusFilter;
+  String? get statusFilter => _statusFilter;
 
   // Error
   String? _errorMessage;
@@ -37,13 +37,12 @@ class EstimateListViewModel extends ChangeNotifier {
   // Commands
   late final Command0<void> _loadEstimatesCommand;
   late final Command0<void> _loadMoreEstimatesCommand;
-  late final Command1<void, EstimateStatus?> _filterByStatusCommand;
+  late final Command1<void, String?> _filterByStatusCommand;
   late final Command1<void, String> _deleteEstimateCommand;
 
   Command0<void> get loadEstimatesCommand => _loadEstimatesCommand;
   Command0<void> get loadMoreEstimatesCommand => _loadMoreEstimatesCommand;
-  Command1<void, EstimateStatus?> get filterByStatusCommand =>
-      _filterByStatusCommand;
+  Command1<void, String?> get filterByStatusCommand => _filterByStatusCommand;
   Command1<void, String> get deleteEstimateCommand => _deleteEstimateCommand;
 
   // Computed properties
@@ -67,8 +66,8 @@ class EstimateListViewModel extends ChangeNotifier {
         );
         return result.when(
           ok: (response) {
-            _estimates = response.estimates;
-            _totalEstimates = response.total ?? 0;
+            _estimates = response;
+            _totalEstimates = response.length;
             _currentPage++;
             _setState(EstimateListState.loaded);
             return Result.ok(null);
@@ -99,8 +98,8 @@ class EstimateListViewModel extends ChangeNotifier {
         );
         return result.when(
           ok: (response) {
-            _estimates.addAll(response.estimates);
-            _totalEstimates = response.total ?? 0;
+            _estimates.addAll(response);
+            _totalEstimates = _estimates.length;
             _currentPage++;
             notifyListeners();
             return Result.ok(null);
@@ -116,7 +115,7 @@ class EstimateListViewModel extends ChangeNotifier {
       }
     });
 
-    _filterByStatusCommand = Command1((EstimateStatus? status) async {
+    _filterByStatusCommand = Command1((String? status) async {
       _statusFilter = status;
       _setState(EstimateListState.loading);
       _clearError();
@@ -130,8 +129,8 @@ class EstimateListViewModel extends ChangeNotifier {
         );
         return result.when(
           ok: (response) {
-            _estimates = response.estimates;
-            _totalEstimates = response.total ?? 0;
+            _estimates = response;
+            _totalEstimates = response.length;
             _currentPage = 1;
             _setState(EstimateListState.loaded);
             return Result.ok(null);
@@ -199,7 +198,7 @@ class EstimateListViewModel extends ChangeNotifier {
     await _loadMoreEstimatesCommand.execute();
   }
 
-  Future<void> filterByStatus(EstimateStatus? status) async {
+  Future<void> filterByStatus(String? status) async {
     await _filterByStatusCommand.execute(status);
   }
 
