@@ -6,14 +6,13 @@ import 'logger_service.dart';
 
 class AuthService {
   final HttpService _httpService;
-  static const String _baseUrl = '/auth';
 
   AuthService(this._httpService);
 
   /// Verifica o status de autenticação
   Future<Result<AuthStatusResponse>> getStatus() async {
     try {
-      final response = await _httpService.get('$_baseUrl/status');
+      final response = await _httpService.get(AppUrls.authStatusUrl);
       final authStatus = AuthStatusResponse.fromJson(response.data);
       return Result.ok(authStatus);
     } catch (e) {
@@ -42,7 +41,10 @@ class AuthService {
   /// Processa o callback de autorização
   Future<Result<AuthRefreshResponse>> processCallback(String code) async {
     try {
-      final response = await _httpService.get('$_baseUrl/callback?code=$code');
+      final response = await _httpService.post(
+        AppUrls.authCallbackUrl,
+        data: {'code': code},
+      );
       final callbackResponse = AuthRefreshResponse.fromJson(response.data);
       return Result.ok(callbackResponse);
     } catch (e) {
@@ -57,7 +59,7 @@ class AuthService {
   Future<Result<AuthRefreshResponse>> refreshToken() async {
     try {
       final response = await _httpService.post(
-        '$_baseUrl/refresh',
+        AppUrls.authRefreshUrl,
         data: {},
       );
       final refreshResponse = AuthRefreshResponse.fromJson(response.data);
