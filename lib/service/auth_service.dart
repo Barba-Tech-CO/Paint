@@ -1,13 +1,14 @@
-import '../model/auth_model.dart';
-import '../utils/result/result.dart';
 import '../config/app_urls.dart';
-import 'http_service.dart';
+import '../model/auth_model.dart';
+import '../utils/logger/app_logger.dart';
+import '../utils/result/result.dart';
 import 'services.dart';
 
 class AuthService {
   final HttpService _httpService;
+  final AppLogger _logger;
 
-  AuthService(this._httpService);
+  AuthService(this._httpService, this._logger);
 
   /// Verifica o status de autenticação
   Future<Result<AuthStatusResponse>> getStatus() async {
@@ -17,7 +18,7 @@ class AuthService {
       final authStatus = AuthStatusResponse.fromJson(response.data);
       return Result.ok(authStatus);
     } catch (e) {
-      LoggerService.error('Error checking authentication status: $e');
+      _logger.error('Error checking authentication status: $e');
       return Result.error(
         Exception('Error checking authentication status: $e'),
       );
@@ -48,7 +49,7 @@ class AuthService {
 
       return Result.ok(authUri.toString());
     } catch (e) {
-      LoggerService.error('Error generating authorization URL: $e');
+      _logger.error('Error generating authorization URL: $e');
       return Result.error(
         Exception('Error generating authorization URL: $e'),
       );
@@ -91,11 +92,11 @@ class AuthService {
         '/auth/success?location_id=$locationId',
       );
 
-      LoggerService.info(
+      _logger.info(
         '[AuthService] Success endpoint response: ${response.data}',
       );
     } catch (e) {
-      LoggerService.error('[AuthService] Error calling /success endpoint: $e');
+      _logger.error('[AuthService] Error calling /success endpoint: $e');
       // Re-throw the error as this is important for the authentication flow
       rethrow;
     }
@@ -122,7 +123,7 @@ class AuthService {
       final refreshResponse = AuthRefreshResponse.fromJson(response.data);
       return Result.ok(refreshResponse);
     } catch (e) {
-      LoggerService.error('Error refreshing token: $e');
+      _logger.error('Error refreshing token: $e');
       return Result.error(
         Exception('Error refreshing token: $e'),
       );
