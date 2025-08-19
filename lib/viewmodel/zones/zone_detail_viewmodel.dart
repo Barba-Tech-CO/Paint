@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 import '../../model/zones_card_model.dart';
 import '../../utils/result/result.dart';
 import '../../utils/command/command.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../helpers/zones/zone_data_classes.dart';
 
 class ZoneDetailViewModel extends ChangeNotifier {
   // Service seria injetado aqui quando estiver pronto
   // final ZonesService _zonesService;
+  final AppLogger _logger;
 
   // Data
   ZonesCardModel? _currentZone;
@@ -19,7 +21,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
   // Internal state
   bool _disposed = false;
 
-  ZoneDetailViewModel();
+  ZoneDetailViewModel(this._logger);
 
   // Commands
   Command1<void, int>? _deleteZoneCommand;
@@ -105,6 +107,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
       _safeNotifyListeners();
       return Result.ok(null);
     } catch (e) {
+      _logger.error('Erro ao excluir zona: $e');
       _setError('Erro ao excluir zona: $e');
       return Result.error(Exception(e.toString()));
     }
@@ -129,6 +132,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
       _safeNotifyListeners();
       return Result.ok(null);
     } catch (e) {
+      _logger.error('Erro ao renomear zona: $e');
       _setError('Erro ao renomear zona: $e');
       return Result.error(Exception(e.toString()));
     }
