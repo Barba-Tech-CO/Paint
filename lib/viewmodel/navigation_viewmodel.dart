@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../model/navigation_item_model.dart';
+import '../utils/logger/app_logger.dart';
 
 class NavigationViewModel extends ChangeNotifier {
+  final AppLogger _logger;
   String _currentRoute = '/dashboard';
   final List<NavigationItemModel> _navigationItems =
       NavigationItemModel.defaultItems;
 
-  NavigationViewModel();
+  NavigationViewModel(this._logger);
 
   String get currentRoute => _currentRoute;
   List<NavigationItemModel> get navigationItems => _navigationItems;
@@ -35,6 +37,7 @@ class NavigationViewModel extends ChangeNotifier {
     try {
       return _navigationItems.firstWhere((item) => item.route == route);
     } catch (e) {
+      _logger.error('Erro ao buscar item de navegação por rota: $e');
       return null;
     }
   }
