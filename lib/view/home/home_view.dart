@@ -134,7 +134,7 @@ class _HomeViewState extends State<HomeView> {
               ),
             ),
             const SizedBox(
-              height: 120,
+              height: 100,
             ), // espaço extra para não cobrir a barra
           ],
         ),
