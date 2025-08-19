@@ -2,12 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'i_http_service.dart';
 import '../config/app_config.dart';
-import 'logger_service.dart';
+import '../utils/logger/app_logger.dart';
 
 class HttpService implements IHttpService {
   static final HttpService _instance = HttpService._internal();
   late final Dio dio;
-  late final LoggerService _logger;
+  late final AppLogger _logger;
 
   factory HttpService() {
     return _instance;
@@ -26,7 +26,7 @@ class HttpService implements IHttpService {
     );
   }
 
-  void setLogger(LoggerService logger) {
+  void setLogger(AppLogger logger) {
     _logger = logger;
   }
 
