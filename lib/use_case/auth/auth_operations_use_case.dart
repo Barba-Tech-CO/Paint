@@ -55,6 +55,15 @@ class AuthOperationsUseCase {
     );
   }
 
+  /// Chama o endpoint de sucesso com o location_id
+  Future<Result<void>> callSuccessEndpoint(String locationId) async {
+    final result = await _authService.callSuccessEndpoint(locationId);
+    return result.when(
+      ok: (_) => Result.ok(null),
+      error: (error) => Result.error(error),
+    );
+  }
+
   /// Renova o token de acesso
   Future<Result<void>> refreshToken() async {
     final result = await _authService.refreshToken();
