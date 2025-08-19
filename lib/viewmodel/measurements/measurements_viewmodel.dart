@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../utils/logger/app_logger.dart';
 
 class MeasurementsViewModel extends ChangeNotifier {
+  final AppLogger _logger;
   int _randomNumber = 0;
   Timer? _timer;
   final _random = Random();
@@ -26,7 +28,7 @@ class MeasurementsViewModel extends ChangeNotifier {
   String? get error => _error;
   Map<String, dynamic> get measurementResults => _measurementResults;
 
-  MeasurementsViewModel() {
+  MeasurementsViewModel(this._logger) {
     startRandomCalculation();
   }
 
@@ -56,6 +58,7 @@ class MeasurementsViewModel extends ChangeNotifier {
         }
       });
     } catch (e) {
+      _logger.error('Erro ao calcular: $e');
       _setError('Erro ao calcular: $e');
     }
   }
