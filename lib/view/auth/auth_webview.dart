@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:go_router/go_router.dart';
-import '../../service/logger_service.dart';
+import '../../utils/logger/app_logger.dart';
+import '../../utils/logger/logger_app_logger_impl.dart';
 import '../../viewmodel/auth/auth_viewmodel.dart';
 import 'marketplace_popup_helper.dart';
 
@@ -19,14 +20,13 @@ class _AuthWebViewState extends State<AuthWebView> {
   late BuildContext _widgetContext;
   bool _isDisposed = false;
   AuthViewModel? _viewModel;
+  static final AppLogger _logger = LoggerAppLoggerImpl();
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _widgetContext = context;
-    if (_viewModel == null) {
-      _viewModel = _widgetContext.read<AuthViewModel>();
-    }
+    _viewModel ??= _widgetContext.read<AuthViewModel>();
   }
 
   @override
@@ -108,17 +108,34 @@ class _AuthWebViewState extends State<AuthWebView> {
                         if (authSuccessful) {
                           // Navigate directly to home since auth is successful
                           try {
-                            GoRouter.of(_widgetContext).go('/home');
+                            // Use a more reliable navigation approach for iOS
+                            if (mounted && !_isDisposed) {
+                              // Close the webview first, then navigate
+                              GoRouter.of(_widgetContext).pop();
+                              // Use a small delay to ensure webview is closed before navigation
+                              Future.delayed(
+                                const Duration(milliseconds: 100),
+                                () {
+                                  if (mounted && !_isDisposed) {
+                                    GoRouter.of(_widgetContext).go('/home');
+                                  }
+                                },
+                              );
+                            }
                           } catch (e) {
-                            LoggerService.error(
+                            _logger.error(
                               '[AuthWebView] Error navigating to home: $e',
                             );
-                            // Fallback to closing webview
-                            GoRouter.of(_widgetContext).pop();
+                            // Fallback to closing webview and let AuthView handle navigation
+                            if (mounted && !_isDisposed) {
+                              GoRouter.of(_widgetContext).pop();
+                            }
                           }
                         } else {
                           // Close the webview and let AuthView handle navigation
-                          GoRouter.of(_widgetContext).pop();
+                          if (mounted && !_isDisposed) {
+                            GoRouter.of(_widgetContext).pop();
+                          }
                         }
                       } catch (e) {
                         if (mounted && !_isDisposed) {
@@ -129,7 +146,7 @@ class _AuthWebViewState extends State<AuthWebView> {
                           try {
                             GoRouter.of(_widgetContext).pop();
                           } catch (e) {
-                            LoggerService.error(
+                            _logger.error(
                               '[AuthWebView] Error closing webview: $e',
                             );
                             GoRouter.of(_widgetContext).go('/home');
@@ -139,7 +156,7 @@ class _AuthWebViewState extends State<AuthWebView> {
                     }
                   });
                 } else {
-                  LoggerService.info(
+                  _logger.info(
                     '[AuthWebView] No authorization code in URL: $request.url',
                   );
                   // Handle error case
