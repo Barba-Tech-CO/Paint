@@ -26,7 +26,10 @@ import '../service/http_service.dart';
 import '../service/navigation_service.dart';
 import '../service/material_service.dart';
 import '../service/paint_catalog_service.dart';
-import '../service/logger_service.dart';
+
+// Logger Layer
+import '../utils/logger/app_logger.dart';
+import '../utils/logger/logger_app_logger_impl.dart';
 
 // Use Case Layer
 import '../use_case/auth/auth_use_cases.dart';
@@ -43,7 +46,9 @@ void setupDependencyInjection() {
     () {
       final httpService = HttpService();
       httpService.setLogger(
-        getIt<LoggerService>(),
+        getIt<AppLogger>(),
+      );
+      return httpService;
     },
   );
 
@@ -79,9 +84,6 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AuthPersistenceService>(
     () => AuthPersistenceService(),
   );
-  getIt.registerLazySingleton<LoggerService>(
-    () => LoggerService.instance,
-  );
   getIt.registerLazySingleton<AppLogger>(
     () => LoggerAppLoggerImpl(),
   );
@@ -95,6 +97,8 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IContactRepository>(
     () => ContactRepository(
       contactService: getIt<ContactService>(),
+      databaseService: getIt<ContactDatabaseService>(),
+      authService: getIt<AuthService>(),
     ),
   );
   getIt.registerLazySingleton<IEstimateRepository>(
@@ -106,9 +110,6 @@ void setupDependencyInjection() {
     () => MaterialRepository(materialService: getIt<MaterialService>()),
   );
   getIt.registerLazySingleton<IPaintCatalogRepository>(
-    () => PaintCatalogRepository(
-      paintCatalogService: getIt<PaintCatalogService>(),
-    ),
     () => PaintCatalogRepository(
       paintCatalogService: getIt<PaintCatalogService>(),
     ),
