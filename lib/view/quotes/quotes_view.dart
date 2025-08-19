@@ -5,6 +5,7 @@ import '../../viewmodel/viewmodels.dart';
 import '../widgets/widgets.dart';
 import 'widgets/quote_card_widget.dart';
 import 'widgets/search_bar_widget.dart';
+import 'widgets/try_again_widget.dart';
 
 class QuotesView extends StatefulWidget {
   const QuotesView({super.key});
@@ -71,9 +72,7 @@ class _QuotesViewState extends State<QuotesView> {
                           text: 'Upload Quote',
                           minimumSize: Size(130, 42),
                           borderRadius: 16,
-                          onPressed: () {
-                            quotesViewModel.pickFile();
-                          },
+                          onPressed: () => quotesViewModel.pickFile(),
                         ),
                       ],
                     ),
@@ -94,50 +93,15 @@ class _QuotesViewState extends State<QuotesView> {
                       );
                     },
                   )
-                : Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 48,
-                          color: Colors.red,
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'Error to load quotes',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'Check your connection and try again',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        SizedBox(height: 16),
-                        PaintProButton(
-                          text: 'Try Again',
-                          minimumSize: Size(130, 42),
-                          borderRadius: 16,
-                          onPressed: () {
-                            quotesViewModel.clearError();
-                          },
-                        ),
-                      ],
-                    ),
+                : TryAgainWidget(
+                    onPressed: () => quotesViewModel.clearError(),
                   ),
           ),
         ],
       ),
       floatingActionButton: quotesViewModel.currentState == QuotesState.loaded
           ? FloatingActionButton(
-              onPressed: () {
-                quotesViewModel.pickFile();
-              },
+              onPressed: () => quotesViewModel.pickFile(),
               backgroundColor: Colors.blue,
               child: Icon(
                 Icons.add,
