@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../../model/zones_card_model.dart';
 import '../../utils/result/result.dart';
 import '../../utils/command/command.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../helpers/zones/zone_data_classes.dart';
 
 enum ZonesState { initial, loading, loaded, error }
@@ -9,8 +10,9 @@ enum ZonesState { initial, loading, loaded, error }
 class ZonesCardViewmodel extends ChangeNotifier {
   // Service seria injetado aqui quando estiver pronto
   // final ZonesService _zonesService;
+  final AppLogger _logger;
 
-  // ZonesCardViewmodel(this._zonesService);
+  ZonesCardViewmodel(this._logger);
 
   // State
   ZonesState _state = ZonesState.initial;
@@ -29,8 +31,6 @@ class ZonesCardViewmodel extends ChangeNotifier {
   // Error
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
-
-  ZonesCardViewmodel();
 
   // Commands
   late final Command0<void> _loadZonesCommand;
@@ -153,6 +153,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
 
       return Result.ok(null);
     } catch (e) {
+      _logger.error('Erro ao carregar zonas: $e');
       _setError('Erro ao carregar zonas: $e');
       _setState(ZonesState.error);
       return Result.error(Exception(e.toString()));
@@ -177,8 +178,11 @@ class ZonesCardViewmodel extends ChangeNotifier {
       notifyListeners();
       return Result.ok(null);
     } catch (e) {
+      _logger.error('Erro ao excluir zona: $e');
       _setError('Erro ao excluir zona: $e');
-      return Result.error(Exception(e.toString()));
+      return Result.error(
+        Exception(e.toString()),
+      );
     }
   }
 
@@ -203,6 +207,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
       notifyListeners();
       return Result.ok(null);
     } catch (e) {
+      _logger.error('Erro ao renomear zona: $e');
       _setError('Erro ao renomear zona: $e');
       return Result.error(Exception(e.toString()));
     }
@@ -241,6 +246,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
       notifyListeners();
       return Result.ok(null);
     } catch (e) {
+      _logger.error('Erro ao adicionar zona: $e');
       _setError('Erro ao adicionar zona: $e');
       return Result.error(Exception(e.toString()));
     }
