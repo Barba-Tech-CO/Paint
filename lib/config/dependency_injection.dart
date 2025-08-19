@@ -34,9 +34,18 @@ import '../viewmodel/viewmodels.dart';
 final GetIt getIt = GetIt.instance;
 
 void setupDependencyInjection() {
+  // Logger first
+  getIt.registerLazySingleton<AppLogger>(
+    () => LoggerAppLoggerImpl(),
+  );
+
   // Serviços
   getIt.registerLazySingleton<HttpService>(
-    () => HttpService(),
+    () {
+      final httpService = HttpService();
+      httpService.setLogger(getIt<AppLogger>());
+      return httpService;
+    },
   );
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(getIt<HttpService>()),
@@ -55,9 +64,6 @@ void setupDependencyInjection() {
   );
   getIt.registerLazySingleton<DeepLinkService>(
     () => DeepLinkService(),
-  );
-  getIt.registerLazySingleton<AppLogger>(
-    () => LoggerAppLoggerImpl(),
   );
 
   // Repositories
