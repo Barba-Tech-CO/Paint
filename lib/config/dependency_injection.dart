@@ -4,12 +4,14 @@ import 'package:get_it/get_it.dart';
 import '../data/repository/auth_repository_impl.dart';
 import '../data/repository/contact_repository_impl.dart';
 import '../data/repository/estimate_repository_impl.dart';
+import '../data/repository/material_repository_impl.dart';
 import '../data/repository/paint_catalog_repository_impl.dart';
 
 // Domain Layer
 import '../domain/repository/auth_repository.dart';
 import '../domain/repository/contact_repository.dart';
 import '../domain/repository/estimate_repository.dart';
+import '../domain/repository/material_repository.dart';
 import '../domain/repository/paint_catalog_repository.dart';
 
 // Service Layer
@@ -21,6 +23,7 @@ import '../service/deep_link_service.dart';
 import '../service/estimate_service.dart';
 import '../service/http_service.dart';
 import '../service/navigation_service.dart';
+import '../service/material_service.dart';
 import '../service/paint_catalog_service.dart';
 import '../service/logger_service.dart';
 
@@ -42,8 +45,6 @@ void setupDependencyInjection() {
       final httpService = HttpService();
       httpService.setLogger(
         getIt<LoggerService>(),
-      );
-      return httpService;
     },
   );
   getIt.registerLazySingleton<AuthService>(
@@ -60,6 +61,9 @@ void setupDependencyInjection() {
     () => EstimateService(
       getIt<HttpService>(),
     ),
+  );
+  getIt.registerLazySingleton<MaterialService>(
+    () => MaterialService(),
   );
   getIt.registerLazySingleton<PaintCatalogService>(
     () => PaintCatalogService(
@@ -97,6 +101,9 @@ void setupDependencyInjection() {
     () => EstimateRepository(
       estimateService: getIt<EstimateService>(),
     ),
+  );
+  getIt.registerLazySingleton<IMaterialRepository>(
+    () => MaterialRepository(materialService: getIt<MaterialService>()),
   );
   getIt.registerLazySingleton<IPaintCatalogRepository>(
     () => PaintCatalogRepository(
@@ -219,8 +226,16 @@ void setupDependencyInjection() {
     () => ZonesCardViewmodel(),
   );
 
+  // ViewModels - Material
+  getIt.registerFactory<MaterialListViewModel>(
+    () => MaterialListViewModel(getIt<IMaterialRepository>()),
+  );
+
   // ViewModels - Select Colors
   getIt.registerFactory<SelectColorsViewModel>(
-    () => SelectColorsViewModel(),
+    () => SelectColorsViewModel(
+      getIt<IPaintCatalogRepository>(),
+      getIt<AppLogger>(),
+    ),
   );
 }

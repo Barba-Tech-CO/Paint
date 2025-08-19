@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
 import '../../model/zones_card_model.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../viewmodel/zones/zones_viewmodels.dart';
 import '../widgets/buttons/paint_pro_delete_button.dart';
 import '../widgets/widgets.dart';
@@ -155,7 +156,10 @@ class _EditZoneViewState extends State<EditZoneView> {
           onPressed: () => context.pop(),
         ),
         actions: [
-          PaintProDeleteButton(viewModel: _viewModel),
+          PaintProDeleteButton(
+            viewModel: _viewModel,
+            logger: getIt<AppLogger>(),
+          ),
         ],
       ),
       body: Padding(
