@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../service/logger_service.dart';
+import '../utils/logger/app_logger.dart';
 import '../domain/repository/paint_catalog_repository.dart';
 
 /// ViewModel para a tela de seleção de cores
 /// Implementa o padrão MVVM com logging integrado
 class SelectColorsViewModel extends ChangeNotifier {
   final IPaintCatalogRepository _paintCatalogRepository;
-  
+  final AppLogger _logger;
+
   // Temporary fallback data while integrating with repository
   final List<String> _fallbackBrands = [
     'Sherwin-Williams',
@@ -60,7 +61,7 @@ class SelectColorsViewModel extends ChangeNotifier {
   Map<String, dynamic>? _selectedColor;
   String? _selectedBrand;
 
-  SelectColorsViewModel(this._paintCatalogRepository) {
+  SelectColorsViewModel(this._paintCatalogRepository, this._logger) {
     _initializeData();
   }
 
@@ -71,6 +72,7 @@ class SelectColorsViewModel extends ChangeNotifier {
 
   /// Carrega as marcas disponíveis
   Future<void> loadBrands() async {
+    _logger.info('Loading brands...');
     setLoading(true);
     clearError();
 
@@ -80,17 +82,17 @@ class SelectColorsViewModel extends ChangeNotifier {
         ok: (brands) {
           _brands = brands.map((brand) => brand.name).toList();
           notifyListeners();
-          LoggerService.info('Brands loaded: ${_brands.length}');
+          _logger.info('Brands loaded: ${_brands.length}');
         },
         error: (error) {
           setError('Erro ao carregar marcas: $error');
-          LoggerService.error('Erro ao carregar marcas', error);
+          _logger.error('Erro ao carregar marcas', error);
           _brands = []; // Will fall back to fallback brands
         },
       );
     } catch (e) {
       setError('Erro inesperado ao carregar marcas: $e');
-      LoggerService.error('Erro inesperado ao carregar marcas', e);
+      _logger.error('Erro inesperado ao carregar marcas', e);
       _brands = [];
     } finally {
       setLoading(false);
@@ -101,7 +103,8 @@ class SelectColorsViewModel extends ChangeNotifier {
   List<String> get brands => _brands.isNotEmpty ? _brands : _fallbackBrands;
 
   /// Lista de cores disponíveis
-  List<Map<String, dynamic>> get colors => _colors.isNotEmpty ? _colors : _fallbackColors;
+  List<Map<String, dynamic>> get colors =>
+      _colors.isNotEmpty ? _colors : _fallbackColors;
 
   /// Cor selecionada atualmente
   Map<String, dynamic>? get selectedColor => _selectedColor;
@@ -114,7 +117,7 @@ class SelectColorsViewModel extends ChangeNotifier {
     _selectedColor = colorData;
     _selectedBrand = brand;
 
-    LoggerService.info(
+    _logger.info(
       'Color Selected: ${colorData['name']} - Brand: $brand - Price: ${colorData['price']}',
     );
 
@@ -123,7 +126,7 @@ class SelectColorsViewModel extends ChangeNotifier {
 
   /// Carrega as cores para uma marca específica
   Future<void> loadColorsForBrand(String brand) async {
-    LoggerService.info('Carregando cores para a marca: $brand');
+    _logger.info('Loading colors for brand: $brand');
     setLoading(true);
     clearError();
 
@@ -132,27 +135,31 @@ class SelectColorsViewModel extends ChangeNotifier {
       result.when(
         ok: (colors) {
           // Convert PaintColor to Map for compatibility
-          _colors = colors.map((color) => {
-            'name': color.name,
-            'code': color.key,
-            'price': '\$${color.price?.toStringAsFixed(2) ?? "N/A"}/Gal',
-            'color': Colors.grey[200], // Default color representation
-          }).toList();
+          _colors = colors
+              .map(
+                (color) => {
+                  'name': color.name,
+                  'code': color.key,
+                  'price': '\$${color.price?.toStringAsFixed(2) ?? "N/A"}/Gal',
+                  'color': Colors.grey[200], // Default color representation
+                },
+              )
+              .toList();
           notifyListeners();
-          LoggerService.info(
+          _logger.info(
             'Colors Loaded - Brand: $brand - Color Count: ${_colors.length}',
           );
         },
         error: (error) {
           setError('Erro ao carregar cores: $error');
-          LoggerService.error('Erro ao carregar cores para $brand', error);
+          _logger.error('Erro ao carregar cores para $brand', error);
           // Fall back to using fallback colors
           _colors = [];
         },
       );
     } catch (e) {
       setError('Erro inesperado ao carregar cores: $e');
-      LoggerService.error('Erro inesperado ao carregar cores para $brand', e);
+      _logger.error('Erro inesperado ao carregar cores para $brand', e);
       _colors = [];
     } finally {
       setLoading(false);
@@ -163,7 +170,7 @@ class SelectColorsViewModel extends ChangeNotifier {
   Future<void> generateEstimate() async {
     if (_selectedColor == null || _selectedBrand == null) {
       setError('Por favor, selecione uma cor antes de gerar o orçamento');
-      LoggerService.warning('Tentativa de gerar orçamento sem cor selecionada');
+      _logger.warning('Tentativa de gerar orçamento sem cor selecionada');
       return;
     }
 
@@ -171,19 +178,19 @@ class SelectColorsViewModel extends ChangeNotifier {
     clearError();
 
     try {
-      LoggerService.info(
-        'Gerando orçamento para cor: ${_selectedColor!['name']}',
+      _logger.info(
+        'Generating estimate for color: ${_selectedColor!['name']}',
       );
 
       // Simula o processo de geração de orçamento
       await Future.delayed(const Duration(seconds: 1));
 
-      LoggerService.info(
+      _logger.info(
         'Estimate Generated - Color: ${_selectedColor!['name']} - Brand: $_selectedBrand - Price: ${_selectedColor!['price']}',
       );
     } catch (error) {
       setError('Erro ao gerar orçamento: $error');
-      LoggerService.error('Erro ao gerar orçamento', error);
+      _logger.error('Erro ao gerar orçamento', error);
     } finally {
       setLoading(false);
     }
@@ -193,7 +200,7 @@ class SelectColorsViewModel extends ChangeNotifier {
   void clearSelection() {
     _selectedColor = null;
     _selectedBrand = null;
-    LoggerService.info('Seleção de cores limpa');
+    _logger.info('Seleção de cores limpa');
     notifyListeners();
   }
 

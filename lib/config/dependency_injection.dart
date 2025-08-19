@@ -39,7 +39,11 @@ final GetIt getIt = GetIt.instance;
 void setupDependencyInjection() {
   // Serviços
   getIt.registerLazySingleton<HttpService>(
-    () => HttpService(),
+    () {
+      final httpService = HttpService();
+      httpService.setLogger(getIt<AppLogger>());
+      return httpService;
+    },
   );
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(getIt<HttpService>()),
@@ -80,12 +84,17 @@ void setupDependencyInjection() {
     () => MaterialRepository(materialService: getIt<MaterialService>()),
   );
   getIt.registerLazySingleton<IPaintCatalogRepository>(
-    () => PaintCatalogRepository(paintCatalogService: getIt<PaintCatalogService>()),
+    () => PaintCatalogRepository(
+      paintCatalogService: getIt<PaintCatalogService>(),
+    ),
   );
 
   // Use Cases
   getIt.registerLazySingleton<AuthOperationsUseCase>(
-    () => AuthOperationsUseCase(getIt<AuthService>()),
+    () => AuthOperationsUseCase(
+      getIt<AuthService>(),
+      getIt<AppLogger>(),
+    ),
   );
   getIt.registerLazySingleton<ManageAuthStateUseCase>(
     () => ManageAuthStateUseCase(),
@@ -185,6 +194,9 @@ void setupDependencyInjection() {
 
   // ViewModels - Select Colors
   getIt.registerFactory<SelectColorsViewModel>(
-    () => SelectColorsViewModel(getIt<IPaintCatalogRepository>()),
+    () => SelectColorsViewModel(
+      getIt<IPaintCatalogRepository>(),
+      getIt<AppLogger>(),
+    ),
   );
 }
