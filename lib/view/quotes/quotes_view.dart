@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodel/viewmodels.dart';
 import '../widgets/widgets.dart';
-
-enum QuotesState { loading, empty, loaded, error }
+import 'widgets/quote_card_widget.dart';
 
 class QuotesView extends StatefulWidget {
   const QuotesView({super.key});
@@ -11,16 +12,10 @@ class QuotesView extends StatefulWidget {
 }
 
 class _QuotesViewState extends State<QuotesView> {
-  QuotesState _currentState = QuotesState.empty;
-
-  // Lista de exemplo para o estado loaded
-  final List<String> _quotes = [
-    'Quote 1: A vida é como pintar uma tela',
-    'Quote 2: Cada cor tem sua importância',
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final quotesViewModel = Provider.of<QuotesViewModel>(context);
+
     return Scaffold(
       appBar: PaintProAppBar(title: 'Quotes'),
       body: LayoutBuilder(
@@ -29,87 +24,65 @@ class _QuotesViewState extends State<QuotesView> {
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: Center(
-                child: _currentState == QuotesState.loading
+                child: quotesViewModel.currentState == QuotesState.loading
                     ? const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           CircularProgressIndicator(),
                           SizedBox(height: 16),
-                          Text('Carregando quotes...'),
+                          Text('Loading quotes...'),
                         ],
                       )
-                    : _currentState == QuotesState.empty
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            'No Quotes yet',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Upload your first quote to get started',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w300,
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          PaintProButton(
-                            text: 'Upload Quote',
-                            minimumSize: Size(130, 42),
-                            borderRadius: 16,
-                            onPressed: () {
-                              setState(() {
-                                _currentState = QuotesState.loading;
-                              });
-                              Future.delayed(Duration(seconds: 2), () {
-                                setState(() {
-                                  _currentState = QuotesState.loaded;
-                                });
-                              });
-                            },
-                          ),
-                        ],
+                    : quotesViewModel.currentState == QuotesState.empty
+                    ? Consumer<QuotesViewModel>(
+                        builder: (context, quotesViewModel, child) {
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                'No Quotes yet',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Upload your first quote to get started',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                              SizedBox(height: 16),
+                              PaintProButton(
+                                text: 'Upload Quote',
+                                minimumSize: Size(130, 42),
+                                borderRadius: 16,
+                                onPressed: () {
+                                  quotesViewModel.pickFile();
+                                },
+                              ),
+                            ],
+                          );
+                        },
                       )
-                    : _currentState == QuotesState.loaded
+                    : quotesViewModel.currentState == QuotesState.loaded
                     ? Column(
                         children: [
-                          Text(
-                            'Suas Quotes',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 16),
                           ListView.builder(
                             shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemCount: _quotes.length,
+                            itemCount: quotesViewModel.quotes.length,
                             itemBuilder: (context, index) {
-                              return Card(
-                                margin: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                child: ListTile(
-                                  title: Text(_quotes[index]),
-                                  trailing: Icon(Icons.format_quote),
+                              final quote = quotesViewModel.quotes[index];
+                              return Align(
+                                alignment: Alignment.center,
+                                child: QuoteCardWidget(
+                                  id: quote.id,
+                                  titulo: quote.titulo,
+                                  dateUpload: quote.dateUpload,
                                 ),
                               );
-                            },
-                          ),
-                          SizedBox(height: 16),
-                          PaintProButton(
-                            text: 'Adicionar Quote',
-                            minimumSize: Size(130, 42),
-                            borderRadius: 16,
-                            onPressed: () {
-                              // Ação para adicionar nova quote
                             },
                           ),
                         ],
@@ -124,14 +97,14 @@ class _QuotesViewState extends State<QuotesView> {
                           ),
                           SizedBox(height: 16),
                           Text(
-                            'Erro ao carregar quotes',
+                            'Error to load quotes',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            'Verifique sua conexão e tente novamente',
+                            'Check your connection and try again',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
@@ -139,18 +112,11 @@ class _QuotesViewState extends State<QuotesView> {
                           ),
                           SizedBox(height: 16),
                           PaintProButton(
-                            text: 'Tentar Novamente',
+                            text: 'Try Again',
                             minimumSize: Size(130, 42),
                             borderRadius: 16,
                             onPressed: () {
-                              setState(() {
-                                _currentState = QuotesState.loading;
-                              });
-                              Future.delayed(Duration(seconds: 1), () {
-                                setState(() {
-                                  _currentState = QuotesState.loaded;
-                                });
-                              });
+                              quotesViewModel.clearError();
                             },
                           ),
                         ],
