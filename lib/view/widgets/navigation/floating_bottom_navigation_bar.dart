@@ -19,7 +19,7 @@ class FloatingBottomNavigationBar extends StatelessWidget {
       animation: viewModel,
       builder: (context, child) {
         return SizedBox(
-          height: 100,
+          height: 120,
           child: Container(
             margin: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -39,10 +39,10 @@ class FloatingBottomNavigationBar extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(30),
               child: Container(
-                height: 80,
+                height: 88,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 16,
+                  vertical: 12,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
