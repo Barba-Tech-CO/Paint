@@ -4,6 +4,7 @@ import '../../config/app_colors.dart';
 import '../../viewmodel/viewmodels.dart';
 import '../widgets/widgets.dart';
 import 'widgets/quote_card_widget.dart';
+import 'widgets/search_bar_widget.dart';
 
 class QuotesView extends StatefulWidget {
   const QuotesView({super.key});
@@ -31,30 +32,7 @@ class _QuotesViewState extends State<QuotesView> {
         children: [
           // Barra de pesquisa
           quotesViewModel.currentState == QuotesState.loaded
-              ? Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search',
-                      prefixIcon: Icon(Icons.search, color: Colors.grey),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.blue),
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                    ),
-                  ),
-                )
+              ? SearchBarWidget(controller: _searchController)
               : SizedBox.shrink(),
           // Lista de quotes
           Expanded(
