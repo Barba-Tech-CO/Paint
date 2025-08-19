@@ -2,12 +2,14 @@ import 'package:flutter/foundation.dart';
 import '../../model/zones_card_model.dart';
 import '../../utils/result/result.dart';
 import '../../utils/command/command.dart';
+import '../../utils/logger/app_logger.dart';
 
 enum ZonesSummaryState { initial, loading, loaded, error }
 
 class ZonesSummaryViewModel extends ChangeNotifier {
   // Service seria injetado aqui quando estiver pronto
   // final ZonesService _zonesService;
+  final AppLogger _logger;
 
   // State
   ZonesSummaryState _state = ZonesSummaryState.initial;
@@ -37,6 +39,8 @@ class ZonesSummaryViewModel extends ChangeNotifier {
       _state == ZonesSummaryState.error || _errorMessage != null;
   bool get hasSummary => _summary != null;
   bool get isInitialized => _loadSummaryCommand != null;
+
+  ZonesSummaryViewModel(this._logger);
 
   // Initialize
   void initialize() {
@@ -87,6 +91,7 @@ class ZonesSummaryViewModel extends ChangeNotifier {
 
       return Result.ok(null);
     } catch (e) {
+      _logger.error('Erro ao carregar resumo: $e');
       _setError('Erro ao carregar resumo: $e');
       _setState(ZonesSummaryState.error);
       return Result.error(Exception(e.toString()));
