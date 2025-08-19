@@ -4,7 +4,7 @@ import '../model/models.dart';
 import '../view/views.dart';
 
 final router = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/quotes',
   routes: [
     GoRoute(
       path: '/splash',
@@ -81,6 +81,10 @@ final router = GoRouter(
       builder: (context, state) {
         return const SelectMaterialView();
       },
+    ),
+    GoRoute(
+      path: '/quotes',
+      builder: (context, state) => const QuotesView(),
     ),
   ],
 );

@@ -71,7 +71,9 @@ void setupDependencyInjection() {
     () => EstimateRepository(estimateService: getIt<EstimateService>()),
   );
   getIt.registerLazySingleton<IPaintCatalogRepository>(
-    () => PaintCatalogRepository(paintCatalogService: getIt<PaintCatalogService>()),
+    () => PaintCatalogRepository(
+      paintCatalogService: getIt<PaintCatalogService>(),
+    ),
   );
 
   // Use Cases
@@ -172,5 +174,9 @@ void setupDependencyInjection() {
   // ViewModels - Select Colors
   getIt.registerFactory<SelectColorsViewModel>(
     () => SelectColorsViewModel(),
+  );
+
+  getIt.registerFactory<QuotesViewModel>(
+    () => QuotesViewModel(),
   );
 }
