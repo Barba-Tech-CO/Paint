@@ -2,9 +2,11 @@ import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
 import '../../model/paint_catalog_model.dart';
 import '../../domain/repository/paint_catalog_repository.dart';
+import '../../utils/logger/app_logger.dart';
 
 class PaintCatalogListViewModel extends ChangeNotifier {
   final IPaintCatalogRepository _paintCatalogRepository;
+  final AppLogger _logger;
 
   List<PaintBrand> _brands = [];
   List<PaintBrand> _popularBrands = [];
@@ -15,7 +17,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
   String? _currentUsage;
   String? _selectedBrandKey;
 
-  PaintCatalogListViewModel(this._paintCatalogRepository);
+  PaintCatalogListViewModel(this._paintCatalogRepository, this._logger);
 
   // Getters
   List<PaintBrand> get brands => _brands;
@@ -41,6 +43,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
+      _logger.error('Erro ao carregar visão geral do catálogo: $e');
       _setError('Erro ao carregar visão geral do catálogo: $e');
     } finally {
       _setLoading(false);
@@ -61,6 +64,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
+      _logger.error('Erro ao carregar marcas: $e');
       _setError('Erro ao carregar marcas: $e');
     } finally {
       _setLoading(false);
@@ -81,6 +85,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
+      _logger.error('Erro ao carregar marcas populares: $e');
       _setError('Erro ao carregar marcas populares: $e');
     } finally {
       _setLoading(false);
@@ -148,7 +153,9 @@ class PaintCatalogListViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _paintCatalogRepository.searchColorsByName(searchTerm);
+      final result = await _paintCatalogRepository.searchColorsByName(
+        searchTerm,
+      );
       if (result is Ok) {
         _colors = result.asOk.value;
         notifyListeners();
