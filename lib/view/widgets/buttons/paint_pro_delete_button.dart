@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../../../service/logger_service.dart';
+import '../../../utils/logger/app_logger.dart';
 import '../../../viewmodel/zones/zones_viewmodels.dart';
 
 class PaintProDeleteButton extends StatelessWidget {
   final ZoneDetailViewModel viewModel;
+  final AppLogger _logger;
 
   const PaintProDeleteButton({
     super.key,
     required this.viewModel,
-  });
+    required AppLogger logger,
+  }) : _logger = logger;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +70,7 @@ class PaintProDeleteButton extends StatelessWidget {
         await viewModel.deleteZone(zone.id);
       } catch (e) {
         // Log error silently - UI coordination still handled by callbacks
-        LoggerService.error('Error deleting zone: $e');
+        _logger.error('Error deleting zone: $e');
       }
     }
   }

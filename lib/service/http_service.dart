@@ -2,12 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'i_http_service.dart';
 import '../config/app_config.dart';
-import 'logger_service.dart';
+import '../utils/logger/app_logger.dart';
 
 class HttpService implements IHttpService {
   static final HttpService _instance = HttpService._internal();
   late final Dio dio;
-  late final LoggerService _logger;
+  late final AppLogger _logger;
 
   factory HttpService() {
     return _instance;
@@ -26,7 +26,7 @@ class HttpService implements IHttpService {
     );
   }
 
-  void setLogger(LoggerService logger) {
+  void setLogger(AppLogger logger) {
     _logger = logger;
   }
 
@@ -45,24 +45,18 @@ class HttpService implements IHttpService {
       );
       final duration = DateTime.now().difference(startTime);
 
-      _logger.logApiCall(
-        path,
-        'GET',
-        requestData: queryParameters,
-        responseData: response.data,
-        statusCode: response.statusCode,
+      _logger.info('API Call: GET $path - Status: ${response.statusCode}');
+      if (queryParameters != null) {
+        _logger.info('Request Data: $queryParameters');
+      }
+      _logger.info('Response Data: ${response.data}');
+      _logger.info(
+        'Performance: HTTP GET $path took ${duration.inMilliseconds}ms',
       );
-
-      _logger.logPerformance('HTTP GET $path', duration);
 
       return response;
     } on DioException catch (e) {
-      _logger.logServiceError(
-        'HttpService',
-        'GET $path',
-        e,
-        e.stackTrace,
-      );
+      _logger.error('HttpService Error: GET $path', e, e.stackTrace);
       rethrow;
     }
   }
