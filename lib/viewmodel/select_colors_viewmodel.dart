@@ -105,8 +105,6 @@ class SelectColorsViewModel extends ChangeNotifier {
   /// Lista de cores disponíveis
   List<Map<String, dynamic>> get colors =>
       _colors.isNotEmpty ? _colors : _fallbackColors;
-  List<Map<String, dynamic>> get colors =>
-      _colors.isNotEmpty ? _colors : _fallbackColors;
 
   /// Cor selecionada atualmente
   Map<String, dynamic>? get selectedColor => _selectedColor;

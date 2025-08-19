@@ -123,7 +123,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
                   return Opacity(
                     opacity: _logoAnimation.value,
                     child: const Text(
-                      'PaintPro',
+                      'Painter Pro',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,

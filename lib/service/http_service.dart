@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 
 import '../config/app_config.dart';
 import '../utils/logger/app_logger.dart';
+import 'i_http_service.dart';
+import 'logger_service.dart';
 
 class HttpService implements IHttpService {
   static final HttpService _instance = HttpService._internal();
