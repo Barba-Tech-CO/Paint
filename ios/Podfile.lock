@@ -6,10 +6,6 @@ PODS:
   - Firebase/Crashlytics (11.15.0):
     - Firebase/CoreOnly
     - FirebaseCrashlytics (~> 11.15.0)
-  - firebase_app_distribution_ios (0.0.1):
-    - firebase_core
-    - FirebaseAppDistribution (~> 11.2.0-beta)
-    - Flutter
   - firebase_core (3.15.1):
     - Firebase/CoreOnly (= 11.15.0)
     - Flutter
@@ -17,11 +13,6 @@ PODS:
     - Firebase/Crashlytics (= 11.15.0)
     - firebase_core
     - Flutter
-  - FirebaseAppDistribution (11.2.0-beta):
-    - FirebaseCore (~> 11.0)
-    - FirebaseInstallations (~> 11.0)
-    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
-    - GoogleUtilities/UserDefaults (~> 8.0)
   - FirebaseCore (11.15.0):
     - FirebaseCoreInternal (~> 11.15.0)
     - GoogleUtilities/Environment (~> 8.1)
@@ -58,27 +49,14 @@ PODS:
   - GoogleDataTransport (10.1.0):
     - nanopb (~> 3.30910.0)
     - PromisesObjC (~> 2.4)
-  - GoogleUtilities/AppDelegateSwizzler (8.1.0):
-    - GoogleUtilities/Environment
-    - GoogleUtilities/Logger
-    - GoogleUtilities/Network
-    - GoogleUtilities/Privacy
   - GoogleUtilities/Environment (8.1.0):
     - GoogleUtilities/Privacy
   - GoogleUtilities/Logger (8.1.0):
     - GoogleUtilities/Environment
     - GoogleUtilities/Privacy
-  - GoogleUtilities/Network (8.1.0):
-    - GoogleUtilities/Logger
-    - "GoogleUtilities/NSData+zlib"
-    - GoogleUtilities/Privacy
-    - GoogleUtilities/Reachability
   - "GoogleUtilities/NSData+zlib (8.1.0)":
     - GoogleUtilities/Privacy
   - GoogleUtilities/Privacy (8.1.0)
-  - GoogleUtilities/Reachability (8.1.0):
-    - GoogleUtilities/Logger
-    - GoogleUtilities/Privacy
   - GoogleUtilities/UserDefaults (8.1.0):
     - GoogleUtilities/Logger
     - GoogleUtilities/Privacy
@@ -95,24 +73,26 @@ PODS:
     - PromisesObjC (= 2.4.0)
   - roomplan_flutter (0.0.1):
     - Flutter
+  - sqflite_darwin (0.0.4):
+    - Flutter
+    - FlutterMacOS
   - webview_flutter_wkwebview (0.0.1):
     - Flutter
     - FlutterMacOS
 
 DEPENDENCIES:
   - app_links (from `.symlinks/plugins/app_links/ios`)
-  - firebase_app_distribution_ios (from `.symlinks/plugins/firebase_app_distribution_ios/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_crashlytics (from `.symlinks/plugins/firebase_crashlytics/ios`)
   - Flutter (from `Flutter`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - roomplan_flutter (from `.symlinks/plugins/roomplan_flutter/ios`)
+  - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
   - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
 
 SPEC REPOS:
   trunk:
     - Firebase
-    - FirebaseAppDistribution
     - FirebaseCore
     - FirebaseCoreExtension
     - FirebaseCoreInternal
@@ -129,8 +109,6 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   app_links:
     :path: ".symlinks/plugins/app_links/ios"
-  firebase_app_distribution_ios:
-    :path: ".symlinks/plugins/firebase_app_distribution_ios/ios"
   firebase_core:
     :path: ".symlinks/plugins/firebase_core/ios"
   firebase_crashlytics:
@@ -141,16 +119,16 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   roomplan_flutter:
     :path: ".symlinks/plugins/roomplan_flutter/ios"
+  sqflite_darwin:
+    :path: ".symlinks/plugins/sqflite_darwin/darwin"
   webview_flutter_wkwebview:
     :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
 
 SPEC CHECKSUMS:
   app_links: c5161ac5ab5383ad046884568b4b91cb52df5d91
   Firebase: d99ac19b909cd2c548339c2241ecd0d1599ab02e
-  firebase_app_distribution_ios: 402a35246e8960364f0b564586e9f78af88a87d0
   firebase_core: ece862f94b2bc72ee0edbeec7ab5c7cb09fe1ab5
   firebase_crashlytics: f89f5137e667ba1733ca5d7ab1b7af3390572520
-  FirebaseAppDistribution: 8d455b5b23a0e69353d36688cc505009db2c49b3
   FirebaseCore: efb3893e5b94f32b86e331e3bd6dadf18b66568e
   FirebaseCoreExtension: edbd30474b5ccf04e5f001470bdf6ea616af2435
   FirebaseCoreInternal: 9afa45b1159304c963da48addb78275ef701c6b4
@@ -166,6 +144,7 @@ SPEC CHECKSUMS:
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
   roomplan_flutter: 91344fe7e70563b788692d64ac5ffd1c447af7a6
+  sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
   webview_flutter_wkwebview: 1821ceac936eba6f7984d89a9f3bcb4dea99ebb2
 
 PODFILE CHECKSUM: c79175163c54963f5bb0db3efa44fa67c7bffa46
