@@ -24,8 +24,14 @@ class _WebViewPopupScreenState extends State<WebViewPopupScreen> {
           onNavigationRequest: (request) {
             return NavigationDecision.navigate;
           },
+          onWebResourceError: (error) {
+            // Handle WebView errors, especially on iOS
+            debugPrint('WebView error: ${error.description}');
+          },
         ),
       )
+      // Add iOS-specific configuration
+      ..enableZoom(false)
       ..loadRequest(Uri.parse(widget.popupUrl));
   }
 
