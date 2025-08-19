@@ -3,13 +3,15 @@ import '../../utils/result/result.dart';
 import '../../model/estimate_model.dart';
 import '../../domain/repository/estimate_repository.dart';
 import '../../utils/command/command.dart';
+import '../../utils/logger/app_logger.dart';
 
 enum EstimateListState { initial, loading, loaded, error }
 
 class EstimateListViewModel extends ChangeNotifier {
   final IEstimateRepository _estimateRepository;
+  final AppLogger _logger;
 
-  EstimateListViewModel(this._estimateRepository);
+  EstimateListViewModel(this._estimateRepository, this._logger);
 
   // State
   EstimateListState _state = EstimateListState.initial;
@@ -80,6 +82,7 @@ class EstimateListViewModel extends ChangeNotifier {
           },
         );
       } catch (e) {
+        _logger.error('Erro ao carregar estimativas: $e');
         _setError(e.toString());
         _setState(EstimateListState.error);
         return Result.error(Exception(e.toString()));
@@ -111,6 +114,7 @@ class EstimateListViewModel extends ChangeNotifier {
           },
         );
       } catch (e) {
+        _logger.error('Erro ao carregar mais estimativas: $e');
         _setError(e.toString());
         return Result.error(Exception(e.toString()));
       }
@@ -143,6 +147,7 @@ class EstimateListViewModel extends ChangeNotifier {
           },
         );
       } catch (e) {
+        _logger.error('Erro ao filtrar estimativas por status: $e');
         _setError(e.toString());
         _setState(EstimateListState.error);
         return Result.error(Exception(e.toString()));
@@ -168,6 +173,7 @@ class EstimateListViewModel extends ChangeNotifier {
           },
         );
       } catch (e) {
+        _logger.error('Erro ao excluir estimativa: $e');
         _setError(e.toString());
         return Result.error(Exception(e.toString()));
       }
