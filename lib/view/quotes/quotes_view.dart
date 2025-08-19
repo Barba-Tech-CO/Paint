@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../config/app_colors.dart';
 import '../../viewmodel/viewmodels.dart';
 import '../widgets/widgets.dart';
 import 'widgets/quote_card_widget.dart';
@@ -12,120 +13,161 @@ class QuotesView extends StatefulWidget {
 }
 
 class _QuotesViewState extends State<QuotesView> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final quotesViewModel = Provider.of<QuotesViewModel>(context);
 
     return Scaffold(
       appBar: PaintProAppBar(title: 'Quotes'),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: Center(
-                child: quotesViewModel.currentState == QuotesState.loading
-                    ? const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 16),
-                          Text('Loading quotes...'),
-                        ],
-                      )
-                    : quotesViewModel.currentState == QuotesState.empty
-                    ? Consumer<QuotesViewModel>(
-                        builder: (context, quotesViewModel, child) {
-                          return Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                'No Quotes yet',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Upload your first quote to get started',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                              ),
-                              SizedBox(height: 16),
-                              PaintProButton(
-                                text: 'Upload Quote',
-                                minimumSize: Size(130, 42),
-                                borderRadius: 16,
-                                onPressed: () {
-                                  quotesViewModel.pickFile();
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      )
-                    : quotesViewModel.currentState == QuotesState.loaded
-                    ? Column(
-                        children: [
-                          ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: quotesViewModel.quotes.length,
-                            itemBuilder: (context, index) {
-                              final quote = quotesViewModel.quotes[index];
-                              return Align(
-                                alignment: Alignment.center,
-                                child: QuoteCardWidget(
-                                  id: quote.id,
-                                  titulo: quote.titulo,
-                                  dateUpload: quote.dateUpload,
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: Colors.red,
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'Error to load quotes',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Check your connection and try again',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          PaintProButton(
-                            text: 'Try Again',
-                            minimumSize: Size(130, 42),
-                            borderRadius: 16,
-                            onPressed: () {
-                              quotesViewModel.clearError();
-                            },
-                          ),
-                        ],
+      body: Column(
+        children: [
+          // Barra de pesquisa
+          quotesViewModel.currentState == QuotesState.loaded
+              ? Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search',
+                      prefixIcon: Icon(Icons.search, color: Colors.grey),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
                       ),
-              ),
-            ),
-          );
-        },
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.blue),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                    ),
+                  ),
+                )
+              : SizedBox.shrink(),
+          // Lista de quotes
+          Expanded(
+            child: quotesViewModel.currentState == QuotesState.loading
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Loading quotes...'),
+                      ],
+                    ),
+                  )
+                : quotesViewModel.currentState == QuotesState.empty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'No Quotes yet',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Upload your first quote to get started',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        PaintProButton(
+                          text: 'Upload Quote',
+                          minimumSize: Size(130, 42),
+                          borderRadius: 16,
+                          onPressed: () {
+                            quotesViewModel.pickFile();
+                          },
+                        ),
+                      ],
+                    ),
+                  )
+                : quotesViewModel.currentState == QuotesState.loaded
+                ? ListView.builder(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: quotesViewModel.quotes.length,
+                    itemBuilder: (context, index) {
+                      final quote = quotesViewModel.quotes[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12.0),
+                        child: QuoteCardWidget(
+                          id: quote.id,
+                          titulo: quote.titulo,
+                          dateUpload: quote.dateUpload,
+                        ),
+                      );
+                    },
+                  )
+                : Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: Colors.red,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Error to load quotes',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Check your connection and try again',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        PaintProButton(
+                          text: 'Try Again',
+                          minimumSize: Size(130, 42),
+                          borderRadius: 16,
+                          onPressed: () {
+                            quotesViewModel.clearError();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
       ),
+      floatingActionButton: quotesViewModel.currentState == QuotesState.loaded
+          ? FloatingActionButton(
+              onPressed: () {
+                quotesViewModel.pickFile();
+              },
+              backgroundColor: Colors.blue,
+              child: Icon(
+                Icons.add,
+                color: AppColors.cardDefault,
+                size: 40,
+              ),
+            )
+          : null,
     );
   }
 }
