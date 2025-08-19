@@ -6,10 +6,10 @@ import '../../domain/repository/paint_catalog_repository.dart';
 class PaintCatalogListViewModel extends ChangeNotifier {
   final IPaintCatalogRepository _paintCatalogRepository;
 
-  List<PaintBrand> _brands = [];
-  List<PaintBrand> _popularBrands = [];
+  List<String> _brands = [];
+  List<String> _popularBrands = [];
   List<PaintColor> _colors = [];
-  CatalogOverview? _overview;
+  Map<String, dynamic>? _overview;
   bool _isLoading = false;
   String? _error;
   String? _currentUsage;
@@ -18,10 +18,10 @@ class PaintCatalogListViewModel extends ChangeNotifier {
   PaintCatalogListViewModel(this._paintCatalogRepository);
 
   // Getters
-  List<PaintBrand> get brands => _brands;
-  List<PaintBrand> get popularBrands => _popularBrands;
+  List<String> get brands => _brands;
+  List<String> get popularBrands => _popularBrands;
   List<PaintColor> get colors => _colors;
-  CatalogOverview? get overview => _overview;
+  Map<String, dynamic>? get overview => _overview;
   bool get isLoading => _isLoading;
   String? get error => _error;
   String? get currentUsage => _currentUsage;
@@ -41,7 +41,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
-      _setError('Erro ao carregar visão geral do catálogo: $e');
+      _setError('Error loading catalog overview: $e');
     } finally {
       _setLoading(false);
     }
@@ -61,7 +61,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
-      _setError('Erro ao carregar marcas: $e');
+      _setError('Error loading brands: $e');
     } finally {
       _setLoading(false);
     }
@@ -81,62 +81,48 @@ class PaintCatalogListViewModel extends ChangeNotifier {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
-      _setError('Erro ao carregar marcas populares: $e');
+      _setError('Error loading popular brands: $e');
     } finally {
       _setLoading(false);
     }
   }
 
   /// Carrega cores de uma marca
-  Future<void> loadBrandColors(String brandKey, {String? usage}) async {
+  Future<void> loadBrandColors(String brandName) async {
     _setLoading(true);
     _clearError();
 
     try {
-      final result = await _paintCatalogRepository.getBrandColors(
-        brandKey,
-        usage: usage,
-      );
+      final result = await _paintCatalogRepository.getBrandColors(brandName);
       if (result is Ok) {
         _colors = result.asOk.value;
-        _currentUsage = usage;
-        _selectedBrandKey = brandKey;
+        _selectedBrandKey = brandName;
         notifyListeners();
       } else {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
-      _setError('Erro ao carregar cores da marca: $e');
+      _setError('Error loading brand colors: $e');
     } finally {
       _setLoading(false);
     }
   }
 
   /// Busca cores
-  Future<void> searchColors({
-    String? query,
-    String? brand,
-    int? limit,
-    int? offset,
-  }) async {
+  Future<void> searchColors(String query) async {
     _setLoading(true);
     _clearError();
 
     try {
-      final result = await _paintCatalogRepository.searchColors(
-        query: query,
-        brand: brand,
-        limit: limit,
-        offset: offset,
-      );
+      final result = await _paintCatalogRepository.searchColors(query);
       if (result is Ok) {
-        _colors = result.asOk.value.colors;
+        _colors = result.asOk.value;
         notifyListeners();
       } else {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
-      _setError('Erro ao buscar cores: $e');
+      _setError('Error searching colors: $e');
     } finally {
       _setLoading(false);
     }
@@ -148,7 +134,7 @@ class PaintCatalogListViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _paintCatalogRepository.searchColorsByName(searchTerm);
+      final result = await _paintCatalogRepository.findColorsByName(searchTerm);
       if (result is Ok) {
         _colors = result.asOk.value;
         notifyListeners();
@@ -156,32 +142,28 @@ class PaintCatalogListViewModel extends ChangeNotifier {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
-      _setError('Erro ao buscar cores por nome: $e');
+      _setError('Error searching colors by name: $e');
     } finally {
       _setLoading(false);
     }
   }
 
   /// Obtém cores filtradas por uso
-  Future<void> getColorsByUsage(String brandKey, String usage) async {
+  Future<void> getColorsByUsage(String usage) async {
     _setLoading(true);
     _clearError();
 
     try {
-      final result = await _paintCatalogRepository.getColorsByUsage(
-        brandKey,
-        usage,
-      );
+      final result = await _paintCatalogRepository.getColorsByUsage(usage);
       if (result is Ok) {
         _colors = result.asOk.value;
         _currentUsage = usage;
-        _selectedBrandKey = brandKey;
         notifyListeners();
       } else {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
-      _setError('Erro ao obter cores por uso: $e');
+      _setError('Error getting colors by usage: $e');
     } finally {
       _setLoading(false);
     }
