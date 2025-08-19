@@ -2,10 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/app_colors.dart';
+import '../../config/dependency_injection.dart';
+import '../../viewmodel/navigation_viewmodel.dart';
 import '../widgets/appbars/paint_pro_app_bar.dart';
+import '../widgets/navigation/floating_bottom_navigation_bar.dart';
 
-class ProjectsView extends StatelessWidget {
+class ProjectsView extends StatefulWidget {
   const ProjectsView({super.key});
+
+  @override
+  State<ProjectsView> createState() => _ProjectsViewState();
+}
+
+class _ProjectsViewState extends State<ProjectsView> {
+  late final NavigationViewModel _navigationViewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _navigationViewModel = getIt<NavigationViewModel>();
+    // Update the current route to projects
+    _navigationViewModel.updateCurrentRoute('/projects');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +56,14 @@ class ProjectsView extends StatelessWidget {
                 color: AppColors.textSecondary,
               ),
             ),
+            const SizedBox(
+              height: 120,
+            ), // espaço extra para não cobrir a barra
           ],
         ),
+      ),
+      bottomNavigationBar: FloatingBottomNavigationBar(
+        viewModel: _navigationViewModel,
       ),
     );
   }
