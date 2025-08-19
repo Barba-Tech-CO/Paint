@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../config/dependency_injection.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../viewmodel/navigation_viewmodel.dart';
 import '../widgets/navigation/floating_bottom_navigation_bar.dart';
 
@@ -24,7 +26,7 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   void initState() {
     super.initState();
-    _navigationViewModel = NavigationViewModel();
+    _navigationViewModel = NavigationViewModel(getIt<AppLogger>());
     _navigationViewModel.updateCurrentRoute(widget.currentRoute);
   }
 
