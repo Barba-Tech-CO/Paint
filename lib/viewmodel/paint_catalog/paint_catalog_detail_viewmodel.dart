@@ -2,9 +2,11 @@ import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
 import '../../model/paint_catalog_model.dart';
 import '../../domain/repository/paint_catalog_repository.dart';
+import '../../utils/logger/app_logger.dart';
 
 class PaintCatalogDetailViewModel extends ChangeNotifier {
   final IPaintCatalogRepository _paintCatalogRepository;
+  final AppLogger _logger;
 
   PaintBrand? _selectedBrand;
   PaintColor? _selectedColor;
@@ -13,7 +15,7 @@ class PaintCatalogDetailViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
-  PaintCatalogDetailViewModel(this._paintCatalogRepository);
+  PaintCatalogDetailViewModel(this._paintCatalogRepository, this._logger);
 
   // Getters
   PaintBrand? get selectedBrand => _selectedBrand;
@@ -45,6 +47,7 @@ class PaintCatalogDetailViewModel extends ChangeNotifier {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
+      _logger.error('Erro ao obter detalhes da cor: $e');
       _setError('Erro ao obter detalhes da cor: $e');
     } finally {
       _setLoading(false);
@@ -77,6 +80,7 @@ class PaintCatalogDetailViewModel extends ChangeNotifier {
         return false;
       }
     } catch (e) {
+      _logger.error('Erro ao calcular necessidade de tinta: $e');
       _setError('Erro ao calcular necessidade de tinta: $e');
       return false;
     } finally {
