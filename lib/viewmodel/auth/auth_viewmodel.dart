@@ -110,6 +110,10 @@ class AuthViewModel extends ChangeNotifier {
     final result = await _authOperationsUseCase.checkAuthStatus();
     result.when(
       ok: (authModel) {
+        _logger.info(
+          '[AuthViewModel] Auth status from backend: authenticated=${authModel.authenticated}, needsLogin=${authModel.needsLogin}',
+        );
+
         final newState = authModel.authenticated && !authModel.needsLogin
             ? AuthState.authenticated
             : AuthState.unauthenticated;
@@ -142,7 +146,28 @@ class AuthViewModel extends ChangeNotifier {
       result.when(
         ok: (response) {
           _logger.info('[AuthViewModel] Callback processado com sucesso');
-          checkAuthStatusCommand.execute();
+
+          // After successful OAuth callback, force local authentication state
+          // This prevents infinite login loops while backend processes the authentication
+          _updateState(
+            _state.copyWith(
+              authStatus: AuthModel(
+                authenticated: true,
+                needsLogin: false,
+                expiresAt: _state.authStatus?.expiresAt,
+                locationId: _state.authStatus?.locationId,
+              ),
+              state: AuthState.authenticated,
+              isLoading: false,
+              errorMessage: null,
+            ),
+          );
+
+          // Also check backend status after a delay to sync with server
+          Future.delayed(const Duration(milliseconds: 1000), () {
+            _logger.info('[AuthViewModel] Syncing with backend auth status...');
+            checkAuthStatusCommand.execute();
+          });
         },
         error: (error) {
           _updateState(
@@ -150,7 +175,6 @@ class AuthViewModel extends ChangeNotifier {
           );
         },
       );
-      _updateState(_state.copyWith(isLoading: false));
       return result;
     } catch (e, stack) {
       _logger.error(
