@@ -103,7 +103,9 @@ class MaterialService {
       await Future.delayed(const Duration(milliseconds: 800));
       return Result.ok(_mockMaterials);
     } catch (e) {
-      return Result.error(Exception('Erro ao carregar materiais: $e'));
+      return Result.error(
+        Exception('Error loading materials: $e'),
+      );
     }
   }
 
@@ -156,7 +158,9 @@ class MaterialService {
 
       return Result.ok(filteredMaterials);
     } catch (e) {
-      return Result.error(Exception('Erro ao filtrar materiais: $e'));
+      return Result.error(
+        Exception('Error filtering materials: $e'),
+      );
     }
   }
 
@@ -168,12 +172,14 @@ class MaterialService {
 
       final material = _mockMaterials.firstWhere(
         (material) => material.id == id,
-        orElse: () => throw Exception('Material não encontrado'),
+        orElse: () => throw Exception('Material not found'),
       );
 
       return Result.ok(material);
     } catch (e) {
-      return Result.error(Exception('Erro ao buscar material: $e'));
+      return Result.error(
+        Exception('Error searching material: $e'),
+      );
     }
   }
 
@@ -207,7 +213,9 @@ class MaterialService {
 
       return Result.ok(stats);
     } catch (e) {
-      return Result.error(Exception('Erro ao carregar estatísticas: $e'));
+      return Result.error(
+        Exception('Error loading material statistics: $e'),
+      );
     }
   }
 }
