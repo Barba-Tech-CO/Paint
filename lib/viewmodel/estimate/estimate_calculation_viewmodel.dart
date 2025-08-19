@@ -2,9 +2,11 @@ import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
 import '../../model/estimate_model.dart';
 import '../../domain/repository/estimate_repository.dart';
+import '../../utils/logger/app_logger.dart';
 
 class EstimateCalculationViewModel extends ChangeNotifier {
   final IEstimateRepository _estimateRepository;
+  final AppLogger _logger;
 
   EstimateModel? _currentEstimate;
   bool _isCalculating = false;
@@ -12,7 +14,7 @@ class EstimateCalculationViewModel extends ChangeNotifier {
   double _totalCost = 0.0;
   double _totalArea = 0.0;
 
-  EstimateCalculationViewModel(this._estimateRepository);
+  EstimateCalculationViewModel(this._estimateRepository, this._logger);
 
   // Getters
   EstimateModel? get currentEstimate => _currentEstimate;
@@ -53,6 +55,7 @@ class EstimateCalculationViewModel extends ChangeNotifier {
       }
       return false;
     } catch (e) {
+      _logger.error('Erro ao calcular orçamento: $e');
       _setError('Erro ao calcular orçamento: $e');
       return false;
     } finally {
