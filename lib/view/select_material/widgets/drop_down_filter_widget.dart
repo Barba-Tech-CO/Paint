@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:paintpro/config/app_colors.dart';
+import '../../../config/app_colors.dart';
 
 class DropDownFilterWidget<T> extends StatelessWidget {
   final String label;
