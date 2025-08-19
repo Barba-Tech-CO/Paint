@@ -21,6 +21,7 @@ import '../service/estimate_service.dart';
 import '../service/http_service.dart';
 import '../service/navigation_service.dart';
 import '../service/paint_catalog_service.dart';
+import '../service/logger_service.dart';
 
 // Use Case Layer
 import '../use_case/auth/auth_use_cases.dart';
@@ -36,7 +37,11 @@ final GetIt getIt = GetIt.instance;
 void setupDependencyInjection() {
   // Serviços
   getIt.registerLazySingleton<HttpService>(
-    () => HttpService(),
+    () {
+      final httpService = HttpService();
+      httpService.setLogger(getIt<LoggerService>());
+      return httpService;
+    },
   );
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(getIt<HttpService>()),
@@ -56,6 +61,9 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<DeepLinkService>(
     () => DeepLinkService(),
   );
+  getIt.registerLazySingleton<LoggerService>(
+    () => LoggerService.instance,
+  );
   getIt.registerLazySingleton<AppLogger>(
     () => LoggerAppLoggerImpl(),
   );
@@ -71,12 +79,14 @@ void setupDependencyInjection() {
     () => EstimateRepository(estimateService: getIt<EstimateService>()),
   );
   getIt.registerLazySingleton<IPaintCatalogRepository>(
-    () => PaintCatalogRepository(paintCatalogService: getIt<PaintCatalogService>()),
+    () => PaintCatalogRepository(
+      paintCatalogService: getIt<PaintCatalogService>(),
+    ),
   );
 
   // Use Cases
   getIt.registerLazySingleton<AuthOperationsUseCase>(
-    () => AuthOperationsUseCase(getIt<AuthService>()),
+    () => AuthOperationsUseCase(getIt<AuthService>(), getIt<AppLogger>()),
   );
   getIt.registerLazySingleton<ManageAuthStateUseCase>(
     () => ManageAuthStateUseCase(),
