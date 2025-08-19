@@ -7,7 +7,7 @@ import '../domain/repository/paint_catalog_repository.dart';
 /// Implementa o padrão MVVM com logging integrado
 class SelectColorsViewModel extends ChangeNotifier {
   final IPaintCatalogRepository _paintCatalogRepository;
-  
+
   // Temporary fallback data while integrating with repository
   final List<String> _fallbackBrands = [
     'Sherwin-Williams',
@@ -78,19 +78,19 @@ class SelectColorsViewModel extends ChangeNotifier {
       final result = await _paintCatalogRepository.getBrands();
       result.when(
         ok: (brands) {
-          _brands = brands.map((brand) => brand.name).toList();
+          _brands = brands; // Brands are now strings directly
           notifyListeners();
           LoggerService.info('Brands loaded: ${_brands.length}');
         },
         error: (error) {
-          setError('Erro ao carregar marcas: $error');
-          LoggerService.error('Erro ao carregar marcas', error);
+          setError('Error loading brands: $error');
+          LoggerService.error('Error loading brands', error);
           _brands = []; // Will fall back to fallback brands
         },
       );
     } catch (e) {
-      setError('Erro inesperado ao carregar marcas: $e');
-      LoggerService.error('Erro inesperado ao carregar marcas', e);
+      setError('Unexpected error loading brands: $e');
+      LoggerService.error('Unexpected error loading brands', e);
       _brands = [];
     } finally {
       setLoading(false);
@@ -101,7 +101,8 @@ class SelectColorsViewModel extends ChangeNotifier {
   List<String> get brands => _brands.isNotEmpty ? _brands : _fallbackBrands;
 
   /// Lista de cores disponíveis
-  List<Map<String, dynamic>> get colors => _colors.isNotEmpty ? _colors : _fallbackColors;
+  List<Map<String, dynamic>> get colors =>
+      _colors.isNotEmpty ? _colors : _fallbackColors;
 
   /// Cor selecionada atualmente
   Map<String, dynamic>? get selectedColor => _selectedColor;
@@ -132,27 +133,31 @@ class SelectColorsViewModel extends ChangeNotifier {
       result.when(
         ok: (colors) {
           // Convert PaintColor to Map for compatibility
-          _colors = colors.map((color) => {
-            'name': color.name,
-            'code': color.key,
-            'price': '\$${color.price?.toStringAsFixed(2) ?? "N/A"}/Gal',
-            'color': Colors.grey[200], // Default color representation
-          }).toList();
+          _colors = colors
+              .map(
+                (color) => {
+                  'name': color.name,
+                  'code': color.key,
+                  'price': '\$${color.price?.toStringAsFixed(2) ?? "N/A"}/Gal',
+                  'color': Colors.grey[200], // Default color representation
+                },
+              )
+              .toList();
           notifyListeners();
           LoggerService.info(
             'Colors Loaded - Brand: $brand - Color Count: ${_colors.length}',
           );
         },
         error: (error) {
-          setError('Erro ao carregar cores: $error');
-          LoggerService.error('Erro ao carregar cores para $brand', error);
+          setError('Error loading colors: $error');
+          LoggerService.error('Error loading colors for $brand', error);
           // Fall back to using fallback colors
           _colors = [];
         },
       );
     } catch (e) {
-      setError('Erro inesperado ao carregar cores: $e');
-      LoggerService.error('Erro inesperado ao carregar cores para $brand', e);
+      setError('Unexpected error loading colors: $e');
+      LoggerService.error('Unexpected error loading colors for $brand', e);
       _colors = [];
     } finally {
       setLoading(false);
@@ -162,8 +167,10 @@ class SelectColorsViewModel extends ChangeNotifier {
   /// Gera o orçamento com as cores selecionadas
   Future<void> generateEstimate() async {
     if (_selectedColor == null || _selectedBrand == null) {
-      setError('Por favor, selecione uma cor antes de gerar o orçamento');
-      LoggerService.warning('Tentativa de gerar orçamento sem cor selecionada');
+      setError('Please select a color before generating the estimate');
+      LoggerService.warning(
+        'Attempt to generate estimate without selected color',
+      );
       return;
     }
 
@@ -172,7 +179,7 @@ class SelectColorsViewModel extends ChangeNotifier {
 
     try {
       LoggerService.info(
-        'Gerando orçamento para cor: ${_selectedColor!['name']}',
+        'Generating estimate for color: ${_selectedColor!['name']}',
       );
 
       // Simula o processo de geração de orçamento
@@ -182,8 +189,8 @@ class SelectColorsViewModel extends ChangeNotifier {
         'Estimate Generated - Color: ${_selectedColor!['name']} - Brand: $_selectedBrand - Price: ${_selectedColor!['price']}',
       );
     } catch (error) {
-      setError('Erro ao gerar orçamento: $error');
-      LoggerService.error('Erro ao gerar orçamento', error);
+      setError('Error generating estimate: $error');
+      LoggerService.error('Error generating estimate', error);
     } finally {
       setLoading(false);
     }
@@ -193,7 +200,7 @@ class SelectColorsViewModel extends ChangeNotifier {
   void clearSelection() {
     _selectedColor = null;
     _selectedBrand = null;
-    LoggerService.info('Seleção de cores limpa');
+    LoggerService.info('Color selection cleared');
     notifyListeners();
   }
 
