@@ -2,15 +2,17 @@ import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
 import '../../model/estimate_model.dart';
 import '../../domain/repository/estimate_repository.dart';
+import '../../utils/logger/app_logger.dart';
 
 class EstimateDetailViewModel extends ChangeNotifier {
   final IEstimateRepository _estimateRepository;
+  final AppLogger _logger;
 
   EstimateModel? _selectedEstimate;
   bool _isLoading = false;
   String? _error;
 
-  EstimateDetailViewModel(this._estimateRepository);
+  EstimateDetailViewModel(this._estimateRepository, this._logger);
 
   // Getters
   EstimateModel? get selectedEstimate => _selectedEstimate;
@@ -31,6 +33,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
+      _logger.error('Erro ao obter detalhes do orçamento: $e');
       _setError('Erro ao obter detalhes do orçamento: $e');
     } finally {
       _setLoading(false);
@@ -62,6 +65,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
       }
       return null;
     } catch (e) {
+      _logger.error('Erro ao criar orçamento: $e');
       _setError('Erro ao criar orçamento: $e');
       return null;
     } finally {
@@ -96,6 +100,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
       }
       return false;
     } catch (e) {
+      _logger.error('Erro ao atualizar orçamento: $e');
       _setError('Erro ao atualizar orçamento: $e');
       return false;
     } finally {
