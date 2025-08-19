@@ -2,16 +2,18 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
 import '../../domain/repository/estimate_repository.dart';
+import '../../utils/logger/app_logger.dart';
 
 class EstimateUploadViewModel extends ChangeNotifier {
   final IEstimateRepository _estimateRepository;
+  final AppLogger _logger;
 
   final List<File> _selectedPhotos = [];
   bool _isUploading = false;
   String? _error;
   double _uploadProgress = 0.0;
 
-  EstimateUploadViewModel(this._estimateRepository);
+  EstimateUploadViewModel(this._estimateRepository, this._logger);
 
   // Getters
   List<File> get selectedPhotos => _selectedPhotos;
@@ -66,6 +68,7 @@ class EstimateUploadViewModel extends ChangeNotifier {
       }
       return false;
     } catch (e) {
+      _logger.error('Erro ao fazer upload das fotos: $e');
       _setError('Erro ao fazer upload das fotos: $e');
       return false;
     } finally {
