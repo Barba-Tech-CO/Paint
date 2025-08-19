@@ -3,13 +3,31 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/app_colors.dart';
+import '../../config/dependency_injection.dart';
+import '../../viewmodel/navigation_viewmodel.dart';
 import '../widgets/appbars/paint_pro_app_bar.dart';
 import '../widgets/cards/greeting_card_widget.dart';
 import '../widgets/cards/project_state_card_widget.dart';
 import '../widgets/cards/stats_card_widget.dart';
+import '../widgets/navigation/floating_bottom_navigation_bar.dart';
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  late final NavigationViewModel _navigationViewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _navigationViewModel = getIt<NavigationViewModel>();
+    // Update the current route to home
+    _navigationViewModel.updateCurrentRoute('/home');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +138,9 @@ class HomeView extends StatelessWidget {
             ), // espaço extra para não cobrir a barra
           ],
         ),
+      ),
+      bottomNavigationBar: FloatingBottomNavigationBar(
+        viewModel: _navigationViewModel,
       ),
     );
   }
