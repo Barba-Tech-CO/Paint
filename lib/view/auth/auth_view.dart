@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
+import '../../service/services.dart';
 import '../../viewmodel/auth/auth_viewmodel.dart';
 import '../widgets/appbars/paint_pro_app_bar.dart';
 import 'auth_content.dart';
@@ -30,13 +31,13 @@ class AuthView extends StatelessWidget {
 
   void _handleSideEffects(BuildContext context, AuthViewModel viewModel) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print('[AuthView] Side effects handler called. shouldNavigateToDashboard: ${viewModel.shouldNavigateToDashboard}');
       if (viewModel.shouldNavigateToDashboard) {
-        print('[AuthView] Navigating to /home');
+        LoggerService.info('[AuthView] Navigating to /home');
         context.go('/home');
       }
+
       if (viewModel.shouldShowPopup && viewModel.popupUrl != null) {
-        print('[AuthView] Showing marketplace popup');
+        LoggerService.info('[AuthView] Showing marketplace popup');
         MarketplacePopupHelper.show(context, viewModel.popupUrl!, viewModel);
       }
     });
