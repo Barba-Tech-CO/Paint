@@ -1,5 +1,5 @@
 import '../../model/auth_state.dart';
-import '../../service/logger_service.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 import 'auth_use_cases.dart';
 
@@ -7,15 +7,17 @@ import 'auth_use_cases.dart';
 class HandleDeepLinkUseCase {
   final AuthOperationsUseCase _authOperationsUseCase;
   final ManageAuthStateUseCase _manageAuthStateUseCase;
+  final AppLogger _logger;
 
   HandleDeepLinkUseCase(
     this._authOperationsUseCase,
     this._manageAuthStateUseCase,
+    this._logger,
   );
 
   /// Lida com sucesso na autenticação via Deep Link
   Future<Result<void>> handleSuccess() async {
-    LoggerService.info(
+    _logger.info(
       '[HandleDeepLinkUseCase] Autenticação bem-sucedida via Deep Link!',
     );
 
@@ -27,7 +29,7 @@ class HandleDeepLinkUseCase {
 
   /// Lida com erro na autenticação via Deep Link
   Future<Result<void>> handleError(String error) async {
-    LoggerService.error('[HandleDeepLinkUseCase] Erro na autenticação: $error');
+    _logger.error('[HandleDeepLinkUseCase] Erro na autenticação: $error');
 
     await _manageAuthStateUseCase.setState(AuthState.error, (state) {});
     await _manageAuthStateUseCase.setError(error, (error) {});
