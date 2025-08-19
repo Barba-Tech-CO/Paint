@@ -27,75 +27,76 @@ class _QuotesViewState extends State<QuotesView> {
 
     return Scaffold(
       appBar: PaintProAppBar(title: 'Quotes'),
-      body: Column(
-        children: [
-          // Barra de pesquisa
-          quotesViewModel.currentState == QuotesState.loaded
-              ? SearchBarWidget(controller: _searchController)
-              : SizedBox.shrink(),
-          // Lista de quotes
-          Expanded(
-            child: quotesViewModel.currentState == QuotesState.loading
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text('Loading quotes...'),
-                      ],
-                    ),
-                  )
-                : quotesViewModel.currentState == QuotesState.empty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'No Quotes yet',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+      body: Padding(
+        padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
+        child: Column(
+          children: [
+            quotesViewModel.currentState == QuotesState.loaded
+                ? SearchBarWidget(controller: _searchController)
+                : SizedBox.shrink(),
+            Expanded(
+              child: quotesViewModel.currentState == QuotesState.loading
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Loading quotes...'),
+                        ],
+                      ),
+                    )
+                  : quotesViewModel.currentState == QuotesState.empty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'No Quotes yet',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        Text(
-                          'Upload your first quote to get started',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w300,
+                          Text(
+                            'Upload your first quote to get started',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w300,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 16),
-                        PaintProButton(
-                          text: 'Upload Quote',
-                          minimumSize: Size(130, 42),
-                          borderRadius: 16,
-                          onPressed: () => quotesViewModel.pickFile(),
-                        ),
-                      ],
+                          SizedBox(height: 16),
+                          PaintProButton(
+                            text: 'Upload Quote',
+                            minimumSize: Size(130, 42),
+                            borderRadius: 16,
+                            onPressed: () => quotesViewModel.pickFile(),
+                          ),
+                        ],
+                      ),
+                    )
+                  : quotesViewModel.currentState == QuotesState.loaded
+                  ? ListView.builder(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: quotesViewModel.quotes.length,
+                      itemBuilder: (context, index) {
+                        final quote = quotesViewModel.quotes[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: QuoteCardWidget(
+                            id: quote.id,
+                            titulo: quote.titulo,
+                            dateUpload: quote.dateUpload,
+                          ),
+                        );
+                      },
+                    )
+                  : TryAgainWidget(
+                      onPressed: () => quotesViewModel.clearError(),
                     ),
-                  )
-                : quotesViewModel.currentState == QuotesState.loaded
-                ? ListView.builder(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: quotesViewModel.quotes.length,
-                    itemBuilder: (context, index) {
-                      final quote = quotesViewModel.quotes[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: QuoteCardWidget(
-                          id: quote.id,
-                          titulo: quote.titulo,
-                          dateUpload: quote.dateUpload,
-                        ),
-                      );
-                    },
-                  )
-                : TryAgainWidget(
-                    onPressed: () => quotesViewModel.clearError(),
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
       floatingActionButton: quotesViewModel.currentState == QuotesState.loaded
           ? FloatingActionButton(
