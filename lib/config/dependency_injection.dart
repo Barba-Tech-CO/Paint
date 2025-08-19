@@ -55,6 +55,7 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(
       getIt<HttpService>(),
+      getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<ContactService>(
@@ -99,6 +100,7 @@ void setupDependencyInjection() {
       contactService: getIt<ContactService>(),
       databaseService: getIt<ContactDatabaseService>(),
       authService: getIt<AuthService>(),
+      logger: getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<IEstimateRepository>(
@@ -129,6 +131,7 @@ void setupDependencyInjection() {
     () => HandleDeepLinkUseCase(
       getIt<AuthOperationsUseCase>(),
       getIt<ManageAuthStateUseCase>(),
+      getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<HandleWebViewNavigationUseCase>(
