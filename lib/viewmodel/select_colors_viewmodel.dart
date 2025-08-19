@@ -1,66 +1,65 @@
 import 'package:flutter/material.dart';
 
-import '../service/logger_service.dart';
-
 /// ViewModel para a tela de seleção de cores
 /// Implementa o padrão MVVM com logging integrado
 class SelectColorsViewModel extends ChangeNotifier {
-  final List<String> _brands = [
-    'Sherwin-Williams',
-    'Benjamin Moore',
-    'Behr',
-    'PP',
-  ];
-
   final List<Map<String, dynamic>> _colors = [
     {
-      'name': 'White',
-      'code': 'SW6232',
-      'price': '\$52.99/Gal',
-      'color': Colors.grey[200],
+      'id': '1',
+      'name': 'Branco',
+      'hex': '#FFFFFF',
+      'price': 45.90,
+      'brand': 'Suvinil',
     },
     {
-      'name': 'Gray',
-      'code': 'SW6233',
-      'price': '\$51.99/Gal',
-      'color': Colors.grey[500],
+      'id': '2',
+      'name': 'Preto',
+      'hex': '#000000',
+      'price': 52.80,
+      'brand': 'Coral',
     },
     {
-      'name': 'White Pink',
-      'code': 'SW6235',
-      'price': '\$46.99/Gal',
-      'color': Colors.pink[100],
+      'id': '3',
+      'name': 'Azul',
+      'hex': '#0000FF',
+      'price': 48.50,
+      'brand': 'Suvinil',
     },
     {
-      'name': 'Pink',
-      'code': 'SW6238',
-      'price': '\$48.99/Gal',
-      'color': Colors.pink[300],
+      'id': '4',
+      'name': 'Vermelho',
+      'hex': '#FF0000',
+      'price': 55.20,
+      'brand': 'Coral',
     },
     {
-      'name': 'Green',
-      'code': 'SW6232',
-      'price': '\$32.99/Gal',
-      'color': Colors.lightGreen[300],
+      'id': '5',
+      'name': 'Verde',
+      'hex': '#00FF00',
+      'price': 49.90,
+      'brand': 'Suvinil',
     },
     {
-      'name': 'Aqua',
-      'code': 'SW6232',
-      'price': '\$52.99/Gal',
-      'color': Colors.cyan[200],
+      'id': '6',
+      'name': 'Amarelo',
+      'hex': '#FFFF00',
+      'price': 47.30,
+      'brand': 'Coral',
     },
   ];
+
+  final List<String> _brands = ['Suvinil', 'Coral', 'Sherwin Williams'];
 
   Map<String, dynamic>? _selectedColor;
   String? _selectedBrand;
 
   SelectColorsViewModel();
 
-  /// Lista de marcas disponíveis
-  List<String> get brands => _brands;
-
   /// Lista de cores disponíveis
   List<Map<String, dynamic>> get colors => _colors;
+
+  /// Lista de marcas disponíveis
+  List<String> get brands => _brands;
 
   /// Cor selecionada atualmente
   Map<String, dynamic>? get selectedColor => _selectedColor;
@@ -73,30 +72,19 @@ class SelectColorsViewModel extends ChangeNotifier {
     _selectedColor = colorData;
     _selectedBrand = brand;
 
-    LoggerService.info(
-      'Color Selected: ${colorData['name']} - Brand: $brand - Price: ${colorData['price']}',
-    );
-
     notifyListeners();
   }
 
   /// Carrega as cores para uma marca específica
   Future<void> loadColorsForBrand(String brand) async {
-    LoggerService.info('Carregando cores para a marca: $brand');
-
     // Simula um delay de carregamento
     await Future.delayed(const Duration(milliseconds: 500));
-
-    LoggerService.info(
-      'Colors Loaded - Brand: $brand - Color Count: ${_colors.length}',
-    );
   }
 
   /// Gera o orçamento com as cores selecionadas
   Future<void> generateEstimate() async {
     if (_selectedColor == null || _selectedBrand == null) {
       setError('Por favor, selecione uma cor antes de gerar o orçamento');
-      LoggerService.warning('Tentativa de gerar orçamento sem cor selecionada');
       return;
     }
 
@@ -104,19 +92,10 @@ class SelectColorsViewModel extends ChangeNotifier {
     clearError();
 
     try {
-      LoggerService.info(
-        'Gerando orçamento para cor: ${_selectedColor!['name']}',
-      );
-
       // Simula o processo de geração de orçamento
       await Future.delayed(const Duration(seconds: 1));
-
-      LoggerService.info(
-        'Estimate Generated - Color: ${_selectedColor!['name']} - Brand: $_selectedBrand - Price: ${_selectedColor!['price']}',
-      );
     } catch (error) {
       setError('Erro ao gerar orçamento: $error');
-      LoggerService.error('Erro ao gerar orçamento', error);
     } finally {
       setLoading(false);
     }
@@ -126,7 +105,6 @@ class SelectColorsViewModel extends ChangeNotifier {
   void clearSelection() {
     _selectedColor = null;
     _selectedBrand = null;
-    LoggerService.info('Seleção de cores limpa');
     notifyListeners();
   }
 
