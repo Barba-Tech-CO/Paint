@@ -18,19 +18,28 @@ class _AuthWebViewState extends State<AuthWebView> {
   WebViewController? _webViewController;
   late BuildContext _widgetContext;
   bool _isDisposed = false;
+  AuthViewModel? _viewModel;
 
   @override
-  Widget build(BuildContext context) {
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _widgetContext = context;
-    return WebViewWidget(
-      controller: _buildWebViewController(widget.url),
-    );
+    if (_viewModel == null) {
+      _viewModel = _widgetContext.read<AuthViewModel>();
+    }
   }
 
   @override
   void dispose() {
     _isDisposed = true;
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return WebViewWidget(
+      controller: _buildWebViewController(widget.url),
+    );
   }
 
   WebViewController _buildWebViewController(String url) {
@@ -42,11 +51,11 @@ class _AuthWebViewState extends State<AuthWebView> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onNavigationRequest: (request) async {
-            final viewModel = _widgetContext.read<AuthViewModel>();
+            if (_viewModel == null) return NavigationDecision.navigate;
 
             // Check if this is the OAuth callback URL
             if (request.url.contains(
-              'paintpro.barbatech.company/api/oauth/callback',
+              'paintpro.barbatech.company/api/auth/callback',
             )) {
               if (mounted && !_isDisposed) {
                 // Extract the authorization code from the URL
@@ -54,66 +63,66 @@ class _AuthWebViewState extends State<AuthWebView> {
                 final code = uri.queryParameters['code'];
 
                 if (code != null) {
-                  LoggerService.info(
-                    '[AuthWebView] Authorization code received: $code',
-                  );
-
                   // Process the callback with the authorization code
                   // Use a microtask to avoid blocking the navigation delegate
                   WidgetsBinding.instance.addPostFrameCallback((_) async {
                     if (mounted && !_isDisposed) {
                       try {
-                        LoggerService.info(
-                          '[AuthWebView] Processing callback...',
-                        );
-                        await viewModel.processCallback(code);
+                        await _viewModel!.processCallback(code);
 
-                        LoggerService.info(
-                          '[AuthWebView] Callback processed, checking auth status...',
+                        // Wait for backend to process the authorization code
+                        // and update the authentication state
+                        await Future.delayed(
+                          const Duration(milliseconds: 2000),
                         );
-                        // Wait a bit for the state to update, then check auth status
-                        await Future.delayed(const Duration(milliseconds: 500));
 
-                        // Force a refresh of auth status
-                        await viewModel.checkAuthStatusCommand.execute();
+                        // Check auth status multiple times with retries
+                        int retryCount = 0;
+                        const maxRetries = 5;
+                        bool authSuccessful = false;
 
-                        LoggerService.info(
-                          '[AuthWebView] Auth status updated, closing webview...',
-                        );
-                        // Close the webview after processing
-                        if (mounted && !_isDisposed) {
-                          LoggerService.info(
-                            '[AuthWebView] Triggering force navigation to home',
+                        while (retryCount < maxRetries &&
+                            !authSuccessful &&
+                            mounted &&
+                            !_isDisposed) {
+                          await _viewModel!.checkAuthStatusCommand.execute();
+
+                          // Wait a bit for the state to update
+                          await Future.delayed(
+                            const Duration(milliseconds: 1000),
                           );
-                          // Use the view model to force navigation
-                          viewModel.forceNavigateToHome();
 
-                          // Also try to close the webview directly
-                          try {
-                            LoggerService.info(
-                              '[AuthWebView] Closing webview...',
+                          if (_viewModel!.shouldNavigateToDashboard) {
+                            authSuccessful = true;
+                            break;
+                          }
+
+                          retryCount++;
+                          if (retryCount < maxRetries) {
+                            await Future.delayed(
+                              const Duration(milliseconds: 1000),
                             );
-                            GoRouter.of(_widgetContext).pop();
-                          } catch (e) {
-                            LoggerService.error(
-                              '[AuthWebView] Error closing webview: $e',
-                            );
-                            // If pop fails, navigate to home
-                            try {
-                              GoRouter.of(_widgetContext).go('/home');
-                            } catch (e2) {
-                              LoggerService.error(
-                                '[AuthWebView] Error navigating to home: $e2',
-                              );
-                            }
                           }
                         }
+
+                        if (authSuccessful) {
+                          // Navigate directly to home since auth is successful
+                          try {
+                            GoRouter.of(_widgetContext).go('/home');
+                          } catch (e) {
+                            LoggerService.error(
+                              '[AuthWebView] Error navigating to home: $e',
+                            );
+                            // Fallback to closing webview
+                            GoRouter.of(_widgetContext).pop();
+                          }
+                        } else {
+                          // Close the webview and let AuthView handle navigation
+                          GoRouter.of(_widgetContext).pop();
+                        }
                       } catch (e) {
-                        LoggerService.error(
-                          '[AuthWebView] Error processing callback: $e',
-                        );
                         if (mounted && !_isDisposed) {
-                          viewModel.handleError(
+                          _viewModel!.handleError(
                             'Error processing callback: $e',
                           );
                           // Try to close webview even on error
@@ -136,7 +145,7 @@ class _AuthWebViewState extends State<AuthWebView> {
                   // Handle error case
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (mounted && !_isDisposed) {
-                      viewModel.handleError('No authorization code received');
+                      _viewModel!.handleError('No authorization code received');
                       GoRouter.of(_widgetContext).pop();
                     }
                   });
@@ -155,7 +164,7 @@ class _AuthWebViewState extends State<AuthWebView> {
                     MarketplacePopupHelper.show(
                       _widgetContext,
                       request.url,
-                      viewModel,
+                      _viewModel!,
                     );
                   }
                 });
@@ -167,13 +176,13 @@ class _AuthWebViewState extends State<AuthWebView> {
             return NavigationDecision.navigate;
           },
           onPageStarted: (url) {
-            if (mounted && !_isDisposed) {
-              context.read<AuthViewModel>().setLoading(true);
+            if (mounted && !_isDisposed && _viewModel != null) {
+              _viewModel!.setLoading(true);
             }
           },
           onPageFinished: (url) {
-            if (mounted && !_isDisposed) {
-              context.read<AuthViewModel>().setLoading(false);
+            if (mounted && !_isDisposed && _viewModel != null) {
+              _viewModel!.setLoading(false);
             }
           },
         ),
