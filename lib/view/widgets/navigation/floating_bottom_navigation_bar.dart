@@ -74,7 +74,7 @@ class FloatingBottomNavigationBar extends StatelessWidget {
                                     index: index,
                                     onTap: () =>
                                         _onItemTapped(context, item, index),
-                                    semanticsLabel: 'Ir para ${item.label}',
+                                    semanticsLabel: 'Go to ${item.label}',
                                   ),
                                 );
                               }),
@@ -97,7 +97,7 @@ class FloatingBottomNavigationBar extends StatelessWidget {
                                     index: index,
                                     onTap: () =>
                                         _onItemTapped(context, item, index),
-                                    semanticsLabel: 'Ir para ${item.label}',
+                                    semanticsLabel: 'Go to ${item.label}',
                                   ),
                                 );
                               }),
@@ -112,7 +112,7 @@ class FloatingBottomNavigationBar extends StatelessWidget {
                 top: -4,
                 child: FloatingCameraButtonWidget(
                   onTap: () => _onCameraTapped(context),
-                  semanticsLabel: 'Abrir câmera',
+                  semanticsLabel: 'Open camera',
                 ),
               ),
             ],
