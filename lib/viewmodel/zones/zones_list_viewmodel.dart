@@ -3,12 +3,14 @@ import '../../model/zones_card_model.dart';
 import '../../utils/result/result.dart';
 import '../../utils/command/command.dart';
 import '../../helpers/zones/zone_data_classes.dart';
+import '../../utils/logger/app_logger.dart';
 
 enum ZonesListState { initial, loading, loaded, error }
 
 class ZonesListViewModel extends ChangeNotifier {
   // Service seria injetado aqui quando estiver pronto
   // final ZonesService _zonesService;
+  final AppLogger _logger;
 
   // State
   ZonesListState _state = ZonesListState.initial;
@@ -25,7 +27,7 @@ class ZonesListViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  ZonesListViewModel();
+  ZonesListViewModel(this._logger);
 
   // Commands
   Command0<void>? _loadZonesCommand;
@@ -110,6 +112,7 @@ class ZonesListViewModel extends ChangeNotifier {
     try {
       return _zones.firstWhere((zone) => zone.id == id);
     } catch (e) {
+      _logger.error('Erro ao buscar zona por ID: $e');
       return null;
     }
   }
@@ -163,6 +166,7 @@ class ZonesListViewModel extends ChangeNotifier {
 
       return Result.ok(null);
     } catch (e) {
+      _logger.error('Erro ao carregar zonas: $e');
       _setError('Erro ao carregar zonas: $e');
       _setState(ZonesListState.error);
       return Result.error(Exception(e.toString()));
@@ -199,6 +203,7 @@ class ZonesListViewModel extends ChangeNotifier {
 
       return Result.ok(null);
     } catch (e) {
+      _logger.error('Erro ao adicionar zona: $e');
       _setError('Erro ao adicionar zona: $e');
       return Result.error(Exception(e.toString()));
     }
