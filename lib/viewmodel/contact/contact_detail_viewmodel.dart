@@ -2,15 +2,17 @@ import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
 import '../../model/contact_model.dart';
 import '../../domain/repository/contact_repository.dart';
+import '../../utils/logger/app_logger.dart';
 
 class ContactDetailViewModel extends ChangeNotifier {
   final IContactRepository _contactRepository;
+  final AppLogger _logger;
 
   ContactModel? _selectedContact;
   bool _isLoading = false;
   String? _error;
 
-  ContactDetailViewModel(this._contactRepository);
+  ContactDetailViewModel(this._contactRepository, this._logger);
 
   // Getters
   ContactModel? get selectedContact => _selectedContact;
@@ -44,6 +46,7 @@ class ContactDetailViewModel extends ChangeNotifier {
         return false;
       }
     } catch (e) {
+      _logger.error('Erro ao criar contato: $e');
       _setError('Erro ao criar contato: $e');
       return false;
     } finally {
@@ -65,6 +68,7 @@ class ContactDetailViewModel extends ChangeNotifier {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
+      _logger.error('Erro ao obter detalhes do contato: $e');
       _setError('Erro ao obter detalhes do contato: $e');
     } finally {
       _setLoading(false);
@@ -100,6 +104,7 @@ class ContactDetailViewModel extends ChangeNotifier {
         return false;
       }
     } catch (e) {
+      _logger.error('Erro ao atualizar contato: $e');
       _setError('Erro ao atualizar contato: $e');
       return false;
     } finally {
@@ -126,6 +131,7 @@ class ContactDetailViewModel extends ChangeNotifier {
       }
       return false;
     } catch (e) {
+      _logger.error('Erro ao remover contato: $e');
       _setError('Erro ao remover contato: $e');
       return false;
     } finally {
