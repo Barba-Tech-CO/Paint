@@ -11,6 +11,7 @@ import '../../service/deep_link_service.dart';
 import '../../use_case/auth/auth_use_cases.dart';
 import '../../utils/command/command.dart';
 import '../../service/logger_service.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 import 'auth_view_state.dart';
 
