@@ -10,7 +10,6 @@ import '../../service/auth_persistence_service.dart';
 import '../../service/deep_link_service.dart';
 import '../../use_case/auth/auth_use_cases.dart';
 import '../../utils/command/command.dart';
-import '../../service/logger_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 import 'auth_view_state.dart';
@@ -18,16 +17,17 @@ import 'auth_view_state.dart';
 class _DeepLinkHandler {
   final DeepLinkService _deepLinkService;
   final void Function(Uri) onDeepLink;
+  final AppLogger _logger;
   StreamSubscription? _subscription;
 
   _DeepLinkHandler(
     this._deepLinkService,
     this.onDeepLink,
+    this._logger,
   );
 
   void initialize() {
     _subscription = _deepLinkService.deepLinkStream.listen((uri) {
-      LoggerService.info('[DeepLinkHandler] Deep Link recebido: $uri');
       onDeepLink(uri);
     });
   }
@@ -76,6 +76,7 @@ class AuthViewModel extends ChangeNotifier {
     _deepLinkHandler = _DeepLinkHandler(
       _deepLinkService,
       _onDeepLinkReceived,
+      _logger,
     );
     _deepLinkHandler.initialize();
     // Use microtask to handle async initialization
@@ -88,22 +89,15 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   void _initializeAuth() async {
-    _logger.info('[AuthViewModel] Initializing authentication...');
     _updateState(
       _state.copyWith(authorizeUrl: AppUrls.goHighLevelAuthorizeUrl),
     );
 
     // First check if user is already authenticated from persisted state
-    _logger.info('[AuthViewModel] Checking persisted authentication state...');
     final isAuthenticated = await _authPersistenceService.isUserAuthenticated();
-    _logger.info(
-      '[AuthViewModel] Persisted auth check result: $isAuthenticated',
-    );
 
     if (isAuthenticated) {
-      _logger.info('[AuthViewModel] User authenticated from persisted state');
       final persistedState = await _authPersistenceService.loadAuthState();
-      _logger.info('[AuthViewModel] Loaded persisted state: $persistedState');
 
       _updateState(
         _state.copyWith(
@@ -117,11 +111,7 @@ class AuthViewModel extends ChangeNotifier {
           isLoading: false,
         ),
       );
-      _logger.info(
-        '[AuthViewModel] State updated to authenticated from persistence',
-      );
     } else {
-      _logger.info('[AuthViewModel] No persisted auth, checking backend...');
       // Check backend status if no persisted authentication
       checkAuthStatusCommand.execute();
     }
@@ -143,7 +133,6 @@ class AuthViewModel extends ChangeNotifier {
 
   // Métodos privados para os comandos
   Future<Result<AuthModel>> _checkAuthStatus() async {
-    LoggerService.info('[AuthViewModel] Checking auth status...');
     _updateState(
       _state.copyWith(
         isLoading: true,
@@ -153,10 +142,6 @@ class AuthViewModel extends ChangeNotifier {
     final result = await _authOperationsUseCase.checkAuthStatus();
     result.when(
       ok: (authModel) {
-        _logger.info(
-          '[AuthViewModel] Auth status from backend: authenticated=${authModel.authenticated}, needsLogin=${authModel.needsLogin}',
-        );
-
         // Only update state if user is not already authenticated locally
         // This prevents backend from overriding successful OAuth authentication
         if (_state.authStatus?.authenticated != true) {
@@ -172,14 +157,11 @@ class AuthViewModel extends ChangeNotifier {
             ),
           );
         } else {
-          _logger.info(
-            '[AuthViewModel] User already authenticated locally, keeping current state',
-          );
           _updateState(_state.copyWith(isLoading: false));
         }
       },
       error: (error) {
-        LoggerService.error(
+        _logger.error(
           '[AuthViewModel] Error checking auth status: $error',
         );
         _updateState(
@@ -196,17 +178,12 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<Result<void>> _processCallback(String code) async {
     try {
-      LoggerService.info(
-        '[AuthViewModel] Processing callback with code: $code',
-      );
       _updateState(_state.copyWith(isLoading: true, errorMessage: null));
 
       final result = await _authOperationsUseCase.processCallback(code);
 
       result.when(
         ok: (response) async {
-          _logger.info('[AuthViewModel] Callback processado com sucesso');
-
           // After successful OAuth callback, force local authentication state
           // This prevents infinite login loops while backend processes the authentication
           final newAuthStatus = AuthModel(
@@ -238,19 +215,15 @@ class AuthViewModel extends ChangeNotifier {
           // But only if user is not already authenticated locally
           Future.delayed(const Duration(milliseconds: 1000), () {
             if (_state.authStatus?.authenticated == true) {
-              _logger.info(
-                '[AuthViewModel] User already authenticated, skipping backend sync',
-              );
+              // User already authenticated, skipping backend sync
             } else {
-              _logger.info(
-                '[AuthViewModel] Syncing with backend auth status...',
-              );
+              // Syncing with backend auth status
               checkAuthStatusCommand.execute();
             }
           });
         },
         error: (error) {
-          LoggerService.error(
+          _logger.error(
             '[AuthViewModel] Error processing callback: $error',
           );
           _updateState(
@@ -260,7 +233,7 @@ class AuthViewModel extends ChangeNotifier {
       );
       return result;
     } catch (e, stack) {
-      LoggerService.error(
+      _logger.error(
         '[AuthViewModel] Unexpected error in processCallback',
         e,
         stack,
@@ -268,7 +241,9 @@ class AuthViewModel extends ChangeNotifier {
       _updateState(
         _state.copyWith(isLoading: false, errorMessage: e.toString()),
       );
-      return Result.error(e is Exception ? e : Exception(e.toString()));
+      return Result.error(
+        e is Exception ? e : Exception(e.toString()),
+      );
     }
   }
 
@@ -277,12 +252,14 @@ class AuthViewModel extends ChangeNotifier {
     final result = await _authOperationsUseCase.refreshToken();
     result.when(
       ok: (response) {
-        LoggerService.info('[AuthViewModel] Token renovado com sucesso');
         checkAuthStatusCommand.execute();
       },
       error: (error) {
         _updateState(
-          _state.copyWith(isLoading: false, errorMessage: error.toString()),
+          _state.copyWith(
+            isLoading: false,
+            errorMessage: error.toString(),
+          ),
         );
       },
     );
