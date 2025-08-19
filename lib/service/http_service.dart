@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import '../config/app_config.dart';
 import '../utils/logger/app_logger.dart';
 import 'i_http_service.dart';
-import 'logger_service.dart';
 
 class HttpService implements IHttpService {
   static final HttpService _instance = HttpService._internal();
@@ -71,7 +70,7 @@ class HttpService implements IHttpService {
   }) async {
     final fullPath = '${dio.options.baseUrl}$path';
 
-    LoggerService.info('--> POST $fullPath');
+    _logger.info('--> POST $fullPath');
 
     try {
       final response = await dio.post(
@@ -81,10 +80,10 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      LoggerService.info('<-- ${response.statusCode} POST $fullPath');
+      _logger.info('<-- ${response.statusCode} POST $fullPath');
       return response;
     } on DioException catch (e) {
-      LoggerService.error(
+      _logger.error(
         '<-- ${e.response?.statusCode ?? 'ERROR'} POST $fullPath: $e',
       );
       rethrow;
@@ -100,7 +99,7 @@ class HttpService implements IHttpService {
   }) async {
     final fullPath = '${dio.options.baseUrl}$path';
 
-    LoggerService.info('--> PUT $fullPath');
+    _logger.info('--> PUT $fullPath');
 
     try {
       final response = await dio.put(
@@ -110,10 +109,10 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      LoggerService.info('<-- ${response.statusCode} PUT $fullPath');
+      _logger.info('<-- ${response.statusCode} PUT $fullPath');
       return response;
     } on DioException catch (e) {
-      LoggerService.error(
+      _logger.error(
         '<-- ${e.response?.statusCode ?? 'ERROR'} PUT $fullPath: $e',
       );
       rethrow;
@@ -129,7 +128,7 @@ class HttpService implements IHttpService {
   }) async {
     final fullPath = '${dio.options.baseUrl}$path';
 
-    LoggerService.info('--> PATCH $fullPath');
+    _logger.info('--> PATCH $fullPath');
 
     try {
       final response = await dio.patch(
@@ -139,10 +138,10 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      LoggerService.info('<-- ${response.statusCode} PATCH $fullPath');
+      _logger.info('<-- ${response.statusCode} PATCH $fullPath');
       return response;
     } on DioException catch (e) {
-      LoggerService.error(
+      _logger.error(
         '<-- ${e.response?.statusCode ?? 'ERROR'} PATCH $fullPath: $e',
       );
       rethrow;
@@ -158,7 +157,7 @@ class HttpService implements IHttpService {
   }) async {
     final fullPath = '${dio.options.baseUrl}$path';
 
-    LoggerService.info('--> DELETE $fullPath');
+    _logger.info('--> DELETE $fullPath');
 
     try {
       final response = await dio.delete(
@@ -168,10 +167,10 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      LoggerService.info('<-- ${response.statusCode} DELETE $fullPath');
+      _logger.info('<-- ${response.statusCode} DELETE $fullPath');
       return response;
     } on DioException catch (e) {
-      LoggerService.error(
+      _logger.error(
         '<-- ${e.response?.statusCode ?? 'ERROR'} DELETE $fullPath: $e',
       );
       rethrow;
