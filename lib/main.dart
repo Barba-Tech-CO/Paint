@@ -81,7 +81,7 @@ class PaintProApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp.router(
-        title: 'PaintPro',
+        title: 'Painter Pro',
         theme: AppTheme.themeData,
         routerConfig: router,
         debugShowCheckedModeBanner: false,
