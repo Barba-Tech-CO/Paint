@@ -36,7 +36,9 @@ class AuthOperationsUseCase {
         error,
         stackTrace,
       );
-      return Result.error(Exception(error.toString()));
+      return Result.error(
+        Exception(error.toString()),
+      );
     }
   }
 
@@ -66,5 +68,10 @@ class AuthOperationsUseCase {
   /// Verifica se o token está próximo de expirar
   Future<Result<bool>> isTokenExpiringSoon() async {
     return await _authService.isTokenExpiringSoon();
+  }
+
+  /// Obtém o location_id atual
+  Future<Result<String?>> getCurrentLocationId() async {
+    return await _authService.getCurrentLocationId();
   }
 }
