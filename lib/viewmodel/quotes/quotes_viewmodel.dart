@@ -12,10 +12,14 @@ class QuotesViewModel extends ChangeNotifier {
 
   // Lista de quotes
   final List<QuotesModel> _quotes = [];
+  final List<QuotesModel> _filteredQuotes = [];
+  String _searchQuery = '';
 
   // Getters
   QuotesState get currentState => _currentState;
-  List<QuotesModel> get quotes => List.unmodifiable(_quotes);
+  List<QuotesModel> get quotes => _searchQuery.isEmpty
+      ? List.unmodifiable(_quotes)
+      : List.unmodifiable(_filteredQuotes);
   bool get isUploading => _isUploading;
   String? get errorMessage => _errorMessage;
   bool get hasQuotes => _quotes.isNotEmpty;
@@ -93,6 +97,41 @@ class QuotesViewModel extends ChangeNotifier {
     _quotes.removeWhere((quote) => quote.id == id);
     _updateState();
     notifyListeners();
+  }
+
+  void renameQuote(String id, String newTitle) {
+    final index = _quotes.indexWhere((quote) => quote.id == id);
+    if (index != -1) {
+      final oldQuote = _quotes[index];
+      _quotes[index] = QuotesModel(
+        id: oldQuote.id,
+        titulo: newTitle,
+        dateUpload: oldQuote.dateUpload,
+      );
+      _filterQuotes(); // Re-apply filter after rename
+      notifyListeners();
+    }
+  }
+
+  void searchQuotes(String query) {
+    _searchQuery = query.toLowerCase();
+    _filterQuotes();
+    notifyListeners();
+  }
+
+  void _filterQuotes() {
+    if (_searchQuery.isEmpty) {
+      _filteredQuotes.clear();
+    } else {
+      _filteredQuotes.clear();
+      _filteredQuotes.addAll(
+        _quotes.where(
+          (quote) =>
+              quote.titulo.toLowerCase().contains(_searchQuery) ||
+              quote.id.toLowerCase().contains(_searchQuery),
+        ),
+      );
+    }
   }
 
   void clearError() {

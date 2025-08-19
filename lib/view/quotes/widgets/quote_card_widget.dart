@@ -7,6 +7,8 @@ class QuoteCardWidget extends StatelessWidget {
   final double? width;
   final double? height;
   final VoidCallback? onTap;
+  final Function(String)? onRename;
+  final VoidCallback? onDelete;
 
   const QuoteCardWidget({
     super.key,
@@ -16,6 +18,8 @@ class QuoteCardWidget extends StatelessWidget {
     this.width = 336,
     this.height = 84,
     this.onTap,
+    this.onRename,
+    this.onDelete,
   });
 
   String _formatDateTime(DateTime dateTime) {
@@ -105,18 +109,130 @@ class QuoteCardWidget extends StatelessWidget {
           Positioned(
             top: -8,
             right: -8,
-            child: IconButton(
-              onPressed: onTap,
-              icon: Icon(Icons.more_vert, size: 20),
-              padding: EdgeInsets.all(8),
-              constraints: BoxConstraints(
-                minWidth: 24,
-                minHeight: 24,
-              ),
+            child: PopupMenuButton(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              icon: Icon(Icons.more_vert, size: 20, color: Colors.grey[700]),
+              onSelected: (value) async {
+                if (value == 'rename') {
+                  final newName = await showDialog<String>(
+                    context: context,
+                    builder: (context) =>
+                        _RenameQuoteDialog(initialName: titulo),
+                  );
+                  if (newName != null && newName.trim().isNotEmpty) {
+                    onRename?.call(newName.trim());
+                  }
+                } else if (value == 'delete') {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => _DeleteQuoteDialog(quoteName: titulo),
+                  );
+                  if (confirm == true) {
+                    onDelete?.call();
+                  }
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'rename',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit),
+                      SizedBox(width: 8),
+                      Text('Rename'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete),
+                      SizedBox(width: 8),
+                      Text('Delete'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RenameQuoteDialog extends StatefulWidget {
+  final String initialName;
+
+  const _RenameQuoteDialog({required this.initialName});
+
+  @override
+  State<_RenameQuoteDialog> createState() => _RenameQuoteDialogState();
+}
+
+class _RenameQuoteDialogState extends State<_RenameQuoteDialog> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialName);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Rename Quote'),
+      content: TextField(
+        controller: _controller,
+        decoration: const InputDecoration(labelText: 'Quote Name'),
+        autofocus: true,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+}
+
+class _DeleteQuoteDialog extends StatelessWidget {
+  final String quoteName;
+
+  const _DeleteQuoteDialog({required this.quoteName});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Delete Quote'),
+      content: Text('Are you sure you want to delete "$quoteName"?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.red,
+          ),
+          child: const Text('Delete'),
+        ),
+      ],
     );
   }
 }

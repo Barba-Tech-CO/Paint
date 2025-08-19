@@ -16,7 +16,22 @@ class _QuotesViewState extends State<QuotesView> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    final quotesViewModel = Provider.of<QuotesViewModel>(
+      context,
+      listen: false,
+    );
+    quotesViewModel.searchQuotes(_searchController.text);
+  }
+
+  @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
@@ -87,6 +102,12 @@ class _QuotesViewState extends State<QuotesView> {
                             id: quote.id,
                             titulo: quote.titulo,
                             dateUpload: quote.dateUpload,
+                            onRename: (newName) {
+                              quotesViewModel.renameQuote(quote.id, newName);
+                            },
+                            onDelete: () {
+                              quotesViewModel.removeQuote(quote.id);
+                            },
                           ),
                         );
                       },
@@ -98,8 +119,9 @@ class _QuotesViewState extends State<QuotesView> {
           ],
         ),
       ),
-      floatingActionButton: quotesViewModel.currentState == QuotesState.loaded
-          ? FloatingActionButton(
+      floatingActionButton: quotesViewModel.currentState != QuotesState.loaded
+          ? null
+          : FloatingActionButton(
               onPressed: () => quotesViewModel.pickFile(),
               backgroundColor: Colors.blue,
               child: Icon(
@@ -107,8 +129,7 @@ class _QuotesViewState extends State<QuotesView> {
                 color: AppColors.cardDefault,
                 size: 40,
               ),
-            )
-          : null,
+            ),
     );
   }
 }
