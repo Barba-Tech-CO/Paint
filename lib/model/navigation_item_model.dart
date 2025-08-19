@@ -21,7 +21,7 @@ class NavigationItemModel {
       icon: Icons.home_rounded,
       activeIcon: Icons.home,
       label: 'Home',
-      route: '/dashboard',
+      route: '/home',
     ),
     const NavigationItemModel(
       id: 'projects',
