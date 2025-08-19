@@ -1,4 +1,3 @@
-import 'dart:io';
 import '../../domain/repository/estimate_repository.dart';
 import '../../model/estimate_model.dart';
 import '../../service/estimate_service.dart';
@@ -7,60 +6,43 @@ import '../../utils/result/result.dart';
 class EstimateRepository implements IEstimateRepository {
   final EstimateService _estimateService;
 
-  EstimateRepository({required EstimateService estimateService}) 
+  EstimateRepository({required EstimateService estimateService})
     : _estimateService = estimateService;
 
   @override
-  Future<Result<DashboardResponse>> getDashboard() {
-    return _estimateService.getDashboard();
+  Future<Result<Map<String, dynamic>>> getDashboard() {
+    return _estimateService.getDashboardData();
   }
 
   @override
-  Future<Result<EstimateListResponse>> getEstimates({
+  Future<Result<List<EstimateModel>>> getEstimates({
     int? limit,
     int? offset,
-    EstimateStatus? status,
-    ProjectType? projectType,
+    String? status,
   }) {
     return _estimateService.getEstimates(
       limit: limit,
       offset: offset,
       status: status,
-      projectType: projectType,
     );
   }
 
   @override
-  Future<Result<EstimateResponse>> createEstimate({
-    required String projectName,
-    required String clientName,
-    required ProjectType projectType,
-  }) {
-    return _estimateService.createEstimate(
-      projectName: projectName,
-      clientName: clientName,
-      projectType: projectType,
-    );
+  Future<Result<EstimateModel>> createEstimate(Map<String, dynamic> data) {
+    return _estimateService.createEstimate(data);
   }
 
   @override
-  Future<Result<EstimateResponse>> getEstimate(String estimateId) {
+  Future<Result<EstimateModel>> getEstimate(String estimateId) {
     return _estimateService.getEstimate(estimateId);
   }
 
   @override
-  Future<Result<EstimateResponse>> updateEstimate(
-    String estimateId, {
-    String? projectName,
-    String? clientName,
-    ProjectType? projectType,
-  }) {
-    return _estimateService.updateEstimate(
-      estimateId,
-      projectName: projectName,
-      clientName: clientName,
-      projectType: projectType,
-    );
+  Future<Result<EstimateModel>> updateEstimate(
+    String estimateId,
+    Map<String, dynamic> data,
+  ) {
+    return _estimateService.updateEstimate(estimateId, data);
   }
 
   @override
@@ -69,43 +51,32 @@ class EstimateRepository implements IEstimateRepository {
   }
 
   @override
-  Future<Result<EstimateResponse>> updateEstimateStatus(
+  Future<Result<EstimateModel>> updateEstimateStatus(
     String estimateId,
-    EstimateStatus status,
+    String status,
   ) {
     return _estimateService.updateEstimateStatus(estimateId, status);
   }
 
   @override
-  Future<Result<EstimateResponse>> uploadPhotos(
+  Future<Result<List<String>>> uploadPhotos(
     String estimateId,
-    List<File> photos,
+    List<String> photoPaths,
   ) {
-    return _estimateService.uploadPhotos(estimateId, photos);
+    return _estimateService.uploadPhotos(estimateId, photoPaths);
   }
 
   @override
-  Future<Result<EstimateResponse>> selectElements(
-    String estimateId, {
-    required bool useCatalog,
-    required String brandKey,
-    required String colorKey,
-    required String usage,
-    required String sizeKey,
-  }) {
-    return _estimateService.selectElements(
-      estimateId,
-      useCatalog: useCatalog,
-      brandKey: brandKey,
-      colorKey: colorKey,
-      usage: usage,
-      sizeKey: sizeKey,
-    );
+  Future<Result<Map<String, dynamic>>> selectElements(
+    String estimateId,
+    List<String> elementIds,
+  ) {
+    return _estimateService.selectElements(estimateId, elementIds);
   }
 
   @override
-  Future<Result<EstimateResponse>> completeEstimate(String estimateId) {
-    return _estimateService.completeEstimate(estimateId);
+  Future<Result<EstimateModel>> finalizeEstimate(String estimateId) {
+    return _estimateService.finalizeEstimate(estimateId);
   }
 
   @override
