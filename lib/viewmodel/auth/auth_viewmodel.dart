@@ -82,7 +82,7 @@ class AuthViewModel extends ChangeNotifier {
 
   void _initializeAuth() {
     _updateState(
-      _state.copyWith(authorizeUrl: AppUrls.ghlAuthorizeUrl),
+      _state.copyWith(authorizeUrl: AppUrls.goHighLevelAuthorizeUrl),
     );
     // Executar o comando para que a tela mostre o conteúdo
     checkAuthStatusCommand.execute();
@@ -105,17 +105,21 @@ class AuthViewModel extends ChangeNotifier {
   // Métodos privados para os comandos
   Future<Result<AuthModel>> _checkAuthStatus() async {
     LoggerService.info('[AuthViewModel] Checking auth status...');
-    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+    _updateState(
+      _state.copyWith(
+        isLoading: true,
+        errorMessage: null,
+      ),
+    );
     final result = await _authOperationsUseCase.checkAuthStatus();
     result.when(
       ok: (authModel) {
         LoggerService.info(
-          '[AuthViewModel] Auth status received: authenticated=${authModel.authenticated}, needsLogin=${authModel.needsLogin}',
+          '[AuthViewModel] Auth status: authenticated=${authModel.authenticated}, needsLogin=${authModel.needsLogin}',
         );
         final newState = authModel.authenticated && !authModel.needsLogin
             ? AuthState.authenticated
             : AuthState.unauthenticated;
-        LoggerService.info('[AuthViewModel] New auth state: $newState');
         _updateState(
           _state.copyWith(
             authStatus: authModel,
@@ -124,12 +128,11 @@ class AuthViewModel extends ChangeNotifier {
             errorMessage: null,
           ),
         );
-        LoggerService.info(
-          '[AuthViewModel] State updated. shouldNavigateToDashboard: $shouldNavigateToDashboard',
-        );
       },
       error: (error) {
-        LoggerService.error('[AuthViewModel] Error checking auth status: $error');
+        LoggerService.error(
+          '[AuthViewModel] Error checking auth status: $error',
+        );
         _updateState(
           _state.copyWith(
             state: AuthState.error,
@@ -144,18 +147,24 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<Result<void>> _processCallback(String code) async {
     try {
-      LoggerService.info('[AuthViewModel] Processing callback with code: $code');
+      LoggerService.info(
+        '[AuthViewModel] Processing callback with code: $code',
+      );
       _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+
       final result = await _authOperationsUseCase.processCallback(code);
+
       result.when(
         ok: (response) {
-          LoggerService.info('[AuthViewModel] Callback processado com sucesso');
+          LoggerService.info('[AuthViewModel] Callback processed successfully');
+
           // After successful callback, check auth status to update navigation flags
-          LoggerService.info('[AuthViewModel] Executing checkAuthStatusCommand...');
           checkAuthStatusCommand.execute();
         },
         error: (error) {
-          LoggerService.error('[AuthViewModel] Error processing callback: $error');
+          LoggerService.error(
+            '[AuthViewModel] Error processing callback: $error',
+          );
           _updateState(
             _state.copyWith(isLoading: false, errorMessage: error.toString()),
           );
@@ -164,7 +173,7 @@ class AuthViewModel extends ChangeNotifier {
       return result;
     } catch (e, stack) {
       LoggerService.error(
-        '[AuthViewModel] Erro inesperado no processCallback',
+        '[AuthViewModel] Unexpected error in processCallback',
         e,
         stack,
       );
@@ -260,27 +269,6 @@ class AuthViewModel extends ChangeNotifier {
   /// Triggers a deep link success callback for testing or manual triggering
   void triggerDeepLinkSuccess() {
     _deepLinkService.triggerSuccessCallback();
-  }
-
-  /// Forces navigation to home after successful authentication
-  void forceNavigateToHome() {
-    LoggerService.info('[AuthViewModel] Force navigating to home');
-    // Create a new authenticated auth status to trigger navigation
-    final newAuthStatus = AuthModel(
-      authenticated: true,
-      needsLogin: false,
-      expiresAt: _state.authStatus?.expiresAt,
-      locationId: _state.authStatus?.locationId,
-      expiresInMinutes: _state.authStatus?.expiresInMinutes,
-      isExpiringSoon: _state.authStatus?.isExpiringSoon,
-    );
-
-    // Update state to trigger navigation
-    _updateState(
-      _state.copyWith(
-        authStatus: newAuthStatus,
-      ),
-    );
   }
 
   Future<Result<AuthState>> reset() async {
