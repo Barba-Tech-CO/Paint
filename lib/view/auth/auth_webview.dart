@@ -57,117 +57,37 @@ class _AuthWebViewState extends State<AuthWebView> {
             if (request.url.contains(
               'paintpro.barbatech.company/api/auth/callback',
             )) {
-              if (mounted && !_isDisposed) {
-                // Extract the authorization code from the URL
-                final uri = Uri.parse(request.url);
-                final code = uri.queryParameters['code'];
-
-                if (code != null) {
-                  // Process the callback with the authorization code
-                  // Use a microtask to avoid blocking the navigation delegate
-                  WidgetsBinding.instance.addPostFrameCallback((_) async {
-                    if (mounted && !_isDisposed) {
-                      try {
-                        await _viewModel!.processCallback(code);
-
-                        // Wait for backend to process the authorization code
-                        // and update the authentication state
-                        await Future.delayed(
-                          const Duration(milliseconds: 2000),
-                        );
-
-                        // Check auth status multiple times with retries
-                        int retryCount = 0;
-                        const maxRetries = 5;
-                        bool authSuccessful = false;
-
-                        while (retryCount < maxRetries &&
-                            !authSuccessful &&
-                            mounted &&
-                            !_isDisposed) {
-                          await _viewModel!.checkAuthStatusCommand.execute();
-
-                          // Wait a bit for the state to update
-                          await Future.delayed(
-                            const Duration(milliseconds: 1000),
-                          );
-
-                          if (_viewModel!.shouldNavigateToDashboard) {
-                            authSuccessful = true;
-                            break;
-                          }
-
-                          retryCount++;
-                          if (retryCount < maxRetries) {
-                            await Future.delayed(
-                              const Duration(milliseconds: 1000),
-                            );
-                          }
-                        }
-
-                        if (authSuccessful) {
-                          // Navigate directly to home since auth is successful
-                          try {
-                            // Use a more reliable navigation approach for iOS
-                            if (mounted && !_isDisposed) {
-                              // Close the webview first, then navigate
-                              GoRouter.of(_widgetContext).pop();
-                              // Use a small delay to ensure webview is closed before navigation
-                              Future.delayed(
-                                const Duration(milliseconds: 100),
-                                () {
-                                  if (mounted && !_isDisposed) {
-                                    GoRouter.of(_widgetContext).go('/home');
-                                  }
-                                },
-                              );
-                            }
-                          } catch (e) {
-                            _logger.error(
-                              '[AuthWebView] Error navigating to home: $e',
-                            );
-                            // Fallback to closing webview and let AuthView handle navigation
-                            if (mounted && !_isDisposed) {
-                              GoRouter.of(_widgetContext).pop();
-                            }
-                          }
-                        } else {
-                          // Close the webview and let AuthView handle navigation
-                          if (mounted && !_isDisposed) {
-                            GoRouter.of(_widgetContext).pop();
-                          }
-                        }
-                      } catch (e) {
-                        if (mounted && !_isDisposed) {
-                          _viewModel!.handleError(
-                            'Error processing callback: $e',
-                          );
-                          // Try to close webview even on error
-                          try {
-                            GoRouter.of(_widgetContext).pop();
-                          } catch (e) {
-                            _logger.error(
-                              '[AuthWebView] Error closing webview: $e',
-                            );
-                            GoRouter.of(_widgetContext).go('/home');
-                          }
-                        }
-                      }
-                    }
-                  });
-                } else {
-                  _logger.info(
-                    '[AuthWebView] No authorization code in URL: $request.url',
-                  );
-                  // Handle error case
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted && !_isDisposed) {
-                      _viewModel!.handleError('No authorization code received');
-                      GoRouter.of(_widgetContext).pop();
-                    }
-                  });
+              _logger.info('[AuthWebView] OAuth callback detected: ${request.url}');
+              
+              // Extract the code and process it through the proper OAuth flow
+              final uri = Uri.parse(request.url);
+              final code = uri.queryParameters['code'];
+              
+              if (code != null) {
+                _logger.info('[AuthWebView] Processing OAuth code through auth service: $code');
+                
+                try {
+                  // Use the proper OAuth flow through AuthViewModel
+                  await _viewModel!.processCallback(code);
+                  
+                  _logger.info('[AuthWebView] OAuth processing completed, navigating to home');
+                  
+                  // Navigate to home after successful processing
+                  if (mounted && !_isDisposed) {
+                    GoRouter.of(_widgetContext).go('/home');
+                  }
+                  
+                } catch (e) {
+                  _logger.error('[AuthWebView] Error processing OAuth callback: $e');
+                  if (_viewModel != null) {
+                    _viewModel!.handleError('Error completing authentication: $e');
+                  }
                 }
+              } else {
+                _logger.error('[AuthWebView] No code found in callback URL');
               }
+              
+              // Prevent navigation to avoid webview SSL issues
               return NavigationDecision.prevent;
             }
 
@@ -175,16 +95,12 @@ class _AuthWebViewState extends State<AuthWebView> {
             if (request.url.startsWith(
               'https://app.gohighlevel.com/?src=marketplace',
             )) {
-              if (mounted && !_isDisposed) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted && !_isDisposed) {
-                    MarketplacePopupHelper.show(
-                      _widgetContext,
-                      request.url,
-                      _viewModel!,
-                    );
-                  }
-                });
+              if (mounted && !_isDisposed && _viewModel != null) {
+                MarketplacePopupHelper.show(
+                  _widgetContext,
+                  request.url,
+                  _viewModel!,
+                );
               }
               return NavigationDecision.prevent;
             }
