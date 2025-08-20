@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
 import '../../viewmodel/navigation_viewmodel.dart';
+import '../../viewmodel/user/user_viewmodel.dart';
 import '../widgets/appbars/paint_pro_app_bar.dart';
 import '../widgets/cards/greeting_card_widget.dart';
 import '../widgets/cards/project_state_card_widget.dart';
@@ -20,13 +21,19 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   late final NavigationViewModel _navigationViewModel;
+  late final UserViewModel _userViewModel;
 
   @override
   void initState() {
     super.initState();
     _navigationViewModel = getIt<NavigationViewModel>();
+    _userViewModel = getIt<UserViewModel>();
+    
     // Update the current route to home
     _navigationViewModel.updateCurrentRoute('/home');
+    
+    // Fetch user data
+    _userViewModel.fetchUser();
   }
 
   @override
@@ -45,9 +52,14 @@ class _HomeViewState extends State<HomeView> {
             SizedBox(
               height: 8,
             ),
-            GreetingCardWidget(
-              greeting: "Good morning!",
-              name: "John",
+            ListenableBuilder(
+              listenable: _userViewModel,
+              builder: (context, child) {
+                return GreetingCardWidget(
+                  greeting: "Good morning!",
+                  name: _userViewModel.displayName,
+                );
+              },
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
