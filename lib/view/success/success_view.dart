@@ -83,7 +83,7 @@ class SuccessView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: PaintProButton(
                 text: 'Ok',
-                onPressed: () => context.go('/'),
+                onPressed: () => context.go('/home'),
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 borderRadius: 12,
