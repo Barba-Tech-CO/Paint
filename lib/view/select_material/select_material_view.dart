@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../config/app_colors.dart';
-import '../../service/services.dart';
-import '../../viewmodel/material/material_viewmodels.dart';
 import '../widgets/widgets.dart';
+import '../../viewmodel/viewmodels.dart';
+import '../../config/app_colors.dart';
+import '../../config/dependency_injection.dart';
 import 'widgets/select_material_widgets.dart';
 
 class SelectMaterialView extends StatefulWidget {
@@ -20,7 +20,7 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
   @override
   void initState() {
     super.initState();
-    _viewModel = MaterialListViewModel(MaterialService());
+    _viewModel = getIt<MaterialListViewModel>();
     _searchController.addListener(_onSearchChanged);
 
     // Inicializa os dados

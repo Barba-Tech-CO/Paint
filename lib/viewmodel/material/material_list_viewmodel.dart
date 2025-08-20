@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import '../../model/models.dart';
-import '../../service/material_service.dart';
+import '../../domain/repository/material_repository.dart';
 
 class MaterialListViewModel extends ChangeNotifier {
-  final MaterialService _materialService;
+  final IMaterialRepository _materialRepository;
   final List<MaterialModel> _selectedMaterials = [];
   final List<String> _availableBrands = [];
   List<MaterialModel> _materials = [];
@@ -13,7 +13,7 @@ class MaterialListViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
-  MaterialListViewModel(this._materialService);
+  MaterialListViewModel(this._materialRepository);
 
   // Getters
   List<MaterialModel> get materials => _materials;
@@ -32,7 +32,7 @@ class MaterialListViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _materialService.getAllMaterials();
+      final result = await _materialRepository.getAllMaterials();
       result.when(
         ok: (materials) {
           _materials = materials;
@@ -56,7 +56,7 @@ class MaterialListViewModel extends ChangeNotifier {
     _currentFilter = filter;
 
     try {
-      final result = await _materialService.getMaterialsWithFilter(filter);
+      final result = await _materialRepository.getMaterialsWithFilter(filter);
       result.when(
         ok: (materials) {
           _materials = materials;
@@ -76,7 +76,7 @@ class MaterialListViewModel extends ChangeNotifier {
   /// Carrega estatísticas dos materiais
   Future<void> loadStats() async {
     try {
-      final result = await _materialService.getMaterialStats();
+      final result = await _materialRepository.getMaterialStats();
       result.when(
         ok: (stats) {
           _stats = stats;
