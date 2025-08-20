@@ -7,6 +7,7 @@ class AuthPersistenceService {
   static const String _keyNeedsLogin = 'auth_needs_login';
   static const String _keyLocationId = 'auth_location_id';
   static const String _keyExpiresAt = 'auth_expires_at';
+  static const String _keySanctumToken = 'auth_sanctum_token';
 
   // Save authentication state
   Future<void> saveAuthState({
@@ -14,6 +15,7 @@ class AuthPersistenceService {
     required bool needsLogin,
     String? locationId,
     DateTime? expiresAt,
+    String? sanctumToken,
   }) async {
     log(
       '[AuthPersistenceService] Saving auth state: authenticated=$authenticated, needsLogin=$needsLogin, locationId=$locationId, expiresAt=$expiresAt',
@@ -31,6 +33,10 @@ class AuthPersistenceService {
       await prefs.setString(_keyExpiresAt, expiresAt.toIso8601String());
     }
 
+    if (sanctumToken != null) {
+      await prefs.setString(_keySanctumToken, sanctumToken);
+    }
+
     log('[AuthPersistenceService] Auth state saved successfully');
   }
 
@@ -41,6 +47,7 @@ class AuthPersistenceService {
     final authenticated = prefs.getBool(_keyAuthenticated) ?? false;
     final needsLogin = prefs.getBool(_keyNeedsLogin) ?? true;
     final locationId = prefs.getString(_keyLocationId);
+    final sanctumToken = prefs.getString(_keySanctumToken);
 
     DateTime? expiresAt;
     final expiresAtString = prefs.getString(_keyExpiresAt);
@@ -57,6 +64,7 @@ class AuthPersistenceService {
       'needsLogin': needsLogin,
       'locationId': locationId,
       'expiresAt': expiresAt,
+      'sanctumToken': sanctumToken,
     };
 
     log('[AuthPersistenceService] Loaded auth state: $state');
@@ -71,6 +79,7 @@ class AuthPersistenceService {
     await prefs.remove(_keyNeedsLogin);
     await prefs.remove(_keyLocationId);
     await prefs.remove(_keyExpiresAt);
+    await prefs.remove(_keySanctumToken);
     log('[AuthPersistenceService] Auth state cleared');
   }
 
@@ -89,5 +98,11 @@ class AuthPersistenceService {
     final result = authenticated && !needsLogin;
     log('[AuthPersistenceService] User authenticated result: $result');
     return result;
+  }
+
+  // Get stored Sanctum token
+  Future<String?> getSanctumToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keySanctumToken);
   }
 }
