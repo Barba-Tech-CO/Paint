@@ -13,6 +13,9 @@ export 'material/material_viewmodels.dart';
 // Paint Catalog ViewModels
 export 'paint_catalog/paint_catalog_viewmodels.dart';
 
+// User ViewModels
+export 'user/user_viewmodel.dart';
+
 // Navigation ViewModel
 export 'navigation_viewmodel.dart';
 
