@@ -49,10 +49,10 @@ class AuthOperationsUseCase {
   }
 
   /// Processa o callback de autorização
-  Future<Result<void>> processCallback(String code) async {
+  Future<Result<AuthRefreshResponse>> processCallback(String code) async {
     final result = await _authService.processCallback(code);
     return result.when(
-      ok: (response) => Result.ok(null),
+      ok: (response) => Result.ok(response),
       error: (error) => Result.error(error),
     );
   }
