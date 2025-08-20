@@ -187,43 +187,45 @@ class AuthViewModel extends ChangeNotifier {
 
       result.when(
         ok: (response) async {
-          // After successful OAuth callback, force local authentication state
-          // This prevents infinite login loops while backend processes the authentication
-          final newAuthStatus = AuthModel(
-            authenticated: true,
-            needsLogin: false,
-            // Set expiration to 30 days from now instead of using backend's incorrect date
-            expiresAt: DateTime.now().add(const Duration(days: 30)),
-            locationId: _state.authStatus?.locationId,
-          );
+          _logger.info('[AuthViewModel] OAuth callback response received');
+          
+          if (response.success && response.locationId != null) {
+            // Use the backend response data to create the auth status
+            final newAuthStatus = AuthModel(
+              authenticated: true,
+              needsLogin: false,
+              expiresAt: response.expiresAt ?? DateTime.now().add(const Duration(days: 30)),
+              locationId: response.locationId,
+            );
 
-          _updateState(
-            _state.copyWith(
-              authStatus: newAuthStatus,
-              state: AuthState.authenticated,
-              isLoading: false,
-              errorMessage: null,
-            ),
-          );
+            _updateState(
+              _state.copyWith(
+                authStatus: newAuthStatus,
+                state: AuthState.authenticated,
+                isLoading: false,
+                errorMessage: null,
+              ),
+            );
 
-          // Save authentication state to persistence
-          await _authPersistenceService.saveAuthState(
-            authenticated: true,
-            needsLogin: false,
-            expiresAt: newAuthStatus.expiresAt,
-            locationId: newAuthStatus.locationId,
-          );
+            // Save authentication state to persistence with backend data
+            await _authPersistenceService.saveAuthState(
+              authenticated: true,
+              needsLogin: false,
+              expiresAt: newAuthStatus.expiresAt,
+              locationId: newAuthStatus.locationId,
+              sanctumToken: response.sanctumToken,
+            );
 
-          // Also check backend status after a delay to sync with server
-          // But only if user is not already authenticated locally
-          Future.delayed(const Duration(milliseconds: 1000), () {
-            if (_state.authStatus?.authenticated == true) {
-              // User already authenticated, skipping backend sync
-            } else {
-              // Syncing with backend auth status
-              checkAuthStatusCommand.execute();
-            }
-          });
+            _logger.info('[AuthViewModel] Authentication state saved successfully');
+          } else {
+            _logger.error('[AuthViewModel] OAuth callback failed or missing location_id');
+            _updateState(
+              _state.copyWith(
+                isLoading: false,
+                errorMessage: 'OAuth authentication failed',
+              ),
+            );
+          }
         },
         error: (error) {
           _logger.error(
