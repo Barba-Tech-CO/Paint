@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart' as webview;
+import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../config/app_urls.dart';
 import '../../model/auth_model.dart';
@@ -125,6 +125,9 @@ class AuthViewModel extends ChangeNotifier {
       });
     } else if (uri.pathSegments.contains('error')) {
       final error = uri.queryParameters['error'];
+      _logger.error(
+        '[AuthViewModel] Error in deep link: $error',
+      );
       _handleDeepLinkUseCase.handleError(
         error ?? 'Erro desconhecido na autenticação',
       );
@@ -311,7 +314,7 @@ class AuthViewModel extends ChangeNotifier {
     _updateState(_state.copyWith(errorMessage: error));
   }
 
-  Future<webview.NavigationDecision> handleWebViewNavigation(String url) async {
+  Future<NavigationDecision> handleWebViewNavigation(String url) async {
     return await _handleWebViewNavigationUseCase.handleNavigation(
       url,
       (error) => handleError(error),
