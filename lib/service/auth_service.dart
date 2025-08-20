@@ -34,7 +34,7 @@ class AuthService {
           'https://marketplace.gohighlevel.com/oauth/chooselocation';
       const String clientId = '6845ab8de6772c0d5c8548d7-mbnty1f6';
       const String redirectUri =
-          'https://paintpro.barbatech.company/api/oauth/callback';
+          'https://paintpro.barbatech.company/api/auth/callback';
       const String scope =
           'contacts.write+associations.write+associations.readonly+oauth.readonly+oauth.write+invoices%2Festimate.write+invoices%2Festimate.readonly+invoices.readonly+associations%2Frelation.write+associations%2Frelation.readonly+contacts.readonly+invoices.write';
 
@@ -59,27 +59,29 @@ class AuthService {
   /// Processa o callback de autorização
   Future<Result<AuthRefreshResponse>> processCallback(String code) async {
     try {
-      // In a real OAuth flow, we need to exchange the authorization code for tokens
-      // This typically involves making a request to the token endpoint
+      _logger.info('[AuthService] Processing OAuth callback with code: ${code.substring(0, 8)}...');
+      
+      // Exchange the authorization code for tokens with the backend
       final response = await _httpService.get(
         '/auth/callback?code=$code',
       );
 
+      _logger.info('[AuthService] Backend response: ${response.data}');
+      
       final callbackResponse = AuthRefreshResponse.fromJson(response.data);
 
-      // After successful token exchange, call the /success endpoint with location_id
-      // The location_id should come from the OAuth response or user selection
-      if (callbackResponse.success) {
-        // Extract location_id from the response or use a default
-        // In GoHighLevel's OAuth flow, the location_id is typically selected by the user
-        // during the authorization process and returned in the callback
-        final locationId =
-            response.data['location_id'] ?? 'default_location_id';
-        await _callSuccessEndpoint(locationId);
+      if (callbackResponse.success && callbackResponse.locationId != null) {
+        _logger.info('[AuthService] OAuth callback successful, location_id: ${callbackResponse.locationId}');
+        
+        // Call the success endpoint to complete the authentication
+        await _callSuccessEndpoint(callbackResponse.locationId!);
+      } else {
+        _logger.warning('[AuthService] OAuth callback failed or missing location_id');
       }
 
       return Result.ok(callbackResponse);
     } catch (e) {
+      _logger.error('[AuthService] Error processing OAuth callback: $e');
       return Result.error(Exception('Erro no callback: $e'));
     }
   }
@@ -108,7 +110,9 @@ class AuthService {
       await _callSuccessEndpoint(locationId);
       return Result.ok(null);
     } catch (e) {
-      return Result.error(Exception('Erro ao chamar endpoint de sucesso: $e'));
+      return Result.error(
+        Exception('Erro ao chamar endpoint de sucesso: $e'),
+      );
     }
   }
 
