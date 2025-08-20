@@ -39,7 +39,7 @@ A integração com o GoHighLevel utiliza OAuth2 para autenticação segura. O ba
 | ------ | ----------------------------------------------- | ----------------------------------- | ------- | ------- |
 | GET    | /api/auth/authorize-url                         | Retorna URL de autorização OAuth2   | JSON    | App     |
 | GET    | /api/auth/redirect                              | Redireciona para autorização GHL    | 302     | Browser |
-| GET    | /api/oauth/callback                             | Troca code por tokens               | Misto   | Ambos   |
+| GET    | /api/auth/callback                              | Troca code por tokens               | Misto   | Ambos   |
 | GET    | /api/auth/status                                | Verifica status da autenticação     | JSON    | App     |
 | POST   | /api/auth/refresh                               | Renova token manual                 | JSON    | App     |
 | GET    | /api/auth/debug                                 | Estatísticas e debug dos tokens     | JSON    | App     |
@@ -105,7 +105,7 @@ A integração com o GoHighLevel utiliza OAuth2 para autenticação segura. O ba
 
    - **Para Apps (Flutter/React Native):**
 
-     - App chama: `GET /api/oauth/callback?code=...`
+     - App chama: `GET /api/auth/callback?code=...`
      - Backend processa e retorna JSON com resultado
      - **Resposta de sucesso:**
        ```json
@@ -117,14 +117,14 @@ A integração com o GoHighLevel utiliza OAuth2 para autenticação segura. O ba
        ```
 
    - **Para Browsers (Web):**
-     - Browser é redirecionado para: `GET /api/oauth/callback?code=...`
+     - Browser é redirecionado para: `GET /api/auth/callback?code=...`
      - Backend processa e redireciona para o app via deep link
      - **Redirecionamento de sucesso:** `paintproapp://auth/success?location_id=...`
      - **Redirecionamento de erro:** `paintproapp://auth/failure?error=...`
 
 3.1 **Chamada Interna: Troca do Code por Tokens**
 
-- Backend faz `POST https://services.leadconnectorhq.com/oauth/token` com:
+- Backend faz `POST https://services.leadconnectorhq.com/auth/token` com:
   ```http
   grant_type=authorization_code&client_id=...&client_secret=...&code=...&redirect_uri=...&user_type=Location
   ```
@@ -175,7 +175,7 @@ A integração com o GoHighLevel utiliza OAuth2 para autenticação segura. O ba
 
 5.1 **Chamada Interna: Refresh do Token**
 
-- Backend faz `POST https://services.leadconnectorhq.com/oauth/token` com:
+- Backend faz `POST https://services.leadconnectorhq.com/auth/token` com:
   ```http
   grant_type=refresh_token&client_id=...&client_secret=...&refresh_token=...&user_type=Location
   ```
@@ -276,7 +276,7 @@ openWebView(url);
 const code = await captureCallbackCode();
 
 // 4. Trocar code por tokens
-const result = await fetch(`/api/oauth/callback?code=${code}`).then((r) =>
+const result = await fetch(`/api/auth/callback?code=${code}`).then((r) =>
   r.json()
 );
 

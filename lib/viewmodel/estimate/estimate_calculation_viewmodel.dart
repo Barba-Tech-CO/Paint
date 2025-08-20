@@ -23,29 +23,23 @@ class EstimateCalculationViewModel extends ChangeNotifier {
 
   /// Seleciona elementos e calcula custos
   Future<bool> selectElementsAndCalculate(
-    String estimateId, {
-    required bool useCatalog,
-    required String brandKey,
-    required String colorKey,
-    required String usage,
-    required String sizeKey,
-  }) async {
+    String estimateId,
+    List<String> elementIds,
+  ) async {
     _setCalculating(true);
     _clearError();
 
     try {
       final result = await _estimateRepository.selectElements(
         estimateId,
-        useCatalog: useCatalog,
-        brandKey: brandKey,
-        colorKey: colorKey,
-        usage: usage,
-        sizeKey: sizeKey,
+        elementIds,
       );
 
-      if (result is Ok && result.asOk.value.data != null) {
-        _currentEstimate = result.asOk.value.data;
-        _updateCalculations();
+      if (result is Ok) {
+        final data = result.asOk.value;
+        // Extract relevant data from the Map<String, dynamic>
+        _totalCost = (data['totalCost'] as num?)?.toDouble() ?? 0.0;
+        _totalArea = (data['totalArea'] as num?)?.toDouble() ?? 0.0;
         notifyListeners();
         return true;
       } else if (result is Error) {
@@ -53,7 +47,7 @@ class EstimateCalculationViewModel extends ChangeNotifier {
       }
       return false;
     } catch (e) {
-      _setError('Erro ao calcular orçamento: $e');
+      _setError('Error calculating estimate: $e');
       return false;
     } finally {
       _setCalculating(false);

@@ -34,14 +34,20 @@ class ContactListViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  // Sync status
+  bool _isSyncing = false;
+  bool get isSyncing => _isSyncing;
+
   // Commands
   late final Command0<void> _loadContactsCommand;
   late final Command0<void> _loadMoreContactsCommand;
   late final Command1<void, String> _searchContactsCommand;
+  late final Command0<void> _syncPendingContactsCommand;
 
   Command0<void> get loadContactsCommand => _loadContactsCommand;
   Command0<void> get loadMoreContactsCommand => _loadMoreContactsCommand;
   Command1<void, String> get searchContactsCommand => _searchContactsCommand;
+  Command0<void> get syncPendingContactsCommand => _syncPendingContactsCommand;
 
   // Computed properties
   bool get isLoading =>
@@ -49,6 +55,10 @@ class ContactListViewModel extends ChangeNotifier {
   bool get hasError =>
       _state == ContactListState.error || _errorMessage != null;
   bool get hasMoreContacts => _contacts.length < _totalContacts;
+  bool get hasPendingContacts =>
+      _contacts.any((c) => c.syncStatus == SyncStatus.pending);
+  bool get hasErrorContacts =>
+      _contacts.any((c) => c.syncStatus == SyncStatus.error);
 
   void _initializeCommands() {
     _loadContactsCommand = Command0(() async {
@@ -139,6 +149,31 @@ class ContactListViewModel extends ChangeNotifier {
         return Result.error(Exception(e.toString()));
       }
     });
+
+    _syncPendingContactsCommand = Command0(() async {
+      _setSyncing(true);
+      _clearError();
+
+      try {
+        final result = await _contactRepository.syncPendingContacts();
+        return result.when(
+          ok: (_) {
+            // Refresh the contact list after sync
+            _refreshAfterSync();
+            return Result.ok(null);
+          },
+          error: (error) {
+            _setError(error.toString());
+            return Result.error(error);
+          },
+        );
+      } catch (e) {
+        _setError(e.toString());
+        return Result.error(Exception(e.toString()));
+      } finally {
+        _setSyncing(false);
+      }
+    });
   }
 
   void _setState(ContactListState state) {
@@ -156,6 +191,16 @@ class ContactListViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _setSyncing(bool syncing) {
+    _isSyncing = syncing;
+    notifyListeners();
+  }
+
+  void _refreshAfterSync() {
+    // Reload contacts to show updated sync status
+    loadContacts();
+  }
+
   // Public methods
   Future<void> loadContacts() async {
     _initializeCommands();
@@ -168,6 +213,10 @@ class ContactListViewModel extends ChangeNotifier {
 
   Future<void> searchContacts(String query) async {
     await _searchContactsCommand.execute(query);
+  }
+
+  Future<void> syncPendingContacts() async {
+    await _syncPendingContactsCommand.execute();
   }
 
   void clearSearch() {
@@ -210,4 +259,21 @@ class ContactListViewModel extends ChangeNotifier {
     _clearError();
     notifyListeners();
   }
+
+  /// Obtém contatos por status de sincronização
+  List<ContactModel> getContactsBySyncStatus(SyncStatus status) {
+    return _contacts.where((contact) => contact.syncStatus == status).toList();
+  }
+
+  /// Obtém contatos pendentes
+  List<ContactModel> get pendingContacts =>
+      getContactsBySyncStatus(SyncStatus.pending);
+
+  /// Obtém contatos com erro
+  List<ContactModel> get errorContacts =>
+      getContactsBySyncStatus(SyncStatus.error);
+
+  /// Obtém contatos sincronizados
+  List<ContactModel> get syncedContacts =>
+      getContactsBySyncStatus(SyncStatus.synced);
 }

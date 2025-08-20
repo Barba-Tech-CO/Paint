@@ -38,9 +38,7 @@ class _CommandBuilderState<T> extends State<CommandBuilder<T>> {
           if (widget.onError != null) {
             return widget.onError!.call((widget.command.result as Error).error);
           }
-          return const Center(
-            child: Text("Ocorreu um erro"),
-          );
+          return const Text("An error occurred");
         }
         if (widget.command.result == null) {
           return const SizedBox.shrink();

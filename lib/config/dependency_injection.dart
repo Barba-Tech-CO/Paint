@@ -19,18 +19,20 @@ import '../service/app_initialization_service.dart';
 import '../service/auth_service.dart';
 import '../service/auth_persistence_service.dart';
 import '../service/contact_service.dart';
+import '../service/contact_database_service.dart';
 import '../service/deep_link_service.dart';
 import '../service/estimate_service.dart';
 import '../service/http_service.dart';
 import '../service/navigation_service.dart';
 import '../service/material_service.dart';
 import '../service/paint_catalog_service.dart';
-import '../service/logger_service.dart';
+
+// Logger Layer
+import '../utils/logger/app_logger.dart';
+import '../utils/logger/logger_app_logger_impl.dart';
 
 // Use Case Layer
 import '../use_case/auth/auth_use_cases.dart';
-import '../utils/logger/app_logger.dart';
-import '../utils/logger/logger_app_logger_impl.dart';
 
 // ViewModel Layer
 import '../viewmodel/select_colors_viewmodel.dart';
@@ -44,9 +46,12 @@ void setupDependencyInjection() {
     () {
       final httpService = HttpService();
       httpService.setLogger(
-        getIt<LoggerService>(),
+        getIt<AppLogger>(),
+      );
+      return httpService;
     },
   );
+
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(
       getIt<HttpService>(),
@@ -79,9 +84,6 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AuthPersistenceService>(
     () => AuthPersistenceService(),
   );
-  getIt.registerLazySingleton<LoggerService>(
-    () => LoggerService.instance,
-  );
   getIt.registerLazySingleton<AppLogger>(
     () => LoggerAppLoggerImpl(),
   );
@@ -95,6 +97,8 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IContactRepository>(
     () => ContactRepository(
       contactService: getIt<ContactService>(),
+      databaseService: getIt<ContactDatabaseService>(),
+      authService: getIt<AuthService>(),
     ),
   );
   getIt.registerLazySingleton<IEstimateRepository>(
@@ -125,7 +129,6 @@ void setupDependencyInjection() {
     () => HandleDeepLinkUseCase(
       getIt<AuthOperationsUseCase>(),
       getIt<ManageAuthStateUseCase>(),
-      getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<HandleWebViewNavigationUseCase>(

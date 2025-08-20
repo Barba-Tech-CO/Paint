@@ -10,25 +10,24 @@ import '../../service/auth_persistence_service.dart';
 import '../../service/deep_link_service.dart';
 import '../../use_case/auth/auth_use_cases.dart';
 import '../../utils/command/command.dart';
+import '../../service/logger_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 import 'auth_view_state.dart';
 
 class _DeepLinkHandler {
   final DeepLinkService _deepLinkService;
-  final AppLogger _logger;
   final void Function(Uri) onDeepLink;
   StreamSubscription? _subscription;
 
   _DeepLinkHandler(
     this._deepLinkService,
-    this._logger,
     this.onDeepLink,
   );
 
   void initialize() {
     _subscription = _deepLinkService.deepLinkStream.listen((uri) {
-      _logger.info('[DeepLinkHandler] Deep Link recebido: $uri');
+      LoggerService.info('[DeepLinkHandler] Deep Link recebido: $uri');
       onDeepLink(uri);
     });
   }
@@ -76,7 +75,6 @@ class AuthViewModel extends ChangeNotifier {
   ) {
     _deepLinkHandler = _DeepLinkHandler(
       _deepLinkService,
-      _logger,
       _onDeepLinkReceived,
     );
     _deepLinkHandler.initialize();
@@ -92,7 +90,7 @@ class AuthViewModel extends ChangeNotifier {
   void _initializeAuth() async {
     _logger.info('[AuthViewModel] Initializing authentication...');
     _updateState(
-      _state.copyWith(authorizeUrl: AppUrls.ghlAuthorizeUrl),
+      _state.copyWith(authorizeUrl: AppUrls.goHighLevelAuthorizeUrl),
     );
 
     // First check if user is already authenticated from persisted state
@@ -131,7 +129,10 @@ class AuthViewModel extends ChangeNotifier {
 
   void _onDeepLinkReceived(Uri uri) {
     if (uri.pathSegments.contains('success')) {
-      _handleDeepLinkUseCase.handleSuccess();
+      _handleDeepLinkUseCase.handleSuccess().then((_) {
+        // After handling success, check auth status to update navigation flags
+        checkAuthStatusCommand.execute();
+      });
     } else if (uri.pathSegments.contains('error')) {
       final error = uri.queryParameters['error'];
       _handleDeepLinkUseCase.handleError(
@@ -142,7 +143,13 @@ class AuthViewModel extends ChangeNotifier {
 
   // Métodos privados para os comandos
   Future<Result<AuthModel>> _checkAuthStatus() async {
-    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+    LoggerService.info('[AuthViewModel] Checking auth status...');
+    _updateState(
+      _state.copyWith(
+        isLoading: true,
+        errorMessage: null,
+      ),
+    );
     final result = await _authOperationsUseCase.checkAuthStatus();
     result.when(
       ok: (authModel) {
@@ -172,6 +179,9 @@ class AuthViewModel extends ChangeNotifier {
         }
       },
       error: (error) {
+        LoggerService.error(
+          '[AuthViewModel] Error checking auth status: $error',
+        );
         _updateState(
           _state.copyWith(
             state: AuthState.error,
@@ -186,8 +196,13 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<Result<void>> _processCallback(String code) async {
     try {
+      LoggerService.info(
+        '[AuthViewModel] Processing callback with code: $code',
+      );
       _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+
       final result = await _authOperationsUseCase.processCallback(code);
+
       result.when(
         ok: (response) async {
           _logger.info('[AuthViewModel] Callback processado com sucesso');
@@ -235,6 +250,9 @@ class AuthViewModel extends ChangeNotifier {
           });
         },
         error: (error) {
+          LoggerService.error(
+            '[AuthViewModel] Error processing callback: $error',
+          );
           _updateState(
             _state.copyWith(isLoading: false, errorMessage: error.toString()),
           );
@@ -242,8 +260,8 @@ class AuthViewModel extends ChangeNotifier {
       );
       return result;
     } catch (e, stack) {
-      _logger.error(
-        '[AuthViewModel] Erro inesperado no processCallback',
+      LoggerService.error(
+        '[AuthViewModel] Unexpected error in processCallback',
         e,
         stack,
       );
@@ -259,7 +277,7 @@ class AuthViewModel extends ChangeNotifier {
     final result = await _authOperationsUseCase.refreshToken();
     result.when(
       ok: (response) {
-        _logger.info('[AuthViewModel] Token renovado com sucesso');
+        LoggerService.info('[AuthViewModel] Token renovado com sucesso');
         checkAuthStatusCommand.execute();
       },
       error: (error) {
@@ -268,7 +286,6 @@ class AuthViewModel extends ChangeNotifier {
         );
       },
     );
-    _updateState(_state.copyWith(isLoading: false));
     return result;
   }
 
@@ -335,6 +352,11 @@ class AuthViewModel extends ChangeNotifier {
 
   void updateAuthorizeUrl(String newUrl) {
     _updateState(_state.copyWith(authorizeUrl: newUrl));
+  }
+
+  /// Triggers a deep link success callback for testing or manual triggering
+  void triggerDeepLinkSuccess() {
+    _deepLinkService.triggerSuccessCallback();
   }
 
   Future<Result<AuthState>> reset() async {

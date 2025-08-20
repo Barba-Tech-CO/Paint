@@ -25,44 +25,36 @@ class EstimateDetailViewModel extends ChangeNotifier {
     try {
       final result = await _estimateRepository.getEstimate(estimateId);
       if (result is Ok) {
-        _selectedEstimate = result.asOk.value.data;
+        _selectedEstimate = result.asOk.value;
         notifyListeners();
       } else {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
-      _setError('Erro ao obter detalhes do orçamento: $e');
+      _setError('Error getting estimate details: $e');
     } finally {
       _setLoading(false);
     }
   }
 
   /// Cria um novo orçamento
-  Future<EstimateModel?> createEstimate({
-    required String projectName,
-    required String clientName,
-    required ProjectType projectType,
-  }) async {
+  Future<EstimateModel?> createEstimate(Map<String, dynamic> data) async {
     _setLoading(true);
     _clearError();
 
     try {
-      final result = await _estimateRepository.createEstimate(
-        projectName: projectName,
-        clientName: clientName,
-        projectType: projectType,
-      );
+      final result = await _estimateRepository.createEstimate(data);
 
-      if (result is Ok && result.asOk.value.data != null) {
-        _selectedEstimate = result.asOk.value.data;
+      if (result is Ok) {
+        _selectedEstimate = result.asOk.value;
         notifyListeners();
-        return result.asOk.value.data;
+        return result.asOk.value;
       } else if (result is Error) {
         _setError(result.asError.error.toString());
       }
       return null;
     } catch (e) {
-      _setError('Erro ao criar orçamento: $e');
+      _setError('Error creating estimate: $e');
       return null;
     } finally {
       _setLoading(false);
@@ -71,24 +63,20 @@ class EstimateDetailViewModel extends ChangeNotifier {
 
   /// Atualiza um orçamento
   Future<bool> updateEstimate(
-    String estimateId, {
-    String? projectName,
-    String? clientName,
-    ProjectType? projectType,
-  }) async {
+    String estimateId,
+    Map<String, dynamic> data,
+  ) async {
     _setLoading(true);
     _clearError();
 
     try {
       final result = await _estimateRepository.updateEstimate(
         estimateId,
-        projectName: projectName,
-        clientName: clientName,
-        projectType: projectType,
+        data,
       );
 
-      if (result is Ok && result.asOk.value.data != null) {
-        _selectedEstimate = result.asOk.value.data;
+      if (result is Ok) {
+        _selectedEstimate = result.asOk.value;
         notifyListeners();
         return true;
       } else if (result is Error) {
@@ -96,7 +84,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
       }
       return false;
     } catch (e) {
-      _setError('Erro ao atualizar orçamento: $e');
+      _setError('Error updating estimate: $e');
       return false;
     } finally {
       _setLoading(false);
@@ -132,7 +120,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
   /// Atualiza o status de um orçamento
   Future<bool> updateEstimateStatus(
     String estimateId,
-    EstimateStatus status,
+    String status,
   ) async {
     _setLoading(true);
     _clearError();
@@ -143,8 +131,8 @@ class EstimateDetailViewModel extends ChangeNotifier {
         status,
       );
 
-      if (result is Ok && result.asOk.value.data != null) {
-        _selectedEstimate = result.asOk.value.data;
+      if (result is Ok) {
+        _selectedEstimate = result.asOk.value;
         notifyListeners();
         return true;
       } else if (result is Error) {
@@ -152,7 +140,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
       }
       return false;
     } catch (e) {
-      _setError('Erro ao atualizar status do orçamento: $e');
+      _setError('Error updating estimate status: $e');
       return false;
     } finally {
       _setLoading(false);
@@ -165,10 +153,10 @@ class EstimateDetailViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await _estimateRepository.completeEstimate(estimateId);
+      final result = await _estimateRepository.finalizeEstimate(estimateId);
 
-      if (result is Ok && result.asOk.value.data != null) {
-        _selectedEstimate = result.asOk.value.data;
+      if (result is Ok) {
+        _selectedEstimate = result.asOk.value;
         notifyListeners();
         return true;
       } else if (result is Error) {
@@ -176,7 +164,7 @@ class EstimateDetailViewModel extends ChangeNotifier {
       }
       return false;
     } catch (e) {
-      _setError('Erro ao finalizar orçamento: $e');
+      _setError('Error finalizing estimate: $e');
       return false;
     } finally {
       _setLoading(false);
@@ -193,14 +181,14 @@ class EstimateDetailViewModel extends ChangeNotifier {
 
       if (result is Ok && result.asOk.value) {
         // Atualiza o status para enviado
-        await updateEstimateStatus(estimateId, EstimateStatus.sent);
+        await updateEstimateStatus(estimateId, 'sent');
         return true;
       } else if (result is Error) {
         _setError(result.asError.error.toString());
       }
       return false;
     } catch (e) {
-      _setError('Erro ao enviar orçamento para GHL: $e');
+      _setError('Error sending estimate to GHL: $e');
       return false;
     } finally {
       _setLoading(false);
