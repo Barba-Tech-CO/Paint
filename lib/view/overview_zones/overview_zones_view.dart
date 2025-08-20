@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
+import '../../helpers/loading_helper.dart';
 import '../../model/models.dart';
 import '../../viewmodel/viewmodels.dart';
-import '../../viewmodel/zones/zones_viewmodels.dart';
 import '../widgets/widgets.dart';
 
 class OverviewZonesView extends StatefulWidget {
@@ -268,7 +268,10 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                             padding: EdgeInsets.zero,
                             backgroundColor: Colors.blue,
                             foregroundColor: Colors.white,
-                            onPressed: () => context.go('/home'),
+                            onPressed: () {
+                              // Usar o helper para navegar para loading de quote
+                              LoadingHelper.navigateToQuoteLoading(context);
+                            },
                           ),
                         ),
                       ],

@@ -99,5 +99,25 @@ final router = GoRouter(
         return const SelectMaterialView();
       },
     ),
+    GoRoute(
+      path: '/loading',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+
+        return LoadingWidget(
+          title: extra?['title'] as String?,
+          subtitle: extra?['subtitle'] as String?,
+          description: extra?['description'] as String?,
+          duration: extra?['duration'] as Duration?,
+          navigateToOnComplete: extra?['navigateToOnComplete'] as String?,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/success',
+      builder: (context, state) {
+        return const SuccessView();
+      },
+    ),
   ],
 );

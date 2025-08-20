@@ -1,13 +1,29 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../config/app_colors.dart';
-import '../../widgets/animation_loading/paint_pro_loading.dart';
+import '../animation_loading/paint_pro_loading.dart';
 
 class LoadingWidget extends StatefulWidget {
-  const LoadingWidget({super.key});
+  final String? title;
+  final String? subtitle;
+  final String? description;
+  final Duration? duration;
+  final VoidCallback? onComplete;
+  final String? navigateToOnComplete;
+
+  const LoadingWidget({
+    super.key,
+    this.title,
+    this.subtitle,
+    this.description,
+    this.duration,
+    this.onComplete,
+    this.navigateToOnComplete,
+  });
 
   @override
   State<LoadingWidget> createState() => _LoadingWidgetState();
@@ -31,6 +47,21 @@ class _LoadingWidgetState extends State<LoadingWidget>
       duration: const Duration(milliseconds: 1500), // Velocidade ajustada
       vsync: this,
     )..repeat();
+
+    // Executa ação apenas se parâmetros específicos forem fornecidos
+    // Isso mantém compatibilidade com uso como widget de estado interno
+    if (widget.onComplete != null || widget.navigateToOnComplete != null) {
+      final delay = widget.duration ?? const Duration(seconds: 3);
+      Future.delayed(delay, () {
+        if (mounted) {
+          if (widget.onComplete != null) {
+            widget.onComplete!();
+          } else if (widget.navigateToOnComplete != null) {
+            context.go(widget.navigateToOnComplete!);
+          }
+        }
+      });
+    }
   }
 
   @override
@@ -94,7 +125,7 @@ class _LoadingWidgetState extends State<LoadingWidget>
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Processing',
+                widget.title ?? 'Processing',
                 style: GoogleFonts.albertSans(
                   color: AppColors.textOnPrimary,
                   fontSize: 22,
@@ -113,17 +144,17 @@ class _LoadingWidgetState extends State<LoadingWidget>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'Processing Photos',
-              style: TextStyle(
+            Text(
+              widget.subtitle ?? 'Processing Photos',
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Calculating measurements...',
-              style: TextStyle(
+            Text(
+              widget.description ?? 'Calculating measurements...',
+              style: const TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
               ),
