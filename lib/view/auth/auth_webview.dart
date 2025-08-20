@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:go_router/go_router.dart';
-import '../../service/logger_service.dart';
+
 import '../../viewmodel/auth/auth_viewmodel.dart';
 import 'marketplace_popup_helper.dart';
 
@@ -110,9 +110,6 @@ class _AuthWebViewState extends State<AuthWebView> {
                           try {
                             GoRouter.of(_widgetContext).go('/home');
                           } catch (e) {
-                            LoggerService.error(
-                              '[AuthWebView] Error navigating to home: $e',
-                            );
                             // Fallback to closing webview
                             GoRouter.of(_widgetContext).pop();
                           }
@@ -129,9 +126,6 @@ class _AuthWebViewState extends State<AuthWebView> {
                           try {
                             GoRouter.of(_widgetContext).pop();
                           } catch (e) {
-                            LoggerService.error(
-                              '[AuthWebView] Error closing webview: $e',
-                            );
                             GoRouter.of(_widgetContext).go('/home');
                           }
                         }
@@ -139,9 +133,6 @@ class _AuthWebViewState extends State<AuthWebView> {
                     }
                   });
                 } else {
-                  LoggerService.info(
-                    '[AuthWebView] No authorization code in URL: $request.url',
-                  );
                   // Handle error case
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (mounted && !_isDisposed) {

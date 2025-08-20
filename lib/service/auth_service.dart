@@ -17,7 +17,6 @@ class AuthService {
       final authStatus = AuthStatusResponse.fromJson(response.data);
       return Result.ok(authStatus);
     } catch (e) {
-      LoggerService.error('Error checking authentication status: $e');
       return Result.error(
         Exception('Error checking authentication status: $e'),
       );
@@ -48,7 +47,6 @@ class AuthService {
 
       return Result.ok(authUri.toString());
     } catch (e) {
-      LoggerService.error('Error generating authorization URL: $e');
       return Result.error(
         Exception('Error generating authorization URL: $e'),
       );
@@ -90,13 +88,7 @@ class AuthService {
       final response = await _httpService.get(
         '/auth/success?location_id=$locationId',
       );
-
-      LoggerService.info(
-        '[AuthService] Success endpoint response: ${response.data}',
-      );
     } catch (e) {
-      LoggerService.error('[AuthService] Error calling /success endpoint: $e');
-      // Re-throw the error as this is important for the authentication flow
       rethrow;
     }
   }
@@ -122,7 +114,6 @@ class AuthService {
       final refreshResponse = AuthRefreshResponse.fromJson(response.data);
       return Result.ok(refreshResponse);
     } catch (e) {
-      LoggerService.error('Error refreshing token: $e');
       return Result.error(
         Exception('Error refreshing token: $e'),
       );
