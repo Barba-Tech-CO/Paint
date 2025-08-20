@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:paintpro/view/widgets/widgets.dart';
-import 'package:paintpro/viewmodel/viewmodels.dart';
-import 'package:paintpro/service/services.dart';
-import 'package:paintpro/config/app_colors.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
@@ -25,7 +21,6 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
   @override
   void initState() {
     super.initState();
-    _viewModel = MaterialListViewModel(MaterialService());
     _viewModel = getIt<MaterialListViewModel>();
     _searchController.addListener(_onSearchChanged);
 
