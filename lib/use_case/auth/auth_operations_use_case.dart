@@ -1,29 +1,30 @@
 import '../../model/auth_model.dart';
 import '../../service/auth_service.dart';
-import '../../service/logger_service.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
 /// UseCase unificado para todas as operações de autenticação
 class AuthOperationsUseCase {
   final AuthService _authService;
+  final AppLogger _logger;
 
-  AuthOperationsUseCase(this._authService);
+  AuthOperationsUseCase(this._authService, this._logger);
 
   /// Verifica o status de autenticação
   Future<Result<AuthModel>> checkAuthStatus() async {
-    LoggerService.info('checkAuthStatus');
+    _logger.info('checkAuthStatus');
 
     try {
       final result = await _authService.getStatus();
       return result.when(
         ok: (status) {
-          LoggerService.info(
+          _logger.info(
             'checkAuthStatus_success - status: ${status.data.toString()}',
           );
           return Result.ok(status.data);
         },
         error: (error) {
-          LoggerService.error(
+          _logger.error(
             'AuthOperationsUseCase.checkAuthStatus error',
             error,
           );
@@ -31,7 +32,7 @@ class AuthOperationsUseCase {
         },
       );
     } catch (error, stackTrace) {
-      LoggerService.error(
+      _logger.error(
         'AuthOperationsUseCase.checkAuthStatus exception',
         error,
         stackTrace,
@@ -50,6 +51,15 @@ class AuthOperationsUseCase {
     final result = await _authService.processCallback(code);
     return result.when(
       ok: (response) => Result.ok(null),
+      error: (error) => Result.error(error),
+    );
+  }
+
+  /// Chama o endpoint de sucesso com o location_id
+  Future<Result<void>> callSuccessEndpoint(String locationId) async {
+    final result = await _authService.callSuccessEndpoint(locationId);
+    return result.when(
+      ok: (_) => Result.ok(null),
       error: (error) => Result.error(error),
     );
   }

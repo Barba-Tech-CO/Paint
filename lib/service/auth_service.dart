@@ -1,8 +1,7 @@
-import 'package:dio/dio.dart';
-
 import '../model/auth_model.dart';
 import '../utils/result/result.dart';
 import 'http_service.dart';
+import 'services.dart';
 
 class AuthService {
   final HttpService _httpService;
@@ -12,6 +11,7 @@ class AuthService {
   /// Verifica o status de autenticação
   Future<Result<AuthStatusResponse>> getStatus() async {
     try {
+      // Make the actual HTTP request to check authentication status
       final response = await _httpService.get('/auth/status');
       final authStatus = AuthStatusResponse.fromJson(response.data);
       return Result.ok(authStatus);
@@ -25,43 +25,26 @@ class AuthService {
   /// Obtém a URL de autorização
   Future<Result<String>> getAuthorizeUrl() async {
     try {
-      final response = await _httpService.get(
-        '/auth/authorize-url',
-        // Opções especiais para esta chamada para não seguir o redirecionamento
-        options: Options(
-          followRedirects: false,
-          validateStatus: (status) {
-            // Aceita qualquer status que não seja um erro de servidor
-            return status != null && status < 500;
-          },
-        ),
+      // Construct the OAuth2 authorization URL directly
+      // No need to make an HTTP request for OAuth2 authorization URLs
+      const String baseUrl =
+          'https://marketplace.gohighlevel.com/oauth/chooselocation';
+      const String clientId = '6845ab8de6772c0d5c8548d7-mbnty1f6';
+      const String redirectUri =
+          'https://paintpro.barbatech.company/api/oauth/callback';
+      const String scope =
+          'contacts.write+associations.write+associations.readonly+oauth.readonly+oauth.write+invoices%2Festimate.write+invoices%2Festimate.readonly+invoices.readonly+associations%2Frelation.write+associations%2Frelation.readonly+contacts.readonly+invoices.write';
+
+      final Uri authUri = Uri.parse(baseUrl).replace(
+        queryParameters: {
+          'response_type': 'code',
+          'redirect_uri': redirectUri,
+          'client_id': clientId,
+          'scope': scope,
+        },
       );
 
-      // Se a resposta for um redirecionamento, pegamos a URL do cabeçalho
-      if (response.statusCode == 302) {
-        final location = response.headers.value('location');
-        if (location != null) {
-          return Result.ok(location);
-        }
-      }
-
-      // Se a resposta for 200, pode ser que o servidor retorne a URL diretamente
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('url')) {
-          return Result.ok(data['url']);
-        }
-        if (data is String && data.startsWith('http')) {
-          return Result.ok(data);
-        }
-      }
-
-      // Se a resposta não for um redirecionamento, algo está errado
-      return Result.error(
-        Exception(
-          'A resposta do servidor não foi um redirecionamento esperado. Status: ${response.statusCode}, Data: ${response.data}',
-        ),
-      );
+      return Result.ok(authUri.toString());
     } catch (e) {
       return Result.error(
         Exception('Erro ao obter URL de autorização: $e'),
@@ -72,17 +55,63 @@ class AuthService {
   /// Processa o callback de autorização
   Future<Result<AuthRefreshResponse>> processCallback(String code) async {
     try {
-      final response = await _httpService.get('/auth/callback?code=$code');
+      // In a real OAuth flow, we need to exchange the authorization code for tokens
+      // This typically involves making a request to the token endpoint
+      final response = await _httpService.get(
+        '/auth/callback?code=$code',
+      );
+
       final callbackResponse = AuthRefreshResponse.fromJson(response.data);
+
+      // After successful token exchange, call the /success endpoint with location_id
+      // The location_id should come from the OAuth response or user selection
+      if (callbackResponse.success) {
+        // Extract location_id from the response or use a default
+        // In GoHighLevel's OAuth flow, the location_id is typically selected by the user
+        // during the authorization process and returned in the callback
+        final locationId =
+            response.data['location_id'] ?? 'default_location_id';
+        await _callSuccessEndpoint(locationId);
+      }
+
       return Result.ok(callbackResponse);
     } catch (e) {
       return Result.error(Exception('Erro no callback: $e'));
     }
   }
 
+  /// Chama o endpoint de sucesso com o location_id
+  Future<void> _callSuccessEndpoint(String locationId) async {
+    try {
+      // Make the actual HTTP request to the /success endpoint
+      final response = await _httpService.get(
+        '/auth/success?location_id=$locationId',
+      );
+
+      LoggerService.info(
+        '[AuthService] Success endpoint response: ${response.data}',
+      );
+    } catch (e) {
+      LoggerService.error('[AuthService] Error calling /success endpoint: $e');
+      // Re-throw the error as this is important for the authentication flow
+      rethrow;
+    }
+  }
+
+  /// Chama o endpoint de sucesso com o location_id (método público)
+  Future<Result<void>> callSuccessEndpoint(String locationId) async {
+    try {
+      await _callSuccessEndpoint(locationId);
+      return Result.ok(null);
+    } catch (e) {
+      return Result.error(Exception('Erro ao chamar endpoint de sucesso: $e'));
+    }
+  }
+
   /// Renova o token de acesso
   Future<Result<AuthRefreshResponse>> refreshToken() async {
     try {
+      // Make the actual HTTP request to refresh the token
       final response = await _httpService.post(
         '/auth/refresh',
         data: {},
