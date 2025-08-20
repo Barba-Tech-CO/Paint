@@ -2,18 +2,22 @@ import 'package:dio/dio.dart';
 
 import '../config/app_config.dart';
 import '../utils/logger/app_logger.dart';
+import 'auth_persistence_service.dart';
 import 'i_http_service.dart';
 
 class HttpService implements IHttpService {
   static final HttpService _instance = HttpService._internal();
   late final Dio dio;
   late final AppLogger _logger;
+  late final AuthPersistenceService _authPersistenceService;
 
   factory HttpService() {
     return _instance;
   }
 
   HttpService._internal() {
+    _authPersistenceService = AuthPersistenceService();
+    
     dio = Dio(
       BaseOptions(
         baseUrl: AppConfig.baseUrl,
@@ -24,10 +28,53 @@ class HttpService implements IHttpService {
         },
       ),
     );
+    
+    // Add interceptor to automatically include Sanctum token
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          // Add authorization header for protected endpoints
+          if (_requiresAuth(options.path)) {
+            final token = await _authPersistenceService.getSanctumToken();
+            if (token != null) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
+          }
+          handler.next(options);
+        },
+      ),
+    );
   }
 
   void setLogger(AppLogger logger) {
     _logger = logger;
+  }
+
+  /// Determines if the endpoint requires authentication
+  bool _requiresAuth(String path) {
+    // Endpoints that require Sanctum authentication
+    final protectedEndpoints = [
+      'api/user',
+      'contacts/',
+      'estimates/',
+    ];
+    
+    // Endpoints that don't require authentication
+    final publicEndpoints = [
+      'auth/status',
+      'auth/callback',
+      'auth/redirect',
+      'auth/refresh',
+      'health',
+    ];
+    
+    // Check if it's explicitly public
+    if (publicEndpoints.any((endpoint) => path.contains(endpoint))) {
+      return false;
+    }
+    
+    // Check if it's a protected endpoint
+    return protectedEndpoints.any((endpoint) => path.contains(endpoint));
   }
 
   @override
