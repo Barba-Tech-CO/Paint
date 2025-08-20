@@ -5,6 +5,7 @@ export 'estimate_model.dart';
 export 'paint_catalog_model.dart';
 export 'navigation_item_model.dart';
 export 'zones_card_model.dart';
+export 'user_model.dart';
 
 // Material Models
 export 'material_models/material_model.dart';
