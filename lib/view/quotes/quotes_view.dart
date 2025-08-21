@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../config/app_colors.dart';
 import '../../viewmodel/viewmodels.dart';
 import '../widgets/widgets.dart';
 import 'widgets/widgets.dart';
@@ -51,44 +50,13 @@ class _QuotesViewState extends State<QuotesView> {
                 : SizedBox.shrink(),
             Expanded(
               child: quotesViewModel.currentState == QuotesState.loading
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 16),
-                          Text('Loading quotes...'),
-                        ],
-                      ),
-                    )
+                  ? const LoadingWidget(message: 'Loading quotes...')
                   : quotesViewModel.currentState == QuotesState.empty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'No Quotes yet',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Upload your first quote to get started',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w300,
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          PaintProButton(
-                            text: 'Upload Quote',
-                            minimumSize: Size(130, 42),
-                            borderRadius: 16,
-                            onPressed: () => quotesViewModel.pickFile(),
-                          ),
-                        ],
-                      ),
+                  ? EmptyStateWidget(
+                      title: 'No Quotes yet',
+                      subtitle: 'Upload your first quote to get started',
+                      buttonText: 'Upload Quote',
+                      onButtonPressed: () => quotesViewModel.pickFile(),
                     )
                   : quotesViewModel.currentState == QuotesState.loaded
                   ? ListView.builder(
@@ -121,14 +89,8 @@ class _QuotesViewState extends State<QuotesView> {
       ),
       floatingActionButton: quotesViewModel.currentState != QuotesState.loaded
           ? null
-          : FloatingActionButton(
+          : PaintProFAB(
               onPressed: () => quotesViewModel.pickFile(),
-              backgroundColor: Colors.blue,
-              child: Icon(
-                Icons.add,
-                color: AppColors.cardDefault,
-                size: 40,
-              ),
             ),
     );
   }
