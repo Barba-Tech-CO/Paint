@@ -3,7 +3,6 @@ import '../../model/contact_list_response.dart';
 import '../../model/contact_model.dart';
 import '../../service/contact_service.dart';
 import '../../service/contact_database_service.dart';
-import '../../service/logger_service.dart';
 import '../../service/auth_service.dart';
 import '../../utils/result/result.dart';
 
@@ -422,7 +421,7 @@ class ContactRepository implements IContactRepository {
     } catch (e) {
       // Log error but don't throw - in production, use proper logging service
       // ignore: avoid_print
-      LoggerService.error('Background sync error: $e');
+      print('Background sync error: $e');
     }
   }
 
@@ -435,7 +434,7 @@ class ContactRepository implements IContactRepository {
     } catch (e) {
       // Log error but don't throw - in production, use proper logging service
       // ignore: avoid_print
-      LoggerService.error('Background contact sync error: $e');
+      print('Background contact sync error: $e');
     }
   }
 
