@@ -1,6 +1,4 @@
-// Extrair para um widget separado para melhor legibilidade e reutilização
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 class PaintProLoading extends StatelessWidget {
