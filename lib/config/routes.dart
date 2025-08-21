@@ -4,7 +4,7 @@ import '../model/models.dart';
 import '../view/views.dart';
 
 final router = GoRouter(
-  initialLocation: '/quotes',
+  initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',
