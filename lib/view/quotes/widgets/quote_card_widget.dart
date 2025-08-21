@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'widgets.dart';
 
 class QuoteCardWidget extends StatelessWidget {
   final String id;
@@ -118,7 +119,7 @@ class QuoteCardWidget extends StatelessWidget {
                   final newName = await showDialog<String>(
                     context: context,
                     builder: (context) =>
-                        _RenameQuoteDialog(initialName: titulo),
+                        RenameQuoteDialog(initialName: titulo),
                   );
                   if (newName != null && newName.trim().isNotEmpty) {
                     onRename?.call(newName.trim());
@@ -126,7 +127,7 @@ class QuoteCardWidget extends StatelessWidget {
                 } else if (value == 'delete') {
                   final confirm = await showDialog<bool>(
                     context: context,
-                    builder: (context) => _DeleteQuoteDialog(quoteName: titulo),
+                    builder: (context) => DeleteQuoteDialog(quoteName: titulo),
                   );
                   if (confirm == true) {
                     onDelete?.call();
@@ -159,80 +160,6 @@ class QuoteCardWidget extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _RenameQuoteDialog extends StatefulWidget {
-  final String initialName;
-
-  const _RenameQuoteDialog({required this.initialName});
-
-  @override
-  State<_RenameQuoteDialog> createState() => _RenameQuoteDialogState();
-}
-
-class _RenameQuoteDialogState extends State<_RenameQuoteDialog> {
-  late TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialName);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Rename Quote'),
-      content: TextField(
-        controller: _controller,
-        decoration: const InputDecoration(labelText: 'Quote Name'),
-        autofocus: true,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context, _controller.text.trim()),
-          child: const Text('Save'),
-        ),
-      ],
-    );
-  }
-}
-
-class _DeleteQuoteDialog extends StatelessWidget {
-  final String quoteName;
-
-  const _DeleteQuoteDialog({required this.quoteName});
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Delete Quote'),
-      content: Text('Are you sure you want to delete "$quoteName"?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          style: TextButton.styleFrom(
-            foregroundColor: Colors.red,
-          ),
-          child: const Text('Delete'),
-        ),
-      ],
     );
   }
 }
