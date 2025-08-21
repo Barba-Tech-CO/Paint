@@ -24,10 +24,10 @@ class QuoteCardWidget extends StatelessWidget {
   });
 
   String _formatDateTime(DateTime dateTime) {
-    // Formato: "Uploaded at 14/07/25 - 10:30 AM"
+    // Formato: "Uploaded at 07/14/2025 - 10:30 AM"
     String day = dateTime.day.toString().padLeft(2, '0');
     String month = dateTime.month.toString().padLeft(2, '0');
-    String year = dateTime.year.toString().substring(2); // Últimos 2 dígitos
+    String year = dateTime.year.toString(); // Ano completo
 
     int hour = dateTime.hour;
     String minute = dateTime.minute.toString().padLeft(2, '0');
@@ -40,7 +40,7 @@ class QuoteCardWidget extends StatelessWidget {
       hour = 12;
     }
 
-    return "Uploaded at $day/$month/$year - $hour:$minute $period";
+    return "Uploaded at $month/$day/$year - $hour:$minute $period";
   }
 
   @override
