@@ -18,12 +18,13 @@ class UserViewModel extends ChangeNotifier {
   UserModel? get user => _user;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  
+
   String get displayName {
-    if (_isLoading) return 'User';
-    if (_error != null) return 'User'; // Fallback when there's an error
-    return _user?.name ?? 'User';
+    if (_isLoading) return 'Barba Tech';
+    if (_error != null) return 'Barba Tech'; // Fallback when there's an error
+    return _user?.name ?? 'Barba Tech';
   }
+
   bool get isGhlUser => _user?.isGhlUser ?? false;
   BusinessInfo? get businessInfo => _user?.businessInfo;
 
@@ -33,7 +34,7 @@ class UserViewModel extends ChangeNotifier {
 
     try {
       final result = await _userService.getUser();
-      
+
       if (result is Ok<UserModel>) {
         _user = result.asOk.value;
         _logger.info('User data fetched successfully: ${_user?.name}');
