@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../config/app_config.dart';
 import '../utils/logger/app_logger.dart';
 import 'auth_persistence_service.dart';
+import 'auth_service_exception.dart';
 import 'i_http_service.dart';
 
 class HttpService implements IHttpService {
@@ -77,6 +78,38 @@ class HttpService implements IHttpService {
     return protectedEndpoints.any((endpoint) => path.contains(endpoint));
   }
 
+  /// Determines if the endpoint is an authentication-related endpoint
+  bool _isAuthEndpoint(String path) {
+    final authEndpoints = [
+      '/auth/callback',
+      '/api/user',
+      'auth/callback',
+      'api/user',
+    ];
+    
+    return authEndpoints.any((endpoint) => path.contains(endpoint));
+  }
+
+  /// Handles DioException and converts HTTP 500 on auth endpoints to AuthServiceException
+  Never _handleDioException(DioException e, String path) {
+    if (e.response?.statusCode == 500 && _isAuthEndpoint(path)) {
+      _logger.error(
+        'HTTP 500 error on auth endpoint: $path',
+        e,
+        e.stackTrace,
+      );
+      
+      throw AuthServiceException(
+        message: 'Authentication service is temporarily unavailable. Please try again in a few moments.',
+        errorType: AuthServiceErrorType.serviceUnavailable,
+        technicalDetails: 'HTTP 500 on $path: ${e.message}',
+      );
+    }
+    
+    // For non-auth endpoints or other status codes, rethrow original exception
+    throw e;
+  }
+
   @override
   Future<Response> get(
     String path, {
@@ -104,7 +137,7 @@ class HttpService implements IHttpService {
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: GET $path', e, e.stackTrace);
-      rethrow;
+      _handleDioException(e, path);
     }
   }
 
