@@ -144,10 +144,16 @@ class _AuthWebViewState extends State<AuthWebView> {
           onNavigationRequest: (request) async {
             if (_viewModel == null) return NavigationDecision.navigate;
 
-            // Check if this is the OAuth callback URL
-            if (request.url.contains(
-              'paintpro.barbatech.company/api/auth/callback',
-            )) {
+            _logger.info('[AuthWebView] Navigation request to: ${request.url}');
+
+            // Check if this is the OAuth callback URL (supports both dev and prod)
+            final isCallbackUrl = request.url.contains('/api/auth/callback') && (
+              request.url.contains('paintpro.barbatech.company') || 
+              request.url.contains('localhost:8080') ||
+              request.url.contains('localhost:8090') ||
+              request.url.contains('10.0.2.2:8080')
+            );
+            if (isCallbackUrl) {
               _logger.info('[AuthWebView] OAuth callback detected: ${request.url}');
               
               // Extract the code and process it through the proper OAuth flow

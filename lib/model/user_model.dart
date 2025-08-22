@@ -1,58 +1,4 @@
-class BusinessInfo {
-  final String name;
-  final String email;
-  final String? phone;
-  final String? website;
-  final String? address;
-  final String? city;
-  final String? state;
-  final String? postalCode;
-  final String? country;
-  final String? description;
-
-  BusinessInfo({
-    required this.name,
-    required this.email,
-    this.phone,
-    this.website,
-    this.address,
-    this.city,
-    this.state,
-    this.postalCode,
-    this.country,
-    this.description,
-  });
-
-  factory BusinessInfo.fromJson(Map<String, dynamic> json) {
-    return BusinessInfo(
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
-      phone: json['phone'],
-      website: json['website'],
-      address: json['address'],
-      city: json['city'],
-      state: json['state'],
-      postalCode: json['postal_code'],
-      country: json['country'],
-      description: json['description'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'email': email,
-      'phone': phone,
-      'website': website,
-      'address': address,
-      'city': city,
-      'state': state,
-      'postal_code': postalCode,
-      'country': country,
-      'description': description,
-    };
-  }
-}
+import 'business_info.dart';
 
 class UserModel {
   final int id;
@@ -74,6 +20,8 @@ class UserModel {
   final DateTime? ghlLastSyncAt;
   final bool isGhlUser;
   final BusinessInfo? businessInfo;
+  final bool? ghlDataIncomplete;
+  final bool? ghlError;
 
   UserModel({
     required this.id,
@@ -95,6 +43,8 @@ class UserModel {
     this.ghlLastSyncAt,
     required this.isGhlUser,
     this.businessInfo,
+    this.ghlDataIncomplete,
+    this.ghlError,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -124,6 +74,8 @@ class UserModel {
       businessInfo: json['business_info'] != null
           ? BusinessInfo.fromJson(json['business_info'])
           : null,
+      ghlDataIncomplete: json['ghl_data_incomplete'],
+      ghlError: json['ghl_error'],
     );
   }
 
@@ -148,54 +100,8 @@ class UserModel {
       'ghl_last_sync_at': ghlLastSyncAt?.toIso8601String(),
       'is_ghl_user': isGhlUser,
       'business_info': businessInfo?.toJson(),
+      'ghl_data_incomplete': ghlDataIncomplete,
+      'ghl_error': ghlError,
     };
-  }
-}
-
-class GhlProfileResponse {
-  final bool success;
-  final GhlProfileData? data;
-  final String? message;
-
-  GhlProfileResponse({
-    required this.success,
-    this.data,
-    this.message,
-  });
-
-  factory GhlProfileResponse.fromJson(Map<String, dynamic> json) {
-    return GhlProfileResponse(
-      success: json['success'] ?? false,
-      data: json['data'] != null ? GhlProfileData.fromJson(json['data']) : null,
-      message: json['message'],
-    );
-  }
-}
-
-class GhlProfileData {
-  final int userId;
-  final String ghlLocationId;
-  final BusinessInfo businessInfo;
-  final DateTime? lastSync;
-  final bool isVerified;
-
-  GhlProfileData({
-    required this.userId,
-    required this.ghlLocationId,
-    required this.businessInfo,
-    this.lastSync,
-    required this.isVerified,
-  });
-
-  factory GhlProfileData.fromJson(Map<String, dynamic> json) {
-    return GhlProfileData(
-      userId: json['user_id'],
-      ghlLocationId: json['ghl_location_id'],
-      businessInfo: BusinessInfo.fromJson(json['business_info']),
-      lastSync: json['last_sync'] != null
-          ? DateTime.parse(json['last_sync'])
-          : null,
-      isVerified: json['is_verified'] ?? false,
-    );
   }
 }

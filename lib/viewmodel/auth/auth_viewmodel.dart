@@ -1,41 +1,20 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../config/app_urls.dart';
 import '../../model/auth_model.dart';
 import '../../model/auth_state.dart';
+import '../../model/user_model.dart';
 import '../../service/auth_persistence_service.dart';
 import '../../service/deep_link_service.dart';
 import '../../use_case/auth/auth_use_cases.dart';
 import '../../utils/command/command.dart';
+import '../../utils/handlers/deep_link_handler.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 import 'auth_view_state.dart';
-
-class _DeepLinkHandler {
-  final DeepLinkService _deepLinkService;
-  final void Function(Uri) onDeepLink;
-  final AppLogger _logger;
-  StreamSubscription? _subscription;
-
-  _DeepLinkHandler(
-    this._deepLinkService,
-    this.onDeepLink,
-    this._logger,
-  );
-
-  void initialize() {
-    _subscription = _deepLinkService.deepLinkStream.listen((uri) {
-      onDeepLink(uri);
-    });
-  }
-
-  void dispose() {
-    _subscription?.cancel();
-  }
-}
 
 class AuthViewModel extends ChangeNotifier {
   final AuthOperationsUseCase _authOperationsUseCase;
@@ -44,7 +23,7 @@ class AuthViewModel extends ChangeNotifier {
   final DeepLinkService _deepLinkService;
   final AuthPersistenceService _authPersistenceService;
   final AppLogger _logger;
-  late final _DeepLinkHandler _deepLinkHandler;
+  late final DeepLinkHandler _deepLinkHandler;
 
   AuthViewState _state = AuthViewState.initial();
   AuthViewState get state => _state;
@@ -73,10 +52,9 @@ class AuthViewModel extends ChangeNotifier {
     this._authPersistenceService,
     this._logger,
   ) {
-    _deepLinkHandler = _DeepLinkHandler(
+    _deepLinkHandler = DeepLinkHandler(
       _deepLinkService,
       _onDeepLinkReceived,
-      _logger,
     );
     _deepLinkHandler.initialize();
     // Use microtask to handle async initialization
@@ -90,7 +68,11 @@ class AuthViewModel extends ChangeNotifier {
 
   void _initializeAuth() async {
     _updateState(
-      _state.copyWith(authorizeUrl: AppUrls.goHighLevelAuthorizeUrl),
+      _state.copyWith(
+        authorizeUrl: kDebugMode
+            ? AppUrls.goHighLevelAuthorizeUrlDev
+            : AppUrls.goHighLevelAuthorizeUrl,
+      ),
     );
 
     // First check if user is already authenticated from persisted state
@@ -129,7 +111,7 @@ class AuthViewModel extends ChangeNotifier {
         '[AuthViewModel] Error in deep link: $error',
       );
       _handleDeepLinkUseCase.handleError(
-        error ?? 'Erro desconhecido na autenticação',
+        error ?? 'Unknown error in authentication',
       );
     }
   }
@@ -143,8 +125,30 @@ class AuthViewModel extends ChangeNotifier {
       ),
     );
     final result = await _authOperationsUseCase.checkAuthStatus();
-    result.when(
-      ok: (authModel) {
+    return result.when(
+      ok: (authModel) async {
+        // Check if user is authenticated on backend but missing local token
+        if (authModel.authenticated && !authModel.needsLogin) {
+          final hasLocalToken = await _authPersistenceService.getSanctumToken();
+
+          if (hasLocalToken == null) {
+            _logger.warning(
+              '[AuthViewModel] User authenticated on backend but no local token - requiring re-authentication',
+            );
+            // Force re-authentication to get fresh token
+            final unauthenticatedModel = authModel.copyWith(needsLogin: true);
+            _updateState(
+              _state.copyWith(
+                authStatus: unauthenticatedModel,
+                state: AuthState.unauthenticated,
+                isLoading: false,
+                errorMessage: 'Please log in again to access your account',
+              ),
+            );
+            return Result.ok(unauthenticatedModel);
+          }
+        }
+
         // Only update state if user is not already authenticated locally
         // This prevents backend from overriding successful OAuth authentication
         if (_state.authStatus?.authenticated != true) {
@@ -162,41 +166,107 @@ class AuthViewModel extends ChangeNotifier {
         } else {
           _updateState(_state.copyWith(isLoading: false));
         }
+
+        return Result.ok(authModel);
       },
       error: (error) {
         _logger.error(
           '[AuthViewModel] Error checking auth status: $error',
         );
-        _updateState(
-          _state.copyWith(
-            state: AuthState.error,
-            isLoading: false,
-            errorMessage: error.toString(),
-          ),
+
+        // Check if it's a service unavailable error (HTTP 500) vs network/other errors
+        final errorMessage = error.toString();
+        final isServiceUnavailable = errorMessage.contains(
+          'Authentication service is temporarily unavailable',
         );
+
+        if (isServiceUnavailable) {
+          // Service unavailable - show error state and propagate error to CommandBuilder
+          _updateState(
+            _state.copyWith(
+              state: AuthState.error,
+              isLoading: false,
+              errorMessage: errorMessage,
+            ),
+          );
+          return Result.error(error);
+        } else {
+          // Other errors (network, etc.) - treat as unauthenticated and show login
+          _logger.warning(
+            '[AuthViewModel] Network or connection error, treating as unauthenticated: $errorMessage',
+          );
+
+          // Create a dummy unauthenticated model
+          final unauthenticatedModel = AuthModel(
+            authenticated: false,
+            needsLogin: true,
+            expiresAt: null,
+            locationId: null,
+          );
+
+          _updateState(
+            _state.copyWith(
+              authStatus: unauthenticatedModel,
+              state: AuthState.unauthenticated,
+              isLoading: false,
+              errorMessage: null, // Clear error to show webview
+            ),
+          );
+
+          // Return success to CommandBuilder so it doesn't show error overlay
+          return Result.ok(unauthenticatedModel);
+        }
       },
     );
-    return result;
   }
 
   Future<Result<void>> _processCallback(String code) async {
     try {
-      _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+      _updateState(
+        _state.copyWith(
+          isLoading: true,
+          errorMessage: null,
+        ),
+      );
 
       final result = await _authOperationsUseCase.processCallback(code);
 
       result.when(
         ok: (response) async {
-          _logger.info('[AuthViewModel] OAuth callback response received');
-
           if (response.success && response.locationId != null) {
+            final authToken = response.authToken ?? response.sanctumToken;
+
+            if (authToken == null) {
+              _logger.warning(
+                '[AuthViewModel] No authentication token received from backend. '
+                'This indicates the OAuth flow is incomplete on the backend side. '
+                'The user will need to complete authentication through the backend.',
+              );
+
+              // Redirect to error state since authentication is incomplete
+              final errorMessage = kDebugMode
+                  ? 'OAuth authentication incomplete. No token received from backend.'
+                  : 'Authentication failed. Please try again.';
+
+              _updateState(
+                _state.copyWith(
+                  state: AuthState.error,
+                  isLoading: false,
+                  errorMessage: errorMessage,
+                ),
+              );
+              return; // Exit early, don't proceed with incomplete authentication
+            }
+
             // Use the backend response data to create the auth status
             final newAuthStatus = AuthModel(
               authenticated: true,
               needsLogin: false,
               expiresAt:
                   response.expiresAt ??
-                  DateTime.now().add(const Duration(days: 30)),
+                  DateTime.now().add(
+                    const Duration(days: 30),
+                  ),
               locationId: response.locationId,
             );
 
@@ -215,11 +285,7 @@ class AuthViewModel extends ChangeNotifier {
               needsLogin: false,
               expiresAt: newAuthStatus.expiresAt,
               locationId: newAuthStatus.locationId,
-              sanctumToken: response.sanctumToken,
-            );
-
-            _logger.info(
-              '[AuthViewModel] Authentication state saved successfully',
+              sanctumToken: authToken,
             );
           } else {
             _logger.error(
@@ -277,8 +343,15 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<Result<void>> _refreshToken() async {
-    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+    _updateState(
+      _state.copyWith(
+        isLoading: true,
+        errorMessage: null,
+      ),
+    );
+    
     final result = await _authOperationsUseCase.refreshToken();
+    
     result.when(
       ok: (response) {
         checkAuthStatusCommand.execute();
@@ -292,6 +365,7 @@ class AuthViewModel extends ChangeNotifier {
         );
       },
     );
+    
     return result;
   }
 
@@ -387,6 +461,30 @@ class AuthViewModel extends ChangeNotifier {
   Future<Result<AuthState>> reset() async {
     _updateState(AuthViewState.initial());
     return Result.ok(AuthState.initial);
+  }
+
+  /// Obtém dados completos do usuário autenticado
+  Future<Result<UserModel>> getUserData() async {
+    final result = await _authOperationsUseCase.getUser();
+    return result.when(
+      ok: (user) {
+        _logger.info('[AuthViewModel] User data retrieved: ${user.name}');
+
+        // Log special states for debugging
+        if (user.ghlDataIncomplete == true) {
+          _logger.warning('[AuthViewModel] User has incomplete GHL data');
+        }
+        if (user.ghlError == true) {
+          _logger.warning('[AuthViewModel] User has GHL error');
+        }
+
+        return Result.ok(user);
+      },
+      error: (error) {
+        _logger.error('[AuthViewModel] Error getting user data: $error');
+        return Result.error(error);
+      },
+    );
   }
 
   @override

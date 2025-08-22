@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../model/business_info.dart';
 import '../../model/user_model.dart';
 import '../../service/user_service.dart';
 import '../../utils/logger/app_logger.dart';
@@ -19,14 +20,17 @@ class UserViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  String get displayName {
-    if (_isLoading) return 'Barba Tech';
-    if (_error != null) return 'Barba Tech'; // Fallback when there's an error
-    return _user?.name ?? 'Barba Tech';
-  }
+  String get displayName => _user?.name ?? '';
 
   bool get isGhlUser => _user?.isGhlUser ?? false;
   BusinessInfo? get businessInfo => _user?.businessInfo;
+
+  // New properties for special GHL states
+  bool get hasGhlDataIncomplete => _user?.ghlDataIncomplete ?? false;
+  bool get hasGhlError => _user?.ghlError ?? false;
+
+  // Helper property to check if user has any GHL issues
+  bool get hasGhlIssues => hasGhlDataIncomplete || hasGhlError;
 
   Future<void> fetchUser() async {
     _setLoading(true);
@@ -38,6 +42,19 @@ class UserViewModel extends ChangeNotifier {
       if (result is Ok<UserModel>) {
         _user = result.asOk.value;
         _logger.info('User data fetched successfully: ${_user?.name}');
+
+        // Log special GHL states for debugging and user awareness
+        if (_user?.ghlDataIncomplete == true) {
+          _logger.warning(
+            'User has incomplete GHL data - some features may be limited',
+          );
+        }
+
+        if (_user?.ghlError == true) {
+          _logger.warning(
+            'User has GHL error - integration may not be working properly',
+          );
+        }
       } else if (result is Error<UserModel>) {
         final errorMessage = result.asError.error.toString();
         _setError(errorMessage);
@@ -64,5 +81,25 @@ class UserViewModel extends ChangeNotifier {
 
   void clearError() {
     _setError(null);
+  }
+
+  /// Returns a user-friendly message for GHL issues
+  String? getGhlIssueMessage() {
+    if (!isGhlUser) return null;
+
+    if (hasGhlError) {
+      return 'There is an issue with your GoHighLevel integration. Some features may not work properly.';
+    }
+
+    if (hasGhlDataIncomplete) {
+      return 'Your GoHighLevel data is incomplete. Please check your integration settings.';
+    }
+
+    return null;
+  }
+
+  /// Checks if the user can access GHL-specific features
+  bool canAccessGhlFeatures() {
+    return isGhlUser && !hasGhlError && !hasGhlDataIncomplete;
   }
 }

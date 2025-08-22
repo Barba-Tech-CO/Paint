@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
+import '../../service/auth_persistence_service.dart';
 import '../../viewmodel/navigation_viewmodel.dart';
 import '../../viewmodel/user/user_viewmodel.dart';
 import '../widgets/appbars/paint_pro_app_bar.dart';
@@ -22,18 +23,36 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   late final NavigationViewModel _navigationViewModel;
   late final UserViewModel _userViewModel;
+  late final AuthPersistenceService _authPersistenceService;
 
   @override
   void initState() {
     super.initState();
     _navigationViewModel = getIt<NavigationViewModel>();
     _userViewModel = getIt<UserViewModel>();
-    
+    _authPersistenceService = getIt<AuthPersistenceService>();
+
     // Update the current route to home
     _navigationViewModel.updateCurrentRoute('/home');
-    
-    // Fetch user data
-    _userViewModel.fetchUser();
+
+    // Check for valid token before fetching user data
+    _checkAuthAndFetchUser();
+  }
+
+  Future<void> _checkAuthAndFetchUser() async {
+    // Check if we have a valid token
+    final token = await _authPersistenceService.getSanctumToken();
+    if (token != null) {
+      // Token exists, fetch user data
+      _userViewModel.fetchUser();
+    } else {
+      // No token, wait a bit and try again (in case OAuth just completed)
+      await Future.delayed(const Duration(milliseconds: 1000));
+      final retryToken = await _authPersistenceService.getSanctumToken();
+      if (retryToken != null && mounted) {
+        _userViewModel.fetchUser();
+      }
+    }
   }
 
   @override
