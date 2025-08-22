@@ -61,30 +61,16 @@ class HttpService implements IHttpService {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Log request details for debugging
-          _logger.info('🌐 HTTP Request: ${options.method} ${options.path}');
-          _logger.info('🌐 Base URL: ${dio.options.baseUrl}');
-          _logger.info('🌐 Full URL: ${dio.options.baseUrl}${options.path}');
-          _logger.info('🌐 Request headers: ${options.headers}');
-
           // Add authorization header for protected endpoints
           if (_requiresAuth(options.path)) {
             final token = await _authPersistenceService.getSanctumToken();
             if (token != null) {
               options.headers['Authorization'] = 'Bearer $token';
-              _logger.info(
-                '✅ Added auth token to ${options.path}: $token',
-              );
             } else {
               _logger.warning(
-                '❌ No auth token available for protected endpoint: ${options.path}',
-              );
-              _logger.info(
-                'Attempting request without Bearer token (may use session-based auth)',
+                'No auth token available for protected endpoint: ${options.path}',
               );
             }
-          } else {
-            _logger.info('Public endpoint, no auth required: ${options.path}');
           }
           handler.next(options);
         },
@@ -159,22 +145,15 @@ class HttpService implements IHttpService {
     Options? options,
   }) async {
     try {
-      final startTime = DateTime.now();
       final response = await dio.get(
         path,
         queryParameters: queryParameters,
         options: options,
       );
-      final duration = DateTime.now().difference(startTime);
-
-      _logger.info('API Call: GET $path - Status: ${response.statusCode}');
-      if (queryParameters != null) {
-        _logger.info('Request Data: $queryParameters');
+      // Only log errors and important status codes
+      if (response.statusCode != 200) {
+        _logger.info('API Call: GET $path - Status: ${response.statusCode}');
       }
-      _logger.info('Response JSON: ${response.data}');
-      _logger.info(
-        'Performance: HTTP GET $path took ${duration.inMilliseconds}ms',
-      );
 
       return response;
     } on DioException catch (e) {
@@ -190,9 +169,6 @@ class HttpService implements IHttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final fullPath = '${dio.options.baseUrl}$path';
-
-    _logger.info('--> POST $fullPath');
 
     try {
       final response = await dio.post(
@@ -202,13 +178,12 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      _logger.info('<-- ${response.statusCode} POST $fullPath');
-      _logger.info('POST Response JSON: ${response.data}');
+      if (response.statusCode != 200) {
+        _logger.info('POST $path - Status: ${response.statusCode}');
+      }
       return response;
     } on DioException catch (e) {
-      _logger.error(
-        '<-- ${e.response?.statusCode ?? 'ERROR'} POST $fullPath: $e',
-      );
+      _logger.error('HttpService Error: POST $path', e);
       rethrow;
     }
   }
@@ -220,9 +195,6 @@ class HttpService implements IHttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final fullPath = '${dio.options.baseUrl}$path';
-
-    _logger.info('--> PUT $fullPath');
 
     try {
       final response = await dio.put(
@@ -232,12 +204,12 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      _logger.info('<-- ${response.statusCode} PUT $fullPath');
+      if (response.statusCode != 200) {
+        _logger.info('PUT $path - Status: ${response.statusCode}');
+      }
       return response;
     } on DioException catch (e) {
-      _logger.error(
-        '<-- ${e.response?.statusCode ?? 'ERROR'} PUT $fullPath: $e',
-      );
+      _logger.error('HttpService Error: PUT $path', e);
       rethrow;
     }
   }
@@ -249,9 +221,6 @@ class HttpService implements IHttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final fullPath = '${dio.options.baseUrl}$path';
-
-    _logger.info('--> PATCH $fullPath');
 
     try {
       final response = await dio.patch(
@@ -261,12 +230,12 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      _logger.info('<-- ${response.statusCode} PATCH $fullPath');
+      if (response.statusCode != 200) {
+        _logger.info('PATCH $path - Status: ${response.statusCode}');
+      }
       return response;
     } on DioException catch (e) {
-      _logger.error(
-        '<-- ${e.response?.statusCode ?? 'ERROR'} PATCH $fullPath: $e',
-      );
+      _logger.error('HttpService Error: PATCH $path', e);
       rethrow;
     }
   }
@@ -278,9 +247,6 @@ class HttpService implements IHttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final fullPath = '${dio.options.baseUrl}$path';
-
-    _logger.info('--> DELETE $fullPath');
 
     try {
       final response = await dio.delete(
@@ -290,12 +256,12 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      _logger.info('<-- ${response.statusCode} DELETE $fullPath');
+      if (response.statusCode != 200) {
+        _logger.info('DELETE $path - Status: ${response.statusCode}');
+      }
       return response;
     } on DioException catch (e) {
-      _logger.error(
-        '<-- ${e.response?.statusCode ?? 'ERROR'} DELETE $fullPath: $e',
-      );
+      _logger.error('HttpService Error: DELETE $path', e);
       rethrow;
     }
   }
