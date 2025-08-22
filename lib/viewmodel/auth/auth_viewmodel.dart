@@ -11,32 +11,10 @@ import '../../service/auth_persistence_service.dart';
 import '../../service/deep_link_service.dart';
 import '../../use_case/auth/auth_use_cases.dart';
 import '../../utils/command/command.dart';
+import '../../utils/handlers/deep_link_handler.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 import 'auth_view_state.dart';
-
-class _DeepLinkHandler {
-  final DeepLinkService _deepLinkService;
-  final void Function(Uri) onDeepLink;
-  final AppLogger _logger;
-  StreamSubscription? _subscription;
-
-  _DeepLinkHandler(
-    this._deepLinkService,
-    this.onDeepLink,
-    this._logger,
-  );
-
-  void initialize() {
-    _subscription = _deepLinkService.deepLinkStream.listen((uri) {
-      onDeepLink(uri);
-    });
-  }
-
-  void dispose() {
-    _subscription?.cancel();
-  }
-}
 
 class AuthViewModel extends ChangeNotifier {
   final AuthOperationsUseCase _authOperationsUseCase;
@@ -45,7 +23,7 @@ class AuthViewModel extends ChangeNotifier {
   final DeepLinkService _deepLinkService;
   final AuthPersistenceService _authPersistenceService;
   final AppLogger _logger;
-  late final _DeepLinkHandler _deepLinkHandler;
+  late final DeepLinkHandler _deepLinkHandler;
 
   AuthViewState _state = AuthViewState.initial();
   AuthViewState get state => _state;
@@ -74,10 +52,9 @@ class AuthViewModel extends ChangeNotifier {
     this._authPersistenceService,
     this._logger,
   ) {
-    _deepLinkHandler = _DeepLinkHandler(
+    _deepLinkHandler = DeepLinkHandler(
       _deepLinkService,
       _onDeepLinkReceived,
-      _logger,
     );
     _deepLinkHandler.initialize();
     // Use microtask to handle async initialization
@@ -134,7 +111,7 @@ class AuthViewModel extends ChangeNotifier {
         '[AuthViewModel] Error in deep link: $error',
       );
       _handleDeepLinkUseCase.handleError(
-        error ?? 'Erro desconhecido na autenticação',
+        error ?? 'Unknown error in authentication',
       );
     }
   }
@@ -215,7 +192,7 @@ class AuthViewModel extends ChangeNotifier {
           return Result.error(error);
         } else {
           // Other errors (network, etc.) - treat as unauthenticated and show login
-          _logger.info(
+          _logger.warning(
             '[AuthViewModel] Network or connection error, treating as unauthenticated: $errorMessage',
           );
 
@@ -256,12 +233,8 @@ class AuthViewModel extends ChangeNotifier {
 
       result.when(
         ok: (response) async {
-          _logger.info('[AuthViewModel] OAuth callback response received');
-
           if (response.success && response.locationId != null) {
             final authToken = response.authToken ?? response.sanctumToken;
-
-            _logger.info('[AuthViewModel] Auth token received: $authToken');
 
             if (authToken == null) {
               _logger.warning(
@@ -291,7 +264,9 @@ class AuthViewModel extends ChangeNotifier {
               needsLogin: false,
               expiresAt:
                   response.expiresAt ??
-                  DateTime.now().add(const Duration(days: 30)),
+                  DateTime.now().add(
+                    const Duration(days: 30),
+                  ),
               locationId: response.locationId,
             );
 
@@ -305,17 +280,12 @@ class AuthViewModel extends ChangeNotifier {
             );
 
             // Save authentication state to persistence with backend data
-            _logger.info('[AuthViewModel] Saving auth state to persistence...');
             await _authPersistenceService.saveAuthState(
               authenticated: true,
               needsLogin: false,
               expiresAt: newAuthStatus.expiresAt,
               locationId: newAuthStatus.locationId,
               sanctumToken: authToken,
-            );
-
-            _logger.info(
-              '[AuthViewModel] Authentication completed successfully with token',
             );
           } else {
             _logger.error(
@@ -373,8 +343,15 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<Result<void>> _refreshToken() async {
-    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+    _updateState(
+      _state.copyWith(
+        isLoading: true,
+        errorMessage: null,
+      ),
+    );
+    
     final result = await _authOperationsUseCase.refreshToken();
+    
     result.when(
       ok: (response) {
         checkAuthStatusCommand.execute();
@@ -388,6 +365,7 @@ class AuthViewModel extends ChangeNotifier {
         );
       },
     );
+    
     return result;
   }
 
