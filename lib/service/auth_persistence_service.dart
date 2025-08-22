@@ -35,6 +35,9 @@ class AuthPersistenceService {
 
     if (sanctumToken != null) {
       await prefs.setString(_keySanctumToken, sanctumToken);
+      log('[AuthPersistenceService] Sanctum token saved: $sanctumToken');
+    } else {
+      log('[AuthPersistenceService] No sanctum token provided to save');
     }
 
     log('[AuthPersistenceService] Auth state saved successfully');
@@ -103,6 +106,12 @@ class AuthPersistenceService {
   // Get stored Sanctum token
   Future<String?> getSanctumToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keySanctumToken);
+    final token = prefs.getString(_keySanctumToken);
+    if (token != null) {
+      log('[AuthPersistenceService] Retrieved token: $token');
+    } else {
+      log('[AuthPersistenceService] No token found in storage');
+    }
+    return token;
   }
 }
