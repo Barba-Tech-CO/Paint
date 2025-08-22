@@ -2,6 +2,7 @@ import '../config/app_urls.dart';
 import '../model/auth_model.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/result/result.dart';
+import 'auth_service_exception.dart';
 import 'services.dart';
 
 class AuthService {
@@ -80,6 +81,10 @@ class AuthService {
       }
 
       return Result.ok(callbackResponse);
+    } on AuthServiceException catch (e) {
+      _logger.info('[AuthService] Authentication service unavailable: ${e.message}');
+      _logger.error('[AuthService] Technical details: ${e.technicalDetails}');
+      return Result.error(Exception(e.message));
     } catch (e) {
       _logger.error('[AuthService] Error processing OAuth callback: $e');
       return Result.error(Exception('Erro no callback: $e'));
