@@ -5,6 +5,8 @@ class AuthModel {
   final String? locationId;
   final int? expiresInMinutes;
   final bool? isExpiringSoon;
+  final int? expiresIn;
+  final bool? tokenValid;
 
   AuthModel({
     required this.authenticated,
@@ -13,6 +15,8 @@ class AuthModel {
     this.locationId,
     this.expiresInMinutes,
     this.isExpiringSoon,
+    this.expiresIn,
+    this.tokenValid,
   });
 
   factory AuthModel.fromJson(Map<String, dynamic> json) {
@@ -25,6 +29,8 @@ class AuthModel {
       locationId: json['location_id'],
       expiresInMinutes: json['expires_in_minutes'],
       isExpiringSoon: json['is_expiring_soon'] ?? false,
+      expiresIn: json['expires_in'],
+      tokenValid: json['token_valid'],
     );
   }
 
@@ -36,6 +42,30 @@ class AuthModel {
       'location_id': locationId,
       'expires_in_minutes': expiresInMinutes,
       'is_expiring_soon': isExpiringSoon,
+      'expires_in': expiresIn,
+      'token_valid': tokenValid,
     };
+  }
+
+  AuthModel copyWith({
+    bool? authenticated,
+    DateTime? expiresAt,
+    bool? needsLogin,
+    String? locationId,
+    int? expiresInMinutes,
+    bool? isExpiringSoon,
+    int? expiresIn,
+    bool? tokenValid,
+  }) {
+    return AuthModel(
+      authenticated: authenticated ?? this.authenticated,
+      expiresAt: expiresAt ?? this.expiresAt,
+      needsLogin: needsLogin ?? this.needsLogin,
+      locationId: locationId ?? this.locationId,
+      expiresInMinutes: expiresInMinutes ?? this.expiresInMinutes,
+      isExpiringSoon: isExpiringSoon ?? this.isExpiringSoon,
+      expiresIn: expiresIn ?? this.expiresIn,
+      tokenValid: tokenValid ?? this.tokenValid,
+    );
   }
 }
