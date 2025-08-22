@@ -1,8 +1,7 @@
-import 'dart:developer';
-
 import '../model/user_model.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/result/result.dart';
+import 'auth_service_exception.dart';
 import 'services.dart';
 
 class UserService {
@@ -16,8 +15,16 @@ class UserService {
     try {
       final response = await _httpService.get('api/user');
       final user = UserModel.fromJson(response.data);
-      log('[UserService] User data: ${user.toJson()}');
+      _logger.info('[UserService] User data: ${user.toJson()}');
       return Result.ok(user);
+    } on AuthServiceException catch (e) {
+      _logger.info(
+        '[UserService] Authentication service unavailable: ${e.message}',
+      );
+      _logger.error('[UserService] Technical details: ${e.technicalDetails}');
+      return Result.error(
+        Exception(e.message),
+      );
     } catch (e) {
       _logger.error('Error getting user data: $e');
       return Result.error(
