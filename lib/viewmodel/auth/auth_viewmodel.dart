@@ -188,13 +188,15 @@ class AuthViewModel extends ChangeNotifier {
       result.when(
         ok: (response) async {
           _logger.info('[AuthViewModel] OAuth callback response received');
-          
+
           if (response.success && response.locationId != null) {
             // Use the backend response data to create the auth status
             final newAuthStatus = AuthModel(
               authenticated: true,
               needsLogin: false,
-              expiresAt: response.expiresAt ?? DateTime.now().add(const Duration(days: 30)),
+              expiresAt:
+                  response.expiresAt ??
+                  DateTime.now().add(const Duration(days: 30)),
               locationId: response.locationId,
             );
 
@@ -216,11 +218,16 @@ class AuthViewModel extends ChangeNotifier {
               sanctumToken: response.sanctumToken,
             );
 
-            _logger.info('[AuthViewModel] Authentication state saved successfully');
+            _logger.info(
+              '[AuthViewModel] Authentication state saved successfully',
+            );
           } else {
-            _logger.error('[AuthViewModel] OAuth callback failed or missing location_id');
+            _logger.error(
+              '[AuthViewModel] OAuth callback failed or missing location_id',
+            );
             _updateState(
               _state.copyWith(
+                state: AuthState.error,
                 isLoading: false,
                 errorMessage: 'OAuth authentication failed',
               ),
@@ -231,8 +238,21 @@ class AuthViewModel extends ChangeNotifier {
           _logger.error(
             '[AuthViewModel] Error processing callback: $error',
           );
+
+          // Check if it's an authentication service unavailable error
+          final errorMessage = error.toString();
+          final isServiceUnavailable = errorMessage.contains(
+            'Authentication service is temporarily unavailable',
+          );
+
           _updateState(
-            _state.copyWith(isLoading: false, errorMessage: error.toString()),
+            _state.copyWith(
+              state: AuthState.error,
+              isLoading: false,
+              errorMessage: isServiceUnavailable
+                  ? 'Authentication service is temporarily unavailable. Please try again in a few moments.'
+                  : 'Unable to complete authentication at this time. Please try again.',
+            ),
           );
         },
       );
@@ -244,7 +264,11 @@ class AuthViewModel extends ChangeNotifier {
         stack,
       );
       _updateState(
-        _state.copyWith(isLoading: false, errorMessage: e.toString()),
+        _state.copyWith(
+          state: AuthState.error,
+          isLoading: false,
+          errorMessage: 'Something went wrong. Please try again.',
+        ),
       );
       return Result.error(
         e is Exception ? e : Exception(e.toString()),
@@ -339,6 +363,25 @@ class AuthViewModel extends ChangeNotifier {
   /// Triggers a deep link success callback for testing or manual triggering
   void triggerDeepLinkSuccess() {
     _deepLinkService.triggerSuccessCallback();
+  }
+
+  /// Retries the authentication flow by clearing error state and reloading
+  Future<void> retryAuthentication() async {
+    _updateState(
+      _state.copyWith(
+        state: AuthState.initial,
+        errorMessage: null,
+        isLoading: false,
+      ),
+    );
+
+    // Reload the WebView by updating the authorize URL
+    final newUrl = await getAuthorizeUrl();
+    if (newUrl != null) {
+      _updateState(
+        _state.copyWith(authorizeUrl: newUrl),
+      );
+    }
   }
 
   Future<Result<AuthState>> reset() async {
