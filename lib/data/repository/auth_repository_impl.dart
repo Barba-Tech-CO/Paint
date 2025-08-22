@@ -1,5 +1,6 @@
 import '../../domain/repository/auth_repository.dart';
 import '../../model/auth_model.dart';
+import '../../model/user_model.dart';
 import '../../service/auth_service.dart';
 import '../../utils/result/result.dart';
 
@@ -42,5 +43,10 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<Result<String?>> getCurrentLocationId() {
     return _authService.getCurrentLocationId();
+  }
+
+  @override
+  Future<Result<UserModel>> getUser() {
+    return _authService.getUser();
   }
 }
