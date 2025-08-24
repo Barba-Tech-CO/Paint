@@ -69,9 +69,7 @@ class AuthViewModel extends ChangeNotifier {
   void _initializeAuth() async {
     _updateState(
       _state.copyWith(
-        authorizeUrl: kDebugMode
-            ? AppUrls.goHighLevelAuthorizeUrlDev
-            : AppUrls.goHighLevelAuthorizeUrl,
+        authorizeUrl: AppUrls.goHighLevelAuthorizeUrl,
       ),
     );
 
@@ -87,6 +85,7 @@ class AuthViewModel extends ChangeNotifier {
             authenticated: persistedState['authenticated'] as bool,
             needsLogin: persistedState['needsLogin'] as bool,
             expiresAt: persistedState['expiresAt'] as DateTime?,
+            sanctumToken: persistedState['sanctumToken'] as String?,
             locationId: persistedState['locationId'] as String?,
           ),
           state: AuthState.authenticated,
