@@ -7,6 +7,7 @@ class AuthModel {
   final bool? isExpiringSoon;
   final int? expiresIn;
   final bool? tokenValid;
+  final String? sanctumToken;
 
   AuthModel({
     required this.authenticated,
@@ -17,6 +18,7 @@ class AuthModel {
     this.isExpiringSoon,
     this.expiresIn,
     this.tokenValid,
+    this.sanctumToken,
   });
 
   factory AuthModel.fromJson(Map<String, dynamic> json) {
@@ -31,6 +33,7 @@ class AuthModel {
       isExpiringSoon: json['is_expiring_soon'] ?? false,
       expiresIn: json['expires_in'],
       tokenValid: json['token_valid'],
+      sanctumToken: json['auth_token'],
     );
   }
 
@@ -44,6 +47,7 @@ class AuthModel {
       'is_expiring_soon': isExpiringSoon,
       'expires_in': expiresIn,
       'token_valid': tokenValid,
+      'auth_token': sanctumToken,
     };
   }
 
@@ -56,6 +60,7 @@ class AuthModel {
     bool? isExpiringSoon,
     int? expiresIn,
     bool? tokenValid,
+    String? sanctumToken,
   }) {
     return AuthModel(
       authenticated: authenticated ?? this.authenticated,
@@ -66,6 +71,7 @@ class AuthModel {
       isExpiringSoon: isExpiringSoon ?? this.isExpiringSoon,
       expiresIn: expiresIn ?? this.expiresIn,
       tokenValid: tokenValid ?? this.tokenValid,
+      sanctumToken: sanctumToken ?? this.sanctumToken,
     );
   }
 }
