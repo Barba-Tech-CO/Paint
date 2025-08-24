@@ -39,8 +39,6 @@ class AuthService {
       // Use the correct redirect URI based on the environment
       final String redirectUri = '${_httpService.dio.options.baseUrl.replaceAll('/api', '')}/api/auth/callback';
       
-      _logger.info('[AuthService] Using redirect URI: $redirectUri');
-      
       const String scope =
           'contacts.write+associations.write+associations.readonly+oauth.readonly+oauth.write+invoices%2Festimate.write+invoices%2Festimate.readonly+invoices.readonly+associations%2Frelation.write+associations%2Frelation.readonly+contacts.readonly+invoices.write';
 
@@ -67,17 +65,11 @@ class AuthService {
   /// Processa o callback de autorização
   Future<Result<AuthRefreshResponse>> processCallback(String code) async {
     try {
-      _logger.info(
-        '[AuthService] Processing OAuth callback with code: ${code.substring(0, 8)}...',
-      );
 
       final callbackUrl = '/auth/callback?code=$code';
-      _logger.info('[AuthService] Making request to: $callbackUrl');
 
       // Exchange the authorization code for tokens with the backend
       final response = await _httpService.get(callbackUrl);
-
-      _logger.info('[AuthService] Callback response JSON: ${response.data}');
 
       final callbackResponse = AuthRefreshResponse.fromJson(response.data);
 
