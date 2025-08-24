@@ -44,7 +44,7 @@ class _AuthWebViewState extends State<AuthWebView> {
         if (authViewModel.state.isError) {
           return _buildErrorState(authViewModel);
         }
-        
+
         return WebViewWidget(
           controller: _buildWebViewController(widget.url),
         );
@@ -82,7 +82,8 @@ class _AuthWebViewState extends State<AuthWebView> {
               ),
               const SizedBox(height: 16),
               Text(
-                authViewModel.state.errorMessage ?? 'Unable to complete authentication',
+                authViewModel.state.errorMessage ??
+                    'Unable to complete authentication',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Colors.black54,
                 ),
@@ -144,48 +145,54 @@ class _AuthWebViewState extends State<AuthWebView> {
           onNavigationRequest: (request) async {
             if (_viewModel == null) return NavigationDecision.navigate;
 
-            _logger.info('[AuthWebView] Navigation request to: ${request.url}');
-
             // Check if this is the OAuth callback URL (supports both dev and prod)
-            final isCallbackUrl = request.url.contains('/api/auth/callback') && (
-              request.url.contains('paintpro.barbatech.company') || 
-              request.url.contains('localhost:8080') ||
-              request.url.contains('localhost:8090') ||
-              request.url.contains('10.0.2.2:8080')
-            );
+            final isCallbackUrl =
+                request.url.contains('/api/auth/callback') &&
+                (request.url.contains('paintpro.barbatech.company') ||
+                    request.url.contains('localhost:8080') ||
+                    request.url.contains('localhost:8090') ||
+                    request.url.contains('10.0.2.2:8080'));
             if (isCallbackUrl) {
-              _logger.info('[AuthWebView] OAuth callback detected: ${request.url}');
-              
               // Extract the code and process it through the proper OAuth flow
               final uri = Uri.parse(request.url);
               final code = uri.queryParameters['code'];
-              
+
               if (code != null) {
-                _logger.info('[AuthWebView] Processing OAuth code through auth service: $code');
-                
                 try {
                   // Use the proper OAuth flow through AuthViewModel
                   await _viewModel!.processCallback(code);
-                  
+
                   // Only navigate if processing was successful and state is authenticated
-                  if (mounted && !_isDisposed && _viewModel!.state.state == AuthState.authenticated) {
-                    _logger.info('[AuthWebView] OAuth processing completed successfully, navigating to home');
+                  if (mounted &&
+                      !_isDisposed &&
+                      _viewModel!.state.state == AuthState.authenticated) {
+                    _logger.info(
+                      '[AuthWebView] OAuth processing completed successfully, navigating to home',
+                    );
                     GoRouter.of(_widgetContext).go('/home');
                   } else if (_viewModel!.state.isError) {
-                    _logger.warning('[AuthWebView] OAuth processing failed, staying on auth page to show error');
+                    _logger.warning(
+                      '[AuthWebView] OAuth processing failed, staying on auth page to show error',
+                    );
                     // Error state will be handled by the Consumer widget in build method
+                    _logger.error(
+                      '[AuthWebView] Error ${_viewModel!.state.errorMessage}',
+                    );
                   }
-                  
                 } catch (e) {
-                  _logger.error('[AuthWebView] Error processing OAuth callback: $e');
+                  _logger.error(
+                    '[AuthWebView] Error processing OAuth callback: $e',
+                  );
                   if (_viewModel != null) {
-                    _viewModel!.handleError('Error completing authentication: $e');
+                    _viewModel!.handleError(
+                      'Error completing authentication: $e',
+                    );
                   }
                 }
               } else {
                 _logger.error('[AuthWebView] No code found in callback URL');
               }
-              
+
               // Prevent navigation to avoid webview SSL issues
               return NavigationDecision.prevent;
             }
