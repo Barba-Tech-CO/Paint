@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -7,7 +8,7 @@ class AppConfig {
   static const bool isProduction = true;
 
   /// URL de desenvolvimento principal (usada para iOS, Web, Desktop).
-  static const String _devBaseUrl = 'http://localhost:8000/api';
+  static const String _devBaseUrl = 'http://localhost:8080/api';
 
   /// URL de produção. Substitua pela URL real do seu backend.
   static const String _prodBaseUrl = 'https://paintpro.barbatech.company/api';
@@ -16,7 +17,7 @@ class AppConfig {
   static String get baseUrl {
     if (isProduction) {
       if (kDebugMode) {
-        print('[AppConfig] Using Production baseUrl: $_prodBaseUrl');
+        log('[AppConfig] Using Production baseUrl: $_prodBaseUrl');
       }
       return _prodBaseUrl;
     } else {
@@ -24,13 +25,13 @@ class AppConfig {
       if (Platform.isAndroid) {
         final androidUrl = _devBaseUrl.replaceAll('localhost', '10.0.2.2');
         if (kDebugMode) {
-          print('[AppConfig] Using Development Android baseUrl: $androidUrl');
+          log('[AppConfig] Using Development Android baseUrl: $androidUrl');
         }
         // Converte 'localhost' para o IP do host da máquina no emulador Android.
         return androidUrl;
       }
       if (kDebugMode) {
-        print('[AppConfig] Using Development baseUrl: $_devBaseUrl');
+        log('[AppConfig] Using Development baseUrl: $_devBaseUrl');
       }
       return _devBaseUrl;
     }

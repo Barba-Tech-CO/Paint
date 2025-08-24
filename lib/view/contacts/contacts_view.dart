@@ -104,7 +104,7 @@ class _ContactsViewState extends State<ContactsView> {
         backgroundColor: AppColors.background,
         appBar: const PaintProAppBar(
           title: 'Contacts',
-          toolbarHeight: 90,
+          toolbarHeight: 80,
         ),
         body: ListView.builder(
           itemCount: allContacts.length,

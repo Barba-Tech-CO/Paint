@@ -308,7 +308,7 @@ class _NewContactViewState extends State<NewContactView> {
 
                     PaintProTextField(
                       label: 'Company Name',
-                      hintText: 'Painter Pro LTDA',
+                      hintText: 'Paint Estimator LTDA',
                       controller: _companyNameController,
                     ),
 

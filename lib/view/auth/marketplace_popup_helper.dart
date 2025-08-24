@@ -3,6 +3,7 @@ import '../../viewmodel/auth/auth_viewmodel.dart';
 import '../widgets/webview_popup_screen.dart';
 
 class MarketplacePopupHelper {
+  
   static void show(BuildContext context, String url, AuthViewModel viewModel) {
     showModalBottomSheet(
       context: context,
@@ -21,6 +22,7 @@ class MarketplacePopupHelper {
     ).then(
       (returnedUrl) {
         if (returnedUrl is String && returnedUrl.isNotEmpty) {
+          // If we get a valid URL back, update the authorize URL in the main webview
           viewModel.updateAuthorizeUrl(returnedUrl);
         }
       },

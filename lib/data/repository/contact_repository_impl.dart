@@ -3,7 +3,7 @@ import '../../model/contact_list_response.dart';
 import '../../model/contact_model.dart';
 import '../../service/contact_service.dart';
 import '../../service/contact_database_service.dart';
-import '../../service/logger_service.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../service/auth_service.dart';
 import '../../utils/result/result.dart';
 
@@ -11,14 +11,17 @@ class ContactRepository implements IContactRepository {
   final ContactService _contactService;
   final ContactDatabaseService _databaseService;
   final AuthService _authService;
+  final AppLogger _logger;
 
   ContactRepository({
     required ContactService contactService,
     required ContactDatabaseService databaseService,
     required AuthService authService,
+    required AppLogger logger,
   }) : _contactService = contactService,
        _databaseService = databaseService,
-       _authService = authService;
+       _authService = authService,
+       _logger = logger;
 
   @override
   Future<Result<ContactListResponse>> getContacts({
@@ -422,7 +425,7 @@ class ContactRepository implements IContactRepository {
     } catch (e) {
       // Log error but don't throw - in production, use proper logging service
       // ignore: avoid_print
-      LoggerService.error('Background sync error: $e');
+      _logger.error('Background sync error: $e');
     }
   }
 
@@ -434,8 +437,7 @@ class ContactRepository implements IContactRepository {
       }
     } catch (e) {
       // Log error but don't throw - in production, use proper logging service
-      // ignore: avoid_print
-      LoggerService.error('Background contact sync error: $e');
+      _logger.error('Background contact sync error: $e');
     }
   }
 

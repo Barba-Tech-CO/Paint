@@ -1,13 +1,16 @@
-import '../model/auth_model.dart';
-import '../utils/result/result.dart';
 import '../config/app_urls.dart';
-import 'http_service.dart';
+import '../model/auth_model.dart';
+import '../model/user_model.dart';
+import '../utils/logger/app_logger.dart';
+import '../utils/result/result.dart';
+import 'auth_service_exception.dart';
 import 'services.dart';
 
 class AuthService {
   final HttpService _httpService;
+  final AppLogger _logger;
 
-  AuthService(this._httpService);
+  AuthService(this._httpService, this._logger);
 
   /// Verifica o status de autenticação
   Future<Result<AuthStatusResponse>> getStatus() async {
@@ -17,7 +20,7 @@ class AuthService {
       final authStatus = AuthStatusResponse.fromJson(response.data);
       return Result.ok(authStatus);
     } catch (e) {
-      LoggerService.error('Error checking authentication status: $e');
+      _logger.error('Error checking authentication status: $e');
       return Result.error(
         Exception('Error checking authentication status: $e'),
       );
@@ -32,8 +35,10 @@ class AuthService {
       const String baseUrl =
           'https://marketplace.gohighlevel.com/oauth/chooselocation';
       const String clientId = '6845ab8de6772c0d5c8548d7-mbnty1f6';
-      const String redirectUri =
-          'https://paintpro.barbatech.company/api/oauth/callback';
+      
+      // Use the correct redirect URI based on the environment
+      final String redirectUri = '${_httpService.dio.options.baseUrl.replaceAll('/api', '')}/api/auth/callback';
+      
       const String scope =
           'contacts.write+associations.write+associations.readonly+oauth.readonly+oauth.write+invoices%2Festimate.write+invoices%2Festimate.readonly+invoices.readonly+associations%2Frelation.write+associations%2Frelation.readonly+contacts.readonly+invoices.write';
 
@@ -46,9 +51,11 @@ class AuthService {
         },
       );
 
+      _logger.info('[AuthService] Authorization URL: $authUri');
+
       return Result.ok(authUri.toString());
     } catch (e) {
-      LoggerService.error('Error generating authorization URL: $e');
+      _logger.error('Error generating authorization URL: $e');
       return Result.error(
         Exception('Error generating authorization URL: $e'),
       );
@@ -58,56 +65,44 @@ class AuthService {
   /// Processa o callback de autorização
   Future<Result<AuthRefreshResponse>> processCallback(String code) async {
     try {
-      // In a real OAuth flow, we need to exchange the authorization code for tokens
-      // This typically involves making a request to the token endpoint
-      final response = await _httpService.get(
-        '/auth/callback?code=$code',
-      );
+
+      final callbackUrl = '/auth/callback?code=$code';
+
+      // Exchange the authorization code for tokens with the backend
+      final response = await _httpService.get(callbackUrl);
 
       final callbackResponse = AuthRefreshResponse.fromJson(response.data);
 
-      // After successful token exchange, call the /success endpoint with location_id
-      // The location_id should come from the OAuth response or user selection
-      if (callbackResponse.success) {
-        // Extract location_id from the response or use a default
-        // In GoHighLevel's OAuth flow, the location_id is typically selected by the user
-        // during the authorization process and returned in the callback
-        final locationId =
-            response.data['location_id'] ?? 'default_location_id';
-        await _callSuccessEndpoint(locationId);
+      if (callbackResponse.success && callbackResponse.locationId != null) {
+        _logger.info(
+          '[AuthService] OAuth callback successful, location_id: ${callbackResponse.locationId}',
+        );
+
+        // Check if we received a valid token
+        if (callbackResponse.authToken == null &&
+            callbackResponse.sanctumToken == null) {
+          _logger.warning(
+            '[AuthService] No authentication token received from backend. '
+            'This indicates the OAuth flow is incomplete on the backend side. '
+            'The user will need to complete authentication through the backend.',
+          );
+        }
+      } else {
+        _logger.warning(
+          '[AuthService] OAuth callback failed or missing location_id',
+        );
       }
 
       return Result.ok(callbackResponse);
+    } on AuthServiceException catch (e) {
+      _logger.info(
+        '[AuthService] Authentication service unavailable: ${e.message}',
+      );
+      _logger.error('[AuthService] Technical details: ${e.technicalDetails}');
+      return Result.error(Exception(e.message));
     } catch (e) {
+      _logger.error('[AuthService] Error processing OAuth callback: $e');
       return Result.error(Exception('Erro no callback: $e'));
-    }
-  }
-
-  /// Chama o endpoint de sucesso com o location_id
-  Future<void> _callSuccessEndpoint(String locationId) async {
-    try {
-      // Make the actual HTTP request to the /success endpoint
-      final response = await _httpService.get(
-        '/auth/success?location_id=$locationId',
-      );
-
-      LoggerService.info(
-        '[AuthService] Success endpoint response: ${response.data}',
-      );
-    } catch (e) {
-      LoggerService.error('[AuthService] Error calling /success endpoint: $e');
-      // Re-throw the error as this is important for the authentication flow
-      rethrow;
-    }
-  }
-
-  /// Chama o endpoint de sucesso com o location_id (método público)
-  Future<Result<void>> callSuccessEndpoint(String locationId) async {
-    try {
-      await _callSuccessEndpoint(locationId);
-      return Result.ok(null);
-    } catch (e) {
-      return Result.error(Exception('Erro ao chamar endpoint de sucesso: $e'));
     }
   }
 
@@ -122,7 +117,7 @@ class AuthService {
       final refreshResponse = AuthRefreshResponse.fromJson(response.data);
       return Result.ok(refreshResponse);
     } catch (e) {
-      LoggerService.error('Error refreshing token: $e');
+      _logger.error('Error refreshing token: $e');
       return Result.error(
         Exception('Error refreshing token: $e'),
       );
@@ -196,6 +191,27 @@ class AuthService {
     } catch (e) {
       return Result.error(
         Exception('Error getting location_id: $e'),
+      );
+    }
+  }
+
+  /// Obtém dados completos do usuário autenticado
+  Future<Result<UserModel>> getUser() async {
+    try {
+      final response = await _httpService.get('/user');
+      final user = UserModel.fromJson(response.data);
+      _logger.info('[AuthService] User data retrieved successfully');
+      return Result.ok(user);
+    } on AuthServiceException catch (e) {
+      _logger.info(
+        '[AuthService] Authentication service unavailable: ${e.message}',
+      );
+      _logger.error('[AuthService] Technical details: ${e.technicalDetails}');
+      return Result.error(Exception(e.message));
+    } catch (e) {
+      _logger.error('[AuthService] Error getting user data: $e');
+      return Result.error(
+        Exception('Error getting user data: $e'),
       );
     }
   }

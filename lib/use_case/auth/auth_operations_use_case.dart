@@ -1,4 +1,5 @@
 import '../../model/auth_model.dart';
+import '../../model/user_model.dart';
 import '../../service/auth_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
@@ -49,19 +50,10 @@ class AuthOperationsUseCase {
   }
 
   /// Processa o callback de autorização
-  Future<Result<void>> processCallback(String code) async {
+  Future<Result<AuthRefreshResponse>> processCallback(String code) async {
     final result = await _authService.processCallback(code);
     return result.when(
-      ok: (response) => Result.ok(null),
-      error: (error) => Result.error(error),
-    );
-  }
-
-  /// Chama o endpoint de sucesso com o location_id
-  Future<Result<void>> callSuccessEndpoint(String locationId) async {
-    final result = await _authService.callSuccessEndpoint(locationId);
-    return result.when(
-      ok: (_) => Result.ok(null),
+      ok: (response) => Result.ok(response),
       error: (error) => Result.error(error),
     );
   }
@@ -83,5 +75,35 @@ class AuthOperationsUseCase {
   /// Obtém o location_id atual
   Future<Result<String?>> getCurrentLocationId() async {
     return await _authService.getCurrentLocationId();
+  }
+
+  /// Obtém dados completos do usuário autenticado
+  Future<Result<UserModel>> getUser() async {
+    _logger.info('[AuthOperationsUseCase] Getting user data');
+    try {
+      final result = await _authService.getUser();
+      return result.when(
+        ok: (user) {
+          _logger.info(
+            '[AuthOperationsUseCase] User data retrieved successfully',
+          );
+          return Result.ok(user);
+        },
+        error: (error) {
+          _logger.error(
+            '[AuthOperationsUseCase] Error getting user data',
+            error,
+          );
+          return Result.error(error);
+        },
+      );
+    } catch (error, stackTrace) {
+      _logger.error(
+        '[AuthOperationsUseCase] Exception getting user data',
+        error,
+        stackTrace,
+      );
+      return Result.error(Exception(error.toString()));
+    }
   }
 }

@@ -45,7 +45,7 @@ class _SelectColorsViewState extends State<SelectColorsView>
         controller: _tabController,
         indicatorColor: Colors.white,
         labelColor: Colors.white,
-        toolbarHeight: 60,
+        toolbarHeight: 80,
         unselectedLabelColor: Colors.white.withValues(alpha: 0.7),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
