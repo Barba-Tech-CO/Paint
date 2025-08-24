@@ -56,9 +56,6 @@ class _ProjectsViewState extends State<ProjectsView> {
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(
-              height: 120,
-            ), // espaço extra para não cobrir a barra
           ],
         ),
       ),
