@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../config/app_colors.dart';
 import '../layout/main_layout.dart';
 import '../widgets/widgets.dart';
+import 'widgets/contact_item_widget.dart';
 
 class ContactsView extends StatefulWidget {
   const ContactsView({super.key});
@@ -13,7 +14,7 @@ class ContactsView extends StatefulWidget {
 }
 
 class _ContactsViewState extends State<ContactsView> {
-  final TextEditingController searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   // Lista de contatos mockados
   List<Map<String, String>> allContacts = [
@@ -70,17 +71,17 @@ class _ContactsViewState extends State<ContactsView> {
   void initState() {
     super.initState();
     filteredContacts = List.from(allContacts);
-    searchController.addListener(_filterContacts);
+    _searchController.addListener(_filterContacts);
   }
 
   @override
   void dispose() {
-    searchController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
   void _filterContacts() {
-    final query = searchController.text.toLowerCase().trim();
+    final query = _searchController.text.toLowerCase().trim();
     setState(() {
       if (query.isEmpty) {
         filteredContacts = List.from(allContacts);
@@ -112,20 +113,53 @@ class _ContactsViewState extends State<ContactsView> {
                     buttonText: 'Add Contact',
                     onButtonPressed: () => context.push('/contact-details'),
                   )
-                : ListView.builder(
-                    itemCount: allContacts.length,
-                    padding: const EdgeInsets.only(
-                      bottom: 140,
-                    ), // Adiciona espaço para o bottom navigation
-                    itemBuilder: (context, index) {
-                      final contact = allContacts[index];
-                      return ListTile(
-                        leading: const Icon(Icons.person),
-                        title: Text(contact['name']!),
-                        subtitle: Text(contact['phone']!),
-                        onTap: () => context.push('/contact-details'),
-                      );
-                    },
+                : Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          left: 32,
+                          right: 32,
+                          top: 24,
+                          bottom: 16,
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search',
+                            prefixIcon: const Icon(
+                              Icons.search,
+                              color: Colors.grey,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: allContacts.length,
+                          padding: const EdgeInsets.only(
+                            bottom: 140,
+                            left: 16,
+                            right: 16,
+                          ),
+                          itemBuilder: (context, index) {
+                            final contact = allContacts[index];
+                            return ContactItemWidget(
+                              contact: contact,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
             // FAB posicionado manualmente
             if (allContacts.isNotEmpty)
@@ -133,7 +167,7 @@ class _ContactsViewState extends State<ContactsView> {
                 bottom: 140, // 120px do bottom navigation + 20px de margem
                 right: 16,
                 child: PaintProFAB(
-                  onPressed: () => context.push('/contact-details'),
+                  onPressed: () => context.push('/new-contact'),
                   icon: Icons.add,
                 ),
               ),
