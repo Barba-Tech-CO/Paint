@@ -54,19 +54,6 @@ class _NewContactViewState extends State<NewContactView> {
       companyName: _companyNameController.text.trim(),
       customFields: customFields.isNotEmpty ? customFields : null,
     );
-
-    if (success && mounted) {
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Contact saved successfully!'),
-          backgroundColor: AppColors.success,
-        ),
-      );
-
-      // Navigate back
-      context.pop();
-    }
   }
 
   @override
