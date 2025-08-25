@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -103,8 +105,8 @@ class LoadingHelper {
     );
 
     Future.delayed(duration ?? const Duration(seconds: 2), () {
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      if (context.canPop()) {
+        context.pop();
       }
       onComplete();
     });

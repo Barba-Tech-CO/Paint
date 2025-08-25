@@ -49,9 +49,6 @@ void setupDependencyInjection() {
         getIt<AppLogger>(),
       );
       return httpService;
-        getIt<AppLogger>(),
-      );
-      return httpService;
     },
   );
 
@@ -64,6 +61,9 @@ void setupDependencyInjection() {
     () => ContactService(
       getIt<HttpService>(),
     ),
+  );
+  getIt.registerLazySingleton<ContactDatabaseService>(
+    () => ContactDatabaseService(),
   );
   getIt.registerLazySingleton<EstimateService>(
     () => EstimateService(
