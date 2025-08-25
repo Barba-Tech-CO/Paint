@@ -3,49 +3,33 @@ import '../../utils/result/result.dart';
 
 abstract class IPaintCatalogRepository {
   /// Lista todas as marcas
-  Future<Result<List<PaintBrand>>> getBrands();
+  Future<Result<List<String>>> getBrands();
 
   /// Lista marcas populares
-  Future<Result<List<PaintBrand>>> getPopularBrands();
+  Future<Result<List<String>>> getPopularBrands();
 
-  /// Lista cores de uma marca
-  Future<Result<List<PaintColor>>> getBrandColors(
-    String brandKey, {
-    String? usage,
-  });
+  /// Lista cores de uma marca específica
+  Future<Result<List<PaintColor>>> getBrandColors(String brandName);
 
   /// Obtém detalhes de uma cor específica
-  Future<Result<ColorDetail>> getColorDetail(
-    String brandKey,
-    String colorKey,
-    String usage,
-  );
+  Future<Result<PaintColor>> getColorDetails(String colorId);
 
-  /// Busca em todas as cores e marcas
-  Future<Result<PaintSearchResult>> searchColors({
-    String? query,
-    String? brand,
-    int? limit,
-    int? offset,
-  });
+  /// Busca cores por nome
+  Future<Result<List<PaintColor>>> searchColors(String query);
 
   /// Calcula a necessidade de tinta para uma área
-  Future<Result<PaintCalculation>> calculatePaintNeeds({
-    required String brandKey,
-    required String colorKey,
-    required String usage,
-    required double area,
+  Future<Result<Map<String, dynamic>>> calculatePaintNeeds({
+    required double areaInSquareMeters,
+    required String colorId,
+    required int coats,
   });
 
   /// Retorna uma visão geral do catálogo
-  Future<Result<CatalogOverview>> getOverview();
+  Future<Result<Map<String, dynamic>>> getOverview();
 
-  /// Busca cores por nome ou código
-  Future<Result<List<PaintColor>>> searchColorsByName(String searchTerm);
+  /// Busca cores por nome (método alternativo)
+  Future<Result<List<PaintColor>>> findColorsByName(String name);
 
-  /// Obtém cores de uma marca filtradas por uso
-  Future<Result<List<PaintColor>>> getColorsByUsage(
-    String brandKey,
-    String usage,
-  );
+  /// Obtém cores por tipo de uso
+  Future<Result<List<PaintColor>>> getColorsByUsage(String usage);
 }

@@ -6,81 +6,59 @@ import '../../utils/result/result.dart';
 class PaintCatalogRepository implements IPaintCatalogRepository {
   final PaintCatalogService _paintCatalogService;
 
-  PaintCatalogRepository({required PaintCatalogService paintCatalogService}) 
+  PaintCatalogRepository({required PaintCatalogService paintCatalogService})
     : _paintCatalogService = paintCatalogService;
 
   @override
-  Future<Result<List<PaintBrand>>> getBrands() {
-    return _paintCatalogService.getBrands();
+  Future<Result<List<String>>> getBrands() {
+    return _paintCatalogService.getPaintBrands();
   }
 
   @override
-  Future<Result<List<PaintBrand>>> getPopularBrands() {
+  Future<Result<List<String>>> getPopularBrands() {
     return _paintCatalogService.getPopularBrands();
   }
 
   @override
-  Future<Result<List<PaintColor>>> getBrandColors(
-    String brandKey, {
-    String? usage,
-  }) {
-    return _paintCatalogService.getBrandColors(brandKey, usage: usage);
+  Future<Result<List<PaintColor>>> getBrandColors(String brandName) {
+    return _paintCatalogService.getBrandColors(brandName);
   }
 
   @override
-  Future<Result<ColorDetail>> getColorDetail(
-    String brandKey,
-    String colorKey,
-    String usage,
-  ) {
-    return _paintCatalogService.getColorDetail(brandKey, colorKey, usage);
+  Future<Result<PaintColor>> getColorDetails(String colorId) {
+    return _paintCatalogService.getColorDetails(colorId);
   }
 
   @override
-  Future<Result<PaintSearchResult>> searchColors({
-    String? query,
-    String? brand,
-    int? limit,
-    int? offset,
-  }) {
-    return _paintCatalogService.searchColors(
-      query: query,
-      brand: brand,
-      limit: limit,
-      offset: offset,
-    );
+  Future<Result<List<PaintColor>>> searchColors(String query) {
+    return _paintCatalogService.searchColors(query);
   }
 
   @override
-  Future<Result<PaintCalculation>> calculatePaintNeeds({
-    required String brandKey,
-    required String colorKey,
-    required String usage,
-    required double area,
+  Future<Result<Map<String, dynamic>>> calculatePaintNeeds({
+    required double areaInSquareMeters,
+    required String colorId,
+    required int coats,
   }) {
     return _paintCatalogService.calculatePaintNeeds(
-      brandKey: brandKey,
-      colorKey: colorKey,
-      usage: usage,
-      area: area,
+      areaInSquareMeters: areaInSquareMeters,
+      colorId: colorId,
+      coats: coats,
     );
   }
 
   @override
-  Future<Result<CatalogOverview>> getOverview() {
-    return _paintCatalogService.getOverview();
+  Future<Result<Map<String, dynamic>>> getOverview() {
+    return _paintCatalogService.getCatalogOverview();
   }
 
   @override
-  Future<Result<List<PaintColor>>> searchColorsByName(String searchTerm) {
-    return _paintCatalogService.searchColorsByName(searchTerm);
+  Future<Result<List<PaintColor>>> findColorsByName(String name) {
+    return _paintCatalogService.findColorsByName(name);
   }
 
   @override
-  Future<Result<List<PaintColor>>> getColorsByUsage(
-    String brandKey,
-    String usage,
-  ) {
-    return _paintCatalogService.getColorsByUsage(brandKey, usage);
+  Future<Result<List<PaintColor>>> getColorsByUsage(String usage) {
+    return _paintCatalogService.getColorsByUsage(usage);
   }
 }

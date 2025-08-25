@@ -82,5 +82,9 @@ final router = GoRouter(
         return const SelectMaterialView();
       },
     ),
+    GoRoute(
+      path: '/quotes',
+      builder: (context, state) => const QuotesView(),
+    ),
   ],
 );

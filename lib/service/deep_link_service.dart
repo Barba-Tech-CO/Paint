@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'dart:developer';
-import 'package:flutter/foundation.dart';
+
 import 'package:app_links/app_links.dart';
+import 'package:flutter/foundation.dart';
+
 import '../config/app_urls.dart';
 
 class DeepLinkService {
@@ -27,8 +28,7 @@ class DeepLinkService {
         (uri) => _processDeepLink(uri),
       );
     } catch (e) {
-      log('[DeepLinkService] Erro ao inicializar serviço: $e');
-      throw Exception('Erro ao inicializar serviço de Deep Links: $e');
+      throw Exception('Error initializing Deep Links service: $e');
     }
   }
 
@@ -38,7 +38,6 @@ class DeepLinkService {
       if (uri.pathSegments.contains('success')) {
         _deepLinkController.add(uri);
       } else if (uri.pathSegments.contains('error')) {
-        log('[DeepLinkService] Erro na autenticação via Deep Link');
         _deepLinkController.add(uri);
       }
     }
@@ -57,7 +56,7 @@ class DeepLinkService {
 
   /// Dispara um Deep Link para o próprio app (para testes)
   void triggerDeepLink(String path) {
-    final uri = Uri.parse('paintproapp://auth/$path');
+    final uri = Uri.parse('${AppUrls.deepLinkBaseUrl}/$path');
     _processDeepLink(uri);
   }
 

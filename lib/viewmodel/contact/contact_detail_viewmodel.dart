@@ -19,20 +19,28 @@ class ContactDetailViewModel extends ChangeNotifier {
 
   /// Cria um novo contato
   Future<bool> createContact({
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String phone,
+    String? name,
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? phone,
+    String? companyName,
+    String? address,
+    List<Map<String, dynamic>>? customFields,
   }) async {
     _setLoading(true);
-    _clearError();
+    clearError();
 
     try {
       final result = await _contactRepository.createContact(
+        name: name,
         firstName: firstName,
         lastName: lastName,
         email: email,
         phone: phone,
+        companyName: companyName,
+        address: address,
+        customFields: customFields,
       );
 
       if (result is Ok) {
@@ -44,7 +52,7 @@ class ContactDetailViewModel extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _setError('Erro ao criar contato: $e');
+      _setError('Error creating contact: $e');
       return false;
     } finally {
       _setLoading(false);
@@ -54,7 +62,7 @@ class ContactDetailViewModel extends ChangeNotifier {
   /// Obtém detalhes de um contato
   Future<void> getContactDetails(String contactId) async {
     _setLoading(true);
-    _clearError();
+    clearError();
 
     try {
       final result = await _contactRepository.getContact(contactId);
@@ -65,7 +73,7 @@ class ContactDetailViewModel extends ChangeNotifier {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
-      _setError('Erro ao obter detalhes do contato: $e');
+      _setError('Error getting contact details: $e');
     } finally {
       _setLoading(false);
     }
@@ -74,21 +82,29 @@ class ContactDetailViewModel extends ChangeNotifier {
   /// Atualiza um contato
   Future<bool> updateContact(
     String contactId, {
+    String? name,
     String? firstName,
     String? lastName,
     String? email,
     String? phone,
+    String? companyName,
+    String? address,
+    List<Map<String, dynamic>>? customFields,
   }) async {
     _setLoading(true);
-    _clearError();
+    clearError();
 
     try {
       final result = await _contactRepository.updateContact(
         contactId,
+        name: name,
         firstName: firstName,
         lastName: lastName,
         email: email,
         phone: phone,
+        companyName: companyName,
+        address: address,
+        customFields: customFields,
       );
 
       if (result is Ok) {
@@ -100,7 +116,7 @@ class ContactDetailViewModel extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _setError('Erro ao atualizar contato: $e');
+      _setError('Error updating contact: $e');
       return false;
     } finally {
       _setLoading(false);
@@ -110,7 +126,7 @@ class ContactDetailViewModel extends ChangeNotifier {
   /// Remove um contato
   Future<bool> deleteContact(String contactId) async {
     _setLoading(true);
-    _clearError();
+    clearError();
 
     try {
       final result = await _contactRepository.deleteContact(contactId);
@@ -126,7 +142,7 @@ class ContactDetailViewModel extends ChangeNotifier {
       }
       return false;
     } catch (e) {
-      _setError('Erro ao remover contato: $e');
+      _setError('Error deleting contact: $e');
       return false;
     } finally {
       _setLoading(false);
@@ -163,6 +179,23 @@ class ContactDetailViewModel extends ChangeNotifier {
     return '$firstName$lastName';
   }
 
+  /// Sincroniza contatos pendentes
+  Future<void> syncPendingContacts() async {
+    _setLoading(true);
+    clearError();
+
+    try {
+      final result = await _contactRepository.syncPendingContacts();
+      if (result is Error) {
+        _setError(result.asError.error.toString());
+      }
+    } catch (e) {
+      _setError('Error syncing pending contacts: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   // Métodos privados para gerenciar estado
   void _setLoading(bool loading) {
     _isLoading = loading;
@@ -174,7 +207,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _clearError() {
+  void clearError() {
     _error = null;
     notifyListeners();
   }

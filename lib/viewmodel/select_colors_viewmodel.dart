@@ -80,7 +80,7 @@ class SelectColorsViewModel extends ChangeNotifier {
       final result = await _paintCatalogRepository.getBrands();
       result.when(
         ok: (brands) {
-          _brands = brands.map((brand) => brand.name).toList();
+          _brands = brands; // Brands are now strings directly
           notifyListeners();
           _logger.info('Brands loaded: ${_brands.length}');
         },
@@ -135,6 +135,16 @@ class SelectColorsViewModel extends ChangeNotifier {
       result.when(
         ok: (colors) {
           // Convert PaintColor to Map for compatibility
+          _colors = colors
+              .map(
+                (color) => {
+                  'name': color.name,
+                  'code': color.key,
+                  'price': '\$${color.price?.toStringAsFixed(2) ?? "N/A"}/Gal',
+                  'color': Colors.grey[200], // Default color representation
+                },
+              )
+              .toList();
           _colors = colors
               .map(
                 (color) => {

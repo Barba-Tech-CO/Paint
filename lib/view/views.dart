@@ -17,3 +17,4 @@ export 'zones/zones_view.dart';
 export 'create_project/create_project_view.dart';
 export 'edit_zone/edit_zone_view.dart';
 export 'select_material/select_material_view.dart';
+export 'quotes/quotes_view.dart';

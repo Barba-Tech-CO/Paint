@@ -1,64 +1,52 @@
-import 'dart:io';
 import '../../model/estimate_model.dart';
 import '../../utils/result/result.dart';
 
 abstract class IEstimateRepository {
   /// Obtém dados do dashboard
-  Future<Result<DashboardResponse>> getDashboard();
+  Future<Result<Map<String, dynamic>>> getDashboard();
 
   /// Lista orçamentos com filtros e paginação
-  Future<Result<EstimateListResponse>> getEstimates({
+  Future<Result<List<EstimateModel>>> getEstimates({
     int? limit,
     int? offset,
-    EstimateStatus? status,
-    ProjectType? projectType,
+    String? status,
   });
 
   /// Cria um novo orçamento
-  Future<Result<EstimateResponse>> createEstimate({
-    required String projectName,
-    required String clientName,
-    required ProjectType projectType,
-  });
+  Future<Result<EstimateModel>> createEstimate(Map<String, dynamic> data);
 
   /// Obtém detalhes de um orçamento
-  Future<Result<EstimateResponse>> getEstimate(String estimateId);
+  Future<Result<EstimateModel>> getEstimate(String estimateId);
 
   /// Atualiza um orçamento
-  Future<Result<EstimateResponse>> updateEstimate(
-    String estimateId, {
-    String? projectName,
-    String? clientName,
-    ProjectType? projectType,
-  });
+  Future<Result<EstimateModel>> updateEstimate(
+    String estimateId,
+    Map<String, dynamic> data,
+  );
 
   /// Remove um orçamento
   Future<Result<bool>> deleteEstimate(String estimateId);
 
   /// Atualiza o status de um orçamento
-  Future<Result<EstimateResponse>> updateEstimateStatus(
+  Future<Result<EstimateModel>> updateEstimateStatus(
     String estimateId,
-    EstimateStatus status,
+    String status,
   );
 
   /// Upload de fotos para um orçamento
-  Future<Result<EstimateResponse>> uploadPhotos(
+  Future<Result<List<String>>> uploadPhotos(
     String estimateId,
-    List<File> photos,
+    List<String> photoPaths,
   );
 
-  /// Seleciona tintas e calcula custos
-  Future<Result<EstimateResponse>> selectElements(
-    String estimateId, {
-    required bool useCatalog,
-    required String brandKey,
-    required String colorKey,
-    required String usage,
-    required String sizeKey,
-  });
+  /// Seleciona elementos para um orçamento
+  Future<Result<Map<String, dynamic>>> selectElements(
+    String estimateId,
+    List<String> elementIds,
+  );
 
   /// Finaliza o orçamento
-  Future<Result<EstimateResponse>> completeEstimate(String estimateId);
+  Future<Result<EstimateModel>> finalizeEstimate(String estimateId);
 
   /// Envia o orçamento para o GHL
   Future<Result<bool>> sendToGHL(String estimateId);

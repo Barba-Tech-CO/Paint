@@ -1,10 +1,11 @@
-import '../utils/result/result.dart';
+import '../model/contact_list_response.dart';
 import '../model/contact_model.dart';
+import '../utils/result/result.dart';
 import 'http_service.dart';
 
 class ContactService {
   final HttpService _httpService;
-  static const String _baseUrl = '/api/contacts';
+  static const String _baseUrl = '/v1/contacts';
 
   ContactService(this._httpService);
 
@@ -25,32 +26,57 @@ class ContactService {
       final contactListResponse = ContactListResponse.fromJson(response.data);
       return Result.ok(contactListResponse);
     } catch (e) {
-      return Result.error(Exception('Erro ao listar contatos: $e'));
+      return Result.error(
+        Exception('Error listing contacts: $e'),
+      );
     }
   }
 
-  /// Cria um novo contato
-  Future<Result<ContactModel>> createContact({
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String phone,
+  /// Busca contatos por nome, email ou telefone
+  Future<Result<ContactListResponse>> searchContacts(String query) async {
+    try {
+      final response = await _httpService.get(
+        _baseUrl,
+        queryParameters: {'query': query},
+      );
+
+      final contactListResponse = ContactListResponse.fromJson(response.data);
+      return Result.ok(contactListResponse);
+    } catch (e) {
+      return Result.error(
+        Exception('Error searching contacts: $e'),
+      );
+    }
+  }
+
+  /// Busca avançada de contatos
+  Future<Result<ContactListResponse>> advancedSearch({
+    String? locationId,
+    int? pageLimit,
+    int? page,
+    String? query,
+    List<Map<String, dynamic>>? filters,
+    List<Map<String, dynamic>>? sort,
   }) async {
     try {
       final response = await _httpService.post(
-        _baseUrl,
+        '$_baseUrl/search',
         data: {
-          'firstName': firstName,
-          'lastName': lastName,
-          'email': email,
-          'phone': phone,
+          if (locationId != null) 'locationId': locationId,
+          if (pageLimit != null) 'pageLimit': pageLimit,
+          if (page != null) 'page': page,
+          if (query != null) 'query': query,
+          if (filters != null) 'filters': filters,
+          if (sort != null) 'sort': sort,
         },
       );
 
-      final contact = ContactModel.fromJson(response.data);
-      return Result.ok(contact);
+      final contactListResponse = ContactListResponse.fromJson(response.data);
+      return Result.ok(contactListResponse);
     } catch (e) {
-      return Result.error(Exception('Erro ao criar contato: $e'));
+      return Result.error(
+        Exception('Error in advanced search: $e'),
+      );
     }
   }
 
@@ -59,62 +85,128 @@ class ContactService {
     try {
       final response = await _httpService.get('$_baseUrl/$contactId');
 
-      final contact = ContactModel.fromJson(response.data);
-      return Result.ok(contact);
+      // Handle the specific response structure from the API
+      if (response.data['success'] == true &&
+          response.data['contactDetails'] != null) {
+        final contact = ContactModel.fromJson(response.data['contactDetails']);
+        return Result.ok(contact);
+      } else {
+        return Result.error(
+          Exception('Contact not found'),
+        );
+      }
     } catch (e) {
-      return Result.error(Exception('Erro ao obter contato: $e'));
+      return Result.error(
+        Exception('Error getting contact: $e'),
+      );
+    }
+  }
+
+  /// Cria um novo contato
+  Future<Result<ContactModel>> createContact({
+    String? name,
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? phone,
+    String? companyName,
+    String? address,
+    List<Map<String, dynamic>>? customFields,
+  }) async {
+    try {
+      final response = await _httpService.post(
+        _baseUrl,
+        data: {
+          if (name != null) 'name': name,
+          if (firstName != null) 'firstName': firstName,
+          if (lastName != null) 'lastName': lastName,
+          if (email != null) 'email': email,
+          if (phone != null) 'phone': phone,
+          if (companyName != null) 'companyName': companyName,
+          if (address != null) 'address': address,
+          if (customFields != null) 'customFields': customFields,
+        },
+      );
+
+      // Handle the specific response structure from the API
+      if (response.data['success'] == true &&
+          response.data['contactDetails'] != null) {
+        final contact = ContactModel.fromJson(response.data['contactDetails']);
+        return Result.ok(contact);
+      } else {
+        return Result.error(
+          Exception('Error creating contact'),
+        );
+      }
+    } catch (e) {
+      return Result.error(
+        Exception('Error creating contact: $e'),
+      );
     }
   }
 
   /// Atualiza um contato
   Future<Result<ContactModel>> updateContact(
     String contactId, {
+    String? name,
     String? firstName,
     String? lastName,
     String? email,
     String? phone,
+    String? companyName,
+    String? address,
+    List<Map<String, dynamic>>? customFields,
   }) async {
     try {
       final updateData = <String, dynamic>{};
+      if (name != null) updateData['name'] = name;
       if (firstName != null) updateData['firstName'] = firstName;
       if (lastName != null) updateData['lastName'] = lastName;
       if (email != null) updateData['email'] = email;
       if (phone != null) updateData['phone'] = phone;
+      if (companyName != null) updateData['companyName'] = companyName;
+      if (address != null) updateData['address'] = address;
+      if (customFields != null) updateData['customFields'] = customFields;
 
       final response = await _httpService.put(
         '$_baseUrl/$contactId',
         data: updateData,
       );
 
-      final contact = ContactModel.fromJson(response.data);
-      return Result.ok(contact);
+      // Handle the specific response structure from the API
+      if (response.data['success'] == true &&
+          response.data['contactDetails'] != null) {
+        final contact = ContactModel.fromJson(response.data['contactDetails']);
+        return Result.ok(contact);
+      } else {
+        return Result.error(
+          Exception('Error updating contact'),
+        );
+      }
     } catch (e) {
-      return Result.error(Exception('Erro ao atualizar contato: $e'));
+      return Result.error(
+        Exception('Error updating contact: $e'),
+      );
     }
   }
 
   /// Remove um contato
   Future<Result<bool>> deleteContact(String contactId) async {
     try {
-      await _httpService.delete('$_baseUrl/$contactId');
-      return Result.ok(true);
-    } catch (e) {
-      return Result.error(Exception('Erro ao remover contato: $e'));
-    }
-  }
+      final response = await _httpService.delete('$_baseUrl/$contactId');
 
-  /// Busca contatos por nome ou email
-  Future<Result<ContactListResponse>> searchContacts(String query) async {
-    try {
-      final response = await _httpService.get(
-        _baseUrl,
-        queryParameters: {'q': query},
+      // Handle the specific response structure from the API
+      if (response.data['success'] == true) {
+        return Result.ok(true);
+      } else {
+        return Result.error(
+          Exception('Error deleting contact'),
+        );
+      }
+    } catch (e) {
+      return Result.error(
+        Exception('Error deleting contact: $e'),
       );
-
-      final contactListResponse = ContactListResponse.fromJson(response.data);
-      return Result.ok(contactListResponse);
-    } catch (e) {
-      return Result.error(Exception('Erro ao buscar contatos: $e'));
     }
   }
 }

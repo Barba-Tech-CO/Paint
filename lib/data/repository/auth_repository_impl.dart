@@ -6,7 +6,8 @@ import '../../utils/result/result.dart';
 class AuthRepository implements IAuthRepository {
   final AuthService _authService;
 
-  AuthRepository({required AuthService authService}) : _authService = authService;
+  AuthRepository({required AuthService authService})
+    : _authService = authService;
 
   @override
   Future<Result<AuthStatusResponse>> getStatus() {
@@ -36,5 +37,10 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<Result<bool>> isTokenExpiringSoon() {
     return _authService.isTokenExpiringSoon();
+  }
+
+  @override
+  Future<Result<String?>> getCurrentLocationId() {
+    return _authService.getCurrentLocationId();
   }
 }
