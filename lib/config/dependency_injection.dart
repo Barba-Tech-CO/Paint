@@ -62,6 +62,9 @@ void setupDependencyInjection() {
       getIt<HttpService>(),
     ),
   );
+  getIt.registerLazySingleton<ContactDatabaseService>(
+    () => ContactDatabaseService(),
+  );
   getIt.registerLazySingleton<EstimateService>(
     () => EstimateService(
       getIt<HttpService>(),
