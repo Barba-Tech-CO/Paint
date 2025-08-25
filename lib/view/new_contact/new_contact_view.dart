@@ -91,7 +91,7 @@ class _NewContactViewState extends State<NewContactView> {
                       const SizedBox(height: 16),
 
                       PaintProTextField(
-                        label: 'Name *',
+                        label: 'Name:',
                         hintText: 'John',
                         controller: _nameController,
                         validator: (value) {
@@ -108,14 +108,14 @@ class _NewContactViewState extends State<NewContactView> {
                       const SizedBox(height: 16),
 
                       PaintProNumberField(
-                        label: 'Phone',
+                        label: 'Phone:',
                         hintText: '(555) 123-4567',
                         controller: _phoneController,
                         kind: NumberFieldKind.phone,
                       ),
 
                       PaintProTextField(
-                        label: 'Email *',
+                        label: 'Email:',
                         hintText: 'example@mail.com',
                         controller: _emailController,
                         validator: (value) {
@@ -137,7 +137,7 @@ class _NewContactViewState extends State<NewContactView> {
                       const SectionTitleWidget(title: 'Additional Information'),
 
                       PaintProTextField(
-                        label: 'Company Name',
+                        label: 'Company Name:',
                         hintText: 'Painter Pro LTDA',
                         controller: _companyNameController,
                       ),
@@ -154,6 +154,7 @@ class _NewContactViewState extends State<NewContactView> {
               child: PaintProButton(
                 text: viewModel.isLoading ? 'Saving...' : 'Save',
                 onPressed: viewModel.isLoading ? null : _saveContact,
+                borderRadius: 16,
               ),
             ),
           ),
