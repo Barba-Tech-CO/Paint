@@ -54,7 +54,7 @@ class FloatingBottomNavigationBar extends StatelessWidget {
                         bottom: 12,
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           ...viewModel.navigationItems
                               .asMap()
@@ -77,8 +77,7 @@ class FloatingBottomNavigationBar extends StatelessWidget {
                                   ),
                                 );
                               }),
-                          // Espaço vazio para o botão da câmera
-                          const SizedBox(width: 80),
+
                           ...viewModel.navigationItems
                               .asMap()
                               .entries
