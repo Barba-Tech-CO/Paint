@@ -327,6 +327,7 @@ class ContactsViewModel extends ChangeNotifier {
     }
   }
 
+  //TODO(gabriel): DADOS MOCKADOS retirar quando api estiver pronta
   // Mock data
   List<ContactModel> _getMockContacts() {
     return [
