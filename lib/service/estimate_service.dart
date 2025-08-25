@@ -1,111 +1,106 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
-import '../utils/result/result.dart';
+
 import '../model/estimate_model.dart';
+import '../utils/result/result.dart';
 import 'http_service.dart';
 
 class EstimateService {
   final HttpService _httpService;
-  static const String _baseUrl = '/api/paint-pro';
+  static const String _baseUrl = '/paint-pro';
 
   EstimateService(this._httpService);
 
   /// Obtém dados do dashboard
-  Future<Result<DashboardResponse>> getDashboard() async {
+  Future<Result<Map<String, dynamic>>> getDashboardData() async {
     try {
-      final response = await _httpService.get('$_baseUrl/estimates/dashboard');
-      final dashboardResponse = DashboardResponse.fromJson(response.data);
-      return Result.ok(dashboardResponse);
+      final response = await _httpService.get('$_baseUrl/dashboard');
+      return Result.ok(response.data);
     } catch (e) {
-      return Result.error(Exception('Erro ao obter dados do dashboard: $e'));
+      return Result.error(
+        Exception('Error getting dashboard data: $e'),
+      );
     }
   }
 
-  /// Lista orçamentos com filtros e paginação
-  Future<Result<EstimateListResponse>> getEstimates({
+  /// Lista orçamentos
+  Future<Result<List<EstimateModel>>> getEstimates({
     int? limit,
     int? offset,
-    EstimateStatus? status,
-    ProjectType? projectType,
+    String? status,
   }) async {
     try {
       final queryParams = <String, dynamic>{};
       if (limit != null) queryParams['limit'] = limit;
       if (offset != null) queryParams['offset'] = offset;
-      if (status != null) queryParams['status'] = status.name;
-      if (projectType != null) queryParams['project_type'] = projectType.name;
+      if (status != null) queryParams['status'] = status;
 
       final response = await _httpService.get(
         '$_baseUrl/estimates',
         queryParameters: queryParams,
       );
 
-      final estimateListResponse = EstimateListResponse.fromJson(response.data);
-      return Result.ok(estimateListResponse);
+      final estimates = (response.data['estimates'] as List)
+          .map((estimate) => EstimateModel.fromJson(estimate))
+          .toList();
+      return Result.ok(estimates);
     } catch (e) {
-      return Result.error(Exception('Erro ao listar orçamentos: $e'));
+      return Result.error(
+        Exception('Error listing estimates: $e'),
+      );
     }
   }
 
   /// Cria um novo orçamento
-  Future<Result<EstimateResponse>> createEstimate({
-    required String projectName,
-    required String clientName,
-    required ProjectType projectType,
-  }) async {
+  Future<Result<EstimateModel>> createEstimate(
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await _httpService.post(
         '$_baseUrl/estimates',
-        data: {
-          'project_name': projectName,
-          'client_name': clientName,
-          'project_type': projectType.name,
-        },
+        data: data,
       );
 
-      final estimateResponse = EstimateResponse.fromJson(response.data);
-      return Result.ok(estimateResponse);
+      final estimate = EstimateModel.fromJson(response.data);
+      return Result.ok(estimate);
     } catch (e) {
-      return Result.error(Exception('Erro ao criar orçamento: $e'));
+      return Result.error(
+        Exception('Error creating estimate: $e'),
+      );
     }
   }
 
-  /// Obtém detalhes de um orçamento
-  Future<Result<EstimateResponse>> getEstimate(String estimateId) async {
+  /// Obtém um orçamento específico
+  Future<Result<EstimateModel>> getEstimate(String estimateId) async {
     try {
       final response = await _httpService.get(
         '$_baseUrl/estimates/$estimateId',
       );
-
-      final estimateResponse = EstimateResponse.fromJson(response.data);
-      return Result.ok(estimateResponse);
+      final estimate = EstimateModel.fromJson(response.data);
+      return Result.ok(estimate);
     } catch (e) {
-      return Result.error(Exception('Erro ao obter orçamento: $e'));
+      return Result.error(
+        Exception('Error getting estimate: $e'),
+      );
     }
   }
 
   /// Atualiza um orçamento
-  Future<Result<EstimateResponse>> updateEstimate(
-    String estimateId, {
-    String? projectName,
-    String? clientName,
-    ProjectType? projectType,
-  }) async {
+  Future<Result<EstimateModel>> updateEstimate(
+    String estimateId,
+    Map<String, dynamic> data,
+  ) async {
     try {
-      final updateData = <String, dynamic>{};
-      if (projectName != null) updateData['project_name'] = projectName;
-      if (clientName != null) updateData['client_name'] = clientName;
-      if (projectType != null) updateData['project_type'] = projectType.name;
-
       final response = await _httpService.put(
         '$_baseUrl/estimates/$estimateId',
-        data: updateData,
+        data: data,
       );
 
-      final estimateResponse = EstimateResponse.fromJson(response.data);
-      return Result.ok(estimateResponse);
+      final estimate = EstimateModel.fromJson(response.data);
+      return Result.ok(estimate);
     } catch (e) {
-      return Result.error(Exception('Erro ao atualizar orçamento: $e'));
+      return Result.error(
+        Exception('Error updating estimate: $e'),
+      );
     }
   }
 
@@ -115,108 +110,105 @@ class EstimateService {
       await _httpService.delete('$_baseUrl/estimates/$estimateId');
       return Result.ok(true);
     } catch (e) {
-      return Result.error(Exception('Erro ao remover orçamento: $e'));
+      return Result.error(
+        Exception('Error deleting estimate: $e'),
+      );
     }
   }
 
   /// Atualiza o status de um orçamento
-  Future<Result<EstimateResponse>> updateEstimateStatus(
+  Future<Result<EstimateModel>> updateEstimateStatus(
     String estimateId,
-    EstimateStatus status,
+    String status,
   ) async {
     try {
       final response = await _httpService.patch(
         '$_baseUrl/estimates/$estimateId/status',
-        data: {'status': status.name},
+        data: {'status': status},
       );
 
-      final estimateResponse = EstimateResponse.fromJson(response.data);
-      return Result.ok(estimateResponse);
+      final estimate = EstimateModel.fromJson(response.data);
+      return Result.ok(estimate);
     } catch (e) {
       return Result.error(
-        Exception('Erro ao atualizar status do orçamento: $e'),
+        Exception('Error updating estimate status: $e'),
       );
     }
   }
 
-  /// Upload de fotos para um orçamento
-  Future<Result<EstimateResponse>> uploadPhotos(
+  /// Faz upload de fotos para um orçamento
+  Future<Result<List<String>>> uploadPhotos(
     String estimateId,
-    List<File> photos,
+    List<String> photoPaths,
   ) async {
     try {
-      final formData = FormData();
-
-      for (int i = 0; i < photos.length; i++) {
-        formData.files.add(
-          MapEntry(
-            'photos[$i]',
-            await MultipartFile.fromFile(photos[i].path),
-          ),
-        );
-      }
+      final formData = FormData.fromMap({
+        'photos': photoPaths
+            .map((path) => MultipartFile.fromFile(path))
+            .toList(),
+      });
 
       final response = await _httpService.post(
         '$_baseUrl/estimates/$estimateId/photos',
         data: formData,
       );
 
-      final estimateResponse = EstimateResponse.fromJson(response.data);
-      return Result.ok(estimateResponse);
+      final photoUrls = List<String>.from(response.data['photoUrls'] ?? []);
+      return Result.ok(photoUrls);
     } catch (e) {
-      return Result.error(Exception('Erro ao fazer upload das fotos: $e'));
+      return Result.error(
+        Exception('Error uploading photos: $e'),
+      );
     }
   }
 
-  /// Seleciona tintas e calcula custos
-  Future<Result<EstimateResponse>> selectElements(
-    String estimateId, {
-    required bool useCatalog,
-    required String brandKey,
-    required String colorKey,
-    required String usage,
-    required String sizeKey,
-  }) async {
+  /// Seleciona elementos para um orçamento
+  Future<Result<Map<String, dynamic>>> selectElements(
+    String estimateId,
+    List<String> elementIds,
+  ) async {
     try {
       final response = await _httpService.post(
-        '$_baseUrl/estimates/$estimateId/select-elements',
-        data: {
-          'use_catalog': useCatalog,
-          'brand_key': brandKey,
-          'color_key': colorKey,
-          'usage': usage,
-          'size_key': sizeKey,
-        },
+        '$_baseUrl/estimates/$estimateId/elements',
+        data: {'elementIds': elementIds},
       );
 
-      final estimateResponse = EstimateResponse.fromJson(response.data);
-      return Result.ok(estimateResponse);
+      return Result.ok(response.data);
     } catch (e) {
-      return Result.error(Exception('Erro ao selecionar elementos: $e'));
+      return Result.error(
+        Exception('Error selecting elements: $e'),
+      );
     }
   }
 
-  /// Finaliza o orçamento
-  Future<Result<EstimateResponse>> completeEstimate(String estimateId) async {
+  /// Finaliza um orçamento
+  Future<Result<EstimateModel>> finalizeEstimate(String estimateId) async {
     try {
       final response = await _httpService.post(
-        '$_baseUrl/estimates/$estimateId/complete',
+        '$_baseUrl/estimates/$estimateId/finalize',
       );
 
-      final estimateResponse = EstimateResponse.fromJson(response.data);
-      return Result.ok(estimateResponse);
+      final estimate = EstimateModel.fromJson(response.data);
+      return Result.ok(estimate);
     } catch (e) {
-      return Result.error(Exception('Erro ao finalizar orçamento: $e'));
+      return Result.error(
+        Exception('Error finalizing estimate: $e'),
+      );
     }
   }
 
-  /// Envia o orçamento para o GHL
+  /// Envia orçamento para GHL
   Future<Result<bool>> sendToGHL(String estimateId) async {
     try {
-      await _httpService.post('$_baseUrl/estimates/$estimateId/send-to-ghl');
-      return Result.ok(true);
+      final response = await _httpService.post(
+        '$_baseUrl/estimates/$estimateId/send-to-ghl',
+      );
+
+      return Result.ok(response.data['success'] == true);
     } catch (e) {
-      return Result.error(Exception('Erro ao enviar orçamento para GHL: $e'));
+      return Result.error(
+        Exception('Error sending estimate to GHL: $e'),
+      );
     }
   }
 }

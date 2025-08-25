@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-import 'i_http_service.dart';
+
 import '../config/app_config.dart';
 import '../utils/logger/app_logger.dart';
+import 'i_http_service.dart';
 
 class HttpService implements IHttpService {
   static final HttpService _instance = HttpService._internal();
@@ -69,9 +69,7 @@ class HttpService implements IHttpService {
     Options? options,
   }) async {
     final fullPath = '${dio.options.baseUrl}$path';
-    if (kDebugMode) {
-      print('--> POST $fullPath');
-    }
+
     try {
       final response = await dio.post(
         path,
@@ -79,14 +77,9 @@ class HttpService implements IHttpService {
         queryParameters: queryParameters,
         options: options,
       );
-      if (kDebugMode) {
-        print('<-- ${response.statusCode} POST $fullPath');
-      }
+
       return response;
     } on DioException catch (e) {
-      if (kDebugMode) {
-        print('<-- ${e.response?.statusCode ?? 'ERROR'} POST $fullPath: $e');
-      }
       rethrow;
     }
   }
@@ -99,9 +92,7 @@ class HttpService implements IHttpService {
     Options? options,
   }) async {
     final fullPath = '${dio.options.baseUrl}$path';
-    if (kDebugMode) {
-      print('--> PUT $fullPath');
-    }
+
     try {
       final response = await dio.put(
         path,
@@ -109,14 +100,9 @@ class HttpService implements IHttpService {
         queryParameters: queryParameters,
         options: options,
       );
-      if (kDebugMode) {
-        print('<-- ${response.statusCode} PUT $fullPath');
-      }
+
       return response;
     } on DioException catch (e) {
-      if (kDebugMode) {
-        print('<-- ${e.response?.statusCode ?? 'ERROR'} PUT $fullPath: $e');
-      }
       rethrow;
     }
   }
@@ -129,9 +115,7 @@ class HttpService implements IHttpService {
     Options? options,
   }) async {
     final fullPath = '${dio.options.baseUrl}$path';
-    if (kDebugMode) {
-      print('--> PATCH $fullPath');
-    }
+
     try {
       final response = await dio.patch(
         path,
@@ -139,14 +123,9 @@ class HttpService implements IHttpService {
         queryParameters: queryParameters,
         options: options,
       );
-      if (kDebugMode) {
-        print('<-- ${response.statusCode} PATCH $fullPath');
-      }
+
       return response;
     } on DioException catch (e) {
-      if (kDebugMode) {
-        print('<-- ${e.response?.statusCode ?? 'ERROR'} PATCH $fullPath: $e');
-      }
       rethrow;
     }
   }
@@ -159,9 +138,7 @@ class HttpService implements IHttpService {
     Options? options,
   }) async {
     final fullPath = '${dio.options.baseUrl}$path';
-    if (kDebugMode) {
-      print('--> DELETE $fullPath');
-    }
+
     try {
       final response = await dio.delete(
         path,
@@ -169,14 +146,9 @@ class HttpService implements IHttpService {
         queryParameters: queryParameters,
         options: options,
       );
-      if (kDebugMode) {
-        print('<-- ${response.statusCode} DELETE $fullPath');
-      }
+
       return response;
     } on DioException catch (e) {
-      if (kDebugMode) {
-        print('<-- ${e.response?.statusCode ?? 'ERROR'} DELETE $fullPath: $e');
-      }
       rethrow;
     }
   }

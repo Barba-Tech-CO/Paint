@@ -1,5 +1,6 @@
 import '../model/auth_model.dart';
 import '../utils/result/result.dart';
+import '../config/app_urls.dart';
 import 'http_service.dart';
 import 'services.dart';
 
@@ -17,7 +18,7 @@ class AuthService {
       return Result.ok(authStatus);
     } catch (e) {
       return Result.error(
-        Exception('Erro ao verificar status: $e'),
+        Exception('Error checking authentication status: $e'),
       );
     }
   }
@@ -47,7 +48,7 @@ class AuthService {
       return Result.ok(authUri.toString());
     } catch (e) {
       return Result.error(
-        Exception('Erro ao obter URL de autorização: $e'),
+        Exception('Error generating authorization URL: $e'),
       );
     }
   }
@@ -87,7 +88,9 @@ class AuthService {
       final response = await _httpService.get(
         '/auth/success?location_id=$locationId',
       );
-    } catch (e) {}
+    } catch (e) {
+      rethrow;
+    }
   }
 
   /// Chama o endpoint de sucesso com o location_id (método público)
@@ -105,13 +108,15 @@ class AuthService {
     try {
       // Make the actual HTTP request to refresh the token
       final response = await _httpService.post(
-        '/auth/refresh',
+        AppUrls.authRefreshUrl,
         data: {},
       );
       final refreshResponse = AuthRefreshResponse.fromJson(response.data);
       return Result.ok(refreshResponse);
     } catch (e) {
-      return Result.error(Exception('Erro ao renovar token: $e'));
+      return Result.error(
+        Exception('Error refreshing token: $e'),
+      );
     }
   }
 
@@ -124,12 +129,12 @@ class AuthService {
         return Result.ok(status.data.authenticated && !status.data.needsLogin);
       } else {
         return Result.error(
-          Exception('Erro ao verificar autenticação'),
+          Exception('Error checking authentication'),
         );
       }
     } catch (e) {
       return Result.error(
-        Exception('Erro ao verificar autenticação: $e'),
+        Exception('Error checking authentication: $e'),
       );
     }
   }
@@ -144,6 +149,12 @@ class AuthService {
           return Result.ok(true);
         }
 
+        // Use the isExpiringSoon field from the API response if available
+        if (status.data.isExpiringSoon != null) {
+          return Result.ok(status.data.isExpiringSoon!);
+        }
+
+        // Fallback to manual calculation
         final now = DateTime.now();
         final expiresAt = status.data.expiresAt!;
         final difference = expiresAt.difference(now);
@@ -151,12 +162,31 @@ class AuthService {
         return Result.ok(difference.inMinutes < 60);
       } else {
         return Result.error(
-          Exception('Erro ao verificar expiração do token'),
+          Exception('Error checking token expiration'),
         );
       }
     } catch (e) {
       return Result.error(
-        Exception('Erro ao verificar expiração do token: $e'),
+        Exception('Error checking token expiration: $e'),
+      );
+    }
+  }
+
+  /// Obtém o location_id atual
+  Future<Result<String?>> getCurrentLocationId() async {
+    try {
+      final statusResult = await getStatus();
+      if (statusResult is Ok) {
+        final status = statusResult.asOk.value;
+        return Result.ok(status.data.locationId);
+      } else {
+        return Result.error(
+          Exception('Error getting location_id'),
+        );
+      }
+    } catch (e) {
+      return Result.error(
+        Exception('Error getting location_id: $e'),
       );
     }
   }

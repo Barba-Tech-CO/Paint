@@ -19,4 +19,7 @@ abstract class IAuthRepository {
 
   /// Verifica se o token está próximo de expirar
   Future<Result<bool>> isTokenExpiringSoon();
+
+  /// Obtém o location_id atual
+  Future<Result<String?>> getCurrentLocationId();
 }

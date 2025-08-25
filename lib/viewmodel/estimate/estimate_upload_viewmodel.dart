@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
 import '../../domain/repository/estimate_repository.dart';
@@ -6,7 +5,7 @@ import '../../domain/repository/estimate_repository.dart';
 class EstimateUploadViewModel extends ChangeNotifier {
   final IEstimateRepository _estimateRepository;
 
-  final List<File> _selectedPhotos = [];
+  final List<String> _selectedPhotos = [];
   bool _isUploading = false;
   String? _error;
   double _uploadProgress = 0.0;
@@ -14,15 +13,15 @@ class EstimateUploadViewModel extends ChangeNotifier {
   EstimateUploadViewModel(this._estimateRepository);
 
   // Getters
-  List<File> get selectedPhotos => _selectedPhotos;
+  List<String> get selectedPhotos => _selectedPhotos;
   bool get isUploading => _isUploading;
   String? get error => _error;
   double get uploadProgress => _uploadProgress;
   bool get hasPhotos => _selectedPhotos.isNotEmpty;
 
   /// Adiciona fotos à lista
-  void addPhotos(List<File> photos) {
-    _selectedPhotos.addAll(photos);
+  void addPhotos(List<String> photoPaths) {
+    _selectedPhotos.addAll(photoPaths);
     notifyListeners();
   }
 
@@ -43,7 +42,7 @@ class EstimateUploadViewModel extends ChangeNotifier {
   /// Faz upload das fotos para um orçamento
   Future<bool> uploadPhotos(String estimateId) async {
     if (_selectedPhotos.isEmpty) {
-      _setError('Nenhuma foto selecionada');
+      _setError('No photos selected');
       return false;
     }
 
@@ -57,7 +56,7 @@ class EstimateUploadViewModel extends ChangeNotifier {
         _selectedPhotos,
       );
 
-      if (result is Ok && result.asOk.value.data != null) {
+      if (result is Ok) {
         _setUploadProgress(1.0);
         notifyListeners();
         return true;
@@ -66,7 +65,7 @@ class EstimateUploadViewModel extends ChangeNotifier {
       }
       return false;
     } catch (e) {
-      _setError('Erro ao fazer upload das fotos: $e');
+      _setError('Error uploading photos: $e');
       return false;
     } finally {
       _setUploading(false);

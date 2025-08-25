@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// PaintPro App Color Palette
+/// Painter Pro App Color Palette
 /// Design System with consistent colors across the application
 class AppColors {
   // Primary Colors

@@ -100,6 +100,10 @@ final router = GoRouter(
       },
     ),
     GoRoute(
+      path: '/quotes',
+      builder: (context, state) => const QuotesView(),
+    ),
+    GoRoute(
       path: '/loading',
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;

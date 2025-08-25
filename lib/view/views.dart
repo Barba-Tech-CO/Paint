@@ -19,3 +19,4 @@ export 'edit_zone/edit_zone_view.dart';
 export 'select_material/select_material_view.dart';
 export 'success/success_view.dart';
 export 'widgets/loading/loading_widget.dart';
+export 'quotes/quotes_view.dart';

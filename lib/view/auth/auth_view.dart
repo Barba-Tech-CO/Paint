@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
+import '../../service/services.dart';
 import '../../viewmodel/auth/auth_viewmodel.dart';
 import '../widgets/appbars/paint_pro_app_bar.dart';
 import 'auth_content.dart';
@@ -33,6 +34,7 @@ class AuthView extends StatelessWidget {
       if (viewModel.shouldNavigateToDashboard) {
         context.go('/home');
       }
+
       if (viewModel.shouldShowPopup && viewModel.popupUrl != null) {
         MarketplacePopupHelper.show(context, viewModel.popupUrl!, viewModel);
       }
