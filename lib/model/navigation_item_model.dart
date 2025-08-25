@@ -21,7 +21,7 @@ class NavigationItemModel {
       icon: Icons.home_rounded,
       activeIcon: Icons.home,
       label: 'Home',
-      route: '/dashboard',
+      route: '/home',
     ),
     const NavigationItemModel(
       id: 'projects',
@@ -38,11 +38,11 @@ class NavigationItemModel {
       route: '/contacts',
     ),
     const NavigationItemModel(
-      id: 'highlights',
+      id: 'uploads',
       icon: Icons.link_rounded,
-      activeIcon: Icons.lightbulb,
-      label: 'Go High le..',
-      route: '/highlights',
+      activeIcon: Icons.create_new_folder_sharp,
+      label: 'Uploads',
+      route: '/quotes',
     ),
   ];
 }

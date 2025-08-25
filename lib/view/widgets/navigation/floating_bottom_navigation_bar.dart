@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../config/app_colors.dart';
 import '../../../model/navigation_item_model.dart';
 import '../../../viewmodel/navigation_viewmodel.dart';
-import 'floating_camera_button_widget.dart';
 import 'navigation_item_widget.dart';
 import 'notch_painter.dart';
 
@@ -107,23 +106,11 @@ class FloatingBottomNavigationBar extends StatelessWidget {
                   ),
                 ),
               ),
-              // Botão da câmera fixo
-              Positioned(
-                top: -4,
-                child: FloatingCameraButtonWidget(
-                  onTap: () => _onCameraTapped(context),
-                  semanticsLabel: 'Abrir câmera',
-                ),
-              ),
             ],
           ),
         );
       },
     );
-  }
-
-  void _onCameraTapped(BuildContext context) {
-    viewModel.onCameraTapped(context);
   }
 
   void _onItemTapped(
