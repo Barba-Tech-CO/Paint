@@ -95,9 +95,6 @@ class _ContactsViewState extends State<ContactsView> {
 
   @override
   Widget build(BuildContext context) {
-    // Para testar estado vazio, descomente a linha abaixo:
-    // allContacts = [];
-
     return MainLayout(
       currentRoute: '/contacts',
       child: Scaffold(
@@ -106,31 +103,42 @@ class _ContactsViewState extends State<ContactsView> {
           title: 'Contacts',
           toolbarHeight: 90,
         ),
-        body: allContacts.isEmpty
-            ? EmptyStateWidget(
-                title: 'No Contacts yet',
-                subtitle: 'Add your first contact to get started',
-                buttonText: 'Add Contact',
-                onButtonPressed: () => context.push('/contact-details'),
-              )
-            : ListView.builder(
-                itemCount: allContacts.length,
-                itemBuilder: (context, index) {
-                  final contact = allContacts[index];
-                  return ListTile(
-                    leading: const Icon(Icons.person),
-                    title: Text(contact['name']!),
-                    subtitle: Text(contact['phone']!),
-                    onTap: () => context.push('/contact-details'),
-                  );
-                },
+        body: Stack(
+          children: [
+            allContacts.isEmpty
+                ? EmptyStateWidget(
+                    title: 'No Contacts yet',
+                    subtitle: 'Add your first contact to get started',
+                    buttonText: 'Add Contact',
+                    onButtonPressed: () => context.push('/contact-details'),
+                  )
+                : ListView.builder(
+                    itemCount: allContacts.length,
+                    padding: const EdgeInsets.only(
+                      bottom: 140,
+                    ), // Adiciona espaço para o bottom navigation
+                    itemBuilder: (context, index) {
+                      final contact = allContacts[index];
+                      return ListTile(
+                        leading: const Icon(Icons.person),
+                        title: Text(contact['name']!),
+                        subtitle: Text(contact['phone']!),
+                        onTap: () => context.push('/contact-details'),
+                      );
+                    },
+                  ),
+            // FAB posicionado manualmente
+            if (allContacts.isNotEmpty)
+              Positioned(
+                bottom: 140, // 120px do bottom navigation + 20px de margem
+                right: 16,
+                child: PaintProFAB(
+                  onPressed: () => context.push('/contact-details'),
+                  icon: Icons.add,
+                ),
               ),
-        floatingActionButton: allContacts.isNotEmpty
-            ? PaintProFAB(
-                onPressed: () => context.push('/contact-details'),
-                icon: Icons.person_add,
-              )
-            : null,
+          ],
+        ),
       ),
     );
   }

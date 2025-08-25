@@ -39,7 +39,7 @@ class NavigationItemModel {
     ),
     const NavigationItemModel(
       id: 'uploads',
-      icon: Icons.create_new_folder_sharp,
+      icon: Icons.folder,
       activeIcon: Icons.create_new_folder_sharp,
       label: 'Uploads',
       route: '/quotes',
