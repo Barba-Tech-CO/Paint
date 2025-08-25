@@ -83,6 +83,9 @@ class PaintProApp extends StatelessWidget {
         ChangeNotifierProvider<QuotesViewModel>(
           create: (_) => getIt<QuotesViewModel>(),
         ),
+        ChangeNotifierProvider<ContactsViewModel>(
+          create: (_) => getIt<ContactsViewModel>(),
+        ),
       ],
       child: MaterialApp.router(
         title: 'Painter Pro',

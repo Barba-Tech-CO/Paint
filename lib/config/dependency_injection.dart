@@ -245,7 +245,12 @@ void setupDependencyInjection() {
     ),
   );
 
+  // ViewModel - Quotes
   getIt.registerFactory<QuotesViewModel>(
     () => QuotesViewModel(),
+  );
+
+  getIt.registerFactory<ContactsViewModel>(
+    () => ContactsViewModel(),
   );
 }

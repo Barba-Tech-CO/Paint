@@ -4,6 +4,9 @@ export 'auth/auth_viewmodel.dart';
 // Contact ViewModels
 export 'contact/contact_viewmodels.dart';
 
+// Contacts ViewModels
+export 'contacts/contacts_viewmodel.dart';
+
 // Estimate ViewModels
 export 'estimate/estimate_viewmodels.dart';
 
