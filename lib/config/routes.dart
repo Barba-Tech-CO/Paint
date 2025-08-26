@@ -31,8 +31,8 @@ final router = GoRouter(
       builder: (context, state) => const ContactsView(),
     ),
     GoRoute(
-      path: '/highlights',
-      builder: (context, state) => const HighlightsView(),
+      path: '/quotes',
+      builder: (context, state) => const QuotesView(),
     ),
     GoRoute(
       path: '/contact-details',
