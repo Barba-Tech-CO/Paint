@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import '../widgets/widgets.dart';
+import '../../viewmodel/viewmodels.dart';
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
-import '../../viewmodel/viewmodels.dart';
-import '../widgets/widgets.dart';
 import 'widgets/select_material_widgets.dart';
 
 class SelectMaterialView extends StatefulWidget {
@@ -279,7 +278,10 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
                       borderRadius: 8,
                       onPressed: _viewModel.selectedCount == 0
                           ? null
-                          : () => context.push('/overview-measurements'),
+                          : () => context.push(
+                              '/overview-zones',
+                              extra: _viewModel.selectedMaterials,
+                            ),
                     ),
                   ],
                 );

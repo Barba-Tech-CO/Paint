@@ -1,10 +1,84 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../config/dependency_injection.dart';
+import '../../helpers/loading_helper.dart';
+import '../../model/models.dart';
+import '../../viewmodel/viewmodels.dart';
 import '../widgets/widgets.dart';
 
-class OverviewZonesView extends StatelessWidget {
-  const OverviewZonesView({super.key});
+class OverviewZonesView extends StatefulWidget {
+  final List<MaterialModel>? selectedMaterials;
+  final List<ZonesCardModel>? selectedZones;
+
+  const OverviewZonesView({
+    super.key,
+    this.selectedMaterials,
+    this.selectedZones,
+  });
+
+  @override
+  State<OverviewZonesView> createState() => _OverviewZonesViewState();
+}
+
+class _OverviewZonesViewState extends State<OverviewZonesView> {
+  late OverviewZonesViewModel _viewModel;
+  late ZonesListViewModel _zonesListViewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = OverviewZonesViewModel();
+    _zonesListViewModel = getIt<ZonesListViewModel>();
+
+    // Inicializar o ZonesListViewModel
+    _zonesListViewModel.initialize();
+
+    // Se materiais foram passados, configurá-los no ViewModel
+    if (widget.selectedMaterials != null &&
+        widget.selectedMaterials!.isNotEmpty) {
+      _viewModel.setSelectedMaterials(widget.selectedMaterials!);
+    }
+
+    // Se zonas foram passadas, configurá-las no ViewModel
+    if (widget.selectedZones != null && widget.selectedZones!.isNotEmpty) {
+      _viewModel.setSelectedZones(widget.selectedZones!);
+    } else {
+      // Se não há zonas passadas, usar as zonas reais do ZonesListViewModel
+      _loadRealZones();
+    }
+  }
+
+  void _loadRealZones() {
+    // Adicionar listener para quando as zonas forem carregadas
+    _zonesListViewModel.addListener(_onZonesLoaded);
+
+    // Se já existem zonas carregadas, usá-las imediatamente
+    if (_zonesListViewModel.zones.isNotEmpty) {
+      _viewModel.setSelectedZones(_zonesListViewModel.zones);
+    } else {
+      // Se não há zonas carregadas ainda, aguardar um pouco e tentar novamente
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (_zonesListViewModel.zones.isNotEmpty) {
+          _viewModel.setSelectedZones(_zonesListViewModel.zones);
+        }
+      });
+    }
+  }
+
+  void _onZonesLoaded() {
+    if (_zonesListViewModel.zones.isNotEmpty &&
+        _viewModel.selectedZones.isEmpty) {
+      _viewModel.setSelectedZones(_zonesListViewModel.zones);
+    }
+  }
+
+  @override
+  void dispose() {
+    _zonesListViewModel.removeListener(_onZonesLoaded);
+    _viewModel.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,136 +90,199 @@ class OverviewZonesView extends StatelessWidget {
           onPressed: () => context.pop(),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              // Project Summary Card
-              ProjectSummaryCardWidget(
-                title: 'Project Summary',
-                children: const [
-                  SummaryInfoRowWidget(
-                    label: 'Total Area',
-                    value: '631 sq ft',
-                  ),
-                  SummaryInfoRowWidget(
-                    label: 'Rooms',
-                    value: 'Living Room',
-                  ),
-                  SummaryInfoRowWidget(
-                    label: 'Paint Type',
-                    value: 'Interior Eggshell',
-                  ),
-                ],
-              ),
-
-              // Materials Card
-              ProjectSummaryCardWidget(
-                title: 'Materials',
-                children: const [
-                  MaterialItemRowWidget(
-                    title: 'Walls',
-                    subtitle: '2.1 gallons x \$52.99',
-                    price: '\$111.28',
-                  ),
-                  MaterialItemRowWidget(
-                    title: 'Primer',
-                    subtitle: '1.2 gallons x \$38.99',
-                    price: '\$46.79',
-                  ),
-                  MaterialItemRowWidget(
-                    title: 'Supplies',
-                    subtitle: 'Brushes, rollers, drop cloths',
-                    price: '\$45.00',
-                  ),
-                  SummaryTotalRowWidget(
-                    label: 'Materials Total:',
-                    value: '\$203.07',
-                  ),
-                ],
-              ),
-
-              ProjectSummaryCardWidget(
-                title: 'Labor',
-                children: const [
-                  MaterialItemRowWidget(
-                    title: 'Prep Work',
-                    subtitle: 'Painting',
-                    price: '\$180.00',
-                  ),
-                  MaterialItemRowWidget(
-                    title: 'Painting',
-                    subtitle: '8 hours x \$45/hr',
-                    price: '\$360.00',
-                  ),
-                  MaterialItemRowWidget(
-                    title: 'Cleanup',
-                    subtitle: '1 hours x 45/hr',
-                    price: '\$45.00',
-                  ),
-                  SummaryTotalRowWidget(
-                    label: 'Materials Total:',
-                    value: '\$203.07',
-                  ),
-                ],
-              ),
-
-              // Room Overview Card
-              ProjectSummaryCardWidget(
-                title: 'Room Overview',
-                children: const [
-                  RoomOverviewRowWidget(
-                    leftTitle: '14 X 16',
-                    leftSubtitle: 'Floor Dimensions',
-                    rightTitle: '224 sq ft',
-                    rightSubtitle: 'Floor Area',
-                  ),
-                ],
-              ),
-
-              // Total Project Cost Card
-              ProjectSummaryCardWidget(
-                children: const [
-                  ProjectCostSummaryWidget(
-                    title: 'Total Project Cost',
-                    cost: '\$585.00',
-                    timeline: 'Timeline: 2-3 days',
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              Padding(
-                padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: PaintProButton(
-                        text: 'Adjust',
-                        borderRadius: 16,
-                        padding: EdgeInsets.zero,
+      body: AnimatedBuilder(
+        animation: _viewModel,
+        builder: (context, child) {
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  // Project Summary Card
+                  ProjectSummaryCardWidget(
+                    title: 'Project Summary',
+                    children: [
+                      SummaryInfoRowWidget(
+                        label: 'Total Area',
+                        value: _viewModel.totalArea,
                       ),
-                    ),
-                    const SizedBox(width: 32),
-                    Flexible(
-                      child: PaintProButton(
-                        text: 'Send Quote',
-                        borderRadius: 16,
-                        padding: EdgeInsets.zero,
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        onPressed: () => context.go('/home'),
+                      // Widget customizado para exibir as zonas
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Zones:',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            // Debug: Verificar se há zonas
+                            if (_viewModel.selectedZones.isEmpty)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'No zones selected',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[500],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                  Text(
+                                    'ViewModel zones: ${_viewModel.zonesCount}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.red[400],
+                                    ),
+                                  ),
+                                  Text(
+                                    'Real zones available: ${_zonesListViewModel.zones.length}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.blue[400],
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              ..._viewModel.formattedZones.map(
+                                (zone) => Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 8,
+                                    top: 2,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 4,
+                                        height: 4,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.grey,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        zone,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
+                      SummaryInfoRowWidget(
+                        label: 'Paint Type',
+                        value: _viewModel.paintType,
+                      ),
+                    ],
+                  ),
+
+                  // Materials Card - dinâmico baseado nos materiais selecionados
+                  ProjectSummaryCardWidget(
+                    title: 'Materials',
+                    children: [
+                      // Listar os materiais selecionados
+                      ..._viewModel.selectedMaterials.map(
+                        (material) => MaterialItemRowWidget(
+                          title: material.name,
+                          subtitle: '${material.code} - ${material.priceUnit}',
+                          price: '\$${material.price.toStringAsFixed(2)}',
+                        ),
+                      ),
+
+                      // Custos adicionais (mão de obra, suprimentos)
+                      const MaterialItemRowWidget(
+                        title: 'Labor Cost',
+                        subtitle: '9 hours x \$45/hr',
+                        price: '\$405.00',
+                      ),
+                      const MaterialItemRowWidget(
+                        title: 'Supplies',
+                        subtitle: 'Brushes, rollers, drop cloths',
+                        price: '\$45.00',
+                      ),
+
+                      SummaryTotalRowWidget(
+                        label: 'Materials Total:',
+                        value:
+                            '\$${_viewModel.totalMaterialsCost.toStringAsFixed(2)}',
+                      ),
+                    ],
+                  ),
+
+                  // Room Overview Card
+                  ProjectSummaryCardWidget(
+                    title: 'Metrics Overview',
+                    children: [
+                      RoomOverviewRowWidget(
+                        leftTitle: _viewModel.floorDimensions,
+                        leftSubtitle: 'Floor Dimensions',
+                        rightTitle: _viewModel.floorArea,
+                        rightSubtitle: 'Floor Area',
+                      ),
+                    ],
+                  ),
+
+                  // Total Project Cost Card
+                  ProjectSummaryCardWidget(
+                    children: [
+                      ProjectCostSummaryWidget(
+                        title: 'Total Project Cost',
+                        cost:
+                            '\$${_viewModel.totalProjectCost.toStringAsFixed(2)}',
+                        timeline: 'Timeline: 2-3 days',
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: PaintProButton(
+                            text: 'Adjust',
+                            borderRadius: 16,
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
+                        const SizedBox(width: 32),
+                        Flexible(
+                          child: PaintProButton(
+                            text: 'Send Quote',
+                            borderRadius: 16,
+                            padding: EdgeInsets.zero,
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                            onPressed: () {
+                              // Usar o helper para navegar para loading de quote
+                              LoadingHelper.navigateToQuoteLoading(context);
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

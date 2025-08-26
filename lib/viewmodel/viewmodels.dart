@@ -22,5 +22,11 @@ export 'navigation_viewmodel.dart';
 // Measurements ViewModel
 export 'measurements/measurements_viewmodel.dart';
 
+// Overview Zones ViewModel
+export 'overview_zones_viewmodel.dart';
+
 // Zones ViewModels
 export 'zones/zones_viewmodels.dart';
+
+// quotes
+export 'quotes/quotes_viewmodels.dart';

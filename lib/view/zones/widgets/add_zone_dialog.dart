@@ -165,7 +165,7 @@ class _AddZoneDialogState extends State<AddZoneDialog> {
                               ),
                               const SizedBox(width: 2),
                               const Text(
-                                'Interior',
+                                'Inside',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: Colors.black87,
@@ -201,7 +201,7 @@ class _AddZoneDialogState extends State<AddZoneDialog> {
                               ),
                               const SizedBox(width: 2),
                               const Text(
-                                'Exterior',
+                                'Outside',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: Colors.black87,

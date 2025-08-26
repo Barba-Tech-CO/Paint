@@ -64,6 +64,9 @@ void setupDependencyInjection() {
       getIt<HttpService>(),
     ),
   );
+  getIt.registerLazySingleton<ContactDatabaseService>(
+    () => ContactDatabaseService(),
+  );
   getIt.registerLazySingleton<EstimateService>(
     () => EstimateService(
       getIt<HttpService>(),
@@ -258,5 +261,9 @@ void setupDependencyInjection() {
       getIt<UserService>(),
       getIt<AppLogger>(),
     ),
+  );
+
+  getIt.registerFactory<QuotesViewModel>(
+    () => QuotesViewModel(),
   );
 }

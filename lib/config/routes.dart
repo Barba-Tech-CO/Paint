@@ -56,7 +56,24 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/overview-zones',
-      builder: (context, state) => const OverviewZonesView(),
+      builder: (context, state) {
+        // Aceita tanto List<MaterialModel> quanto Map com materiais e zonas
+        final extra = state.extra;
+        List<MaterialModel>? selectedMaterials;
+        List<ZonesCardModel>? selectedZones;
+
+        if (extra is List<MaterialModel>) {
+          selectedMaterials = extra;
+        } else if (extra is Map) {
+          selectedMaterials = extra['materials'] as List<MaterialModel>?;
+          selectedZones = extra['zones'] as List<ZonesCardModel>?;
+        }
+
+        return OverviewZonesView(
+          selectedMaterials: selectedMaterials,
+          selectedZones: selectedZones,
+        );
+      },
     ),
     GoRoute(
       path: '/new-contact',
@@ -80,6 +97,30 @@ final router = GoRouter(
       path: '/select-material',
       builder: (context, state) {
         return const SelectMaterialView();
+      },
+    ),
+    GoRoute(
+      path: '/quotes',
+      builder: (context, state) => const QuotesView(),
+    ),
+    GoRoute(
+      path: '/loading',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+
+        return LoadingWidget(
+          title: extra?['title'] as String?,
+          subtitle: extra?['subtitle'] as String?,
+          description: extra?['description'] as String?,
+          duration: extra?['duration'] as Duration?,
+          navigateToOnComplete: extra?['navigateToOnComplete'] as String?,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/success',
+      builder: (context, state) {
+        return const SuccessView();
       },
     ),
   ],

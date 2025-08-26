@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
 import '../layout/main_layout.dart';
-import '../widgets/appbars/paint_pro_app_bar.dart';
+import '../widgets/widgets.dart';
 
 class ContactsView extends StatefulWidget {
   const ContactsView({super.key});
@@ -106,18 +106,31 @@ class _ContactsViewState extends State<ContactsView> {
           title: 'Contacts',
           toolbarHeight: 80,
         ),
-        body: ListView.builder(
-          itemCount: allContacts.length,
-          itemBuilder: (context, index) {
-            final contact = allContacts[index];
-            return ListTile(
-              leading: const Icon(Icons.person),
-              title: Text(contact['name']!),
-              subtitle: Text(contact['phone']!),
-              onTap: () => context.push('/contact-details'),
-            );
-          },
-        ),
+        body: allContacts.isEmpty
+            ? EmptyStateWidget(
+                title: 'No Contacts yet',
+                subtitle: 'Add your first contact to get started',
+                buttonText: 'Add Contact',
+                onButtonPressed: () => context.push('/contact-details'),
+              )
+            : ListView.builder(
+                itemCount: allContacts.length,
+                itemBuilder: (context, index) {
+                  final contact = allContacts[index];
+                  return ListTile(
+                    leading: const Icon(Icons.person),
+                    title: Text(contact['name']!),
+                    subtitle: Text(contact['phone']!),
+                    onTap: () => context.push('/contact-details'),
+                  );
+                },
+              ),
+        floatingActionButton: allContacts.isNotEmpty
+            ? PaintProFAB(
+                onPressed: () => context.push('/contact-details'),
+                icon: Icons.person_add,
+              )
+            : null,
       ),
     );
   }
