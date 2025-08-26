@@ -39,10 +39,10 @@ class NavigationItemModel {
     ),
     const NavigationItemModel(
       id: 'highlights',
-      icon: Icons.link_rounded,
-      activeIcon: Icons.lightbulb,
-      label: 'Go High le..',
-      route: '/highlights',
+      icon: Icons.folder_rounded,
+      activeIcon: Icons.drive_folder_upload_rounded,
+      label: 'Quotes',
+      route: '/quotes',
     ),
   ];
 }
