@@ -28,5 +28,5 @@ export 'overview_zones_viewmodel.dart';
 // Zones ViewModels
 export 'zones/zones_viewmodels.dart';
 
-// quotes
-export 'quotes/quotes_viewmodels.dart';
+// Quotes ViewModels
+export 'quotes/quotes_viewmodel.dart';
