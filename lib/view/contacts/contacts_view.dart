@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
+import '../../helpers/contacts/split_full_name.dart';
 import '../../model/contact_model.dart';
 import '../../viewmodel/viewmodels.dart';
 import '../layout/main_layout.dart';
@@ -58,23 +59,6 @@ class _ContactsViewState extends State<ContactsView> {
               .replaceAll(RegExp(r',\s*,'), ',')
               .replaceAll(RegExp(r'^,\s*|,\s*$'), ''),
     };
-  }
-
-  // Helper method to split full name into first and last name
-  Map<String, String> _splitFullName(String fullName) {
-    final trimmedName = fullName.trim();
-    if (trimmedName.isEmpty) {
-      return {'firstName': '', 'lastName': ''};
-    }
-
-    final parts = trimmedName.split(' ');
-    if (parts.length == 1) {
-      return {'firstName': parts[0], 'lastName': ''};
-    }
-
-    final firstName = parts.first;
-    final lastName = parts.skip(1).join(' ');
-    return {'firstName': firstName, 'lastName': lastName};
   }
 
   @override
@@ -184,7 +168,7 @@ class _ContactsViewState extends State<ContactsView> {
                                     contact: contactMap,
                                     onRename: (newName) {
                                       // Split the full name into first and last name
-                                      final nameParts = _splitFullName(newName);
+                                      final nameParts = splitFullName(newName);
                                       final updatedContact = contact.copyWith(
                                         firstName: nameParts['firstName'],
                                         lastName: nameParts['lastName'],
