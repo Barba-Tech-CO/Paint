@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'widgets.dart';
+import '../../widgets/widgets.dart';
 
 class QuoteCardWidget extends StatelessWidget {
   final String id;
@@ -118,8 +118,7 @@ class QuoteCardWidget extends StatelessWidget {
                 if (value == 'rename') {
                   final newName = await showDialog<String>(
                     context: context,
-                    builder: (context) =>
-                        RenameQuoteDialog(initialName: titulo),
+                    builder: (context) => RenameDialog(initialName: titulo),
                   );
                   if (newName != null && newName.trim().isNotEmpty) {
                     onRename?.call(newName.trim());
@@ -127,7 +126,7 @@ class QuoteCardWidget extends StatelessWidget {
                 } else if (value == 'delete') {
                   final confirm = await showDialog<bool>(
                     context: context,
-                    builder: (context) => DeleteQuoteDialog(quoteName: titulo),
+                    builder: (context) => DeleteDialog(quoteName: titulo),
                   );
                   if (confirm == true) {
                     onDelete?.call();

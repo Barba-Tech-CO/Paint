@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class DeleteQuoteDialog extends StatelessWidget {
+class DeleteDialog extends StatelessWidget {
   final String quoteName;
 
-  const DeleteQuoteDialog({
+  const DeleteDialog({
     super.key,
     required this.quoteName,
   });

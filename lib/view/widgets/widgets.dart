@@ -33,3 +33,8 @@ export 'summary/project_cost_summary_widget.dart';
 export 'summary/room_overview_row_widget.dart';
 export 'summary/summary_info_row_widget.dart';
 export 'summary/summary_total_row_widget.dart';
+
+// Dialog
+
+export 'dialogs/delete_dialog_widget.dart';
+export 'dialogs/rename_dialog_widget.dart';

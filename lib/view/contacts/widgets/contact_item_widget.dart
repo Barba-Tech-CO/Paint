@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../widgets/widgets.dart';
+
 class ContactItemWidget extends StatelessWidget {
   final Map<String, String> contact;
   final VoidCallback? onMorePressed;
+  final Function(String)? onRename;
+  final VoidCallback? onDelete;
 
   const ContactItemWidget({
     super.key,
     required this.contact,
     this.onMorePressed,
+    this.onRename,
+    this.onDelete,
   });
 
   @override
@@ -98,17 +104,57 @@ class ContactItemWidget extends StatelessWidget {
               ),
               // IconButton posicionado absoluto
               Positioned(
-                top: 8, // 8 pixels do topo
-                right: 8, // 8 pixels da direita
-                child: IconButton(
-                  icon: const Icon(
+                top: 8,
+                right: 8,
+                child: PopupMenuButton(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  icon: Icon(
                     Icons.more_vert,
-                    color: Colors.grey,
                     size: 20,
+                    color: Colors.grey[700],
                   ),
-                  onPressed: onMorePressed ?? () {},
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(),
+                  onSelected: (value) async {
+                    if (value == 'rename') {
+                      final newName = await showDialog<String>(
+                        context: context,
+                        builder: (context) => RenameDialog(initialName: name),
+                      );
+                      if (newName != null && newName.trim().isNotEmpty) {
+                        onRename?.call(newName.trim());
+                      }
+                    } else if (value == 'delete') {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => DeleteDialog(quoteName: name),
+                      );
+                      if (confirm == true) {
+                        onDelete?.call();
+                      }
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'rename',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit),
+                          SizedBox(width: 8),
+                          Text('Rename'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete),
+                          SizedBox(width: 8),
+                          Text('Delete'),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
