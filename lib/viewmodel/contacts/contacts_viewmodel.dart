@@ -20,7 +20,10 @@ class ContactsViewModel extends ChangeNotifier {
   set contacts(List<ContactModel> value) {
     _contacts = value;
     _filteredContacts = List.from(value);
-    notifyListeners();
+    // Use Future.microtask to defer notification
+    Future.microtask(() {
+      notifyListeners();
+    });
   }
 
   List<ContactModel> _filteredContacts = [];
@@ -28,7 +31,10 @@ class ContactsViewModel extends ChangeNotifier {
 
   set filteredContacts(List<ContactModel> value) {
     _filteredContacts = value;
-    notifyListeners();
+    // Use Future.microtask to defer notification
+    Future.microtask(() {
+      notifyListeners();
+    });
   }
 
   ContactModel? _selectedContact;
@@ -36,7 +42,10 @@ class ContactsViewModel extends ChangeNotifier {
 
   set selectedContact(ContactModel? value) {
     _selectedContact = value;
-    notifyListeners();
+    // Use Future.microtask to defer notification
+    Future.microtask(() {
+      notifyListeners();
+    });
   }
 
   // Search
@@ -46,8 +55,11 @@ class ContactsViewModel extends ChangeNotifier {
   set searchQuery(String value) {
     if (_searchQuery != value) {
       _searchQuery = value;
-      _filterContactsByQuery(value);
-      notifyListeners();
+      // Use Future.microtask to defer the filtering and notification
+      Future.microtask(() {
+        _filterContactsByQuery(value);
+        notifyListeners();
+      });
     }
   }
 
@@ -57,7 +69,10 @@ class ContactsViewModel extends ChangeNotifier {
 
   set errorMessage(String? value) {
     _errorMessage = value;
-    notifyListeners();
+    // Use Future.microtask to defer notification
+    Future.microtask(() {
+      notifyListeners();
+    });
   }
 
   ContactsViewModel();
@@ -154,12 +169,18 @@ class ContactsViewModel extends ChangeNotifier {
   void clearSearch() {
     _searchQuery = '';
     _filteredContacts = List.from(_contacts);
-    notifyListeners();
+    // Use Future.microtask to defer notification
+    Future.microtask(() {
+      notifyListeners();
+    });
   }
 
   void selectContact(ContactModel? contact) {
     _selectedContact = contact;
-    notifyListeners();
+    // Use Future.microtask to defer notification
+    Future.microtask(() {
+      notifyListeners();
+    });
   }
 
   // Private helper methods
@@ -185,7 +206,10 @@ class ContactsViewModel extends ChangeNotifier {
   void addContactToList(ContactModel contact) {
     _contacts.add(contact);
     _filterContactsByQuery(_searchQuery);
-    notifyListeners();
+    // Use Future.microtask to defer notification
+    Future.microtask(() {
+      notifyListeners();
+    });
   }
 
   void updateContactInList(ContactModel updatedContact) {
@@ -193,14 +217,20 @@ class ContactsViewModel extends ChangeNotifier {
     if (index != -1) {
       _contacts[index] = updatedContact;
       _filterContactsByQuery(_searchQuery);
-      notifyListeners();
+      // Use Future.microtask to defer notification
+      Future.microtask(() {
+        notifyListeners();
+      });
     }
   }
 
   void removeContactFromList(String contactId) {
     _contacts.removeWhere((c) => c.id == contactId);
     _filterContactsByQuery(_searchQuery);
-    notifyListeners();
+    // Use Future.microtask to defer notification
+    Future.microtask(() {
+      notifyListeners();
+    });
   }
 
   ContactModel? getContactById(String id) {

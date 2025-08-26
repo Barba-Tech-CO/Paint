@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
+import '../../model/contact_model.dart';
 import '../../viewmodel/viewmodels.dart';
 import '../layout/main_layout.dart';
 import '../widgets/widgets.dart';
@@ -18,27 +21,35 @@ class ContactsView extends StatefulWidget {
 class _ContactsViewState extends State<ContactsView> {
   final TextEditingController _searchController = TextEditingController();
   late final ContactsViewModel _viewModel;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
     super.initState();
     _viewModel = context.read<ContactsViewModel>();
-    _viewModel.initialize();
+    // Use Future.microtask to defer initialization after build
+    Future.microtask(() {
+      _viewModel.initialize();
+    });
     _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text.trim();
-    _viewModel.searchQuery = query;
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      final query = _searchController.text.trim();
+      _viewModel.searchQuery = query;
+    });
   }
 
-  Map<String, String> _convertContactModelToMap(contact) {
+  Map<String, String> _convertContactModelToMap(ContactModel contact) {
     return {
       'name': '${contact.firstName ?? ''} ${contact.lastName ?? ''}'.trim(),
       'phone': contact.phone ?? '',
@@ -47,6 +58,23 @@ class _ContactsViewState extends State<ContactsView> {
               .replaceAll(RegExp(r',\s*,'), ',')
               .replaceAll(RegExp(r'^,\s*|,\s*$'), ''),
     };
+  }
+
+  // Helper method to split full name into first and last name
+  Map<String, String> _splitFullName(String fullName) {
+    final trimmedName = fullName.trim();
+    if (trimmedName.isEmpty) {
+      return {'firstName': '', 'lastName': ''};
+    }
+
+    final parts = trimmedName.split(' ');
+    if (parts.length == 1) {
+      return {'firstName': parts[0], 'lastName': ''};
+    }
+
+    final firstName = parts.first;
+    final lastName = parts.skip(1).join(' ');
+    return {'firstName': firstName, 'lastName': lastName};
   }
 
   @override
@@ -154,6 +182,20 @@ class _ContactsViewState extends State<ContactsView> {
 
                                   return ContactItemWidget(
                                     contact: contactMap,
+                                    onRename: (newName) {
+                                      // Split the full name into first and last name
+                                      final nameParts = _splitFullName(newName);
+                                      final updatedContact = contact.copyWith(
+                                        firstName: nameParts['firstName'],
+                                        lastName: nameParts['lastName'],
+                                        updatedAt: DateTime.now(),
+                                      );
+                                      _viewModel.updateContact(updatedContact);
+                                    },
+                                    onDelete: () {
+                                      // Deletar o contato
+                                      _viewModel.deleteContact(contact.id!);
+                                    },
                                     onMorePressed: () {
                                       // TODO: Implementar menu de ações
                                       _showContactOptions(context, contact);
