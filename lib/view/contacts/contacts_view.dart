@@ -196,10 +196,6 @@ class _ContactsViewState extends State<ContactsView> {
                                       // Deletar o contato
                                       _viewModel.deleteContact(contact.id!);
                                     },
-                                    onMorePressed: () {
-                                      // TODO: Implementar menu de ações
-                                      _showContactOptions(context, contact);
-                                    },
                                   );
                                 },
                               ),
@@ -223,63 +219,6 @@ class _ContactsViewState extends State<ContactsView> {
           ),
         ),
       ),
-    );
-  }
-
-  void _showContactOptions(BuildContext context, contact) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.edit),
-                title: const Text('Edit Contact'),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/contact-details', extra: contact);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete),
-                title: const Text('Delete Contact'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showDeleteConfirmation(context, contact);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context, contact) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Contact'),
-          content: Text(
-            'Are you sure you want to delete ${contact.firstName} ${contact.lastName}?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _viewModel.deleteContact(contact.id!);
-              },
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
     );
   }
 }
