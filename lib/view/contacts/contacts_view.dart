@@ -52,7 +52,7 @@ class _ContactsViewState extends State<ContactsView> {
 
   Map<String, String> _convertContactModelToMap(ContactModel contact) {
     return {
-      'name': '${contact.firstName ?? ''} ${contact.lastName ?? ''}'.trim(),
+      'name': contact.name ?? 'No Name',
       'phone': contact.phone ?? '',
       'address':
           '${contact.address ?? ''}, ${contact.city ?? ''}, ${contact.country ?? ''}'
@@ -167,11 +167,10 @@ class _ContactsViewState extends State<ContactsView> {
                                   return ContactItemWidget(
                                     contact: contactMap,
                                     onRename: (newName) {
-                                      // Split the full name into first and last name
+                                      // Update the contact name
                                       final nameParts = splitFullName(newName);
                                       final updatedContact = contact.copyWith(
-                                        firstName: nameParts['firstName'],
-                                        lastName: nameParts['lastName'],
+                                        name: nameParts['name'],
                                         updatedAt: DateTime.now(),
                                       );
                                       _viewModel.updateContact(updatedContact);
@@ -189,8 +188,7 @@ class _ContactsViewState extends State<ContactsView> {
                   // FAB posicionado manualmente
                   if (viewModel.hasContacts)
                     Positioned(
-                      bottom:
-                          140, // 120px do bottom navigation + 20px de margem
+                      bottom: 120,
                       right: 16,
                       child: PaintProFAB(
                         onPressed: () => context.push('/new-contact'),
