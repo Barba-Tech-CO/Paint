@@ -4,12 +4,14 @@ import '../../model/contact_model.dart';
 import '../../service/contact_service.dart';
 import '../../service/contact_database_service.dart';
 import '../../service/auth_service.dart';
+import '../../service/location_service.dart';
 import '../../utils/result/result.dart';
 
 class ContactRepository implements IContactRepository {
   final ContactService _contactService;
   final ContactDatabaseService _databaseService;
   final AuthService _authService;
+  final LocationService _locationService;
 
   ContactRepository({
     required ContactService contactService,
@@ -17,7 +19,8 @@ class ContactRepository implements IContactRepository {
     required AuthService authService,
   }) : _contactService = contactService,
        _databaseService = databaseService,
-       _authService = authService;
+       _authService = authService,
+       _locationService = LocationService();
 
   @override
   Future<Result<ContactListResponse>> getContacts({
@@ -56,26 +59,21 @@ class ContactRepository implements IContactRepository {
   /// Cria um novo contato
   Future<Result<ContactModel>> createContact({
     String? name,
-    String? firstName,
-    String? lastName,
-    String? email,
     String? phone,
+    List<String>? additionalPhones,
+    String? email,
+    List<String>? additionalEmails,
     String? companyName,
     String? address,
+    String? city,
+    String? state,
+    String? postalCode,
+    String? country,
     List<Map<String, dynamic>>? customFields,
   }) async {
     try {
-      // Get the current location_id from auth service
-      final locationIdResult = await _authService.getCurrentLocationId();
-      if (locationIdResult is Error) {
-        return Result.error(
-          Exception(
-            'Error getting location_id: ${locationIdResult.asError.error}',
-          ),
-        );
-      }
-
-      final locationId = locationIdResult.asOk.value;
+      // Get the current location_id from location service
+      final locationId = _locationService.currentLocationId;
       if (locationId == null || locationId.isEmpty) {
         return Result.error(
           Exception('Location ID not available. User not authenticated.'),
@@ -85,15 +83,21 @@ class ContactRepository implements IContactRepository {
       // Create a temporary contact with pending sync status
       final tempGhlId =
           'temp_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecond}';
+
       final tempContact = ContactModel(
         ghlId: tempGhlId,
         locationId: locationId, // Use actual location_id from auth
-        firstName: firstName,
-        lastName: lastName,
+        name: name,
         email: email,
         phone: phone,
+        additionalPhones: additionalPhones,
+        additionalEmails: additionalEmails,
         companyName: companyName,
         address: address,
+        city: city,
+        state: state,
+        postalCode: postalCode,
+        country: country,
         customFields: customFields,
         syncStatus: SyncStatus.pending,
         createdAt: DateTime.now(),
@@ -106,12 +110,16 @@ class ContactRepository implements IContactRepository {
       // Attempt to sync with API
       final apiResult = await _contactService.createContact(
         name: name,
-        firstName: firstName,
-        lastName: lastName,
         email: email,
         phone: phone,
+        additionalPhones: additionalPhones,
+        additionalEmails: additionalEmails,
         companyName: companyName,
         address: address,
+        city: city,
+        state: state,
+        postalCode: postalCode,
+        country: country,
         customFields: customFields,
       );
 
@@ -171,12 +179,16 @@ class ContactRepository implements IContactRepository {
   Future<Result<ContactModel>> updateContact(
     String contactId, {
     String? name,
-    String? firstName,
-    String? lastName,
-    String? email,
     String? phone,
+    List<String>? additionalPhones,
+    String? email,
+    List<String>? additionalEmails,
     String? companyName,
     String? address,
+    String? city,
+    String? state,
+    String? postalCode,
+    String? country,
     List<Map<String, dynamic>>? customFields,
   }) async {
     try {
@@ -211,13 +223,12 @@ class ContactRepository implements IContactRepository {
 
       // Create updated contact with pending sync status
       final updatedContact = currentContact.copyWith(
-        firstName: firstName ?? currentContact.firstName,
-        lastName: lastName ?? currentContact.lastName,
-        email: email ?? currentContact.email,
-        phone: phone ?? currentContact.phone,
-        companyName: companyName ?? currentContact.companyName,
-        address: address ?? currentContact.address,
-        customFields: customFields ?? currentContact.customFields,
+        name: name,
+        email: email,
+        phone: phone,
+        companyName: companyName,
+        address: address,
+        customFields: customFields,
         syncStatus: SyncStatus.pending,
         updatedAt: DateTime.now(),
       );
@@ -229,8 +240,6 @@ class ContactRepository implements IContactRepository {
       final apiResult = await _contactService.updateContact(
         contactId,
         name: name,
-        firstName: firstName,
-        lastName: lastName,
         email: email,
         phone: phone,
         companyName: companyName,
@@ -337,7 +346,7 @@ class ContactRepository implements IContactRepository {
 
   @override
   Future<Result<ContactListResponse>> advancedSearch({
-    String? locationId,
+    String? name,
     int? pageLimit,
     int? page,
     String? query,
@@ -345,6 +354,15 @@ class ContactRepository implements IContactRepository {
     List<Map<String, dynamic>>? sort,
   }) async {
     try {
+      // Get the current location_id from location service
+      final locationId = _locationService.currentLocationId;
+
+      if (locationId == null || locationId.isEmpty) {
+        return Result.error(
+          Exception('Location ID not available. Please authenticate first.'),
+        );
+      }
+
       // For advanced search, we'll use the API directly
       // but cache results locally
       final apiResult = await _contactService.advancedSearch(
@@ -443,8 +461,7 @@ class ContactRepository implements IContactRepository {
       if (contact.ghlId == null || contact.ghlId!.startsWith('temp')) {
         // This is a new contact, try to create it
         final result = await _contactService.createContact(
-          firstName: contact.firstName,
-          lastName: contact.lastName,
+          name: contact.name,
           email: contact.email,
           phone: contact.phone,
           companyName: contact.companyName,
@@ -464,8 +481,7 @@ class ContactRepository implements IContactRepository {
         // This is an existing contact, try to update it
         final result = await _contactService.updateContact(
           contact.ghlId!,
-          firstName: contact.firstName,
-          lastName: contact.lastName,
+          name: contact.name,
           email: contact.email,
           phone: contact.phone,
           companyName: contact.companyName,
