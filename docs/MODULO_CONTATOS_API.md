@@ -1,230 +1,324 @@
-# 📋 Módulo de Contatos da API - Documentação Completa
+# MÓDULO DE CONTATOS - CRM Integration
 
-## 📖 Visão Geral
+Este módulo gerencia a integração completa com contatos do CRM, permitindo operações CRUD, busca avançada e sincronização offline-first no aplicativo Flutter.
 
-O módulo de contatos da API PaintPro integra com o CRM GoHighLevel para gerenciar contatos, leads e sincronização de dados. Este módulo fornece endpoints RESTful para operações CRUD completas e sincronização bidirecional com o sistema externo.
+## 1. Visão Geral
 
-## 🏗️ Arquitetura
+### 1.1 Funcionalidades Principais
+- ✅ **CRUD Completo** - Criar, ler, atualizar e deletar contatos
+- ✅ **Busca Avançada** - Filtros múltiplos e ordenação
+- ✅ **Sincronização Offline-First** - Cache local com sincronização automática
+- ✅ **Autenticação CRM** - OAuth2 integrado
+- ✅ **Rate Limiting** - Controle automático de requisições
 
-### Estrutura de Pastas
+### 1.2 Limitações e Controles
+- **Rate Limiting de Leitura:** 100 requisições/minuto
+- **Rate Limiting de Escrita:** 30 requisições/minuto
+- **Cache Recomendado:** 1000 contatos por usuário
+- **Sincronização:** Automática com controle de conflitos
 
-```
-app/Modules/GoHighLevel/
-├── Controllers/
-│   └── GhlContactController.php
-├── Models/
-│   └── GhlContact.php
-├── Services/
-│   ├── GhlContactService.php
-│   └── GhlContactSyncService.php
-├── Requests/
-│   ├── CreateGhlContactRequest.php
-│   └── UpdateGhlContactRequest.php
-└── Repositories/
-    └── GhlContactRepository.php
-```
+## 2. Modelo de Dados (Flutter/SQLite)
 
-### Princípios da Arquitetura
-
-- **Integração GHL**: Comunicação direta com GoHighLevel CRM
-- **Sincronização Bidirecional**: Dados sincronizados entre sistemas
-- **Validação Robusta**: Validação de dados antes do envio
-- **Tratamento de Erros**: Gestão completa de erros e exceções
-- **Modular**: Estrutura DDD com separação clara de responsabilidades
-
-## 🗄️ Modelo de Dados
-
-### Model: GhlContact
-
-```php
-<?php
-namespace App\Modules\GoHighLevel\Models;
-
-class GhlContact extends Model
-{
-    protected $table = 'ghl_contacts';
-
-    protected $fillable = [
-        'ghl_id', 'location_id', 'first_name', 'last_name', 'email', 'phone',
-        'phone_label', 'company_name', 'business_name', 'address', 'city',
-        'state', 'postal_code', 'country', 'additional_emails',
-        'additional_phones', 'custom_fields', 'tags', 'type', 'source',
-        'dnd', 'dnd_settings', 'sync_status', 'last_synced_at',
-        'sync_error', 'ghl_created_at', 'ghl_updated_at'
-    ];
-
-    protected $casts = [
-        'additional_emails' => 'array',
-        'additional_phones' => 'array',
-        'custom_fields' => 'array',
-        'tags' => 'array',
-        'dnd_settings' => 'array',
-        'dnd' => 'boolean',
-        'last_synced_at' => 'datetime',
-        'ghl_created_at' => 'datetime',
-        'ghl_updated_at' => 'datetime'
-    ];
-}
-```
-
-### Tabela do Banco: ghl_contacts
+### 2.1 Estrutura para Cache Local (SQLite)
 
 ```sql
 CREATE TABLE ghl_contacts (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-
-    -- Campos principais do GoHighLevel
-    ghl_id VARCHAR(255) UNIQUE NOT NULL COMMENT 'ID único do contato no GoHighLevel',
-    location_id VARCHAR(255) NOT NULL COMMENT 'ID da localização no GoHighLevel',
-
-    -- Informações pessoais
-    first_name VARCHAR(255) NULL,
-    last_name VARCHAR(255) NULL,
-    email VARCHAR(255) NULL,
-    phone VARCHAR(255) NULL,
-    phone_label VARCHAR(255) NULL,
-
-    -- Informações de empresa
-    company_name VARCHAR(255) NULL,
-    business_name VARCHAR(255) NULL,
-
-    -- Endereço
-    address TEXT NULL,
-    city VARCHAR(255) NULL,
-    state VARCHAR(255) NULL,
-    postal_code VARCHAR(255) NULL,
-    country VARCHAR(255) NULL,
-
-    -- Campos adicionais
-    additional_emails JSON NULL,
-    additional_phones JSON NULL,
-    custom_fields JSON NULL,
-    tags JSON NULL,
-
-    -- Metadados
-    type VARCHAR(255) NULL COMMENT 'lead, contact, etc',
-    source VARCHAR(255) NULL,
-    dnd BOOLEAN DEFAULT FALSE COMMENT 'Do Not Disturb',
-    dnd_settings JSON NULL,
-
-    -- Status de sincronização
-    sync_status ENUM('synced', 'pending', 'error') DEFAULT 'synced',
-    last_synced_at TIMESTAMP NULL,
-    sync_error TEXT NULL,
-    ghl_created_at TIMESTAMP NULL,
-    ghl_updated_at TIMESTAMP NULL,
-
-    -- Timestamps padrão
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    -- Índices
-    INDEX idx_ghl_id (ghl_id),
-    INDEX idx_location_id (location_id),
-    INDEX idx_email (email),
-    INDEX idx_phone (phone),
-    INDEX idx_sync_status (sync_status)
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER, -- Isolamento por usuário
+    
+    -- Identificadores GoHighLevel
+    ghl_id TEXT UNIQUE NOT NULL, -- ID único no GoHighLevel
+    location_id TEXT NOT NULL, -- ID da localização no GHL
+    
+    -- Informações Pessoais
+    first_name TEXT,
+    last_name TEXT,
+    email TEXT,
+    phone TEXT,
+    phone_label TEXT,
+    
+    -- Informações Empresa
+    company_name TEXT,
+    business_name TEXT,
+    
+    -- Endereço Completo
+    address TEXT,
+    city TEXT,
+    state TEXT,
+    postal_code TEXT,
+    country TEXT,
+    
+    -- Dados Complexos (JSON como TEXT no SQLite)
+    additional_emails TEXT, -- JSON: ["email1@example.com", "email2@example.com"]
+    additional_phones TEXT, -- JSON: ["+1234567890", "+0987654321"]
+    custom_fields TEXT, -- JSON: [{"id":"field1", "key":"project_type", "field_value":"exterior"}]
+    tags TEXT, -- JSON: ["prospect", "paint-service"]
+    
+    -- Configurações
+    type TEXT, -- lead, contact, etc
+    source TEXT, -- Fonte do contato
+    dnd INTEGER DEFAULT 0, -- Do Not Disturb (0=false, 1=true)
+    dnd_settings TEXT, -- JSON: {"Call": {"status": "active"}, "Email": {"status": "inactive"}}
+    
+    -- Controle de Sincronização Offline-First
+    sync_status TEXT DEFAULT 'synced', -- synced, pending, error
+    last_synced_at TEXT, -- ISO 8601 timestamp
+    sync_error TEXT,
+    
+    -- Timestamps GoHighLevel
+    ghl_created_at TEXT, -- ISO 8601 timestamp
+    ghl_updated_at TEXT, -- ISO 8601 timestamp
+    created_at TEXT, -- ISO 8601 timestamp
+    updated_at TEXT -- ISO 8601 timestamp
 );
+
+-- Índices para Performance
+CREATE INDEX idx_ghl_contacts_user_id ON ghl_contacts(user_id);
+CREATE INDEX idx_ghl_contacts_ghl_id ON ghl_contacts(ghl_id);
+CREATE INDEX idx_ghl_contacts_location_id ON ghl_contacts(location_id);
+CREATE INDEX idx_ghl_contacts_email ON ghl_contacts(email);
+CREATE INDEX idx_ghl_contacts_phone ON ghl_contacts(phone);
+CREATE INDEX idx_ghl_contacts_sync_status ON ghl_contacts(sync_status);
+CREATE INDEX idx_ghl_contacts_location_sync ON ghl_contacts(location_id, sync_status);
+CREATE INDEX idx_ghl_contacts_user_sync ON ghl_contacts(user_id, sync_status, updated_at);
 ```
 
-## 🌐 Endpoints da API
+### 2.2 Estados de Sincronização
 
-### Base URL
+- **synced** - Contato sincronizado com sucesso
+- **pending** - Aguardando sincronização  
+- **error** - Erro na sincronização
 
+## 3. Endpoints da API
+
+### 3.1 Autenticação Requerida
+
+**Headers obrigatórios em todas as requisições:**
+- `Authorization: Bearer {sanctum_token}`
+- `X-GHL-Location-ID: {location_id}` ou query param `location_id`
+- `Accept: application/json`
+- `Content-Type: application/json` (para POST/PUT)
+
+### 3.2 Lista de Endpoints
+
+| Método | Endpoint | Descrição | Rate Limit |
+|--------|----------|-----------|------------|
+| `GET` | `/api/contacts` | Lista contatos com filtros | 100 req/min |
+| `POST` | `/api/contacts` | Cria novo contato | 30 req/min |
+| `POST` | `/api/contacts/search` | Busca avançada | 100 req/min |
+| `GET` | `/api/contacts/{contactId}` | Busca contato específico | 100 req/min |
+| `PUT` | `/api/contacts/{contactId}` | Atualiza contato | 30 req/min |
+| `DELETE` | `/api/contacts/{contactId}` | Remove contato | 30 req/min |
+
+## 4. Validação de Dados
+
+### 4.1 Campos para Criar Contato
+
+**Obrigatórios:**
+- `firstName` OU `name` - String, máx 255 caracteres
+
+**Opcionais:**
+- `lastName` - String, máx 255 caracteres
+- `email` - Email válido, máx 255 caracteres
+- `phone` - String, máx 20 caracteres
+- `gender` - Enum: "male", "female", "other"
+- `address1` - String, máx 255 caracteres
+- `city` - String, máx 255 caracteres
+- `state` - String, máx 255 caracteres
+- `postalCode` - String, máx 20 caracteres
+- `country` - String, máx 100 caracteres
+- `companyName` - String, máx 255 caracteres
+- `website` - URL válida, máx 255 caracteres
+- `timezone` - String, máx 100 caracteres
+- `dnd` - Boolean
+- `tags` - Array de strings, cada tag máx 50 caracteres
+- `customFields` - Array de objetos CustomField
+- `assignedTo` - String (ID do usuário responsável)
+
+### 4.2 Campos para Atualizar Contato
+
+**Todos os campos são opcionais** para operação de atualização, seguindo as mesmas regras de validação da criação.
+
+## 5. Exemplos de Uso
+
+### 5.1 Listar Contatos
+
+**Request:**
+```http
+GET /api/contacts?location_id=60d5ec49e1b2c50012345678&limit=20&query=maria
+Authorization: Bearer {sanctum_token}
+X-GHL-Location-ID: 60d5ec49e1b2c50012345678
+Accept: application/json
 ```
-https://paintpro.barbatech.company/api/v1/contacts
-```
 
-### Autenticação
-
-Todos os endpoints requerem autenticação via token GoHighLevel:
-
-```
-Authorization: Bearer {ghl_token}
-```
-
-## 📋 Endpoints Disponíveis
-
-### 1. Listar Contatos
-
-**GET** `/api/v1/contacts`
-
-Lista todos os contatos do GoHighLevel com paginação e filtros.
-
-#### Parâmetros de Query
-
-| Parâmetro | Tipo    | Obrigatório | Descrição                                         |
-| --------- | ------- | ----------- | ------------------------------------------------- |
-| `limit`   | integer | Não         | Número de contatos por página (1-100, padrão: 20) |
-| `query`   | string  | Não         | Busca por nome, email ou telefone                 |
-
-#### Exemplo de Request
-
-```bash
-GET /api/v1/contacts?limit=10&query=maria
-```
-
-#### Exemplo de Response (200 OK)
-
+**Response (200 OK):**
 ```json
 {
   "contacts": [
     {
       "id": "60d5ec49e1b2c50012345678",
-      "name": "Maria Silva",
       "firstName": "Maria",
       "lastName": "Silva",
-      "phoneNo": "+5511999999999",
-      "phoneLabel": "mobile",
       "email": "maria@example.com",
-      "additionalEmails": ["maria.silva@company.com"],
-      "additionalPhones": ["+5511888888888"],
+      "phone": "+1234567890",
       "companyName": "Silva Construções",
-      "businessName": "Silva Construções Ltda",
-      "address": "Rua das Flores, 123",
+      "address": "123 Main St, City, State 12345",
       "city": "São Paulo",
       "state": "SP",
       "postalCode": "01234-567",
-      "country": "BR",
+      "country": "Brazil",
+      "additionalEmails": ["maria.work@example.com"],
+      "additionalPhones": ["+1234567891"],
       "customFields": [
         {
-          "field": "project_type",
-          "value": "exterior"
+          "id": "field_123",
+          "key": "project_type",
+          "field_value": "exterior",
+          "source": "custom"
         }
-      ]
+      ],
+      "tags": ["prospect", "paint-service"],
+      "dnd": false,
+      "dndSettings": {}
     }
   ],
-  "count": 1
+  "count": 15
 }
 ```
 
-#### Status Codes
-
-- **200 OK**: Contatos retornados com sucesso
-- **401 Unauthorized**: Token GHL inválido ou expirado
-- **500 Internal Server Error**: Erro interno do servidor
-
----
-
-### 2. Buscar Contatos
-
-**POST** `/api/v1/contacts/search`
-
-Realiza busca avançada por contatos usando múltiplos critérios.
-
-#### Request Body
-
+**Response (401 Unauthorized):**
 ```json
 {
-  "locationId": "5DP41231LkQsiKESj6rh",
+  "error": "Token not found or expired",
+  "message": "A new OAuth authentication is required",
+  "auth_url": "https://paintpro.barbatech.company/api/auth/redirect?location_id=123"
+}
+```
+
+**Response (429 Too Many Requests):**
+```json
+{
+  "success": false,
+  "message": "Too many requests. Please slow down.",
+  "error_code": "RATE_LIMIT_EXCEEDED",
+  "details": {
+    "max_attempts": 100,
+    "decay_minutes": 1,
+    "retry_after_seconds": 45
+  }
+}
+```
+
+### 5.2 Criar Contato
+
+**Request:**
+```http
+POST /api/contacts?location_id=60d5ec49e1b2c50012345678
+Authorization: Bearer {sanctum_token}
+Content-Type: application/json
+Accept: application/json
+```
+
+**Request Body:**
+```json
+{
+  "firstName": "Maria",
+  "lastName": "Silva",
+  "email": "maria@example.com",
+  "phone": "+1234567890",
+  "companyName": "Silva Construções",
+  "address1": "123 Main Street",
+  "city": "São Paulo",
+  "state": "SP",
+  "postalCode": "01234-567",
+  "country": "Brazil",
+  "tags": ["prospect", "referral"],
+  "customFields": [
+    {
+      "id": "field_123",
+      "key": "project_type",
+      "field_value": "exterior"
+    }
+  ]
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Contact created successfully",
+  "contactDetails": {
+    "id": "60d5ec49e1b2c50012345678",
+    "firstName": "Maria",
+    "lastName": "Silva",
+    "email": "maria@example.com",
+    "phone": "+1234567890",
+    "companyName": "Silva Construções",
+    "address": "123 Main St, City, State 12345",
+    "customFields": [],
+    "tags": ["prospect", "referral"]
+  }
+}
+```
+
+**Response (422 Unprocessable Entity):**
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": {
+    "firstName": ["The first name field is required when name is not present."],
+    "email": ["The email must be a valid email address."]
+  }
+}
+```
+
+**Response (401 Unauthorized):**
+```json
+{
+  "error": "Token not found or expired",
+  "message": "A new OAuth authentication is required",
+  "auth_url": "https://paintpro.barbatech.company/api/auth/redirect?location_id=123"
+}
+```
+
+**Response (429 Too Many Requests):**
+```json
+{
+  "success": false,
+  "message": "Too many requests. Please slow down.",
+  "error_code": "RATE_LIMIT_EXCEEDED",
+  "details": {
+    "max_attempts": 30,
+    "decay_minutes": 1,
+    "retry_after_seconds": 45
+  }
+}
+```
+
+### 5.3 Busca Avançada de Contatos
+
+**Request:**
+```http
+POST /api/contacts/search
+Authorization: Bearer {sanctum_token}
+Content-Type: application/json
+Accept: application/json
+```
+
+**Request Body:**
+```json
+{
+  "locationId": "60d5ec49e1b2c50012345678",
+  "query": "maria",
   "pageLimit": 20,
   "page": 1,
-  "query": "joao",
   "filters": [
     {
       "field": "email",
       "operator": "contains",
-      "value": "joao@example.com"
+      "value": "maria"
     }
   ],
   "sort": [
@@ -236,347 +330,466 @@ Realiza busca avançada por contatos usando múltiplos critérios.
 }
 ```
 
-#### Exemplo de Response (200 OK)
-
+**Response (200 OK):**
 ```json
 {
   "contacts": [
     {
       "id": "60d5ec49e1b2c50012345679",
-      "name": "João Santos",
-      "firstName": "João",
+      "firstName": "Maria",
       "lastName": "Santos",
-      "phoneNo": "+5511777777777",
-      "phoneLabel": "work",
-      "email": "joao@example.com",
-      "additionalEmails": [],
-      "additionalPhones": [],
-      "companyName": "Santos Arquitetura",
-      "businessName": "Santos Arquitetura Ltda",
-      "address": "Av. Paulista, 1000",
-      "city": "São Paulo",
-      "state": "SP",
-      "postalCode": "01310-100",
-      "country": "BR",
+      "email": "maria@example.com",
+      "phone": "+1234567890",
+      "companyName": null,
+      "address": "456 Another St",
       "customFields": [],
-      "tags": ["arquiteto", "premium"],
-      "type": "contact",
-      "source": "website",
-      "dnd": false,
-      "dndSettings": [],
-      "dateAdded": "2024-01-15T10:30:00Z",
-      "dateUpdated": "2024-01-20T14:45:00Z",
-      "assignedTo": "user123",
-      "locationId": "5DP41231LkQsiKESj6rh",
-      "validEmail": true,
-      "opportunities": []
+      "tags": ["lead"]
     }
   ],
-  "count": 1
+  "count": 3
 }
 ```
 
----
-
-### 3. Buscar Contato Específico
-
-**GET** `/api/v1/contacts/{contactId}`
-
-Retorna detalhes completos de um contato específico.
-
-#### Parâmetros de Path
-
-| Parâmetro   | Tipo   | Obrigatório | Descrição                    |
-| ----------- | ------ | ----------- | ---------------------------- |
-| `contactId` | string | Sim         | ID do contato no GoHighLevel |
-
-#### Exemplo de Request
-
-```bash
-GET /api/v1/contacts/60d5ec49e1b2c50012345678
-```
-
-#### Exemplo de Response (200 OK)
-
+**Response (422 Unprocessable Entity):**
 ```json
 {
-  "success": true,
-  "contactDetails": {
-    "id": "60d5ec49e1b2c50012345678",
-    "name": "Maria Silva",
-    "phoneNo": "+5511999999999",
-    "email": "maria@example.com",
-    "additionalEmails": ["maria.silva@company.com"],
-    "companyName": "Silva Construções",
-    "address": "Rua das Flores, 123",
-    "customFields": [
-      {
-        "field": "project_type",
-        "value": "exterior"
-      }
-    ]
+  "success": false,
+  "message": "Validation failed",
+  "errors": {
+    "locationId": ["The location id field is required."],
+    "page": ["The page field must be at least 1."]
   }
 }
 ```
 
----
-
-### 4. Criar Contato
-
-**POST** `/api/v1/contacts`
-
-Cria um novo contato no GoHighLevel.
-
-#### Request Body
-
+**Response (401 Unauthorized):**
 ```json
 {
-  "name": "Maria Silva",
-  "email": "maria@example.com",
-  "phone": "+5511999999999",
-  "companyName": "Silva Construções",
-  "address": "Rua das Flores, 123, São Paulo, SP, 01234-567",
-  "customFields": [
-    {
-      "field": "project_type",
-      "value": "exterior"
-    }
-  ]
+  "error": "Token not found or expired",
+  "message": "A new OAuth authentication is required",
+  "auth_url": "https://paintpro.barbatech.company/api/auth/redirect?location_id=123"
 }
 ```
 
-#### Exemplo de Response (201 Created)
+**Response (429 Too Many Requests):**
+```json
+{
+  "success": false,
+  "message": "Too many requests. Please slow down.",
+  "error_code": "RATE_LIMIT_EXCEEDED",
+  "details": {
+    "max_attempts": 100,
+    "decay_minutes": 1,
+    "retry_after_seconds": 45
+  }
+}
+```
 
+### 5.4 Buscar Contato Específico
+
+**Request:**
+```http
+GET /api/contacts/60d5ec49e1b2c50012345678?location_id=60d5ec49e1b2c50012345678
+Authorization: Bearer {sanctum_token}
+X-GHL-Location-ID: 60d5ec49e1b2c50012345678
+Accept: application/json
+```
+
+**Response (200 OK):**
 ```json
 {
   "success": true,
-  "message": "Contact created successfully",
   "contactDetails": {
     "id": "60d5ec49e1b2c50012345678",
-    "name": "Maria Silva",
     "firstName": "Maria",
     "lastName": "Silva",
-    "phoneNo": "+5511999999999",
-    "phoneLabel": null,
     "email": "maria@example.com",
-    "additionalEmails": [],
-    "additionalPhones": [],
+    "phone": "+1234567890",
     "companyName": "Silva Construções",
-    "businessName": null,
-    "address": "Rua das Flores, 123",
+    "address": "123 Main St, City, State 12345",
     "city": "São Paulo",
     "state": "SP",
     "postalCode": "01234-567",
-    "country": "BR",
+    "country": "Brazil",
+    "additionalEmails": ["maria.work@example.com"],
+    "additionalPhones": ["+1234567891"],
     "customFields": [
       {
-        "field": "project_type",
-        "value": "exterior"
+        "id": "field_123",
+        "key": "project_type",
+        "field_value": "exterior",
+        "source": "custom"
       }
     ],
-    "tags": [],
-    "type": null,
-    "source": null,
+    "tags": ["prospect", "paint-service"],
     "dnd": false,
-    "dndSettings": [],
-    "dateAdded": "2024-01-25T15:30:00Z",
-    "dateUpdated": "2024-01-25T15:30:00Z",
-    "assignedTo": null,
-    "locationId": "5DP41231LkQsiKESj6rh",
-    "validEmail": true,
-    "opportunities": []
-  },
-  "isExisting": false
+    "dndSettings": {
+      "Call": {"status": "active"},
+      "Email": {"status": "inactive"}
+    }
+  }
 }
 ```
 
-#### Exemplo de Response (200 OK - Contato Existente)
-
+**Response (404 Not Found):**
 ```json
 {
-  "success": true,
-  "message": "Contact already exists",
-  "contactDetails": {
-    "id": "60d5ec49e1b2c50012345678",
-    "name": "Maria Silva",
-    "firstName": "Maria",
-    "lastName": "Silva",
-    "phoneNo": "+5511999999999",
-    "email": "maria@example.com",
-    "companyName": "Silva Construções",
-    "address": "Rua das Flores, 123",
-    "customFields": [
-      {
-        "field": "project_type",
-        "value": "exterior"
-      }
-    ]
-  },
-  "isExisting": true
+  "error": "Contact not found"
 }
 ```
 
----
-
-### 5. Atualizar Contato
-
-**PUT** `/api/v1/contacts/{contactId}`
-
-Atualiza dados de um contato existente.
-
-#### Parâmetros de Path
-
-| Parâmetro   | Tipo   | Obrigatório | Descrição                    |
-| ----------- | ------ | ----------- | ---------------------------- |
-| `contactId` | string | Sim         | ID do contato no GoHighLevel |
-
-#### Request Body
-
+**Response (401 Unauthorized):**
 ```json
 {
-  "name": "Maria Silva Santos",
+  "error": "Token not found or expired",
+  "message": "A new OAuth authentication is required",
+  "auth_url": "https://paintpro.barbatech.company/api/auth/redirect?location_id=123"
+}
+```
+
+**Response (429 Too Many Requests):**
+```json
+{
+  "success": false,
+  "message": "Too many requests. Please slow down.",
+  "error_code": "RATE_LIMIT_EXCEEDED",
+  "details": {
+    "max_attempts": 100,
+    "decay_minutes": 1,
+    "retry_after_seconds": 45
+  }
+}
+```
+
+### 5.5 Atualizar Contato
+
+**Request:**
+```http
+PUT /api/contacts/60d5ec49e1b2c50012345678?location_id=60d5ec49e1b2c50012345678
+Authorization: Bearer {sanctum_token}
+X-GHL-Location-ID: 60d5ec49e1b2c50012345678
+Content-Type: application/json
+Accept: application/json
+```
+
+**Request Body:**
+```json
+{
+  "firstName": "Maria",
+  "lastName": "Silva Santos",
   "email": "maria.santos@example.com",
-  "phone": "+5511999999998",
-  "companyName": "Silva & Santos Ltda",
-  "address": "456 Nova Rua, São Paulo, SP, 01234-789"
+  "companyName": "Silva & Santos Construções",
+  "tags": ["prospect", "paint-service", "premium"]
 }
 ```
 
-#### Exemplo de Response (200 OK)
-
+**Response (200 OK):**
 ```json
 {
   "success": true,
   "message": "Contact updated successfully",
   "contactDetails": {
     "id": "60d5ec49e1b2c50012345678",
-    "name": "Maria Silva Santos",
-    "phoneNo": "+5511999999998",
+    "firstName": "Maria",
+    "lastName": "Silva Santos",
     "email": "maria.santos@example.com",
-    "additionalEmails": [],
-    "companyName": "Silva & Santos Ltda",
-    "address": "456 Nova Rua, São Paulo, SP, 01234-789",
-    "customFields": []
+    "phone": "+1234567890",
+    "companyName": "Silva & Santos Construções",
+    "address": "123 Main St, City, State 12345",
+    "customFields": [
+      {
+        "id": "field_123",
+        "key": "project_type",
+        "field_value": "exterior",
+        "source": "custom"
+      }
+    ],
+    "tags": ["prospect", "paint-service", "premium"]
   }
 }
 ```
 
----
-
-### 6. Deletar Contato
-
-**DELETE** `/api/v1/contacts/{contactId}`
-
-Remove permanentemente um contato do GoHighLevel.
-
-#### Parâmetros de Path
-
-| Parâmetro   | Tipo   | Obrigatório | Descrição                    |
-| ----------- | ------ | ----------- | ---------------------------- |
-| `contactId` | string | Sim         | ID do contato no GoHighLevel |
-
-#### Exemplo de Request
-
-```bash
-DELETE /api/v1/contacts/60d5ec49e1b2c50012345678
+**Response (404 Not Found):**
+```json
+{
+  "error": "Contact not found"
+}
 ```
 
-#### Exemplo de Response (200 OK)
+**Response (422 Unprocessable Entity):**
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": {
+    "email": ["The email must be a valid email address."],
+    "tags": ["Each tag must not exceed 50 characters."]
+  }
+}
+```
 
+**Response (401 Unauthorized):**
+```json
+{
+  "error": "Token not found or expired",
+  "message": "A new OAuth authentication is required",
+  "auth_url": "https://paintpro.barbatech.company/api/auth/redirect?location_id=123"
+}
+```
+
+**Response (429 Too Many Requests):**
+```json
+{
+  "success": false,
+  "message": "Too many requests. Please slow down.",
+  "error_code": "RATE_LIMIT_EXCEEDED",
+  "details": {
+    "max_attempts": 30,
+    "decay_minutes": 1,
+    "retry_after_seconds": 45
+  }
+}
+```
+
+### 5.6 Deletar Contato
+
+**Request:**
+```http
+DELETE /api/contacts/60d5ec49e1b2c50012345678?location_id=60d5ec49e1b2c50012345678
+Authorization: Bearer {sanctum_token}
+X-GHL-Location-ID: 60d5ec49e1b2c50012345678
+Accept: application/json
+```
+
+**Response (200 OK):**
 ```json
 {
   "success": true,
-  "message": "Contact deleted successfully",
-  "verification": {
-    "status": 404,
-    "message": "Contact confirmed as deleted from GoHighLevel",
-    "local_deleted": true
+  "message": "Contact deleted successfully"
+}
+```
+
+**Response (404 Not Found):**
+```json
+{
+  "error": "Contact not found"
+}
+```
+
+**Response (401 Unauthorized):**
+```json
+{
+  "error": "Token not found or expired",
+  "message": "A new OAuth authentication is required",
+  "auth_url": "https://paintpro.barbatech.company/api/auth/redirect?location_id=123"
+}
+```
+
+**Response (429 Too Many Requests):**
+```json
+{
+  "success": false,
+  "message": "Too many requests. Please slow down.",
+  "error_code": "RATE_LIMIT_EXCEEDED",
+  "details": {
+    "max_attempts": 30,
+    "decay_minutes": 1,
+    "retry_after_seconds": 45
   }
 }
 ```
 
-## 🔄 Sincronização
+## 6. Tratamento de Erros
 
-### Serviço de Sincronização
+### 6.1 Todos os Códigos de Status HTTP
 
-O módulo inclui um serviço dedicado para sincronização com o GoHighLevel:
+**2xx - Sucesso:**
+- `200 OK` - Operação bem-sucedida (listar, buscar, atualizar)
+- `201 Created` - Contato criado com sucesso
 
-```php
-class GhlContactSyncService
+**4xx - Erros do Cliente:**
+- `400 Bad Request` - Requisição malformada
+- `401 Unauthorized` - Token de autenticação inválido ou expirado
+- `403 Forbidden` - Acesso negado ao recurso
+- `404 Not Found` - Contato não encontrado
+- `422 Unprocessable Entity` - Erro de validação de dados
+- `429 Too Many Requests` - Rate limit excedido
+
+**5xx - Erros do Servidor:**
+- `500 Internal Server Error` - Erro interno do servidor
+- `502 Bad Gateway` - Erro de comunicação com GoHighLevel
+- `503 Service Unavailable` - Serviço temporariamente indisponível
+
+### 6.2 Exemplos de Respostas de Erro
+
+**401 Unauthorized:**
+```json
 {
-    public function syncContact(string $ghlId, string $locationId): bool
-    public function markAsDeleted(string $ghlId): bool
+  "error": "Token not found or expired",
+  "message": "A new OAuth authentication is required",
+  "auth_url": "https://paintpro.barbatech.company/api/auth/redirect?location_id=123"
 }
 ```
 
-### Status de Sincronização
+**403 Forbidden:**
+```json
+{
+  "success": false,
+  "message": "Access denied to this resource",
+  "error_code": "FORBIDDEN"
+}
+```
 
-- **`synced`**: Contato sincronizado com sucesso
-- **`pending`**: Aguardando sincronização
-- **`error`**: Erro na sincronização
+**422 Unprocessable Entity:**
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": {
+    "firstName": ["The first name field is required when name is not present."],
+    "email": ["The email must be a valid email address."]
+  }
+}
+```
 
-## 📊 Validações
+**429 Too Many Requests:**
+```json
+{
+  "success": false,
+  "message": "Too many requests. Please slow down.",
+  "error_code": "RATE_LIMIT_EXCEEDED",
+  "details": {
+    "max_attempts": 100,
+    "decay_minutes": 1,
+    "retry_after_seconds": 45
+  }
+}
+```
 
-### CreateGhlContactRequest
+**500 Internal Server Error:**
+```json
+{
+  "success": false,
+  "message": "Internal server error occurred",
+  "error_code": "INTERNAL_ERROR"
+}
+```
 
-- `name` ou `firstName`: obrigatório (pelo menos um)
-- `email`: formato válido de email
-- `phone`: string opcional
-- `companyName`: string opcional
-- `address`: string opcional
+**502 Bad Gateway:**
+```json
+{
+  "success": false,
+  "message": "Unable to communicate with GoHighLevel service",
+  "error_code": "UPSTREAM_ERROR"
+}
+```
 
-### UpdateGhlContactRequest
+**503 Service Unavailable:**
+```json
+{
+  "success": false,
+  "message": "Service temporarily unavailable. Please try again later.",
+  "error_code": "SERVICE_UNAVAILABLE"
+}
+```
 
-- Todos os campos são opcionais
-- Validações aplicadas apenas aos campos fornecidos
+## 7. Sincronização Offline-First
 
-### Estrutura de Custom Fields
+### 7.1 Controle de Estado
+
+**Estados de sync_status:**
+- **synced** - Contato sincronizado com sucesso
+- **pending** - Aguardando sincronização
+- **error** - Erro na sincronização
+
+### 7.2 Queries SQLite Essenciais
+
+**Buscar contatos para sincronização:**
+```sql
+SELECT * FROM ghl_contacts 
+WHERE user_id = ? 
+AND (sync_status = 'pending' OR sync_status = 'error')
+ORDER BY 
+  CASE sync_status 
+    WHEN 'error' THEN 1 
+    WHEN 'pending' THEN 2 
+    ELSE 3 
+  END, 
+  updated_at DESC;
+```
+
+**Buscar mudanças incrementais:**
+```sql
+SELECT * FROM ghl_contacts 
+WHERE user_id = ? 
+AND updated_at > ?
+ORDER BY updated_at ASC;
+```
+
+### 7.3 Estratégias de Cache
+
+**Limite recomendado:** 1000 contatos por usuário
+
+**Limpeza de cache:**
+```sql
+DELETE FROM ghl_contacts 
+WHERE user_id = ? 
+AND id NOT IN (
+  SELECT id FROM ghl_contacts 
+  WHERE user_id = ? 
+  ORDER BY last_synced_at DESC, updated_at DESC 
+  LIMIT ?
+);
+```
+
+## 8. Integração GoHighLevel
+
+### 8.1 Configuração de Headers
+
+A API detecta automaticamente o `location_id` de múltiplas fontes:
+1. **Query parameter:** `?location_id=123`
+2. **Header HTTP:** `X-GHL-Location-ID: 123`
+3. **Parâmetro de rota:** `/{location_id}`
+
+**Recomendado:** Usar sempre o header HTTP `X-GHL-Location-ID` para consistência.
+
+### 8.2 Estrutura DND Settings
 
 ```json
 {
-  "custom_fields": [
+  "Call": {"status": "active"},
+  "Email": {"status": "inactive"},
+  "SMS": {"status": "permanent"},
+  "WhatsApp": {"status": "active"},
+  "GMB": {"status": "inactive"},
+  "FB": {"status": "active"}
+}
+```
+
+### 8.3 Campos Personalizados do GHL
+
+```json
+{
+  "customFields": [
     {
-      "key": "string_required",
-      "value": "any_type",
-      "type": "string|number|boolean|date",
-      "required": false
+      "id": "field_unique_id",
+      "key": "project_type",
+      "field_value": "exterior_painting",
+      "source": "custom"
     }
   ]
 }
 ```
 
-### Estrutura de Tags
+### Health Check de Tokens
 
-```json
-{
-  "tags": ["string1", "string2", "string3"]
-}
-```
+**GET /api/auth/status** - Verifica status dos tokens GoHighLevel.
 
-## 🚨 Tratamento de Erros
+---
 
-### Estrutura de Erro Padrão
-
-```json
-{
-  "success": false,
-  "message": "Descrição do erro",
-  "error": "Detalhes técnicos do erro"
-}
-```
-
-### Códigos de Erro Comuns
-
-- **400**: Parâmetros inválidos ou dados incorretos
-- **401**: Autenticação falhou
-- **404**: Recurso não encontrado
-- **422**: Erro de validação
-- **500**: Erro interno do servidor
-
-## 🔐 Segurança
-
-### Autenticação
-
-- Token GoHighLevel obrigatório em todos os endpoints
-- Validação automática de expiração de token
-- Middleware `ValidateGhlToken`
+**Módulo:** GoHighLevel Contacts  
+**Versão:** 1.0.1  
+**Última Atualização:** 2025-01-20  
+**Plataforma:** Flutter + SQLite  
+**Suporte Offline:** ✅ Completo  
+**Sincronização:** ✅ Automática

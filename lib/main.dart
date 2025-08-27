@@ -7,6 +7,7 @@ import 'config/dependency_injection.dart';
 import 'config/theme.dart';
 import 'config/routes.dart';
 import 'service/navigation_service.dart';
+import 'service/location_service.dart';
 import 'viewmodel/viewmodels.dart';
 
 void main() async {
@@ -85,6 +86,10 @@ class PaintProApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<ContactsViewModel>(
           create: (_) => getIt<ContactsViewModel>(),
+        ),
+        // Location Service
+        ChangeNotifierProvider<LocationService>(
+          create: (_) => getIt<LocationService>(),
         ),
       ],
       child: MaterialApp.router(

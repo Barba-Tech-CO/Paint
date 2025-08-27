@@ -19,11 +19,11 @@ class AppUrls {
 
   // Contact URLs
   static const String contactsBaseUrl = '/contacts';
-  static const String contactsListUrl = '$contactsBaseUrl/list';
-  static const String contactsSearchUrl = '$contactsBaseUrl/search';
-  static const String contactsCreateUrl = '$contactsBaseUrl/create';
-  static const String contactsUpdateUrl = '$contactsBaseUrl/update';
-  static const String contactsDeleteUrl = '$contactsBaseUrl/delete';
+  static const String contactsListUrl = contactsBaseUrl;
+  static const String contactsSearchUrl = contactsBaseUrl;
+  static const String contactsCreateUrl = contactsBaseUrl;
+  static const String contactsUpdateUrl = contactsBaseUrl;
+  static const String contactsDeleteUrl = contactsBaseUrl;
 
   // Estimate URLs
   static const String estimatesBaseUrl = '/estimates';

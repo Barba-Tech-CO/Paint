@@ -1,5 +1,5 @@
+import '../model/paint_catalog/paint_catalog_model.dart';
 import '../utils/result/result.dart';
-import '../model/paint_catalog_model.dart';
 import 'http_service.dart';
 
 class PaintCatalogService {

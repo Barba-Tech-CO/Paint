@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
-import '../../model/zones_card_model.dart';
+import '../../model/models.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../viewmodel/zones/zones_viewmodels.dart';
 import '../widgets/buttons/paint_pro_delete_button.dart';

@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
-import '../../utils/result/result.dart';
-import '../../model/paint_catalog_model.dart';
+
 import '../../domain/repository/paint_catalog_repository.dart';
+import '../../model/paint_catalog/paint_catalog_model.dart';
+import '../../utils/result/result.dart';
 
 class PaintCatalogListViewModel extends ChangeNotifier {
   final IPaintCatalogRepository _paintCatalogRepository;

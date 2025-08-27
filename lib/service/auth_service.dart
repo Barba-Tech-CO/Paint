@@ -1,13 +1,14 @@
-import '../model/auth_model.dart';
-import '../utils/result/result.dart';
 import '../config/app_urls.dart';
-import 'http_service.dart';
+import '../model/auth_model/auth_refresh_response.dart';
+import '../model/auth_model/auth_status_response.dart';
+import '../utils/result/result.dart';
 import 'services.dart';
 
 class AuthService {
   final HttpService _httpService;
+  final LocationService _locationService;
 
-  AuthService(this._httpService);
+  AuthService(this._httpService, this._locationService);
 
   /// Verifica o status de autenticação
   Future<Result<AuthStatusResponse>> getStatus() async {
@@ -15,6 +16,13 @@ class AuthService {
       // Make the actual HTTP request to check authentication status
       final response = await _httpService.get('/auth/status');
       final authStatus = AuthStatusResponse.fromJson(response.data);
+
+      // Update location service if we have a location ID from the status
+      if (authStatus.data.locationId != null &&
+          authStatus.data.locationId!.isNotEmpty) {
+        _locationService.setLocationId(authStatus.data.locationId!);
+      }
+
       return Result.ok(authStatus);
     } catch (e) {
       return Result.error(
@@ -67,12 +75,23 @@ class AuthService {
       // After successful token exchange, call the /success endpoint with location_id
       // The location_id should come from the OAuth response or user selection
       if (callbackResponse.success) {
-        // Extract location_id from the response or use a default
-        // In GoHighLevel's OAuth flow, the location_id is typically selected by the user
-        // during the authorization process and returned in the callback
+        // Extract location_id from the response
         final locationId =
-            response.data['location_id'] ?? 'default_location_id';
-        await _callSuccessEndpoint(locationId);
+            response.data['location_id'] ??
+            response.data['locationId'] ??
+            callbackResponse.locationId;
+
+        if (locationId != null && locationId.isNotEmpty) {
+          // Store the location ID in the LocationService
+          _locationService.setLocationId(locationId);
+
+          // Call the success endpoint
+          await _callSuccessEndpoint(locationId);
+        } else {
+          return Result.error(
+            Exception('Location ID not found in OAuth response'),
+          );
+        }
       }
 
       return Result.ok(callbackResponse);
@@ -82,12 +101,14 @@ class AuthService {
   }
 
   /// Chama o endpoint de sucesso com o location_id
-  Future<void> _callSuccessEndpoint(String locationId) async {
+  Future<Result> _callSuccessEndpoint(String locationId) async {
     try {
       // Make the actual HTTP request to the /success endpoint
       final response = await _httpService.get(
         '/auth/success?location_id=$locationId',
       );
+
+      return Result.ok(response.data);
     } catch (e) {
       rethrow;
     }
@@ -175,6 +196,12 @@ class AuthService {
   /// Obtém o location_id atual
   Future<Result<String?>> getCurrentLocationId() async {
     try {
+      // First check if we have it in memory
+      if (_locationService.hasLocationId) {
+        return Result.ok(_locationService.currentLocationId);
+      }
+
+      // If not in memory, try to get it from the API status
       final statusResult = await getStatus();
       if (statusResult is Ok) {
         final status = statusResult.asOk.value;

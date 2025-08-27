@@ -1,15 +1,16 @@
 import 'package:flutter/foundation.dart';
-import '../../model/contact_model.dart';
-import '../../domain/repository/contact_repository.dart';
-import '../../utils/result/result.dart';
+
+import '../../model/contacts/contact_model.dart';
+import '../../use_case/contacts/contact_operations_use_case.dart';
 import '../../utils/command/command.dart';
+import '../../utils/result/result.dart';
 
 enum ContactListState { initial, loading, loaded, error }
 
 class ContactListViewModel extends ChangeNotifier {
-  final IContactRepository _contactRepository;
+  final ContactOperationsUseCase _contactUseCase;
 
-  ContactListViewModel(this._contactRepository);
+  ContactListViewModel(this._contactUseCase);
 
   // State
   ContactListState _state = ContactListState.initial;
@@ -67,7 +68,7 @@ class ContactListViewModel extends ChangeNotifier {
       _currentPage = 0;
 
       try {
-        final result = await _contactRepository.getContacts(
+        final result = await _contactUseCase.getContacts(
           limit: _pageSize,
           offset: _currentPage * _pageSize,
         );
@@ -98,7 +99,7 @@ class ContactListViewModel extends ChangeNotifier {
       }
 
       try {
-        final result = await _contactRepository.getContacts(
+        final result = await _contactUseCase.getContacts(
           limit: _pageSize,
           offset: _currentPage * _pageSize,
         );
@@ -128,7 +129,7 @@ class ContactListViewModel extends ChangeNotifier {
       _currentPage = 0;
 
       try {
-        final result = await _contactRepository.searchContacts(query);
+        final result = await _contactUseCase.searchContacts(query);
         return result.when(
           ok: (response) {
             _contacts = response.contacts;
@@ -155,7 +156,7 @@ class ContactListViewModel extends ChangeNotifier {
       _clearError();
 
       try {
-        final result = await _contactRepository.syncPendingContacts();
+        final result = await _contactUseCase.syncPendingContacts();
         return result.when(
           ok: (_) {
             // Refresh the contact list after sync

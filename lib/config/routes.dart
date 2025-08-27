@@ -4,7 +4,7 @@ import '../model/models.dart';
 import '../view/views.dart';
 
 final router = GoRouter(
-  initialLocation: '/home',
+  initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',
@@ -31,8 +31,8 @@ final router = GoRouter(
       builder: (context, state) => const ContactsView(),
     ),
     GoRoute(
-      path: '/highlights',
-      builder: (context, state) => const HighlightsView(),
+      path: '/quotes',
+      builder: (context, state) => const QuotesView(),
     ),
     GoRoute(
       path: '/contact-details',
@@ -78,6 +78,18 @@ final router = GoRouter(
     GoRoute(
       path: '/new-contact',
       builder: (context, state) => const NewContactView(),
+    ),
+    GoRoute(
+      path: '/edit-contact',
+      builder: (context, state) {
+        final contact = state.extra as ContactModel?;
+        if (contact == null) {
+          // Se não houver contato, redirecionar para a lista de contatos
+          return const ContactsView();
+        }
+
+        return EditContactView(contact: contact);
+      },
     ),
     GoRoute(
       path: '/zones-details',
