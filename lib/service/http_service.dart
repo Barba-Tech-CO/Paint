@@ -44,14 +44,17 @@ class HttpService implements IHttpService {
   }
 
   /// Sets the GoHighLevel token for API authentication
+  @override
   void setGhlToken(String token) {
     _ghlToken = token;
   }
 
   /// Gets the current GoHighLevel token
+  @override
   String? get ghlToken => _ghlToken;
 
   /// Clears the GoHighLevel token
+  @override
   void clearGhlToken() {
     _ghlToken = null;
   }
@@ -94,8 +97,6 @@ class HttpService implements IHttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final fullPath = '${dio.options.baseUrl}$path';
-
     try {
       final response = await dio.post(
         path,
@@ -106,6 +107,7 @@ class HttpService implements IHttpService {
 
       return response;
     } on DioException catch (e) {
+      _logger.error('HttpService Error: POST $path', e, e.stackTrace);
       rethrow;
     }
   }
@@ -117,8 +119,6 @@ class HttpService implements IHttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final fullPath = '${dio.options.baseUrl}$path';
-
     try {
       final response = await dio.put(
         path,
@@ -129,6 +129,7 @@ class HttpService implements IHttpService {
 
       return response;
     } on DioException catch (e) {
+      _logger.error('HttpService Error: PUT $path', e, e.stackTrace);
       rethrow;
     }
   }
@@ -140,8 +141,6 @@ class HttpService implements IHttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final fullPath = '${dio.options.baseUrl}$path';
-
     try {
       final response = await dio.patch(
         path,
@@ -152,6 +151,7 @@ class HttpService implements IHttpService {
 
       return response;
     } on DioException catch (e) {
+      _logger.error('HttpService Error: PATCH $path', e, e.stackTrace);
       rethrow;
     }
   }
@@ -163,8 +163,6 @@ class HttpService implements IHttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final fullPath = '${dio.options.baseUrl}$path';
-
     try {
       final response = await dio.delete(
         path,
@@ -175,6 +173,7 @@ class HttpService implements IHttpService {
 
       return response;
     } on DioException catch (e) {
+      _logger.error('HttpService Error: DELETE $path', e, e.stackTrace);
       rethrow;
     }
   }
