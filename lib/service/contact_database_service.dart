@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../model/contact_model.dart';
+import '../model/models.dart';
 
 class ContactDatabaseService {
   static Database? _database;
