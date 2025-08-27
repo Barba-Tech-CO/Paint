@@ -1,10 +1,16 @@
+import 'dart:developer';
+
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+
+import '../config/app_urls.dart';
 import '../model/models.dart';
 import '../utils/result/result.dart';
 import 'http_service.dart';
 
 class ContactService {
   final HttpService _httpService;
-  static const String _baseUrl = '/v1/contacts';
+  static const String _baseUrl = AppUrls.contactsBaseUrl;
 
   ContactService(this._httpService);
 
@@ -187,6 +193,20 @@ class ContactService {
         requestData['customFields'] = customFields;
       }
 
+      // Debug: Log the request details
+      if (kDebugMode) {
+        log('Debug: Creating contact with URL: $_baseUrl');
+        log(
+          'Debug: Full URL will be: ${_httpService.dio.options.baseUrl}$_baseUrl',
+        );
+        log('Debug: Request data: $requestData');
+        log('Debug: HTTP Method: POST');
+        log(
+          'Debug: GHL Token: ${_httpService.ghlToken != null ? "Present" : "Missing"}',
+        );
+      }
+
+      // Use the correct endpoint for creating contacts (POST /v1/contacts)
       final response = await _httpService.post(
         _baseUrl,
         data: requestData,
@@ -217,9 +237,35 @@ class ContactService {
           Exception(errorMessage),
         );
       }
+    } on DioException catch (e) {
+      // Handle specific HTTP status codes for GET requests
+      String errorMessage;
+      switch (e.response?.statusCode) {
+        case 404:
+          errorMessage =
+              'Contact sync endpoint not found. Please check the API configuration.';
+          break;
+        case 401:
+          errorMessage = 'Authentication required. Please log in again.';
+          break;
+        case 403:
+          errorMessage =
+              'Access denied. You do not have permission to sync contacts.';
+          break;
+        case 422:
+          errorMessage =
+              'Invalid sync parameters. Please check your information.';
+          break;
+        case 500:
+          errorMessage = 'Server error. Please try again later.';
+          break;
+        default:
+          errorMessage = 'Error syncing contact: ${e.message}';
+      }
+      return Result.error(Exception(errorMessage));
     } catch (e) {
       return Result.error(
-        Exception('Error creating contact: $e'),
+        Exception('Error syncing contact: $e'),
       );
     }
   }
