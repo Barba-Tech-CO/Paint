@@ -166,6 +166,7 @@ class _ContactsViewState extends State<ContactsView> {
 
                                   return ContactItemWidget(
                                     contact: contactMap,
+                                    contactModel: contact,
                                     onRename: (newName) {
                                       // Update the contact name
                                       final nameParts = splitFullName(newName);
