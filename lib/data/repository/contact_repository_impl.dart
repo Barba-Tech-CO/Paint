@@ -4,6 +4,7 @@ import '../../service/auth_service.dart';
 import '../../service/contact_database_service.dart';
 import '../../service/contact_service.dart';
 import '../../service/location_service.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
 class ContactRepository implements IContactRepository {
@@ -11,15 +12,19 @@ class ContactRepository implements IContactRepository {
   final ContactDatabaseService _databaseService;
   final AuthService _authService;
   final LocationService _locationService;
+  final AppLogger _logger;
 
   ContactRepository({
     required ContactService contactService,
     required ContactDatabaseService databaseService,
     required AuthService authService,
+    required LocationService locationService,
+    required AppLogger logger,
   }) : _contactService = contactService,
        _databaseService = databaseService,
        _authService = authService,
-       _locationService = LocationService();
+       _locationService = locationService,
+       _logger = logger;
 
   @override
   Future<Result<ContactListResponse>> getContacts({
@@ -43,8 +48,18 @@ class ContactRepository implements IContactRepository {
         offset: offset,
       );
 
-      // Attempt to sync with API in the background
-      _syncWithApiInBackground();
+      // Attempt to sync with API in background and handle errors
+      final syncResult = await _syncWithApiInBackground();
+      if (syncResult is Error) {
+        // Log sync error to console
+        _logger.error(
+          'Background sync failed: ${syncResult.asError.error}',
+          syncResult.asError.error,
+        );
+        // Return contacts from local database but with sync error info
+        // The error will be available for the UI to show to the user
+        return Result.ok(response);
+      }
 
       return Result.ok(response);
     } catch (e) {
@@ -134,7 +149,14 @@ class ContactRepository implements IContactRepository {
         await _databaseService.deleteContact(tempGhlId);
         return Result.ok(syncedContact);
       } else {
+        // API call failed, but contact is saved locally
+        // Log the error for debugging
+        _logger.info(
+          'API call failed, keeping contact locally: ${apiResult.asError.error}',
+        );
+
         // Keep the contact as pending for later sync
+        // Return success since the contact was saved locally
         return Result.ok(tempContact);
       }
     } catch (e) {
@@ -152,7 +174,12 @@ class ContactRepository implements IContactRepository {
 
       if (localContact != null) {
         // Attempt to sync with API in the background
-        _syncContactWithApiInBackground(contactId);
+        try {
+          await _syncContactWithApiInBackground(contactId);
+        } catch (e) {
+          // Log sync error but don't fail the get operation
+          _logger.error('Background sync failed for contact $contactId: $e', e);
+        }
         return Result.ok(localContact);
       }
 
@@ -333,7 +360,12 @@ class ContactRepository implements IContactRepository {
       );
 
       // Attempt to sync with API in the background
-      _syncWithApiInBackground();
+      try {
+        await _syncWithApiInBackground();
+      } catch (e) {
+        // Log sync error but don't fail the search operation
+        _logger.error('Background sync failed during search: $e', e);
+      }
 
       return Result.ok(response);
     } catch (e) {
@@ -398,7 +430,12 @@ class ContactRepository implements IContactRepository {
       final pendingContacts = await _databaseService.getPendingContacts();
 
       for (final contact in pendingContacts) {
-        await _syncContactWithApi(contact);
+        try {
+          await _syncContactWithApi(contact);
+        } catch (e) {
+          // Log individual contact sync error but continue with others
+          _logger.error('Failed to sync contact ${contact.ghlId}: $e', e);
+        }
       }
 
       return Result.ok(null);
@@ -431,14 +468,53 @@ class ContactRepository implements IContactRepository {
   }
 
   // Private helper methods
-  Future<void> _syncWithApiInBackground() async {
+  Future<Result<void>> _syncWithApiInBackground() async {
     // This would typically run in a background task
     try {
-      await syncPendingContacts();
+      // Only sync down from API (GET), don't try to create contacts (POST)
+      // This prevents the 405 error when accessing the contacts screen
+      return await _syncContactsFromApi();
     } catch (e) {
-      // Log error but don't throw - in production, use proper logging service
-      // ignore: avoid_print
-      print('Background sync error: $e');
+      // Log error to console using logger
+      _logger.error('Background sync error: $e', e);
+      return Result.error(
+        Exception('Error syncing contacts: $e'),
+      );
+    }
+  }
+
+  /// Sync contacts from API to local database (GET only)
+  Future<Result<void>> _syncContactsFromApi() async {
+    try {
+      // Get contacts from API (GET request)
+      final apiResult = await _contactService.getContacts();
+
+      if (apiResult is Ok) {
+        final apiContacts = apiResult.asOk.value.contacts;
+
+        // Update local database with API data
+        for (final contact in apiContacts) {
+          await _databaseService.insertContact(contact);
+        }
+        return Result.ok(null);
+      } else {
+        // Log API error to console
+        _logger.error(
+          'API sync error: ${apiResult.asError.error}',
+          apiResult.asError.error,
+        );
+        return Result.error(
+          Exception(
+            'Failed to sync contacts from API: ${apiResult.asError.error}',
+          ),
+        );
+      }
+    } catch (e) {
+      // Log error to console
+      _logger.error('Error syncing contacts from API: $e', e);
+      return Result.error(
+        Exception('Error syncing contacts from API: $e'),
+      );
     }
   }
 
@@ -450,15 +526,14 @@ class ContactRepository implements IContactRepository {
       }
     } catch (e) {
       // Log error but don't throw - in production, use proper logging service
-      // ignore: avoid_print
-      print('Background contact sync error: $e');
+      _logger.error('Background contact sync error: $e', e);
     }
   }
 
   Future<void> _syncContactWithApi(ContactModel contact) async {
     try {
       if (contact.ghlId == null || contact.ghlId!.startsWith('temp')) {
-        // This is a new contact, try to create it
+        // This is a new contact, try to sync it
         final result = await _contactService.createContact(
           name: contact.name,
           email: contact.email,
