@@ -1,9 +1,8 @@
 import '../../domain/repository/contact_repository.dart';
-import '../../model/contact_list_response.dart';
-import '../../model/contact_model.dart';
-import '../../service/contact_service.dart';
-import '../../service/contact_database_service.dart';
+import '../../model/models.dart';
 import '../../service/auth_service.dart';
+import '../../service/contact_database_service.dart';
+import '../../service/contact_service.dart';
 import '../../service/location_service.dart';
 import '../../utils/result/result.dart';
 
