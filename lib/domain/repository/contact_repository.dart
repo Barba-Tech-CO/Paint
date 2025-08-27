@@ -12,12 +12,16 @@ abstract class IContactRepository {
   /// Cria um novo contato (offline-first)
   Future<Result<ContactModel>> createContact({
     String? name,
-    String? firstName,
-    String? lastName,
-    String? email,
     String? phone,
+    List<String>? additionalPhones,
+    String? email,
+    List<String>? additionalEmails,
     String? companyName,
     String? address,
+    String? city,
+    String? state,
+    String? postalCode,
+    String? country,
     List<Map<String, dynamic>>? customFields,
   });
 
@@ -28,12 +32,16 @@ abstract class IContactRepository {
   Future<Result<ContactModel>> updateContact(
     String contactId, {
     String? name,
-    String? firstName,
-    String? lastName,
-    String? email,
     String? phone,
+    List<String>? additionalPhones,
+    String? email,
+    List<String>? additionalEmails,
     String? companyName,
     String? address,
+    String? city,
+    String? state,
+    String? postalCode,
+    String? country,
     List<Map<String, dynamic>>? customFields,
   });
 
@@ -45,7 +53,7 @@ abstract class IContactRepository {
 
   /// Busca avançada de contatos (offline-first)
   Future<Result<ContactListResponse>> advancedSearch({
-    String? locationId,
+    String? name,
     int? pageLimit,
     int? page,
     String? query,
