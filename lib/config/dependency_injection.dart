@@ -23,6 +23,7 @@ import '../service/contact_database_service.dart';
 import '../service/deep_link_service.dart';
 import '../service/estimate_service.dart';
 import '../service/http_service.dart';
+import '../service/location_service.dart';
 import '../service/navigation_service.dart';
 import '../service/material_service.dart';
 import '../service/paint_catalog_service.dart';
@@ -56,6 +57,9 @@ void setupDependencyInjection() {
     () => AuthService(
       getIt<HttpService>(),
     ),
+  );
+  getIt.registerLazySingleton<LocationService>(
+    () => LocationService(),
   );
   getIt.registerLazySingleton<ContactService>(
     () => ContactService(
@@ -167,6 +171,7 @@ void setupDependencyInjection() {
   getIt.registerFactory<ContactDetailViewModel>(
     () => ContactDetailViewModel(
       getIt<IContactRepository>(),
+      getIt<LocationService>(),
     ),
   );
 
