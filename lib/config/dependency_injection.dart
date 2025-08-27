@@ -23,6 +23,7 @@ import '../service/contact_database_service.dart';
 import '../service/deep_link_service.dart';
 import '../service/estimate_service.dart';
 import '../service/http_service.dart';
+import '../service/location_service.dart';
 import '../service/navigation_service.dart';
 import '../service/material_service.dart';
 import '../service/paint_catalog_service.dart';
@@ -34,6 +35,8 @@ import '../utils/logger/logger_app_logger_impl.dart';
 
 // Use Case Layer
 import '../use_case/auth/auth_use_cases.dart';
+import '../use_case/contacts/contact_operations_use_case.dart';
+import '../use_case/contacts/contact_sync_use_case.dart';
 
 // ViewModel Layer
 import '../viewmodel/select_colors_viewmodel.dart';
@@ -42,6 +45,11 @@ import '../viewmodel/viewmodels.dart';
 final GetIt getIt = GetIt.instance;
 
 void setupDependencyInjection() {
+  // Logger Layer - Register first to avoid circular dependencies
+  getIt.registerLazySingleton<AppLogger>(
+    () => LoggerAppLoggerImpl(),
+  );
+
   // Serviços
   getIt.registerLazySingleton<HttpService>(
     () {
@@ -57,11 +65,16 @@ void setupDependencyInjection() {
     () => AuthService(
       getIt<HttpService>(),
       getIt<AppLogger>(),
+      getIt<LocationService>(),
     ),
+  );
+  getIt.registerLazySingleton<LocationService>(
+    () => LocationService(),
   );
   getIt.registerLazySingleton<ContactService>(
     () => ContactService(
       getIt<HttpService>(),
+      getIt<LocationService>(),
     ),
   );
   getIt.registerLazySingleton<ContactDatabaseService>(
@@ -111,6 +124,8 @@ void setupDependencyInjection() {
       databaseService: getIt<ContactDatabaseService>(),
       authService: getIt<AuthService>(),
       logger: getIt<AppLogger>(),
+      locationService: getIt<LocationService>(),
+      logger: getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<IEstimateRepository>(
@@ -127,7 +142,7 @@ void setupDependencyInjection() {
     ),
   );
 
-  // Use Cases
+  // Use Cases - Auth
   getIt.registerLazySingleton<AuthOperationsUseCase>(
     () => AuthOperationsUseCase(
       getIt<AuthService>(),
@@ -146,6 +161,20 @@ void setupDependencyInjection() {
   );
   getIt.registerLazySingleton<HandleWebViewNavigationUseCase>(
     () => HandleWebViewNavigationUseCase(),
+  );
+
+  // Use Cases - Contacts
+  getIt.registerLazySingleton<ContactOperationsUseCase>(
+    () => ContactOperationsUseCase(
+      getIt<IContactRepository>(),
+      getIt<AppLogger>(),
+    ),
+  );
+  getIt.registerLazySingleton<ContactSyncUseCase>(
+    () => ContactSyncUseCase(
+      getIt<IContactRepository>(),
+      getIt<AppLogger>(),
+    ),
   );
 
   getIt.registerLazySingleton<AppInitializationService>(
@@ -171,12 +200,14 @@ void setupDependencyInjection() {
   // ViewModels - Contact
   getIt.registerFactory<ContactListViewModel>(
     () => ContactListViewModel(
-      getIt<IContactRepository>(),
+      getIt<ContactOperationsUseCase>(),
     ),
   );
   getIt.registerFactory<ContactDetailViewModel>(
     () => ContactDetailViewModel(
-      getIt<IContactRepository>(),
+      getIt<ContactOperationsUseCase>(),
+      getIt<LocationService>(),
+      getIt<AppLogger>(),
     ),
   );
 
@@ -263,7 +294,14 @@ void setupDependencyInjection() {
     ),
   );
 
+  // ViewModel - Quotes
   getIt.registerFactory<QuotesViewModel>(
     () => QuotesViewModel(),
+  );
+
+  getIt.registerFactory<ContactsViewModel>(
+    () => ContactsViewModel(
+      getIt<ContactOperationsUseCase>(),
+    ),
   );
 }

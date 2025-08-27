@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
-import '../../model/zones_card_model.dart';
-import '../../utils/result/result.dart';
-import '../../utils/command/command.dart';
+
 import '../../helpers/zones/zone_data_classes.dart';
+import '../../model/models.dart';
+import '../../utils/command/command.dart';
+import '../../utils/result/result.dart';
 
 class ZoneDetailViewModel extends ChangeNotifier {
   // Service seria injetado aqui quando estiver pronto

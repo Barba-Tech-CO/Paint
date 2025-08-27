@@ -1,5 +1,4 @@
-import '../../model/auth_model.dart';
-import '../../model/user_model.dart';
+import '../../model/models.dart';
 import '../../service/auth_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';

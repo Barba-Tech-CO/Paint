@@ -4,8 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../config/app_urls.dart';
-import '../../model/auth_model.dart';
-import '../../model/auth_state.dart';
+import '../../model/models.dart';
 import '../../model/user_model.dart';
 import '../../service/auth_persistence_service.dart';
 import '../../service/deep_link_service.dart';

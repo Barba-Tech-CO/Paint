@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
-import '../../model/estimate_model.dart';
+import '../../model/models.dart';
 import '../../domain/repository/estimate_repository.dart';
 
 class EstimateCalculationViewModel extends ChangeNotifier {

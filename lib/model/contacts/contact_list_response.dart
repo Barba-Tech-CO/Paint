@@ -16,6 +16,7 @@ class ContactListResponse {
   });
 
   factory ContactListResponse.fromJson(Map<String, dynamic> json) {
+    // Handle the API response structure - the service layer already handles success/error
     final contactsList = json['contacts'] as List<dynamic>? ?? [];
     return ContactListResponse(
       contacts: contactsList

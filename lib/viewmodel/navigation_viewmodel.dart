@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../model/navigation_item_model.dart';
+import '../model/models.dart';
 
 class NavigationViewModel extends ChangeNotifier {
   String _currentRoute = '/home';
@@ -48,11 +48,6 @@ class NavigationViewModel extends ChangeNotifier {
 }
 
 extension NavigationViewModelActions on NavigationViewModel {
-  void onCameraTapped(BuildContext context) {
-    updateCurrentRoute('/camera');
-    context.go('/camera');
-  }
-
   void onItemTapped(BuildContext context, NavigationItemModel item, int index) {
     if (_currentRoute != item.route) {
       updateCurrentRoute(item.route);

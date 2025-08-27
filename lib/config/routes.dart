@@ -80,6 +80,18 @@ final router = GoRouter(
       builder: (context, state) => const NewContactView(),
     ),
     GoRoute(
+      path: '/edit-contact',
+      builder: (context, state) {
+        final contact = state.extra as ContactModel?;
+        if (contact == null) {
+          // Se não houver contato, redirecionar para a lista de contatos
+          return const ContactsView();
+        }
+
+        return EditContactView(contact: contact);
+      },
+    ),
+    GoRoute(
       path: '/zones-details',
       builder: (context, state) {
         final zone = state.extra as ZonesCardModel?;

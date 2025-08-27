@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../config/app_colors.dart';
-import '../../../model/navigation_item_model.dart';
+import '../../../model/models.dart';
 import '../../../viewmodel/navigation_viewmodel.dart';
 import 'navigation_item_widget.dart';
 

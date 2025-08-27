@@ -1,6 +1,5 @@
 import '../../domain/repository/auth_repository.dart';
-import '../../model/auth_model.dart';
-import '../../model/user_model.dart';
+import '../../model/models.dart';
 import '../../service/auth_service.dart';
 import '../../utils/result/result.dart';
 

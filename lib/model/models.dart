@@ -1,14 +1,10 @@
 // Models
-export 'auth_model.dart';
-export 'business_info.dart';
-export 'contact_model.dart';
-export 'estimate_model.dart';
-export 'ghl_profile_data.dart';
-export 'ghl_profile_response.dart';
-export 'navigation_item_model.dart';
-export 'paint_catalog_model.dart';
-export 'user_model.dart';
-export 'zones_card_model.dart';
+export 'auth_model/auth.dart';
+export 'contacts/contacts.dart';
+export 'estimates/estimate_model.dart';
+export 'material_models/material_models.dart';
+export 'navigation/navigation_item_model.dart';
+export 'zones/zones_card_model.dart';
 
 // Material Models
 export 'material_models/material_model.dart';

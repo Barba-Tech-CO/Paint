@@ -38,10 +38,10 @@ class NavigationItemModel {
       route: '/contacts',
     ),
     const NavigationItemModel(
-      id: 'highlights',
-      icon: Icons.folder_rounded,
-      activeIcon: Icons.drive_folder_upload_rounded,
-      label: 'Quotes',
+      id: 'uploads',
+      icon: Icons.folder,
+      activeIcon: Icons.create_new_folder_sharp,
+      label: 'Uploads',
       route: '/quotes',
     ),
   ];

@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
-class RenameQuoteDialog extends StatefulWidget {
+class RenameDialog extends StatefulWidget {
   final String initialName;
 
-  const RenameQuoteDialog({
+  const RenameDialog({
     super.key,
     required this.initialName,
   });
 
   @override
-  State<RenameQuoteDialog> createState() => _RenameQuoteDialogState();
+  State<RenameDialog> createState() => _RenameDialogState();
 }
 
-class _RenameQuoteDialogState extends State<RenameQuoteDialog> {
+class _RenameDialogState extends State<RenameDialog> {
   late TextEditingController _controller;
 
   @override

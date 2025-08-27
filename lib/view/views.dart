@@ -4,6 +4,7 @@ export 'camera/camera_view.dart';
 export 'contact_details/contact_details_view.dart';
 export 'contacts/contacts_view.dart';
 export 'create_project/create_project_view.dart';
+export 'edit_contact/edit_contact_view.dart';
 export 'edit_zone/edit_zone_view.dart';
 export 'home/home_view.dart';
 export 'layout/main_layout.dart';

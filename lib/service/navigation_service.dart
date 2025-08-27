@@ -30,8 +30,8 @@ class NavigationService {
     context.go('/contacts');
   }
 
-  void navigateToHighlights(BuildContext context) {
-    context.go('/highlights');
+  void navigateToQuotes(BuildContext context) {
+    context.go('/quotes');
   }
 
   void replaceToDashboard(BuildContext context) {
