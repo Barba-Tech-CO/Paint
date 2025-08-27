@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../widgets/widgets.dart';
+import '../../../model/models.dart';
 
 class ContactItemWidget extends StatelessWidget {
   final Map<String, String> contact;
   final VoidCallback? onMorePressed;
   final Function(String)? onRename;
   final VoidCallback? onDelete;
+  final ContactModel?
+  contactModel; // Adicionado para ter acesso ao modelo completo
 
   const ContactItemWidget({
     super.key,
@@ -15,6 +18,7 @@ class ContactItemWidget extends StatelessWidget {
     this.onMorePressed,
     this.onRename,
     this.onDelete,
+    this.contactModel, // Adicionado ao construtor
   });
 
   @override
@@ -115,13 +119,10 @@ class ContactItemWidget extends StatelessWidget {
                     color: Colors.grey[700],
                   ),
                   onSelected: (value) async {
-                    if (value == 'rename') {
-                      final newName = await showDialog<String>(
-                        context: context,
-                        builder: (context) => RenameDialog(initialName: name),
-                      );
-                      if (newName != null && newName.trim().isNotEmpty) {
-                        onRename?.call(newName.trim());
+                    if (value == 'edit') {
+                      // Navegar para a tela de edição com os dados do contato
+                      if (contactModel != null) {
+                        context.push('/edit-contact', extra: contactModel);
                       }
                     } else if (value == 'delete') {
                       final confirm = await showDialog<bool>(
@@ -135,12 +136,12 @@ class ContactItemWidget extends StatelessWidget {
                   },
                   itemBuilder: (context) => [
                     const PopupMenuItem(
-                      value: 'rename',
+                      value: 'edit',
                       child: Row(
                         children: [
                           Icon(Icons.edit_rounded),
                           SizedBox(width: 8),
-                          Text('Rename'),
+                          Text('Editar'),
                         ],
                       ),
                     ),
@@ -150,7 +151,7 @@ class ContactItemWidget extends StatelessWidget {
                         children: [
                           Icon(Icons.delete_rounded),
                           SizedBox(width: 8),
-                          Text('Delete'),
+                          Text('Excluir'),
                         ],
                       ),
                     ),
