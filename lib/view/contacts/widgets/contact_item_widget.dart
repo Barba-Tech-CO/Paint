@@ -9,8 +9,7 @@ class ContactItemWidget extends StatelessWidget {
   final VoidCallback? onMorePressed;
   final Function(String)? onRename;
   final VoidCallback? onDelete;
-  final ContactModel?
-  contactModel; // Adicionado para ter acesso ao modelo completo
+  final ContactModel? contactModel;
 
   const ContactItemWidget({
     super.key,
@@ -18,7 +17,7 @@ class ContactItemWidget extends StatelessWidget {
     this.onMorePressed,
     this.onRename,
     this.onDelete,
-    this.contactModel, // Adicionado ao construtor
+    this.contactModel,
   });
 
   @override
