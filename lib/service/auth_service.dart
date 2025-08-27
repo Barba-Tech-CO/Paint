@@ -1,8 +1,7 @@
-import '../model/auth_model.dart';
-import '../utils/result/result.dart';
 import '../config/app_urls.dart';
-import 'http_service.dart';
-import 'location_service.dart';
+import '../model/auth_model/auth_refresh_response.dart';
+import '../model/auth_model/auth_status_response.dart';
+import '../utils/result/result.dart';
 import 'services.dart';
 
 class AuthService {
@@ -102,12 +101,14 @@ class AuthService {
   }
 
   /// Chama o endpoint de sucesso com o location_id
-  Future<void> _callSuccessEndpoint(String locationId) async {
+  Future<Result> _callSuccessEndpoint(String locationId) async {
     try {
       // Make the actual HTTP request to the /success endpoint
       final response = await _httpService.get(
         '/auth/success?location_id=$locationId',
       );
+
+      return Result.ok(response.data);
     } catch (e) {
       rethrow;
     }
