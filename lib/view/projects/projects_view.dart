@@ -4,9 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../config/app_colors.dart';
 import '../layout/main_layout.dart';
 import '../../config/dependency_injection.dart';
-import '../../viewmodel/navigation_viewmodel.dart';
-import '../widgets/appbars/paint_pro_app_bar.dart';
-import '../widgets/navigation/floating_bottom_navigation_bar.dart';
+import '../../viewmodel/viewmodels.dart';
+import '../widgets/widgets.dart';
 
 class ProjectsView extends StatefulWidget {
   const ProjectsView({super.key});
