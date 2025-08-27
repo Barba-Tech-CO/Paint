@@ -1,5 +1,4 @@
-import '../model/contact_list_response.dart';
-import '../model/contact_model.dart';
+import '../model/models.dart';
 import '../utils/result/result.dart';
 import 'http_service.dart';
 
@@ -23,8 +22,18 @@ class ContactService {
         },
       );
 
-      final contactListResponse = ContactListResponse.fromJson(response.data);
-      return Result.ok(contactListResponse);
+      // Handle the API response structure with success and data fields
+      if (response.data['success'] == true) {
+        // The API returns the contacts directly in the response when success is true
+        final contactListResponse = ContactListResponse.fromJson(response.data);
+        return Result.ok(contactListResponse);
+      } else {
+        final errorMessage =
+            response.data['message'] ?? 'Error listing contacts';
+        return Result.error(
+          Exception(errorMessage),
+        );
+      }
     } catch (e) {
       return Result.error(
         Exception('Error listing contacts: $e'),
@@ -40,8 +49,18 @@ class ContactService {
         queryParameters: {'query': query},
       );
 
-      final contactListResponse = ContactListResponse.fromJson(response.data);
-      return Result.ok(contactListResponse);
+      // Handle the API response structure with success and data fields
+      if (response.data['success'] == true) {
+        // The API returns the contacts directly in the response when success is true
+        final contactListResponse = ContactListResponse.fromJson(response.data);
+        return Result.ok(contactListResponse);
+      } else {
+        final errorMessage =
+            response.data['message'] ?? 'Error searching contacts';
+        return Result.error(
+          Exception(errorMessage),
+        );
+      }
     } catch (e) {
       return Result.error(
         Exception('Error searching contacts: $e'),
@@ -71,8 +90,18 @@ class ContactService {
         },
       );
 
-      final contactListResponse = ContactListResponse.fromJson(response.data);
-      return Result.ok(contactListResponse);
+      // Handle the API response structure with success and data fields
+      if (response.data['success'] == true) {
+        // The API returns the contacts directly in the response when success is true
+        final contactListResponse = ContactListResponse.fromJson(response.data);
+        return Result.ok(contactListResponse);
+      } else {
+        final errorMessage =
+            response.data['message'] ?? 'Error in advanced search';
+        return Result.error(
+          Exception(errorMessage),
+        );
+      }
     } catch (e) {
       return Result.error(
         Exception('Error in advanced search: $e'),
@@ -86,13 +115,27 @@ class ContactService {
       final response = await _httpService.get('$_baseUrl/$contactId');
 
       // Handle the specific response structure from the API
-      if (response.data['success'] == true &&
-          response.data['contactDetails'] != null) {
-        final contact = ContactModel.fromJson(response.data['contactDetails']);
-        return Result.ok(contact);
+      if (response.data['success'] == true) {
+        if (response.data['contactDetails'] != null) {
+          final contact = ContactModel.fromJson(
+            response.data['contactDetails'],
+          );
+          return Result.ok(contact);
+        } else if (response.data['data'] != null) {
+          final contact = ContactModel.fromJson(response.data['data']);
+          return Result.ok(contact);
+        } else if (response.data['contact'] != null) {
+          final contact = ContactModel.fromJson(response.data['contact']);
+          return Result.ok(contact);
+        } else {
+          return Result.error(
+            Exception('Contact data not found in response'),
+          );
+        }
       } else {
+        final errorMessage = response.data['message'] ?? 'Contact not found';
         return Result.error(
-          Exception('Contact not found'),
+          Exception(errorMessage),
         );
       }
     } catch (e) {
@@ -150,13 +193,28 @@ class ContactService {
       );
 
       // Handle the specific response structure from the API
-      if (response.data['success'] == true &&
-          response.data['contactDetails'] != null) {
-        final contact = ContactModel.fromJson(response.data['contactDetails']);
-        return Result.ok(contact);
+      if (response.data['success'] == true) {
+        if (response.data['contactDetails'] != null) {
+          final contact = ContactModel.fromJson(
+            response.data['contactDetails'],
+          );
+          return Result.ok(contact);
+        } else if (response.data['data'] != null) {
+          final contact = ContactModel.fromJson(response.data['data']);
+          return Result.ok(contact);
+        } else if (response.data['contact'] != null) {
+          final contact = ContactModel.fromJson(response.data['contact']);
+          return Result.ok(contact);
+        } else {
+          return Result.error(
+            Exception('Contact data not found in response'),
+          );
+        }
       } else {
+        final errorMessage =
+            response.data['message'] ?? 'Error creating contact';
         return Result.error(
-          Exception('Error creating contact'),
+          Exception(errorMessage),
         );
       }
     } catch (e) {
@@ -213,13 +271,28 @@ class ContactService {
       );
 
       // Handle the specific response structure from the API
-      if (response.data['success'] == true &&
-          response.data['contactDetails'] != null) {
-        final contact = ContactModel.fromJson(response.data['contactDetails']);
-        return Result.ok(contact);
+      if (response.data['success'] == true) {
+        if (response.data['contactDetails'] != null) {
+          final contact = ContactModel.fromJson(
+            response.data['contactDetails'],
+          );
+          return Result.ok(contact);
+        } else if (response.data['data'] != null) {
+          final contact = ContactModel.fromJson(response.data['data']);
+          return Result.ok(contact);
+        } else if (response.data['contact'] != null) {
+          final contact = ContactModel.fromJson(response.data['contact']);
+          return Result.ok(contact);
+        } else {
+          return Result.error(
+            Exception('Contact data not found in response'),
+          );
+        }
       } else {
+        final errorMessage =
+            response.data['message'] ?? 'Error updating contact';
         return Result.error(
-          Exception('Error updating contact'),
+          Exception(errorMessage),
         );
       }
     } catch (e) {
@@ -238,8 +311,10 @@ class ContactService {
       if (response.data['success'] == true) {
         return Result.ok(true);
       } else {
+        final errorMessage =
+            response.data['message'] ?? 'Error deleting contact';
         return Result.error(
-          Exception('Error deleting contact'),
+          Exception(errorMessage),
         );
       }
     } catch (e) {
