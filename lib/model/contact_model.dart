@@ -5,8 +5,7 @@ class ContactModel {
   final String? id;
   final String? ghlId;
   final String? locationId;
-  final String? firstName;
-  final String? lastName;
+  final String? name;
   final String? email;
   final String? phone;
   final String? phoneLabel;
@@ -38,8 +37,7 @@ class ContactModel {
     this.id,
     this.ghlId,
     this.locationId,
-    this.firstName,
-    this.lastName,
+    this.name,
     this.email,
     this.phone,
     this.phoneLabel,
@@ -72,8 +70,7 @@ class ContactModel {
       id: json['id'],
       ghlId: json['ghlId'] ?? json['id'],
       locationId: json['locationId'],
-      firstName: json['firstName'],
-      lastName: json['lastName'],
+      name: json['name'],
       email: json['email'],
       phone: json['phoneNo'] ?? json['phone'],
       phoneLabel: json['phoneLabel'],
@@ -120,8 +117,7 @@ class ContactModel {
       'id': id,
       'ghlId': ghlId,
       'locationId': locationId,
-      'firstName': firstName,
-      'lastName': lastName,
+      'name': name,
       'email': email,
       'phoneNo': phone,
       'phoneLabel': phoneLabel,
@@ -152,8 +148,7 @@ class ContactModel {
       localId: map['id'],
       ghlId: map['ghl_id'],
       locationId: map['location_id'],
-      firstName: map['first_name'],
-      lastName: map['last_name'],
+      name: map['name'],
       email: map['email'],
       phone: map['phone'],
       phoneLabel: map['phone_label'],
@@ -227,8 +222,7 @@ class ContactModel {
     return {
       'ghl_id': ghlId,
       'location_id': locationId,
-      'first_name': firstName,
-      'last_name': lastName,
+      'name': name,
       'email': email,
       'phone': phone,
       'phone_label': phoneLabel,
@@ -259,21 +253,16 @@ class ContactModel {
   }
 
   String get fullName {
-    final parts = <String>[];
-    if (firstName?.isNotEmpty == true) parts.add(firstName!);
-    if (lastName?.isNotEmpty == true) parts.add(lastName!);
-    return parts.isEmpty ? 'Sem nome' : parts.join(' ');
+    if (name?.isNotEmpty == true) return name!;
+    return 'Sem nome';
   }
-
-  String get name => fullName;
 
   ContactModel copyWith({
     int? localId,
     String? id,
     String? ghlId,
     String? locationId,
-    String? firstName,
-    String? lastName,
+    String? name,
     String? email,
     String? phone,
     String? phoneLabel,
@@ -305,8 +294,7 @@ class ContactModel {
       id: id ?? this.id,
       ghlId: ghlId ?? this.ghlId,
       locationId: locationId ?? this.locationId,
-      firstName: firstName ?? this.firstName,
-      lastName: lastName ?? this.lastName,
+      name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
       phoneLabel: phoneLabel ?? this.phoneLabel,
