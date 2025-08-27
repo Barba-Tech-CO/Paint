@@ -256,6 +256,8 @@ void setupDependencyInjection() {
   );
 
   getIt.registerFactory<ContactsViewModel>(
-    () => ContactsViewModel(),
+    () => ContactsViewModel(
+      getIt<IContactRepository>(),
+    ),
   );
 }
