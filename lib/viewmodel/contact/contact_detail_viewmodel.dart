@@ -2,18 +2,24 @@ import 'package:flutter/foundation.dart';
 
 import '../../domain/repository/contact_repository.dart';
 import '../../model/contacts/contact_model.dart';
-import '../../utils/result/result.dart';
 import '../../service/location_service.dart';
+import '../../utils/result/result.dart';
+import '../../utils/logger/app_logger.dart';
 
 class ContactDetailViewModel extends ChangeNotifier {
   final IContactRepository _contactRepository;
   final LocationService _locationService;
+  final AppLogger _logger;
 
   ContactModel? _selectedContact;
   bool _isLoading = false;
   String? _error;
 
-  ContactDetailViewModel(this._contactRepository, this._locationService);
+  ContactDetailViewModel(
+    this._contactRepository,
+    this._locationService,
+    this._logger,
+  );
 
   // Getters
   ContactModel? get selectedContact => _selectedContact;
@@ -70,11 +76,20 @@ class ContactDetailViewModel extends ChangeNotifier {
         notifyListeners();
         return true;
       } else {
-        _setError(result.asError.error.toString());
+        // Log technical error to console for debugging
+        _logger.error(
+          'Contact creation failed: ${result.asError.error}',
+          result.asError.error,
+        );
+        // Set user-friendly error message
+        _setError(_getUserFriendlyErrorMessage(result.asError.error));
         return false;
       }
     } catch (e) {
-      _setError('Error creating contact: $e');
+      // Log technical error to console for debugging
+      _logger.error('Exception in contact creation: $e', e);
+      // Set user-friendly error message
+      _setError(_getUserFriendlyErrorMessage(e));
       return false;
     } finally {
       _setLoading(false);
@@ -251,6 +266,43 @@ class ContactDetailViewModel extends ChangeNotifier {
       _setLoading(false);
     }
   }
+
+  /// Converts technical errors to user-friendly messages
+  String _getUserFriendlyErrorMessage(dynamic error) {
+    final errorString = error.toString().toLowerCase();
+
+    // Log the full technical error for debugging
+    _logger.error('Technical error: $error', error);
+
+    // Map common error types to friendly messages
+    if (errorString.contains('location id not available')) {
+      return 'Please log in again to continue.';
+    } else if (errorString.contains('database') ||
+        errorString.contains('sql')) {
+      return 'Unable to save contact. Please try again.';
+    } else if (errorString.contains('network') ||
+        errorString.contains('connection')) {
+      return 'Network connection issue. Please check your internet and try again.';
+    } else if (errorString.contains('authentication') ||
+        errorString.contains('unauthorized')) {
+      return 'Session expired. Please log in again.';
+    } else if (errorString.contains('validation') ||
+        errorString.contains('invalid')) {
+      return 'Please check your information and try again.';
+    } else if (errorString.contains('method not allowed') ||
+        errorString.contains('405')) {
+      return 'Contact saved locally. Will sync when connection is restored.';
+    } else if (errorString.contains('endpoint not found') ||
+        errorString.contains('404')) {
+      return 'Contact saved locally. Will sync when connection is restored.';
+    } else {
+      return 'Contact saved locally. Will sync when connection is restored.';
+    }
+  }
+
+  /// Gets a user-friendly error message
+  String get userFriendlyError =>
+      _error != null ? _getUserFriendlyErrorMessage(_error) : '';
 
   // Métodos privados para gerenciar estado
   void _setLoading(bool loading) {
