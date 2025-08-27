@@ -1,6 +1,7 @@
 import '../model/contact_list_response.dart';
 import '../model/contact_model.dart';
 import '../utils/result/result.dart';
+import '../config/app_urls.dart';
 import 'http_service.dart';
 
 class ContactService {
@@ -105,27 +106,48 @@ class ContactService {
   /// Cria um novo contato
   Future<Result<ContactModel>> createContact({
     String? name,
-    String? firstName,
-    String? lastName,
     String? email,
     String? phone,
     String? companyName,
     String? address,
+    String? city,
+    String? state,
+    String? postalCode,
+    String? country,
+    List<String>? additionalEmails,
+    List<String>? additionalPhones,
     List<Map<String, dynamic>>? customFields,
   }) async {
     try {
+      final requestData = <String, dynamic>{};
+
+      // Add name field
+      if (name != null && name.isNotEmpty) {
+        requestData['name'] = name;
+      }
+
+      // Add other fields
+      if (email != null) requestData['email'] = email;
+      if (phone != null) requestData['phone'] = phone;
+      if (companyName != null) requestData['companyName'] = companyName;
+      if (address != null) requestData['address'] = address;
+      if (city != null) requestData['city'] = city;
+      if (state != null) requestData['state'] = state;
+      if (postalCode != null) requestData['postalCode'] = postalCode;
+      if (country != null) requestData['country'] = country;
+      if (additionalEmails != null && additionalEmails.isNotEmpty) {
+        requestData['additionalEmails'] = additionalEmails;
+      }
+      if (additionalPhones != null && additionalPhones.isNotEmpty) {
+        requestData['additionalPhones'] = additionalPhones;
+      }
+      if (customFields != null && customFields.isNotEmpty) {
+        requestData['customFields'] = customFields;
+      }
+
       final response = await _httpService.post(
         _baseUrl,
-        data: {
-          if (name != null) 'name': name,
-          if (firstName != null) 'firstName': firstName,
-          if (lastName != null) 'lastName': lastName,
-          if (email != null) 'email': email,
-          if (phone != null) 'phone': phone,
-          if (companyName != null) 'companyName': companyName,
-          if (address != null) 'address': address,
-          if (customFields != null) 'customFields': customFields,
-        },
+        data: requestData,
       );
 
       // Handle the specific response structure from the API
@@ -149,23 +171,39 @@ class ContactService {
   Future<Result<ContactModel>> updateContact(
     String contactId, {
     String? name,
-    String? firstName,
-    String? lastName,
     String? email,
     String? phone,
     String? companyName,
     String? address,
+    String? city,
+    String? state,
+    String? postalCode,
+    String? country,
+    List<String>? additionalEmails,
+    List<String>? additionalPhones,
     List<Map<String, dynamic>>? customFields,
   }) async {
     try {
       final updateData = <String, dynamic>{};
-      if (name != null) updateData['name'] = name;
-      if (firstName != null) updateData['firstName'] = firstName;
-      if (lastName != null) updateData['lastName'] = lastName;
+
+      // Add name field
+      if (name != null && name.isNotEmpty) {
+        updateData['name'] = name;
+      }
+
+      // Add other fields
       if (email != null) updateData['email'] = email;
       if (phone != null) updateData['phone'] = phone;
       if (companyName != null) updateData['companyName'] = companyName;
       if (address != null) updateData['address'] = address;
+      if (city != null) updateData['city'] = city;
+      if (state != null) updateData['state'] = state;
+      if (postalCode != null) updateData['postalCode'] = postalCode;
+      if (country != null) updateData['country'] = country;
+      if (additionalEmails != null)
+        updateData['additionalEmails'] = additionalEmails;
+      if (additionalPhones != null)
+        updateData['additionalPhones'] = additionalPhones;
       if (customFields != null) updateData['customFields'] = customFields;
 
       final response = await _httpService.put(
