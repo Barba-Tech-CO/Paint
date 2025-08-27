@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../model/contact_model.dart';
+import '../../model/contacts/contact_model.dart';
 import '../../domain/repository/contact_repository.dart';
 import '../../utils/result/result.dart';
 import '../../utils/command/command.dart';
