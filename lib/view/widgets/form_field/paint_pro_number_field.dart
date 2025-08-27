@@ -128,7 +128,7 @@ class PaintProNumberField extends StatelessWidget {
       case NumberFieldKind.phone:
         return <TextInputFormatter>[
           FilteringTextInputFormatter.digitsOnly,
-          LengthLimitingTextInputFormatter(10),
+          LengthLimitingTextInputFormatter(15), // Increased from 10 to 15
           _PhoneNumberFormatter(),
         ];
       case NumberFieldKind.zip:
