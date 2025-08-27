@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart' as webview;
 
 import '../../config/app_urls.dart';
-import '../../model/auth_model.dart';
-import '../../model/auth_state.dart';
+import '../../model/models.dart';
 import '../../service/auth_persistence_service.dart';
 import '../../service/deep_link_service.dart';
 import '../../use_case/auth/auth_use_cases.dart';
