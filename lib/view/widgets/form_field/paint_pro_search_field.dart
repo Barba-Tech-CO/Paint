@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 
 class PaintProSearchField extends StatefulWidget {
-  final TextEditingController controller;
+  final TextEditingController? controller;
+  final String? hintText;
+  final void Function(String)? onChanged;
+  final void Function()? onClear;
 
   const PaintProSearchField({
     super.key,
-    required this.controller,
+    this.controller,
+    this.hintText,
+    this.onChanged,
+    this.onClear,
   });
 
   @override
@@ -13,26 +19,68 @@ class PaintProSearchField extends StatefulWidget {
 }
 
 class _PaintProSearchFieldState extends State<PaintProSearchField> {
+  late TextEditingController _controller;
+  bool _isControllerLocal = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.controller != null) {
+      _controller = widget.controller!;
+    } else {
+      _controller = TextEditingController();
+      _isControllerLocal = true;
+    }
+
+    if (widget.onChanged != null) {
+      _controller.addListener(_onTextChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    if (widget.onChanged != null) {
+      _controller.removeListener(_onTextChanged);
+    }
+    if (_isControllerLocal) {
+      _controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    if (widget.onChanged != null) {
+      widget.onChanged!(_controller.text);
+    }
+  }
+
+  void _clearText() {
+    _controller.clear();
+    if (widget.onClear != null) {
+      widget.onClear!();
+    }
+    if (widget.onChanged != null) {
+      widget.onChanged!('');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: TextField(
-        controller: widget.controller,
-        decoration: InputDecoration(
-          hintText: 'Search',
-          prefixIcon: const Icon(Icons.search),
-          suffixIcon: _buildClearButton(),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          filled: true,
-          fillColor: Colors.grey[100],
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
+    return TextField(
+      controller: _controller,
+      decoration: InputDecoration(
+        hintText: widget.hintText ?? 'Search',
+        prefixIcon: const Icon(Icons.search),
+        suffixIcon: _buildClearButton(),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: Colors.grey[100],
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
         ),
       ),
     );
@@ -40,7 +88,7 @@ class _PaintProSearchFieldState extends State<PaintProSearchField> {
 
   Widget? _buildClearButton() {
     return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: widget.controller,
+      valueListenable: _controller,
       builder: (context, value, child) {
         if (value.text.isEmpty) {
           return const SizedBox.shrink();
@@ -48,11 +96,25 @@ class _PaintProSearchFieldState extends State<PaintProSearchField> {
 
         return IconButton(
           icon: const Icon(Icons.clear),
-          onPressed: () {
-            widget.controller.clear();
-          },
+          onPressed: _clearText,
         );
       },
     );
   }
 }
+
+// decoration: InputDecoration(
+//           hintText: 'Search',
+//           prefixIcon: const Icon(Icons.search),
+//           suffixIcon: _buildClearButton(),
+//           border: OutlineInputBorder(
+//             borderRadius: BorderRadius.circular(12),
+//             borderSide: BorderSide.none,
+//           ),
+//           filled: true,
+//           fillColor: Colors.grey[100],
+//           contentPadding: const EdgeInsets.symmetric(
+//             horizontal: 16,
+//             vertical: 12,
+//           ),
+//         ),

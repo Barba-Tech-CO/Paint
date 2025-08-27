@@ -126,8 +126,8 @@ class _ProjectsViewState extends State<ProjectsView> {
                       padding: const EdgeInsets.all(16.0),
                       child: PaintProSearchField(
                         hintText: 'Search projects',
-                        onChanged: (value) =>
-                            viewModel.updateSearchQuery(value),
+                        onChanged: (value) => viewModel.searchQuery = value,
+                        onClear: () => viewModel.clearSearch(),
                       ),
                     ),
 
