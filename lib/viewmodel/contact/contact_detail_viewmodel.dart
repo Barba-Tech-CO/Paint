@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 
-import '../../domain/repository/contact_repository.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../service/location_service.dart';
-import '../../utils/result/result.dart';
+import '../../use_case/contacts/contact_operations_use_case.dart';
 import '../../utils/logger/app_logger.dart';
+import '../../utils/result/result.dart';
 
 class ContactDetailViewModel extends ChangeNotifier {
-  final IContactRepository _contactRepository;
+  final ContactOperationsUseCase _contactUseCase;
   final LocationService _locationService;
   final AppLogger _logger;
 
@@ -16,7 +16,7 @@ class ContactDetailViewModel extends ChangeNotifier {
   String? _error;
 
   ContactDetailViewModel(
-    this._contactRepository,
+    this._contactUseCase,
     this._locationService,
     this._logger,
   );
@@ -57,7 +57,7 @@ class ContactDetailViewModel extends ChangeNotifier {
           .map((phone) => phone!)
           .toList();
 
-      final result = await _contactRepository.createContact(
+      final result = await _contactUseCase.createContact(
         name: name,
         phone: phone,
         additionalPhones: phonesList,
@@ -102,7 +102,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     clearError();
 
     try {
-      final result = await _contactRepository.getContact(contactId);
+      final result = await _contactUseCase.getContact(contactId);
       if (result is Ok) {
         _selectedContact = result.asOk.value;
         notifyListeners();
@@ -146,7 +146,7 @@ class ContactDetailViewModel extends ChangeNotifier {
           .map((phone) => phone!)
           .toList();
 
-      final result = await _contactRepository.updateContact(
+      final result = await _contactUseCase.updateContact(
         contactId,
         name: name,
         phone: phone,
@@ -183,7 +183,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     clearError();
 
     try {
-      final result = await _contactRepository.deleteContact(contactId);
+      final result = await _contactUseCase.deleteContact(contactId);
 
       if (result is Ok && result.asOk.value) {
         if (_selectedContact?.id == contactId) {
@@ -256,7 +256,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     clearError();
 
     try {
-      final result = await _contactRepository.syncPendingContacts();
+      final result = await _contactUseCase.syncPendingContacts();
       if (result is Error) {
         _setError(result.asError.error.toString());
       }
