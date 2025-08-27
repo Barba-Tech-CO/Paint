@@ -1,45 +1,67 @@
 import 'package:flutter/foundation.dart';
-import '../../utils/result/result.dart';
-import '../../model/contact_model.dart';
+
 import '../../domain/repository/contact_repository.dart';
+import '../../model/contact_model.dart';
+import '../../utils/result/result.dart';
+import '../../service/location_service.dart';
 
 class ContactDetailViewModel extends ChangeNotifier {
   final IContactRepository _contactRepository;
+  final LocationService _locationService;
 
   ContactModel? _selectedContact;
   bool _isLoading = false;
   String? _error;
 
-  ContactDetailViewModel(this._contactRepository);
+  ContactDetailViewModel(this._contactRepository, this._locationService);
 
   // Getters
   ContactModel? get selectedContact => _selectedContact;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  String? get currentLocationId => _locationService.currentLocationId;
+  bool get hasLocationId => _locationService.hasLocationId;
 
   /// Cria um novo contato
   Future<bool> createContact({
     String? name,
-    String? firstName,
-    String? lastName,
-    String? email,
     String? phone,
+    List<String?>? additionalPhones,
+    String? email,
+    List<String?>? additionalEmails,
     String? companyName,
     String? address,
+    String? city,
+    String? state,
+    String? postalCode,
     List<Map<String, dynamic>>? customFields,
   }) async {
     _setLoading(true);
     clearError();
 
     try {
+      // Convert nullable string lists to non-nullable string lists
+      final emailsList = additionalEmails
+          ?.where((email) => email != null && email.isNotEmpty)
+          .map((email) => email!)
+          .toList();
+
+      final phonesList = additionalPhones
+          ?.where((phone) => phone != null && phone.isNotEmpty)
+          .map((phone) => phone!)
+          .toList();
+
       final result = await _contactRepository.createContact(
         name: name,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
         phone: phone,
+        additionalPhones: phonesList,
+        email: email,
+        additionalEmails: emailsList,
         companyName: companyName,
         address: address,
+        city: city,
+        state: state,
+        postalCode: postalCode,
         customFields: customFields,
       );
 
@@ -83,27 +105,44 @@ class ContactDetailViewModel extends ChangeNotifier {
   Future<bool> updateContact(
     String contactId, {
     String? name,
-    String? firstName,
-    String? lastName,
-    String? email,
     String? phone,
+    List<String?>? additionalPhones,
+    String? email,
+    List<String?>? additionalEmails,
     String? companyName,
     String? address,
+    String? city,
+    String? state,
+    String? postalCode,
     List<Map<String, dynamic>>? customFields,
   }) async {
     _setLoading(true);
     clearError();
 
     try {
+      // Convert nullable string lists to non-nullable string lists
+      final emailsList = additionalEmails
+          ?.where((email) => email != null && email.isNotEmpty)
+          .map((email) => email!)
+          .toList();
+
+      final phonesList = additionalPhones
+          ?.where((phone) => phone != null && phone.isNotEmpty)
+          .map((phone) => phone!)
+          .toList();
+
       final result = await _contactRepository.updateContact(
         contactId,
         name: name,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
         phone: phone,
+        additionalPhones: phonesList,
+        email: email,
+        additionalEmails: emailsList,
         companyName: companyName,
         address: address,
+        city: city,
+        state: state,
+        postalCode: postalCode,
         customFields: customFields,
       );
 
@@ -170,13 +209,30 @@ class ContactDetailViewModel extends ChangeNotifier {
   /// Obtém as iniciais do contato
   String get initials {
     if (_selectedContact == null) return '';
-    final firstName = _selectedContact!.firstName?.isNotEmpty == true
-        ? _selectedContact!.firstName![0].toUpperCase()
+    final name = _selectedContact!.name;
+    if (name == null || name.isEmpty) return '';
+
+    final nameParts = name.split(' ');
+    if (nameParts.isEmpty) return '';
+
+    final firstInitial = nameParts.first[0].toUpperCase();
+    final lastInitial = nameParts.length > 1
+        ? nameParts.last[0].toUpperCase()
         : '';
-    final lastName = _selectedContact!.lastName?.isNotEmpty == true
-        ? _selectedContact!.lastName![0].toUpperCase()
-        : '';
-    return '$firstName$lastName';
+
+    return '$firstInitial$lastInitial';
+  }
+
+  /// Verifica se o location ID está disponível para operações da API
+  bool get isLocationAvailable => _locationService.hasLocationId;
+
+  /// Obtém informações de debug sobre o location
+  String get locationDebugInfo {
+    if (_locationService.hasLocationId) {
+      return 'Location ID: ${_locationService.currentLocationId}';
+    } else {
+      return 'No location ID available';
+    }
   }
 
   /// Sincroniza contatos pendentes
