@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:go_router/go_router.dart';
-import '../../model/auth_state.dart';
+
+import '../../model/auth_model/auth_state.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/logger/logger_app_logger_impl.dart';
 import '../../viewmodel/auth/auth_viewmodel.dart';

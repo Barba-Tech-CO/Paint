@@ -1,8 +1,8 @@
 import '../config/app_urls.dart';
-import '../model/auth_model/auth_refresh_response.dart';
-import '../model/auth_model/auth_status_response.dart';
+import '../model/models.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/result/result.dart';
+import 'auth_service_exception.dart';
 import 'services.dart';
 
 class AuthService {

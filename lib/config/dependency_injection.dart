@@ -64,8 +64,8 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(
       getIt<HttpService>(),
-      getIt<AppLogger>(),
       getIt<LocationService>(),
+      getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<LocationService>(
@@ -125,7 +125,6 @@ void setupDependencyInjection() {
       authService: getIt<AuthService>(),
       logger: getIt<AppLogger>(),
       locationService: getIt<LocationService>(),
-      logger: getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<IEstimateRepository>(

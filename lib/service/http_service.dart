@@ -1,12 +1,8 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
-
 
 import '../config/app_config.dart';
 import '../utils/logger/app_logger.dart';
 import 'auth_persistence_service.dart';
-import 'auth_service_exception.dart';
 import 'i_http_service.dart';
 
 class HttpService implements IHttpService {
@@ -88,8 +84,19 @@ class HttpService implements IHttpService {
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: GET $path', e, e.stackTrace);
-      _handleDioException(e, path);
+      return _handleDioException(e, path);
     }
+  }
+
+  /// Handles DioException and returns a proper Response
+  Response _handleDioException(DioException e, String path) {
+    // Create a mock response with error details
+    return Response(
+      requestOptions: RequestOptions(path: path),
+      statusCode: e.response?.statusCode ?? 500,
+      statusMessage: e.message,
+      data: {'error': e.message},
+    );
   }
 
   @override
