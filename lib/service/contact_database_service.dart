@@ -1,5 +1,9 @@
-import 'package:sqflite/sqflite.dart';
+import 'dart:developer';
+
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
+
 import '../model/models.dart';
 
 class ContactDatabaseService {
@@ -18,8 +22,9 @@ class ContactDatabaseService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // Updated version to force migration
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -29,8 +34,7 @@ class ContactDatabaseService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         ghl_id TEXT UNIQUE NOT NULL,
         location_id TEXT NOT NULL,
-        first_name TEXT,
-        last_name TEXT,
+        name TEXT,
         email TEXT,
         phone TEXT,
         phone_label TEXT,
@@ -71,6 +75,22 @@ class ContactDatabaseService {
     );
   }
 
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // For major schema changes, recreate the table
+      await db.execute('DROP TABLE IF EXISTS $_tableName');
+      await _onCreate(db, newVersion);
+    }
+  }
+
+  /// Clears all data from the database (useful for testing or major schema changes)
+  Future<void> clearDatabase() async {
+    final db = await database;
+    await db.execute('DROP TABLE IF EXISTS $_tableName');
+    await db.execute('DELETE FROM sqlite_sequence WHERE name = "$_tableName"');
+    _database = null; // Force recreation on next access
+  }
+
   /// Inserts a new contact into the local database
   Future<int> insertContact(ContactModel contact) async {
     final db = await database;
@@ -82,6 +102,12 @@ class ContactDatabaseService {
 
     final data = contact.toMap();
     data.remove('id'); // Remove localId as it's auto-generated
+
+    // Debug logging
+    if (kDebugMode) {
+      log('Debug: Inserting contact with data: $data');
+      log('Debug: Table columns: ${await db.query(_tableName, limit: 0)}');
+    }
 
     return await db.insert(_tableName, data);
   }
@@ -200,14 +226,12 @@ class ContactDatabaseService {
     final maps = await db.query(
       _tableName,
       where: '''
-        first_name LIKE ? OR 
-        last_name LIKE ? OR 
+        name LIKE ? OR 
         email LIKE ? OR 
         phone LIKE ? OR
         company_name LIKE ?
       ''',
       whereArgs: [
-        searchQuery,
         searchQuery,
         searchQuery,
         searchQuery,
