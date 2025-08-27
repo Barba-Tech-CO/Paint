@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:validatorless/validatorless.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../config/app_colors.dart';
 import '../../helpers/snackbar_helper.dart';
@@ -50,6 +51,13 @@ class _NewContactViewState extends State<NewContactView> {
     }
 
     final viewModel = context.read<ContactDetailViewModel>();
+
+    // Debug: Check location ID and authentication status
+    if (kDebugMode) {
+      print('Debug: Current location ID: ${viewModel.currentLocationId}');
+      print('Debug: Has location ID: ${viewModel.hasLocationId}');
+      print('Debug: Location debug info: ${viewModel.locationDebugInfo}');
+    }
 
     // Create custom fields for additional data
     final customFields = <Map<String, dynamic>>[];
@@ -121,6 +129,40 @@ class _NewContactViewState extends State<NewContactView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 16),
+
+                      // Debug section - only show in debug mode
+                      if (kDebugMode) ...[
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.1),
+                            border: Border.all(color: Colors.orange),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Debug Information:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Location ID: ${viewModel.currentLocationId ?? 'null'}',
+                              ),
+                              Text('Has Location: ${viewModel.hasLocationId}'),
+                              Text(
+                                'Location Info: ${viewModel.locationDebugInfo}',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
                       const SectionTitleWidget(title: 'Client Information'),
                       const SizedBox(height: 16),
 
@@ -149,14 +191,24 @@ class _NewContactViewState extends State<NewContactView> {
                         hintText: '(555) 123-4567',
                         controller: _phoneController,
                         kind: NumberFieldKind.phone,
-                        validator: Validatorless.multiple(
-                          [
-                            Validatorless.required('Phone is required'),
-                            Validatorless.phone(
-                              'Please enter a valid phone number',
-                            ),
-                          ],
-                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Phone is required';
+                          }
+
+                          // Remove all non-digit characters for validation
+                          final digitsOnly = value.replaceAll(
+                            RegExp(r'[^\d]'),
+                            '',
+                          );
+
+                          // Check if it's a valid phone number (at least 7 digits)
+                          if (digitsOnly.length >= 7) {
+                            return null;
+                          } else {
+                            return 'Please enter a valid phone number (at least 7 digits)';
+                          }
+                        },
                       ),
                       const SizedBox(height: 16),
                       PaintProNumberField(
@@ -166,16 +218,22 @@ class _NewContactViewState extends State<NewContactView> {
                         kind: NumberFieldKind.phone,
                         validator: (value) {
                           if (value == null || value.isEmpty) return null;
+
                           final phones = value
                               .split(',')
                               .map((e) => e.trim())
                               .where((e) => e.isNotEmpty);
+
                           for (final phone in phones) {
-                            final phoneValidator = Validatorless.phone(
-                              'Invalid phone number',
+                            // Remove all non-digit characters for validation
+                            final digitsOnly = phone.replaceAll(
+                              RegExp(r'[^\d]'),
+                              '',
                             );
-                            if (phoneValidator(phone) != null) {
-                              return 'Please enter valid phone numbers separated by commas';
+
+                            // Check if it's a valid phone number (at least 7 digits)
+                            if (digitsOnly.length < 7) {
+                              return 'Please enter valid phone numbers separated by commas (at least 7 digits each)';
                             }
                           }
                           return null;
