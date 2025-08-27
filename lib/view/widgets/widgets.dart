@@ -38,3 +38,9 @@ export 'summary/summary_total_row_widget.dart';
 
 export 'dialogs/delete_dialog_widget.dart';
 export 'dialogs/rename_dialog_widget.dart';
+
+// Form Fields
+export 'form_field/paint_pro_search_field.dart';
+export 'form_field/paint_pro_number_field.dart';
+export 'form_field/paint_pro_text_field.dart';
+export 'form_field/paint_pro_phone_field.dart';

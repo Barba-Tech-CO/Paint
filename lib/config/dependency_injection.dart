@@ -108,9 +108,6 @@ void setupDependencyInjection() {
       getIt<AppLogger>(),
     ),
   );
-  getIt.registerLazySingleton<AppLogger>(
-    () => LoggerAppLoggerImpl(),
-  );
 
   // Repositories
   getIt.registerLazySingleton<IAuthRepository>(

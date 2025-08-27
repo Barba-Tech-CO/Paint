@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
-class SearchFieldWidget extends StatefulWidget {
+class PaintProSearchField extends StatefulWidget {
   final TextEditingController controller;
 
-  const SearchFieldWidget({
+  const PaintProSearchField({
     super.key,
     required this.controller,
   });
 
   @override
-  State<SearchFieldWidget> createState() => _SearchFieldWidgetState();
+  State<PaintProSearchField> createState() => _PaintProSearchFieldState();
 }
 
-class _SearchFieldWidgetState extends State<SearchFieldWidget> {
+class _PaintProSearchFieldState extends State<PaintProSearchField> {
   @override
   Widget build(BuildContext context) {
     return Container(
