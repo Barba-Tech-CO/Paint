@@ -8,6 +8,7 @@ class HttpService implements IHttpService {
   static final HttpService _instance = HttpService._internal();
   late final Dio dio;
   late final AppLogger _logger;
+  String? _ghlToken;
 
   factory HttpService() {
     return _instance;
@@ -24,10 +25,35 @@ class HttpService implements IHttpService {
         },
       ),
     );
+
+    // Add interceptor to include GHL token in all requests
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          if (_ghlToken != null) {
+            options.headers['Authorization'] = 'Bearer $_ghlToken';
+          }
+          handler.next(options);
+        },
+      ),
+    );
   }
 
   void setLogger(AppLogger logger) {
     _logger = logger;
+  }
+
+  /// Sets the GoHighLevel token for API authentication
+  void setGhlToken(String token) {
+    _ghlToken = token;
+  }
+
+  /// Gets the current GoHighLevel token
+  String? get ghlToken => _ghlToken;
+
+  /// Clears the GoHighLevel token
+  void clearGhlToken() {
+    _ghlToken = null;
   }
 
   @override
