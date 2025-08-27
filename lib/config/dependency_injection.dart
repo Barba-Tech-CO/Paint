@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:get_it/get_it.dart';
 
 // Data Layer
@@ -42,6 +44,11 @@ import '../viewmodel/viewmodels.dart';
 final GetIt getIt = GetIt.instance;
 
 void setupDependencyInjection() {
+  // Logger Layer - Register first to avoid circular dependencies
+  getIt.registerLazySingleton<AppLogger>(
+    () => LoggerAppLoggerImpl(),
+  );
+
   // Serviços
   getIt.registerLazySingleton<HttpService>(
     () {
@@ -56,6 +63,7 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(
       getIt<HttpService>(),
+      getIt<LocationService>(),
     ),
   );
   getIt.registerLazySingleton<LocationService>(
@@ -91,9 +99,6 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AuthPersistenceService>(
     () => AuthPersistenceService(),
   );
-  getIt.registerLazySingleton<AppLogger>(
-    () => LoggerAppLoggerImpl(),
-  );
 
   // Repositories
   getIt.registerLazySingleton<IAuthRepository>(
@@ -106,6 +111,8 @@ void setupDependencyInjection() {
       contactService: getIt<ContactService>(),
       databaseService: getIt<ContactDatabaseService>(),
       authService: getIt<AuthService>(),
+      locationService: getIt<LocationService>(),
+      logger: getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<IEstimateRepository>(
@@ -172,6 +179,7 @@ void setupDependencyInjection() {
     () => ContactDetailViewModel(
       getIt<IContactRepository>(),
       getIt<LocationService>(),
+      getIt<AppLogger>(),
     ),
   );
 
