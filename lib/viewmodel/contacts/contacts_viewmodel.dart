@@ -190,8 +190,7 @@ class ContactsViewModel extends ChangeNotifier {
     } else {
       final searchLower = query.toLowerCase();
       _filteredContacts = _contacts.where((contact) {
-        final fullName = '${contact.firstName ?? ''} ${contact.lastName ?? ''}'
-            .toLowerCase();
+        final fullName = contact.name?.toLowerCase() ?? '';
         final phone = contact.phone?.toLowerCase() ?? '';
         final email = contact.email?.toLowerCase() ?? '';
 
@@ -336,9 +335,7 @@ class ContactsViewModel extends ChangeNotifier {
       } else {
         _filteredContacts = _contacts.where((contact) {
           final searchLower = query.toLowerCase();
-          final fullName =
-              '${contact.firstName ?? ''} ${contact.lastName ?? ''}'
-                  .toLowerCase();
+          final fullName = contact.name?.toLowerCase() ?? '';
           final phone = contact.phone?.toLowerCase() ?? '';
           final email = contact.email?.toLowerCase() ?? '';
 
@@ -363,8 +360,7 @@ class ContactsViewModel extends ChangeNotifier {
     return [
       ContactModel(
         id: '1',
-        firstName: 'Ana',
-        lastName: 'Tessendre',
+        name: 'Ana Tessendre',
         phone: '+1 75 385-85605',
         email: 'ana.tessendre@email.com',
         address: '1243 New orlando',
@@ -374,8 +370,7 @@ class ContactsViewModel extends ChangeNotifier {
       ),
       ContactModel(
         id: '2',
-        firstName: 'Leonardo',
-        lastName: 'Martins',
+        name: 'Leonardo Martins',
         phone: '+1 51 332-71890',
         email: 'leonardo.martins@email.com',
         address: '77 Grove S',
@@ -385,8 +380,7 @@ class ContactsViewModel extends ChangeNotifier {
       ),
       ContactModel(
         id: '3',
-        firstName: 'Camila',
-        lastName: 'Rocha',
+        name: 'Camila Rocha',
         phone: '+1 33 918-45673',
         email: 'camila.rocha@email.com',
         address: '503 Main St',
@@ -396,8 +390,7 @@ class ContactsViewModel extends ChangeNotifier {
       ),
       ContactModel(
         id: '4',
-        firstName: 'Diego',
-        lastName: 'Alvarez',
+        name: 'Diego Alvarez',
         phone: '+1 48 762-90123',
         email: 'diego.alvarez@email.com',
         address: '21 Broadway',
@@ -407,8 +400,7 @@ class ContactsViewModel extends ChangeNotifier {
       ),
       ContactModel(
         id: '5',
-        firstName: 'Fernanda',
-        lastName: 'Lopes',
+        name: 'Fernanda Lopes',
         phone: '+1 27 388-11456',
         email: 'fernanda.lopes@email.com',
         address: '1098 Pine Road',
@@ -418,8 +410,7 @@ class ContactsViewModel extends ChangeNotifier {
       ),
       ContactModel(
         id: '6',
-        firstName: 'Beatriz',
-        lastName: 'Alcantra',
+        name: 'Beatriz Alcantra',
         phone: '+1 75 385-85605',
         email: 'beatriz.alcantra@email.com',
         address: '1243 New orlando',
