@@ -138,7 +138,7 @@ class ContactItemWidget extends StatelessWidget {
                       value: 'rename',
                       child: Row(
                         children: [
-                          Icon(Icons.edit),
+                          Icon(Icons.edit_rounded),
                           SizedBox(width: 8),
                           Text('Rename'),
                         ],
@@ -148,7 +148,7 @@ class ContactItemWidget extends StatelessWidget {
                       value: 'delete',
                       child: Row(
                         children: [
-                          Icon(Icons.delete),
+                          Icon(Icons.delete_rounded),
                           SizedBox(width: 8),
                           Text('Delete'),
                         ],
