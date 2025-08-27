@@ -1,7 +1,6 @@
 import '../model/contact_list_response.dart';
 import '../model/contact_model.dart';
 import '../utils/result/result.dart';
-import '../config/app_urls.dart';
 import 'http_service.dart';
 
 class ContactService {
