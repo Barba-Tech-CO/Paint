@@ -200,10 +200,12 @@ class ContactService {
       if (state != null) updateData['state'] = state;
       if (postalCode != null) updateData['postalCode'] = postalCode;
       if (country != null) updateData['country'] = country;
-      if (additionalEmails != null)
+      if (additionalEmails != null) {
         updateData['additionalEmails'] = additionalEmails;
-      if (additionalPhones != null)
+      }
+      if (additionalPhones != null) {
         updateData['additionalPhones'] = additionalPhones;
+      }
       if (customFields != null) updateData['customFields'] = customFields;
 
       final response = await _httpService.put(
