@@ -1,5 +1,4 @@
-import '../../model/auth_model.dart';
-import '../../model/auth_state.dart';
+import '../../model/models.dart';
 
 class AuthViewState {
   final AuthState state;
