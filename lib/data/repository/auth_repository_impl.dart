@@ -43,4 +43,9 @@ class AuthRepository implements IAuthRepository {
   Future<Result<String?>> getCurrentLocationId() {
     return _authService.getCurrentLocationId();
   }
+
+  @override
+  Future<Result<UserModel>> getUser() {
+    return _authService.getUser();
+  }
 }

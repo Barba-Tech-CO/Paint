@@ -93,7 +93,7 @@ class PaintProApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp.router(
-        title: 'Painter Pro',
+        title: 'Paint Estimator',
         theme: AppTheme.themeData,
         routerConfig: router,
         debugShowCheckedModeBanner: false,

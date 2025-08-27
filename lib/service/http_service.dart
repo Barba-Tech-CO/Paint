@@ -1,7 +1,12 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
+
 
 import '../config/app_config.dart';
 import '../utils/logger/app_logger.dart';
+import 'auth_persistence_service.dart';
+import 'auth_service_exception.dart';
 import 'i_http_service.dart';
 
 class HttpService implements IHttpService {
@@ -9,18 +14,22 @@ class HttpService implements IHttpService {
   late final Dio dio;
   late final AppLogger _logger;
   String? _ghlToken;
+  late final AuthPersistenceService _authPersistenceService;
 
   factory HttpService() {
     return _instance;
   }
 
   HttpService._internal() {
+    _authPersistenceService = AuthPersistenceService();
+
     dio = Dio(
       BaseOptions(
         baseUrl: AppConfig.baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
       ),
@@ -66,27 +75,20 @@ class HttpService implements IHttpService {
     Options? options,
   }) async {
     try {
-      final startTime = DateTime.now();
       final response = await dio.get(
         path,
         queryParameters: queryParameters,
         options: options,
       );
-      final duration = DateTime.now().difference(startTime);
-
-      _logger.info('API Call: GET $path - Status: ${response.statusCode}');
-      if (queryParameters != null) {
-        _logger.info('Request Data: $queryParameters');
+      // Only log errors and important status codes
+      if (response.statusCode != 200) {
+        _logger.info('API Call: GET $path - Status: ${response.statusCode}');
       }
-      _logger.info('Response Data: ${response.data}');
-      _logger.info(
-        'Performance: HTTP GET $path took ${duration.inMilliseconds}ms',
-      );
 
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: GET $path', e, e.stackTrace);
-      rethrow;
+      _handleDioException(e, path);
     }
   }
 
@@ -105,6 +107,9 @@ class HttpService implements IHttpService {
         options: options,
       );
 
+      if (response.statusCode != 200) {
+        _logger.info('POST $path - Status: ${response.statusCode}');
+      }
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: POST $path', e, e.stackTrace);
@@ -127,6 +132,9 @@ class HttpService implements IHttpService {
         options: options,
       );
 
+      if (response.statusCode != 200) {
+        _logger.info('PUT $path - Status: ${response.statusCode}');
+      }
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: PUT $path', e, e.stackTrace);
@@ -149,6 +157,9 @@ class HttpService implements IHttpService {
         options: options,
       );
 
+      if (response.statusCode != 200) {
+        _logger.info('PATCH $path - Status: ${response.statusCode}');
+      }
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: PATCH $path', e, e.stackTrace);
@@ -171,6 +182,9 @@ class HttpService implements IHttpService {
         options: options,
       );
 
+      if (response.statusCode != 200) {
+        _logger.info('DELETE $path - Status: ${response.statusCode}');
+      }
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: DELETE $path', e, e.stackTrace);

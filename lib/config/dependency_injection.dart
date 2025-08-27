@@ -27,6 +27,7 @@ import '../service/location_service.dart';
 import '../service/navigation_service.dart';
 import '../service/material_service.dart';
 import '../service/paint_catalog_service.dart';
+import '../service/user_service.dart';
 
 // Logger Layer
 import '../utils/logger/app_logger.dart';
@@ -63,6 +64,7 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(
       getIt<HttpService>(),
+      getIt<AppLogger>(),
       getIt<LocationService>(),
     ),
   );
@@ -100,6 +102,15 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AuthPersistenceService>(
     () => AuthPersistenceService(),
   );
+  getIt.registerLazySingleton<UserService>(
+    () => UserService(
+      getIt<HttpService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+  getIt.registerLazySingleton<AppLogger>(
+    () => LoggerAppLoggerImpl(),
+  );
 
   // Repositories
   getIt.registerLazySingleton<IAuthRepository>(
@@ -112,6 +123,7 @@ void setupDependencyInjection() {
       contactService: getIt<ContactService>(),
       databaseService: getIt<ContactDatabaseService>(),
       authService: getIt<AuthService>(),
+      logger: getIt<AppLogger>(),
       locationService: getIt<LocationService>(),
       logger: getIt<AppLogger>(),
     ),
@@ -144,6 +156,7 @@ void setupDependencyInjection() {
     () => HandleDeepLinkUseCase(
       getIt<AuthOperationsUseCase>(),
       getIt<ManageAuthStateUseCase>(),
+      getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<HandleWebViewNavigationUseCase>(
@@ -269,6 +282,14 @@ void setupDependencyInjection() {
   getIt.registerFactory<SelectColorsViewModel>(
     () => SelectColorsViewModel(
       getIt<IPaintCatalogRepository>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  // ViewModels - User
+  getIt.registerFactory<UserViewModel>(
+    () => UserViewModel(
+      getIt<UserService>(),
       getIt<AppLogger>(),
     ),
   );

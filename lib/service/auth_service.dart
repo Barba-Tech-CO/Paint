@@ -1,14 +1,16 @@
 import '../config/app_urls.dart';
 import '../model/auth_model/auth_refresh_response.dart';
 import '../model/auth_model/auth_status_response.dart';
+import '../utils/logger/app_logger.dart';
 import '../utils/result/result.dart';
 import 'services.dart';
 
 class AuthService {
   final HttpService _httpService;
   final LocationService _locationService;
+  final AppLogger _logger;
 
-  AuthService(this._httpService, this._locationService);
+  AuthService(this._httpService, this._locationService, this._logger);
 
   /// Verifica o status de autenticação
   Future<Result<AuthStatusResponse>> getStatus() async {
@@ -25,6 +27,7 @@ class AuthService {
 
       return Result.ok(authStatus);
     } catch (e) {
+      _logger.error('Error checking authentication status: $e');
       return Result.error(
         Exception('Error checking authentication status: $e'),
       );
@@ -39,8 +42,11 @@ class AuthService {
       const String baseUrl =
           'https://marketplace.gohighlevel.com/oauth/chooselocation';
       const String clientId = '6845ab8de6772c0d5c8548d7-mbnty1f6';
-      const String redirectUri =
-          'https://paintpro.barbatech.company/api/oauth/callback';
+
+      // Use the correct redirect URI based on the environment
+      final String redirectUri =
+          '${_httpService.dio.options.baseUrl.replaceAll('/api', '')}/api/auth/callback';
+
       const String scope =
           'contacts.write+associations.write+associations.readonly+oauth.readonly+oauth.write+invoices%2Festimate.write+invoices%2Festimate.readonly+invoices.readonly+associations%2Frelation.write+associations%2Frelation.readonly+contacts.readonly+invoices.write';
 
@@ -53,8 +59,11 @@ class AuthService {
         },
       );
 
+      _logger.info('[AuthService] Authorization URL: $authUri');
+
       return Result.ok(authUri.toString());
     } catch (e) {
+      _logger.error('Error generating authorization URL: $e');
       return Result.error(
         Exception('Error generating authorization URL: $e'),
       );
@@ -64,11 +73,10 @@ class AuthService {
   /// Processa o callback de autorização
   Future<Result<AuthRefreshResponse>> processCallback(String code) async {
     try {
-      // In a real OAuth flow, we need to exchange the authorization code for tokens
-      // This typically involves making a request to the token endpoint
-      final response = await _httpService.get(
-        '/auth/callback?code=$code',
-      );
+      final callbackUrl = '/auth/callback?code=$code';
+
+      // Exchange the authorization code for tokens with the backend
+      final response = await _httpService.get(callbackUrl);
 
       final callbackResponse = AuthRefreshResponse.fromJson(response.data);
 
@@ -95,7 +103,14 @@ class AuthService {
       }
 
       return Result.ok(callbackResponse);
+    } on AuthServiceException catch (e) {
+      _logger.info(
+        '[AuthService] Authentication service unavailable: ${e.message}',
+      );
+      _logger.error('[AuthService] Technical details: ${e.technicalDetails}');
+      return Result.error(Exception(e.message));
     } catch (e) {
+      _logger.error('[AuthService] Error processing OAuth callback: $e');
       return Result.error(Exception('Erro no callback: $e'));
     }
   }
@@ -135,6 +150,7 @@ class AuthService {
       final refreshResponse = AuthRefreshResponse.fromJson(response.data);
       return Result.ok(refreshResponse);
     } catch (e) {
+      _logger.error('Error refreshing token: $e');
       return Result.error(
         Exception('Error refreshing token: $e'),
       );
@@ -214,6 +230,27 @@ class AuthService {
     } catch (e) {
       return Result.error(
         Exception('Error getting location_id: $e'),
+      );
+    }
+  }
+
+  /// Obtém dados completos do usuário autenticado
+  Future<Result<UserModel>> getUser() async {
+    try {
+      final response = await _httpService.get('/user');
+      final user = UserModel.fromJson(response.data);
+      _logger.info('[AuthService] User data retrieved successfully');
+      return Result.ok(user);
+    } on AuthServiceException catch (e) {
+      _logger.info(
+        '[AuthService] Authentication service unavailable: ${e.message}',
+      );
+      _logger.error('[AuthService] Technical details: ${e.technicalDetails}');
+      return Result.error(Exception(e.message));
+    } catch (e) {
+      _logger.error('[AuthService] Error getting user data: $e');
+      return Result.error(
+        Exception('Error getting user data: $e'),
       );
     }
   }

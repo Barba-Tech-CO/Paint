@@ -16,6 +16,9 @@ export 'material/material_viewmodels.dart';
 // Paint Catalog ViewModels
 export 'paint_catalog/paint_catalog_viewmodels.dart';
 
+// User ViewModels
+export 'user/user_viewmodel.dart';
+
 // Navigation ViewModel
 export 'navigation_viewmodel.dart';
 
@@ -28,5 +31,5 @@ export 'overview_zones_viewmodel.dart';
 // Zones ViewModels
 export 'zones/zones_viewmodels.dart';
 
-// quotes
-export 'quotes/quotes_viewmodels.dart';
+// Quotes ViewModels
+export 'quotes/quotes_viewmodel.dart';

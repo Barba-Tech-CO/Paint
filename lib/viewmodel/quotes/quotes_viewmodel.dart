@@ -63,31 +63,28 @@ class QuotesViewModel extends ChangeNotifier {
       );
 
       if (result != null) {
-        String? filePath = result.files.single.path;
         String? fileName = result.files.single.name;
 
-        if (filePath != null) {
-          // Cria um novo quote
-          final newQuote = QuotesModel(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            titulo: fileName,
-            dateUpload: DateTime.now(),
-          );
+        // Cria um novo quote
+        final newQuote = QuotesModel(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          titulo: fileName,
+          dateUpload: DateTime.now(),
+        );
 
-          // Adiciona à lista
-          _quotes.add(newQuote);
-          _updateState();
+        // Adiciona à lista
+        _quotes.add(newQuote);
+        _updateState();
 
-          print('Quote adicionado: ${newQuote.titulo}');
-        }
+        debugPrint('Quote adicionado: ${newQuote.titulo}');
       } else {
         // Usuário cancelou - volta ao estado anterior
         _updateState();
-        print('Seleção de arquivo cancelada');
+        debugPrint('Seleção de arquivo cancelada');
       }
     } catch (e) {
       _setError('Erro ao fazer upload do arquivo: $e');
-      print('Erro no upload: $e');
+      debugPrint('Erro no upload: $e');
     } finally {
       _setLoading(false);
     }

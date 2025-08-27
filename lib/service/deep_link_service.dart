@@ -4,11 +4,15 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 
 import '../config/app_urls.dart';
+import '../utils/logger/app_logger.dart';
+import '../utils/logger/logger_app_logger_impl.dart';
 
 class DeepLinkService {
   static final DeepLinkService _instance = DeepLinkService._internal();
   factory DeepLinkService() => _instance;
   DeepLinkService._internal();
+
+  final AppLogger _logger = LoggerAppLoggerImpl();
 
   final AppLinks _appLinks = AppLinks();
   StreamSubscription? _subscription;
@@ -28,6 +32,7 @@ class DeepLinkService {
         (uri) => _processDeepLink(uri),
       );
     } catch (e) {
+      _logger.error('[DeepLinkService] Error initializing service: $e');
       throw Exception('Error initializing Deep Links service: $e');
     }
   }
@@ -38,6 +43,9 @@ class DeepLinkService {
       if (uri.pathSegments.contains('success')) {
         _deepLinkController.add(uri);
       } else if (uri.pathSegments.contains('error')) {
+        _logger.error(
+          '[DeepLinkService] Authentication error via Deep Link',
+        );
         _deepLinkController.add(uri);
       }
     }

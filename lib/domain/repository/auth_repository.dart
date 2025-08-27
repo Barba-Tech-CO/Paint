@@ -22,4 +22,7 @@ abstract class IAuthRepository {
 
   /// Obtém o location_id atual
   Future<Result<String?>> getCurrentLocationId();
+
+  /// Obtém dados completos do usuário autenticado
+  Future<Result<UserModel>> getUser();
 }
