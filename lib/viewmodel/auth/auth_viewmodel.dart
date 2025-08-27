@@ -247,7 +247,7 @@ class AuthViewModel extends ChangeNotifier {
         },
       );
       return result;
-    } catch (e, stack) {
+    } catch (e) {
       _updateState(
         _state.copyWith(isLoading: false, errorMessage: e.toString()),
       );
