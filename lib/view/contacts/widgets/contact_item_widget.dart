@@ -25,10 +25,10 @@ class ContactItemWidget extends StatelessWidget {
     final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
     return Padding(
-      padding: EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: 12),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        width: double.infinity, // Ocupa toda a largura disponível
+        width: double.infinity,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -98,7 +98,7 @@ class ContactItemWidget extends StatelessWidget {
                     ),
                     const SizedBox(
                       width: 32,
-                    ), // Espaço para o IconButton posicionado
+                    ),
                   ],
                 ),
               ),
