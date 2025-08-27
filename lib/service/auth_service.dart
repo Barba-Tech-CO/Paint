@@ -8,7 +8,7 @@ class AuthService {
   final HttpService _httpService;
   final LocationService _locationService;
 
-  AuthService(this._httpService) : _locationService = LocationService();
+  AuthService(this._httpService, this._locationService);
 
   /// Verifica o status de autenticação
   Future<Result<AuthStatusResponse>> getStatus() async {
