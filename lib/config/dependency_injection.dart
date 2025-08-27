@@ -34,6 +34,8 @@ import '../utils/logger/logger_app_logger_impl.dart';
 
 // Use Case Layer
 import '../use_case/auth/auth_use_cases.dart';
+import '../use_case/contacts/contact_operations_use_case.dart';
+import '../use_case/contacts/contact_sync_use_case.dart';
 
 // ViewModel Layer
 import '../viewmodel/select_colors_viewmodel.dart';
@@ -70,6 +72,7 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<ContactService>(
     () => ContactService(
       getIt<HttpService>(),
+      getIt<LocationService>(),
     ),
   );
   getIt.registerLazySingleton<ContactDatabaseService>(
@@ -127,7 +130,7 @@ void setupDependencyInjection() {
     ),
   );
 
-  // Use Cases
+  // Use Cases - Auth
   getIt.registerLazySingleton<AuthOperationsUseCase>(
     () => AuthOperationsUseCase(
       getIt<AuthService>(),
@@ -145,6 +148,20 @@ void setupDependencyInjection() {
   );
   getIt.registerLazySingleton<HandleWebViewNavigationUseCase>(
     () => HandleWebViewNavigationUseCase(),
+  );
+
+  // Use Cases - Contacts
+  getIt.registerLazySingleton<ContactOperationsUseCase>(
+    () => ContactOperationsUseCase(
+      getIt<IContactRepository>(),
+      getIt<AppLogger>(),
+    ),
+  );
+  getIt.registerLazySingleton<ContactSyncUseCase>(
+    () => ContactSyncUseCase(
+      getIt<IContactRepository>(),
+      getIt<AppLogger>(),
+    ),
   );
 
   getIt.registerLazySingleton<AppInitializationService>(
@@ -170,12 +187,12 @@ void setupDependencyInjection() {
   // ViewModels - Contact
   getIt.registerFactory<ContactListViewModel>(
     () => ContactListViewModel(
-      getIt<IContactRepository>(),
+      getIt<ContactOperationsUseCase>(),
     ),
   );
   getIt.registerFactory<ContactDetailViewModel>(
     () => ContactDetailViewModel(
-      getIt<IContactRepository>(),
+      getIt<ContactOperationsUseCase>(),
       getIt<LocationService>(),
       getIt<AppLogger>(),
     ),
@@ -263,7 +280,7 @@ void setupDependencyInjection() {
 
   getIt.registerFactory<ContactsViewModel>(
     () => ContactsViewModel(
-      getIt<IContactRepository>(),
+      getIt<ContactOperationsUseCase>(),
     ),
   );
 }
