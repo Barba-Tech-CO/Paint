@@ -1,13 +1,14 @@
 import 'package:flutter/foundation.dart';
-import '../../model/contact_model.dart';
-import '../../utils/result/result.dart';
+
+import '../../domain/repository/contact_repository.dart';
+import '../../model/models.dart';
 import '../../utils/command/command.dart';
+import '../../utils/result/result.dart';
 
 enum ContactsState { initial, loading, loaded, error }
 
 class ContactsViewModel extends ChangeNotifier {
-  // Service seria injetado aqui quando estiver pronto
-  // final ContactsService _contactsService;
+  final IContactRepository _contactRepository;
 
   // State
   ContactsState _state = ContactsState.initial;
@@ -75,7 +76,7 @@ class ContactsViewModel extends ChangeNotifier {
     });
   }
 
-  ContactsViewModel();
+  ContactsViewModel(this._contactRepository);
 
   // Commands
   Command0<void>? _loadContactsCommand;
@@ -240,23 +241,28 @@ class ContactsViewModel extends ChangeNotifier {
     }
   }
 
-  // Private methods - Mock data implementation
+  // Private methods - API integration through repository
   Future<Result<void>> _loadContactsData() async {
     try {
       _state = ContactsState.loading;
       _errorMessage = null;
       notifyListeners();
 
-      // Simula delay de API
-      await Future.delayed(const Duration(milliseconds: 800));
+      final result = await _contactRepository.getContacts();
 
-      // Dados mockados
-      _contacts = _getMockContacts();
-      _filteredContacts = List.from(_contacts);
-      _state = ContactsState.loaded;
-
-      notifyListeners();
-      return Result.ok(null);
+      if (result is Ok) {
+        final response = result.asOk.value;
+        _contacts = response.contacts;
+        _filteredContacts = List.from(_contacts);
+        _state = ContactsState.loaded;
+        notifyListeners();
+        return Result.ok(null);
+      } else {
+        _state = ContactsState.error;
+        _errorMessage = 'Erro ao carregar contatos: ${result.asError.error}';
+        notifyListeners();
+        return Result.error(Exception(_errorMessage));
+      }
     } catch (e) {
       _state = ContactsState.error;
       _errorMessage = 'Erro ao carregar contatos: ${e.toString()}';
@@ -267,20 +273,32 @@ class ContactsViewModel extends ChangeNotifier {
 
   Future<Result<void>> _addContactData(ContactModel contact) async {
     try {
-      // Simula delay de API
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      final newContact = contact.copyWith(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+      final result = await _contactRepository.createContact(
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        additionalPhones: contact.additionalPhones,
+        additionalEmails: contact.additionalEmails,
+        companyName: contact.companyName,
+        address: contact.address,
+        city: contact.city,
+        state: contact.state,
+        postalCode: contact.postalCode,
+        country: contact.country,
+        customFields: contact.customFields,
       );
 
-      _contacts.add(newContact);
-      _filteredContacts = List.from(_contacts);
-
-      notifyListeners();
-      return Result.ok(null);
+      if (result is Ok) {
+        final newContact = result.asOk.value;
+        _contacts.add(newContact);
+        _filteredContacts = List.from(_contacts);
+        notifyListeners();
+        return Result.ok(null);
+      } else {
+        _errorMessage = 'Erro ao adicionar contato: ${result.asError.error}';
+        notifyListeners();
+        return Result.error(Exception(_errorMessage));
+      }
     } catch (e) {
       _errorMessage = 'Erro ao adicionar contato: ${e.toString()}';
       notifyListeners();
@@ -290,17 +308,43 @@ class ContactsViewModel extends ChangeNotifier {
 
   Future<Result<void>> _updateContactData(ContactModel contact) async {
     try {
-      // Simula delay de API
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      final index = _contacts.indexWhere((c) => c.id == contact.id);
-      if (index != -1) {
-        _contacts[index] = contact.copyWith(updatedAt: DateTime.now());
-        _filteredContacts = List.from(_contacts);
+      final contactId = contact.ghlId ?? contact.id;
+      if (contactId == null) {
+        _errorMessage = 'ID do contato não encontrado';
         notifyListeners();
+        return Result.error(Exception(_errorMessage));
       }
 
-      return Result.ok(null);
+      final result = await _contactRepository.updateContact(
+        contactId,
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        additionalPhones: contact.additionalPhones,
+        additionalEmails: contact.additionalEmails,
+        companyName: contact.companyName,
+        address: contact.address,
+        city: contact.city,
+        state: contact.state,
+        postalCode: contact.postalCode,
+        country: contact.country,
+        customFields: contact.customFields,
+      );
+
+      if (result is Ok) {
+        final updatedContact = result.asOk.value;
+        final index = _contacts.indexWhere((c) => c.id == updatedContact.id);
+        if (index != -1) {
+          _contacts[index] = updatedContact;
+          _filteredContacts = List.from(_contacts);
+          notifyListeners();
+        }
+        return Result.ok(null);
+      } else {
+        _errorMessage = 'Erro ao atualizar contato: ${result.asError.error}';
+        notifyListeners();
+        return Result.error(Exception(_errorMessage));
+      }
     } catch (e) {
       _errorMessage = 'Erro ao atualizar contato: ${e.toString()}';
       notifyListeners();
@@ -310,14 +354,18 @@ class ContactsViewModel extends ChangeNotifier {
 
   Future<Result<void>> _deleteContactData(String contactId) async {
     try {
-      // Simula delay de API
-      await Future.delayed(const Duration(milliseconds: 300));
+      final result = await _contactRepository.deleteContact(contactId);
 
-      _contacts.removeWhere((c) => c.id == contactId);
-      _filteredContacts = List.from(_contacts);
-
-      notifyListeners();
-      return Result.ok(null);
+      if (result is Ok) {
+        _contacts.removeWhere((c) => c.id == contactId);
+        _filteredContacts = List.from(_contacts);
+        notifyListeners();
+        return Result.ok(null);
+      } else {
+        _errorMessage = 'Erro ao deletar contato: ${result.asError.error}';
+        notifyListeners();
+        return Result.error(Exception(_errorMessage));
+      }
     } catch (e) {
       _errorMessage = 'Erro ao deletar contato: ${e.toString()}';
       notifyListeners();
@@ -327,97 +375,28 @@ class ContactsViewModel extends ChangeNotifier {
 
   Future<Result<void>> _searchContactsData(String query) async {
     try {
-      // Simula delay de busca
-      await Future.delayed(const Duration(milliseconds: 200));
-
       if (query.isEmpty) {
         _filteredContacts = List.from(_contacts);
-      } else {
-        _filteredContacts = _contacts.where((contact) {
-          final searchLower = query.toLowerCase();
-          final fullName = contact.name?.toLowerCase() ?? '';
-          final phone = contact.phone?.toLowerCase() ?? '';
-          final email = contact.email?.toLowerCase() ?? '';
-
-          return fullName.contains(searchLower) ||
-              phone.contains(searchLower) ||
-              email.contains(searchLower);
-        }).toList();
+        notifyListeners();
+        return Result.ok(null);
       }
 
-      notifyListeners();
-      return Result.ok(null);
+      final result = await _contactRepository.searchContacts(query);
+
+      if (result is Ok) {
+        final response = result.asOk.value;
+        _filteredContacts = response.contacts;
+        notifyListeners();
+        return Result.ok(null);
+      } else {
+        _errorMessage = 'Erro ao buscar contatos: ${result.asError.error}';
+        notifyListeners();
+        return Result.error(Exception(_errorMessage));
+      }
     } catch (e) {
       _errorMessage = 'Erro ao buscar contatos: ${e.toString()}';
       notifyListeners();
       return Result.error(Exception(_errorMessage));
     }
-  }
-
-  //TODO(gabriel): DADOS MOCKADOS retirar quando api estiver pronta
-  // Mock data
-  List<ContactModel> _getMockContacts() {
-    return [
-      ContactModel(
-        id: '1',
-        name: 'Ana Tessendre',
-        phone: '+1 75 385-85605',
-        email: 'ana.tessendre@email.com',
-        address: '1243 New orlando',
-        city: 'Texas',
-        country: 'USA',
-        createdAt: DateTime.now().subtract(const Duration(days: 5)),
-      ),
-      ContactModel(
-        id: '2',
-        name: 'Leonardo Martins',
-        phone: '+1 51 332-71890',
-        email: 'leonardo.martins@email.com',
-        address: '77 Grove S',
-        city: 'New York',
-        country: 'USA',
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-      ),
-      ContactModel(
-        id: '3',
-        name: 'Camila Rocha',
-        phone: '+1 33 918-45673',
-        email: 'camila.rocha@email.com',
-        address: '503 Main St',
-        city: 'Florida',
-        country: 'USA',
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      ContactModel(
-        id: '4',
-        name: 'Diego Alvarez',
-        phone: '+1 48 762-90123',
-        email: 'diego.alvarez@email.com',
-        address: '21 Broadway',
-        city: 'Ohio',
-        country: 'USA',
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      ContactModel(
-        id: '5',
-        name: 'Fernanda Lopes',
-        phone: '+1 27 388-11456',
-        email: 'fernanda.lopes@email.com',
-        address: '1098 Pine Road',
-        city: 'New Jersey',
-        country: 'USA',
-        createdAt: DateTime.now(),
-      ),
-      ContactModel(
-        id: '6',
-        name: 'Beatriz Alcantra',
-        phone: '+1 75 385-85605',
-        email: 'beatriz.alcantra@email.com',
-        address: '1243 New orlando',
-        city: 'Texas',
-        country: 'USA',
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-    ];
   }
 }
