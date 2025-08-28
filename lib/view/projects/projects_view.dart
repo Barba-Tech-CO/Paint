@@ -133,72 +133,56 @@ class _ProjectsViewState extends State<ProjectsView> {
 
                   // Projects count
                   if (viewModel.hasProjects)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Row(
-                        children: [
-                          Text(
-                            viewModel.isSearching
-                                ? '${viewModel.filteredProjectsCount} de ${viewModel.projectsCount} projetos'
-                                : '${viewModel.projectsCount} projetos',
-                            style: GoogleFonts.albertSans(
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-                  // Projects list
-                  Expanded(
-                    child: viewModel.hasFilteredProjects
-                        ? ListView.builder(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
-                            ),
-                            itemCount: viewModel.filteredProjects.length,
-                            itemBuilder: (context, index) {
-                              final project = viewModel.filteredProjects[index];
-                              return ZonesCard(
-                                title: project.title,
-                                image: project.image,
-                                valueDimension: project.floorAreaValue,
-                                valueArea: project.areaPaintable,
-                                valuePaintable: project.areaPaintable,
-                              );
-                            },
-                          )
-                        : Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.search_off,
-                                  size: 64,
-                                  color: AppColors.textSecondary,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Nenhum projeto encontrado',
-                                  style: GoogleFonts.albertSans(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Tente uma busca diferente',
-                                  style: GoogleFonts.albertSans(
-                                    fontSize: 14,
+                    // Projects list
+                    Expanded(
+                      child: viewModel.hasFilteredProjects
+                          ? ListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                              ),
+                              itemCount: viewModel.filteredProjects.length,
+                              itemBuilder: (context, index) {
+                                final project =
+                                    viewModel.filteredProjects[index];
+                                return ZonesCard(
+                                  title: project.title,
+                                  image: project.image,
+                                  valueDimension: project.floorAreaValue,
+                                  valueArea: project.areaPaintable,
+                                  valuePaintable: project.areaPaintable,
+                                );
+                              },
+                            )
+                          : Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.search_off,
+                                    size: 64,
                                     color: AppColors.textSecondary,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Nenhum projeto encontrado',
+                                    style: GoogleFonts.albertSans(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Tente uma busca diferente',
+                                    style: GoogleFonts.albertSans(
+                                      fontSize: 14,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                  ),
+                    ),
                 ],
               );
             },
