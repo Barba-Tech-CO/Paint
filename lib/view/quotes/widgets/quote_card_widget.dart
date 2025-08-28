@@ -58,6 +58,7 @@ class QuoteCardWidget extends StatelessWidget {
       case 'completed':
         return Colors.green;
       case 'failed':
+      case 'error':
         return Colors.red;
       default:
         return Colors.grey;
