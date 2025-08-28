@@ -2,6 +2,33 @@
 
 Este módulo gerencia o upload e extração de dados de materiais a partir de arquivos PDF, com armazenamento em **Cloudflare R2** e processamento automático de orçamentos e listas de materiais. O sistema suporta apenas arquivos com preços em **USD ($)** e todas as mensagens são em **inglês**.
 
+## 🔒 SEGURANÇA E CONTROLE DE ACESSO
+
+### Sistema de Autenticação e Autorização
+
+- **Autenticação obrigatória** via Laravel Sanctum (Bearer Token)
+- **Middleware de segurança** específico para PDFs (`pdf.security`)
+- **Políticas de autorização** para controle granular de acesso
+- **Isolamento por usuário** garantindo que cada usuário veja apenas seus próprios arquivos
+
+### Camadas de Segurança Implementadas
+
+1. **Middleware `auth:sanctum`** - Autenticação obrigatória
+2. **Middleware `user.ownership`** - Garantia de ownership de dados
+3. **Middleware `pdf.security`** - Validação específica de segurança para PDFs
+4. **Políticas de autorização** - Controle fino de permissões por recurso
+5. **Global scopes** - Filtros automáticos por usuário em todos os modelos
+6. **Validação de FormRequest** - Garantia de que `user_id` seja sempre preenchido
+
+### Garantias de Segurança
+
+- ✅ **PDFs sempre associados a usuários** - Campo `user_id` obrigatório (NOT NULL)
+- ✅ **Isolamento automático** - Usuários só veem seus próprios arquivos
+- ✅ **Validação de ownership** - Verificação em todas as operações CRUD
+- ✅ **Logs de segurança** - Rastreamento de todas as operações críticas
+- ✅ **Prevenção de acesso não autorizado** - Bloqueio automático de tentativas de acesso
+- ✅ **Validação de recursos** - Verificação de propriedade antes de operações
+
 ## 1. Modelos de Dados e Estrutura da Tabela
 
 ### Modelo PdfUpload (Upload de PDF)
@@ -9,8 +36,9 @@ Este módulo gerencia o upload e extração de dados de materiais a partir de ar
 **Arquivo:** `app/PdfUpload.php`
 
 **Atributos do Model:**
+
 - `id` (integer, not null) - ID único do upload
-- `user_id` (integer, nullable) - ID do usuário proprietário
+- `user_id` (integer, **NOT NULL**) - **ID do usuário proprietário (obrigatório)**
 - `original_name` (string, not null) - Nome original do arquivo
 - `display_name` (string, nullable) - Nome de exibição personalizado
 - `file_path` (string, not null) - **Chave R2 do arquivo** (formato: `pdfs/{Y}/{m}/{d}/{uuid}-{nome}.pdf`)
@@ -24,10 +52,11 @@ Este módulo gerencia o upload e extração de dados de materiais a partir de ar
 - `updated_at` (timestamp, not null) - Data de atualização
 
 **Estrutura da Tabela `pdf_uploads`:**
+
 ```sql
 CREATE TABLE pdf_uploads (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NULL,
+    user_id BIGINT NOT NULL, -- Campo obrigatório para segurança
     original_name VARCHAR(255) NOT NULL,
     display_name VARCHAR(255) NULL,
     file_path VARCHAR(255) NOT NULL, -- Chave R2 do arquivo
@@ -50,9 +79,10 @@ CREATE TABLE pdf_uploads (
 **Arquivo:** `app/ExtractedMaterial.php`
 
 **Atributos do Model:**
+
 - `id` (integer, not null) - ID único do material
 - `pdf_upload_id` (integer, not null) - ID do upload de PDF
-- `user_id` (integer, nullable) - ID do usuário proprietário
+- `user_id` (integer, **NOT NULL**) - **ID do usuário proprietário (obrigatório)**
 - `brand` (string, not null) - Marca do material
 - `description` (string, not null) - Descrição do material
 - `type` (string, not null) - Tipo do material (padrão: 'liquid')
@@ -67,11 +97,12 @@ CREATE TABLE pdf_uploads (
 - `updated_at` (timestamp, not null) - Data de atualização
 
 **Estrutura da Tabela `extracted_materials`:**
+
 ```sql
 CREATE TABLE extracted_materials (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     pdf_upload_id BIGINT NOT NULL,
-    user_id BIGINT NULL,
+    user_id BIGINT NOT NULL, -- Campo obrigatório para segurança
     brand VARCHAR(255) NOT NULL,
     description VARCHAR(255) NOT NULL,
     type VARCHAR(255) DEFAULT 'liquid',
@@ -92,9 +123,48 @@ CREATE TABLE extracted_materials (
 );
 ```
 
-## 2. Endpoints da API
+## 2. Políticas de Autorização e Segurança
 
-### 2.1 Upload de PDF
+### 2.1 Políticas Implementadas
+
+**PdfUploadPolicy** - Controla acesso aos PDFs:
+
+- `view` - Usuário só pode ver PDFs que pertencem a ele
+- `create` - Usuário autenticado pode criar PDFs
+- `update` - Usuário só pode atualizar PDFs que pertencem a ele
+- `delete` - Usuário só pode excluir PDFs que pertencem a ele
+
+**ExtractedMaterialPolicy** - Controla acesso aos materiais:
+
+- `view` - Usuário só pode ver materiais que pertencem a ele
+- `create` - Usuário autenticado pode criar materiais
+- `update` - Usuário só pode atualizar materiais que pertencem a ele
+- `delete` - Usuário só pode excluir materiais que pertencem a ele
+
+### 2.2 Middleware de Segurança
+
+**`pdf.security`** - Validação específica para operações de PDF:
+
+- Verificação de autenticação obrigatória
+- Logs de segurança para operações críticas
+- Validação de acesso a recursos antes de operações
+- Prevenção de tentativas de acesso não autorizado
+
+**`user.ownership`** - Garantia de ownership de dados:
+
+- Auto-merge automático de `user_id` em todas as requisições
+- Filtros automáticos por usuário em todas as consultas
+
+### 2.3 Validações de Segurança
+
+- **Campo `user_id` obrigatório** em todos os FormRequests
+- **Validação automática** de ownership em todas as operações
+- **Global scopes** nos modelos garantindo isolamento por usuário
+- **Verificação de propriedade** antes de operações de modificação
+
+## 3. Endpoints da API
+
+### 3.1 Upload de PDF
 
 **Título:** Fazer Upload de Arquivo PDF  
 **Descrição:** Faz upload de um arquivo PDF para extração de materiais
@@ -102,7 +172,7 @@ CREATE TABLE extracted_materials (
 **URL e Método HTTP:** `POST /api/materials/upload`  
 **Parâmetros da Rota:** Nenhum
 
-### 2.2 Listar Uploads
+### 3.2 Listar Uploads
 
 **Título:** Listar Uploads de PDF  
 **Descrição:** Retorna lista paginada de uploads de PDF com status de processamento
@@ -110,38 +180,44 @@ CREATE TABLE extracted_materials (
 **URL e Método HTTP:** `GET /api/materials/uploads`  
 **Parâmetros da Rota:** Nenhum  
 **Query Parameters:**
+
 - `status` (string, opcional) - Filtrar por status (pending, processing, completed, failed)
 - `limit` (integer, opcional) - Número de itens por página (padrão: 10)
 - `page` (integer, opcional) - Número da página (padrão: 1)
 
-### 2.3 Verificar Status
+**Segurança:** Apenas retorna PDFs do usuário autenticado
+
+### 3.3 Verificar Status
 
 **Título:** Verificar Status do Processamento  
 **Descrição:** Retorna o status e resultados do processamento de um PDF específico
 
 **URL e Método HTTP:** `GET /api/materials/status/{pdfUpload}`  
 **Parâmetros da Rota:**
+
 - `pdfUpload` (integer, obrigatório) - ID do upload de PDF
 
-### 2.4 Atualizar Upload
+### 3.4 Atualizar Upload
 
 **Título:** Atualizar Dados do Upload  
 **Descrição:** Atualiza informações de um upload de PDF (como nome de exibição)
 
 **URL e Método HTTP:** `PUT /api/materials/update/{pdfUpload}`  
 **Parâmetros da Rota:**
+
 - `pdfUpload` (integer, obrigatório) - ID do upload de PDF
 
-### 2.5 Excluir Upload
+### 3.5 Excluir Upload
 
 **Título:** Excluir Upload de PDF  
 **Descrição:** Remove um upload de PDF e todos os materiais extraídos
 
 **URL e Método HTTP:** `DELETE /api/materials/delete/{pdfUpload}`  
 **Parâmetros da Rota:**
+
 - `pdfUpload` (integer, obrigatório) - ID do upload de PDF
 
-### 2.6 Listar Materiais Extraídos
+### 3.6 Listar Materiais Extraídos
 
 **Título:** Listar Materiais Extraídos  
 **Descrição:** Retorna lista paginada e filtrada de todos os materiais extraídos dos PDFs
@@ -149,6 +225,7 @@ CREATE TABLE extracted_materials (
 **URL e Método HTTP:** `GET /api/materials/extracted`  
 **Parâmetros da Rota:** Nenhum  
 **Query Parameters:**
+
 - `brand` (string, opcional) - Filtrar por marca específica (dropdown)
 - `ambient` (string, opcional) - Filtrar por ambiente/categoria (dropdown: Interior, Exterior, etc.)
 - `finish` (string, opcional) - Filtrar por acabamento (dropdown: Flat, Satin, Semi-Gloss, Gloss)
@@ -158,16 +235,17 @@ CREATE TABLE extracted_materials (
 - `sort_order` (string, opcional) - Ordem (asc, desc) - padrão: desc
 - `page` (integer, opcional) - Número da página (padrão: 1, fixo 20 itens por página)
 
-### 2.7 Obter Material Específico
+### 3.7 Obter Material Específico
 
 **Título:** Obter Detalhes de Material Extraído  
 **Descrição:** Retorna detalhes completos de um material extraído específico
 
 **URL e Método HTTP:** `GET /api/materials/extracted/{material}`  
 **Parâmetros da Rota:**
+
 - `material` (integer, obrigatório) - ID do material extraído
 
-### 2.8 Obter Filtros Disponíveis
+### 3.8 Obter Filtros Disponíveis
 
 **Título:** Obter Opções de Filtros  
 **Descrição:** Retorna todos os valores únicos disponíveis para filtros (marcas, tipos, acabamentos, etc.)
@@ -175,11 +253,12 @@ CREATE TABLE extracted_materials (
 **URL e Método HTTP:** `GET /api/materials/filters`  
 **Parâmetros da Rota:** Nenhum
 
-## 3. Requisição Esperada
+## 4. Requisição Esperada
 
-### 3.1 Upload de PDF
+### 4.1 Upload de PDF
 
 **Headers:**
+
 ```
 Accept: application/json
 Content-Type: multipart/form-data
@@ -187,20 +266,26 @@ Authorization: Bearer {auth_token}
 ```
 
 **Corpo da Requisição:**
+
 ```
 pdf: [arquivo PDF] // Arquivo PDF (obrigatório, máximo 25MB, apenas .pdf)
 ```
 
 **Validações:**
+
 - Arquivo obrigatório
 - Apenas tipo MIME `application/pdf`
 - Tamanho máximo: 25MB (25.600 KB)
 - Apenas preços em USD ($) são aceitos
 - Rejeita documentos com moedas não-USD (R$, €, £, etc.)
+- **Campo `user_id` obrigatório** (preenchido automaticamente)
+- **Autenticação obrigatória** via Bearer Token
+- **Validação de ownership** do usuário
 
 ### 3.2 Listar Uploads
 
 **Headers:**
+
 ```
 Accept: application/json
 Authorization: Bearer {auth_token}
@@ -211,6 +296,7 @@ Authorization: Bearer {auth_token}
 ### 3.3 Verificar Status
 
 **Headers:**
+
 ```
 Accept: application/json
 Authorization: Bearer {auth_token}
@@ -221,6 +307,7 @@ Authorization: Bearer {auth_token}
 ### 3.4 Atualizar Upload
 
 **Headers:**
+
 ```
 Accept: application/json
 Content-Type: application/json
@@ -228,15 +315,17 @@ Authorization: Bearer {auth_token}
 ```
 
 **Corpo da Requisição:**
+
 ```json
 {
-    "display_name": "Orçamento Atualizado - Casa Maria Silva" // Nome de exibição (obrigatório)
+  "display_name": "Orçamento Atualizado - Casa Maria Silva" // Nome de exibição (obrigatório)
 }
 ```
 
 ### 3.5 Excluir Upload
 
 **Headers:**
+
 ```
 Accept: application/json
 Authorization: Bearer {auth_token}
@@ -247,6 +336,7 @@ Authorization: Bearer {auth_token}
 ### 3.6 Listar Materiais Extraídos
 
 **Headers:**
+
 ```
 Accept: application/json
 Authorization: Bearer {auth_token}
@@ -257,52 +347,60 @@ Authorization: Bearer {auth_token}
 **Exemplos de Uso dos Filtros:**
 
 **1. Filtrar por marca específica (dropdown):**
+
 ```
 GET /api/materials/extracted?brand=Benjamin Moore
 # Encontra apenas materiais da marca "Benjamin Moore"
 ```
 
 **2. Filtrar por ambiente/categoria (dropdown):**
+
 ```
 GET /api/materials/extracted?ambient=Exterior
 # Encontra apenas materiais para uso exterior
 ```
 
 **3. Filtrar por acabamento (dropdown):**
+
 ```
 GET /api/materials/extracted?finish=Flat
 # Encontra apenas materiais com acabamento "Flat"
 ```
 
 **4. Filtrar por qualidade única (chip selecionado):**
+
 ```
 GET /api/materials/extracted?quality=Premium
 # Encontra apenas materiais de qualidade "Premium"
 ```
 
 **5. Filtrar por múltiplas qualidades (múltiplos chips):**
+
 ```
 GET /api/materials/extracted?quality[]=Premium&quality[]=High
 # Encontra materiais de qualidade "Premium" OU "High"
 ```
 
 **6. Busca textual (campo search no topo):**
+
 ```
 GET /api/materials/extracted?search=interior paint
 # Busca "interior paint" na descrição e marca
 ```
 
 **7. Múltiplos filtros combinados:**
+
 ```
 GET /api/materials/extracted?brand=Benjamin Moore&ambient=Interior&finish=Satin&quality[]=Premium&quality[]=High&search=paint&sort_by=unit_price&sort_order=asc&page=1
 ```
 
 **9. Navegação entre páginas:**
+
 ```
 # Primeira página (padrão)
 GET /api/materials/extracted?page=1
 
-# Segunda página  
+# Segunda página
 GET /api/materials/extracted?page=2
 
 # Terceira página com filtros
@@ -310,6 +408,7 @@ GET /api/materials/extracted?brand=Benjamin Moore&finish=Satin&page=3
 ```
 
 **8. Ordenação personalizada:**
+
 ```
 # Ordenar por preço (menor para maior)
 GET /api/materials/extracted?sort_by=unit_price&sort_order=asc
@@ -324,6 +423,7 @@ GET /api/materials/extracted?sort_by=finish&sort_order=asc
 ### 3.7 Obter Material Específico
 
 **Headers:**
+
 ```
 Accept: application/json
 Authorization: Bearer {auth_token}
@@ -334,6 +434,7 @@ Authorization: Bearer {auth_token}
 ### 3.8 Obter Filtros Disponíveis
 
 **Headers:**
+
 ```
 Accept: application/json
 Authorization: Bearer {auth_token}
@@ -346,449 +447,456 @@ Authorization: Bearer {auth_token}
 ### 4.1 Upload de PDF
 
 **Status 201 (Created):**
+
 ```json
 {
-    "success": true,
-    "data": {
-        "upload": {
-            "id": 15,
-            "user_id": 1,
-            "original_name": "quote-materials.pdf",
-            "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
-            "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
-            "file_hash": "a1b2c3d4e5f6...",
-            "status": "pending",
-            "materials_extracted": 0,
-            "created_at": "2025-08-27T16:30:00Z",
-            "updated_at": "2025-08-27T16:30:00Z"
-        },
-        "message": "PDF uploaded successfully. Processing started.",
-        "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
-        "size": 1048576
-    }
+  "success": true,
+  "data": {
+    "upload": {
+      "id": 15,
+      "user_id": 1,
+      "original_name": "quote-materials.pdf",
+      "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
+      "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
+      "file_hash": "a1b2c3d4e5f6...",
+      "status": "pending",
+      "materials_extracted": 0,
+      "created_at": "2025-08-27T16:30:00Z",
+      "updated_at": "2025-08-27T16:30:00Z"
+    },
+    "message": "PDF uploaded successfully. Processing started.",
+    "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
+    "size": 1048576
+  }
 }
 ```
 
 **Status 422 (Validation Error):**
+
 ```json
 {
-    "message": "The PDF field is required.",
-    "errors": {
-        "pdf": ["The PDF field is required."]
-    }
+  "message": "The PDF field is required.",
+  "errors": {
+    "pdf": ["The PDF field is required."]
+  }
 }
 ```
 
 **Status 422 (File Size Error):**
+
 ```json
 {
-    "message": "The PDF must not exceed 25MB.",
-    "errors": {
-        "pdf": ["The PDF must not exceed 25MB."]
-    }
+  "message": "The PDF must not exceed 25MB.",
+  "errors": {
+    "pdf": ["The PDF must not exceed 25MB."]
+  }
 }
 ```
 
 **Status 422 (Invalid File Type):**
+
 ```json
 {
-    "message": "The PDF must be a valid PDF file.",
-    "errors": {
-        "pdf": ["The PDF must be a valid PDF file."]
-    }
+  "message": "The PDF must be a valid PDF file.",
+  "errors": {
+    "pdf": ["The PDF must be a valid PDF file."]
+  }
 }
 ```
 
 **Status 422 (Invalid Currency):**
+
 ```json
 {
-    "success": false,
-    "message": "Upload failed: Invalid currency detected: Brazilian Real (R$). Only USD ($) is supported for material pricing."
+  "success": false,
+  "message": "Upload failed: Invalid currency detected: Brazilian Real (R$). Only USD ($) is supported for material pricing."
 }
 ```
 
 **Status 200 (Duplicate File - Already Processed):**
+
 ```json
 {
-    "success": true,
-    "data": {
-        "upload": {
-            "id": 12,
-            "original_name": "quote-materials.pdf",
-            "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
-            "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
-            "status": "completed",
-            "materials_extracted": 25
-        },
-        "message": "File already uploaded and processed"
-    }
+  "success": true,
+  "data": {
+    "upload": {
+      "id": 12,
+      "original_name": "quote-materials.pdf",
+      "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
+      "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
+      "status": "completed",
+      "materials_extracted": 25
+    },
+    "message": "File already uploaded and processed"
+  }
 }
 ```
 
 ### 4.2 Listar Uploads
 
 **Status 200 (Success):**
+
 ```json
 {
-    "success": true,
-    "data": {
-        "uploads": [
-            {
-                "id": 15,
-                "original_name": "quote-materials.pdf",
-                "display_name": "Quote Materials - Project Alpha",
-                "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
-                "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
-                "status": "completed",
-                "materials_extracted": 25,
-                "created_at": "2025-08-27T16:30:00Z",
-                "updated_at": "2025-08-27T16:45:00Z"
-            },
-            {
-                "id": 14,
-                "original_name": "paint-list.pdf",
-                "display_name": "Premium Paint List",
-                "file_path": "pdfs/2025/08/27/uuid-paint-list.pdf",
-                "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-paint-list.pdf",
-                "status": "processing",
-                "materials_extracted": 0,
-                "created_at": "2025-08-27T15:15:00Z",
-                "updated_at": "2025-08-27T15:20:00Z"
-            }
-        ],
-        "pagination": {
-            "total": 45,
-            "per_page": 15,
-            "current_page": 1,
-            "last_page": 3
-        }
+  "success": true,
+  "data": {
+    "uploads": [
+      {
+        "id": 15,
+        "original_name": "quote-materials.pdf",
+        "display_name": "Quote Materials - Project Alpha",
+        "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
+        "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
+        "status": "completed",
+        "materials_extracted": 25,
+        "created_at": "2025-08-27T16:30:00Z",
+        "updated_at": "2025-08-27T16:45:00Z"
+      },
+      {
+        "id": 14,
+        "original_name": "paint-list.pdf",
+        "display_name": "Premium Paint List",
+        "file_path": "pdfs/2025/08/27/uuid-paint-list.pdf",
+        "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-paint-list.pdf",
+        "status": "processing",
+        "materials_extracted": 0,
+        "created_at": "2025-08-27T15:15:00Z",
+        "updated_at": "2025-08-27T15:20:00Z"
+      }
+    ],
+    "pagination": {
+      "total": 45,
+      "per_page": 15,
+      "current_page": 1,
+      "last_page": 3
     }
+  }
 }
 ```
 
 ### 4.3 Verificar Status
 
 **Status 200 (Success) - Processamento Concluído:**
+
 ```json
 {
-    "success": true,
-    "data": {
-        "upload": {
-            "id": 15,
-            "original_name": "quote-materials.pdf",
-            "display_name": "Quote Materials - Project Alpha",
-            "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
-            "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
-            "status": "completed",
-            "materials_extracted": 25,
-            "error_message": null,
-            "r2_key": "pdfs/2025/08/27/uuid-quote-materials.pdf",
-            "extraction_metadata": {
-                "brand": "Sherwin-Williams", 
-                "total_materials": 25,
-                "extraction_timestamp": "2025-08-27T16:45:00Z"
-            },
-            "created_at": "2025-08-27T16:30:00Z",
-            "updated_at": "2025-08-27T16:45:00Z"
-        }
+  "success": true,
+  "data": {
+    "upload": {
+      "id": 15,
+      "original_name": "quote-materials.pdf",
+      "display_name": "Quote Materials - Project Alpha",
+      "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
+      "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
+      "status": "completed",
+      "materials_extracted": 25,
+      "error_message": null,
+      "r2_key": "pdfs/2025/08/27/uuid-quote-materials.pdf",
+      "extraction_metadata": {
+        "brand": "Sherwin-Williams",
+        "total_materials": 25,
+        "extraction_timestamp": "2025-08-27T16:45:00Z"
+      },
+      "created_at": "2025-08-27T16:30:00Z",
+      "updated_at": "2025-08-27T16:45:00Z"
     }
+  }
 }
 ```
 
 **Status 200 (Success) - Processamento em Andamento:**
+
 ```json
 {
-    "success": true,
-    "data": {
-        "upload": {
-            "id": 14,
-            "original_name": "paint-list.pdf",
-            "display_name": "Premium Paint List",
-            "file_path": "pdfs/2025/08/27/uuid-paint-list.pdf", 
-            "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-paint-list.pdf",
-            "status": "processing",
-            "materials_extracted": 0,
-            "error_message": null,
-            "r2_key": "pdfs/2025/08/27/uuid-paint-list.pdf",
-            "created_at": "2025-08-27T15:15:00Z",
-            "updated_at": "2025-08-27T16:50:00Z"
-        }
+  "success": true,
+  "data": {
+    "upload": {
+      "id": 14,
+      "original_name": "paint-list.pdf",
+      "display_name": "Premium Paint List",
+      "file_path": "pdfs/2025/08/27/uuid-paint-list.pdf",
+      "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-paint-list.pdf",
+      "status": "processing",
+      "materials_extracted": 0,
+      "error_message": null,
+      "r2_key": "pdfs/2025/08/27/uuid-paint-list.pdf",
+      "created_at": "2025-08-27T15:15:00Z",
+      "updated_at": "2025-08-27T16:50:00Z"
     }
+  }
 }
 ```
 
 **Status 200 (Success) - Processamento com Erro:**
+
 ```json
 {
-    "success": true,
-    "data": {
-        "upload": {
-            "id": 13,
-            "original_name": "corrupted-file.pdf",
-            "display_name": "Problematic File",
-            "file_path": "pdfs/2025/08/27/uuid-corrupted-file.pdf",
-            "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-corrupted-file.pdf",
-            "status": "error",
-            "materials_extracted": 0,
-            "error_message": "Invalid currency detected: Brazilian Real (R$). Only USD ($) is supported for material pricing.",
-            "r2_key": "pdfs/2025/08/27/uuid-corrupted-file.pdf",
-            "created_at": "2025-08-27T14:00:00Z",
-            "updated_at": "2025-08-27T14:05:00Z"
-        }
+  "success": true,
+  "data": {
+    "upload": {
+      "id": 13,
+      "original_name": "corrupted-file.pdf",
+      "display_name": "Problematic File",
+      "file_path": "pdfs/2025/08/27/uuid-corrupted-file.pdf",
+      "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-corrupted-file.pdf",
+      "status": "error",
+      "materials_extracted": 0,
+      "error_message": "Invalid currency detected: Brazilian Real (R$). Only USD ($) is supported for material pricing.",
+      "r2_key": "pdfs/2025/08/27/uuid-corrupted-file.pdf",
+      "created_at": "2025-08-27T14:00:00Z",
+      "updated_at": "2025-08-27T14:05:00Z"
     }
+  }
 }
 ```
 
 **Status 404 (Not Found):**
+
 ```json
 {
-    "success": false,
-    "message": "Failed to retrieve status: No query results for model [App\\PdfUpload]."
+  "success": false,
+  "message": "Failed to retrieve status: No query results for model [App\\PdfUpload]."
 }
 ```
 
 ### 4.4 Atualizar Upload
 
 **Status 200 (Success):**
+
 ```json
 {
-    "success": true,
-    "data": {
-        "upload": {
-            "id": 15,
-            "original_name": "quote-materials.pdf",
-            "display_name": "Updated Quote - Project Alpha",
-            "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
-            "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
-            "status": "completed",
-            "updated_at": "2025-08-27T17:00:00Z"
-        },
-        "message": "PDF display name updated successfully"
-    }
+  "success": true,
+  "data": {
+    "upload": {
+      "id": 15,
+      "original_name": "quote-materials.pdf",
+      "display_name": "Updated Quote - Project Alpha",
+      "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
+      "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
+      "status": "completed",
+      "updated_at": "2025-08-27T17:00:00Z"
+    },
+    "message": "PDF display name updated successfully"
+  }
 }
 ```
 
 **Status 422 (Validation Error):**
+
 ```json
 {
-    "message": "The display name field is required.",
-    "errors": {
-        "display_name": ["The display name field is required."]
-    }
+  "message": "The display name field is required.",
+  "errors": {
+    "display_name": ["The display name field is required."]
+  }
 }
 ```
 
 **Status 404 (Not Found):**
+
 ```json
 {
-    "success": false,
-    "message": "Failed to update PDF: No query results for model [App\\PdfUpload]."
+  "success": false,
+  "message": "Failed to update PDF: No query results for model [App\\PdfUpload]."
 }
 ```
 
 ### 4.5 Excluir Upload
 
 **Status 200 (Success):**
+
 ```json
 {
-    "success": true,
-    "data": {
-        "message": "PDF and all related materials deleted successfully"
-    }
+  "success": true,
+  "data": {
+    "message": "PDF and all related materials deleted successfully"
+  }
 }
 ```
 
 **Status 404 (Not Found):**
+
 ```json
 {
-    "success": false,
-    "message": "Failed to delete PDF: No query results for model [App\\PdfUpload]."
+  "success": false,
+  "message": "Failed to delete PDF: No query results for model [App\\PdfUpload]."
 }
 ```
 
 **Status 422 (Server Error):**
+
 ```json
 {
-    "success": false,
-    "message": "Failed to delete PDF: [error details]"
+  "success": false,
+  "message": "Failed to delete PDF: [error details]"
 }
 ```
 
 ### 4.6 Listar Materiais Extraídos
 
 **Status 200 (Success):**
+
 ```json
 {
-    "success": true,
-    "data": {
-        "materials": [
-            {
-                "id": 15,
-                "pdf_upload_id": 3,
-                "user_id": 1,
-                "brand": "Sherwin-Williams",
-                "description": "ProClassic Interior Acrylic Latex Enamel",
-                "type": "liquid",
-                "unit": "gallon",
-                "unit_price": 52.99,
-                "finish": "satin",
-                "quality_grade": "premium",
-                "category": "interior-paint",
-                "specifications": {
-                    "coverage": "350-400 sq ft per gallon",
-                    "dry_time": "2-4 hours",
-                    "voc_content": "<50 g/L"
-                },
-                "line_number": 3,
-                "created_at": "2025-08-27T16:45:00Z",
-                "updated_at": "2025-08-27T16:45:00Z",
-                "pdf_upload": {
-                    "id": 3,
-                    "original_name": "sherwin-quote.pdf",
-                    "display_name": "Sherwin Williams Quote - Living Room",
-                    "created_at": "2025-08-27T16:30:00Z"
-                }
-            },
-            {
-                "id": 16,
-                "pdf_upload_id": 3,
-                "user_id": 1,
-                "brand": "Benjamin Moore",
-                "description": "Advance Waterborne Interior Alkyd Paint",
-                "type": "liquid",
-                "unit": "quart",
-                "unit_price": 28.99,
-                "finish": "semi-gloss",
-                "quality_grade": "professional",
-                "category": "trim-paint",
-                "specifications": {
-                    "coverage": "75-100 sq ft per quart",
-                    "dry_time": "1-2 hours",
-                    "durability": "high"
-                },
-                "line_number": 7,
-                "created_at": "2025-08-27T16:45:00Z",
-                "updated_at": "2025-08-27T16:45:00Z",
-                "pdf_upload": {
-                    "id": 3,
-                    "original_name": "sherwin-quote.pdf",
-                    "display_name": "Sherwin Williams Quote - Living Room",
-                    "created_at": "2025-08-27T16:30:00Z"
-                }
-            }
-        ],
-        "pagination": {
-            "total": 125,
-            "per_page": 20,
-            "current_page": 1,
-            "last_page": 7,
-            "from": 1,
-            "to": 20
+  "success": true,
+  "data": {
+    "materials": [
+      {
+        "id": 15,
+        "pdf_upload_id": 3,
+        "user_id": 1,
+        "brand": "Sherwin-Williams",
+        "description": "ProClassic Interior Acrylic Latex Enamel",
+        "type": "liquid",
+        "unit": "gallon",
+        "unit_price": 52.99,
+        "finish": "satin",
+        "quality_grade": "premium",
+        "category": "interior-paint",
+        "specifications": {
+          "coverage": "350-400 sq ft per gallon",
+          "dry_time": "2-4 hours",
+          "voc_content": "<50 g/L"
         },
-        "filters_applied": {
-            "brand": "Benjamin Moore",
-            "ambient": "Interior",
-            "finish": "Satin",
-            "quality": ["Premium"]
+        "line_number": 3,
+        "created_at": "2025-08-27T16:45:00Z",
+        "updated_at": "2025-08-27T16:45:00Z",
+        "pdf_upload": {
+          "id": 3,
+          "original_name": "sherwin-quote.pdf",
+          "display_name": "Sherwin Williams Quote - Living Room",
+          "created_at": "2025-08-27T16:30:00Z"
         }
+      },
+      {
+        "id": 16,
+        "pdf_upload_id": 3,
+        "user_id": 1,
+        "brand": "Benjamin Moore",
+        "description": "Advance Waterborne Interior Alkyd Paint",
+        "type": "liquid",
+        "unit": "quart",
+        "unit_price": 28.99,
+        "finish": "semi-gloss",
+        "quality_grade": "professional",
+        "category": "trim-paint",
+        "specifications": {
+          "coverage": "75-100 sq ft per quart",
+          "dry_time": "1-2 hours",
+          "durability": "high"
+        },
+        "line_number": 7,
+        "created_at": "2025-08-27T16:45:00Z",
+        "updated_at": "2025-08-27T16:45:00Z",
+        "pdf_upload": {
+          "id": 3,
+          "original_name": "sherwin-quote.pdf",
+          "display_name": "Sherwin Williams Quote - Living Room",
+          "created_at": "2025-08-27T16:30:00Z"
+        }
+      }
+    ],
+    "pagination": {
+      "total": 125,
+      "per_page": 20,
+      "current_page": 1,
+      "last_page": 7,
+      "from": 1,
+      "to": 20
+    },
+    "filters_applied": {
+      "brand": "Benjamin Moore",
+      "ambient": "Interior",
+      "finish": "Satin",
+      "quality": ["Premium"]
     }
+  }
 }
 ```
 
 **Status 422 (Error):**
+
 ```json
 {
-    "success": false,
-    "message": "Failed to retrieve materials: [error details]"
+  "success": false,
+  "message": "Failed to retrieve materials: [error details]"
 }
 ```
 
 ### 4.7 Obter Material Específico
 
 **Status 200 (Success):**
+
 ```json
 {
-    "success": true,
-    "data": {
-        "material": {
-            "id": 15,
-            "pdf_upload_id": 3,
-            "user_id": 1,
-            "brand": "Sherwin-Williams",
-            "description": "ProClassic Interior Acrylic Latex Enamel",
-            "type": "liquid",
-            "unit": "gallon",
-            "unit_price": 52.99,
-            "finish": "satin",
-            "quality_grade": "premium",
-            "category": "interior-paint",
-            "specifications": {
-                "coverage": "350-400 sq ft per gallon",
-                "dry_time": "2-4 hours",
-                "voc_content": "<50 g/L",
-                "color_family": "white",
-                "sheen_level": "25-35%"
-            },
-            "line_number": 3,
-            "created_at": "2025-08-27T16:45:00Z",
-            "updated_at": "2025-08-27T16:45:00Z",
-            "pdf_upload": {
-                "id": 3,
-                "original_name": "sherwin-quote.pdf",
-                "display_name": "Sherwin Williams Quote - Living Room",
-                "created_at": "2025-08-27T16:30:00Z"
-            }
-        }
+  "success": true,
+  "data": {
+    "material": {
+      "id": 15,
+      "pdf_upload_id": 3,
+      "user_id": 1,
+      "brand": "Sherwin-Williams",
+      "description": "ProClassic Interior Acrylic Latex Enamel",
+      "type": "liquid",
+      "unit": "gallon",
+      "unit_price": 52.99,
+      "finish": "satin",
+      "quality_grade": "premium",
+      "category": "interior-paint",
+      "specifications": {
+        "coverage": "350-400 sq ft per gallon",
+        "dry_time": "2-4 hours",
+        "voc_content": "<50 g/L",
+        "color_family": "white",
+        "sheen_level": "25-35%"
+      },
+      "line_number": 3,
+      "created_at": "2025-08-27T16:45:00Z",
+      "updated_at": "2025-08-27T16:45:00Z",
+      "pdf_upload": {
+        "id": 3,
+        "original_name": "sherwin-quote.pdf",
+        "display_name": "Sherwin Williams Quote - Living Room",
+        "created_at": "2025-08-27T16:30:00Z"
+      }
     }
+  }
 }
 ```
 
 **Status 404 (Not Found):**
+
 ```json
 {
-    "success": false,
-    "message": "Failed to retrieve material: No query results for model [App\\ExtractedMaterial]."
+  "success": false,
+  "message": "Failed to retrieve material: No query results for model [App\\ExtractedMaterial]."
 }
 ```
 
 ### 4.8 Obter Filtros Disponíveis
 
 **Status 200 (Success):**
+
 ```json
 {
-    "success": true,
-    "data": {
-        "filters": {
-            "brands": [
-                "Benjamin Moore",
-                "Sherwin-Williams"
-            ],
-            "ambients": [
-                "Interior",
-                "Exterior"
-            ],
-            "finishes": [
-                "Flat",
-                "Satin",
-                "Semi-Gloss",
-                "Gloss"
-            ],
-            "qualities": [
-                "Economic",
-                "Standard",
-                "High",
-                "Premium"
-            ]
-        }
+  "success": true,
+  "data": {
+    "filters": {
+      "brands": ["Benjamin Moore", "Sherwin-Williams"],
+      "ambients": ["Interior", "Exterior"],
+      "finishes": ["Flat", "Satin", "Semi-Gloss", "Gloss"],
+      "qualities": ["Economic", "Standard", "High", "Premium"]
     }
+  }
 }
 ```
 
 **Status 422 (Error):**
+
 ```json
 {
-    "success": false,
-    "message": "Failed to retrieve filters: [error details]"
+  "success": false,
+  "message": "Failed to retrieve filters: [error details]"
 }
 ```
 
@@ -812,11 +920,13 @@ R2_PUBLIC_BASE_URL=https://your-custom-domain.com
 ### 5.2 Estrutura de Armazenamento
 
 **Formato da Chave R2:**
+
 ```
 pdfs/{year}/{month}/{day}/{uuid}-{sanitized-filename}.pdf
 ```
 
 **Exemplo:**
+
 ```
 pdfs/2025/08/27/03aa1e55-fcc2-47e4-be98-5346dc76ba05-quote-materials.pdf
 ```
@@ -837,9 +947,9 @@ pdfs/2025/08/27/03aa1e55-fcc2-47e4-be98-5346dc76ba05-quote-materials.pdf
 - ✅ **Cleanup Automático**: Remove arquivos locais após processamento
 - ✅ **Marca Suportadas**: Sherwin-Williams e Benjamin Moore
 
-## 6. Exemplos de Implementação Flutter
+## 9. Exemplos de Implementação Flutter
 
-### 6.1 Classe Dart para Requisições
+### 9.1 Classe Dart para Requisições
 
 ```dart
 class MaterialFilters {
@@ -865,12 +975,12 @@ class MaterialFilters {
 
   Map<String, dynamic> toQueryParams() {
     final params = <String, dynamic>{};
-    
+
     if (brand != null && brand!.isNotEmpty) params['brand'] = brand;
     if (ambient != null && ambient!.isNotEmpty) params['ambient'] = ambient;
     if (finish != null && finish!.isNotEmpty) params['finish'] = finish;
     if (search != null && search!.isNotEmpty) params['search'] = search;
-    
+
     // Qualidade pode ser múltipla (array)
     if (quality != null && quality!.isNotEmpty) {
       if (quality!.length == 1) {
@@ -881,17 +991,17 @@ class MaterialFilters {
         }
       }
     }
-    
+
     params['sort_by'] = sortBy;
     params['sort_order'] = sortOrder;
     params['page'] = page.toString();
-    
+
     return params;
   }
 }
 ```
 
-### 6.2 Exemplos de Uso no Flutter
+### 9.2 Exemplos de Uso no Flutter
 
 ```dart
 // 1. Buscar tintas Benjamin Moore com acabamento Satin
@@ -919,7 +1029,7 @@ final searchFilters = MaterialFilters(
 // 4. Filtros combinados da interface
 final combinedFilters = MaterialFilters(
   brand: 'Benjamin Moore',
-  ambient: 'Exterior', 
+  ambient: 'Exterior',
   finish: 'Flat',
   quality: ['Premium'],
   search: 'EG-SHEL',
@@ -928,19 +1038,19 @@ final combinedFilters = MaterialFilters(
 );
 ```
 
-### 6.3 Construção de URLs
+### 9.3 Construção de URLs
 
 ```dart
 String buildMaterialsUrl(MaterialFilters filters) {
   final baseUrl = 'https://paintpro.barbatech.company/api/materials/extracted';
   final params = filters.toQueryParams();
-  
+
   if (params.isEmpty) return baseUrl;
-  
+
   final queryString = params.entries
       .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
       .join('&');
-      
+
   return '$baseUrl?$queryString';
 }
 
@@ -948,7 +1058,7 @@ String buildMaterialsUrl(MaterialFilters filters) {
 // https://paintpro.barbatech.company/api/materials/extracted?brand=Benjamin Moore&ambient=Interior&finish=Satin&quality[]=Premium&quality[]=High&sort_by=unit_price&sort_order=asc&page=2
 ```
 
-### 6.4 Filtros Dinâmicos com Dropdown
+### 9.4 Filtros Dinâmicos com Dropdown
 
 ```dart
 // 1. Primeiro, buscar opções disponíveis para filtros
@@ -1030,7 +1140,7 @@ void applyFilters() {
     quality: selectedQualities.isEmpty ? null : selectedQualities,
     search: searchController.text.isEmpty ? null : searchController.text,
   );
-  
+
   // Recarregar lista
   loadMaterials(filters);
 }
@@ -1040,7 +1150,7 @@ class MaterialsPagination {
   int currentPage = 1;
   int? totalPages;
   bool isLoading = false;
-  
+
   // Carregar próxima página
   void loadNextPage() {
     if (totalPages != null && currentPage < totalPages! && !isLoading) {
@@ -1050,7 +1160,7 @@ class MaterialsPagination {
       loadMaterials(filters);
     }
   }
-  
+
   // Carregar página anterior
   void loadPreviousPage() {
     if (currentPage > 1 && !isLoading) {
@@ -1060,7 +1170,7 @@ class MaterialsPagination {
       loadMaterials(filters);
     }
   }
-  
+
   // Ir para página específica
   void goToPage(int page) {
     if (page >= 1 && (totalPages == null || page <= totalPages!) && !isLoading) {
@@ -1070,11 +1180,11 @@ class MaterialsPagination {
       loadMaterials(filters);
     }
   }
-  
+
   // Widget de paginação
   Widget buildPagination() {
     if (totalPages == null || totalPages! <= 1) return SizedBox.shrink();
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -1093,21 +1203,57 @@ class MaterialsPagination {
 }
 ```
 
-## 7. Observações Técnicas
+## 7. Melhorias de Segurança Implementadas
 
-### 7.1 Processamento
+### 7.1 Migração de Segurança
+
+- **Campo `user_id` obrigatório** - Migração executada para tornar NOT NULL
+- **Limpeza de registros órfãos** - Remoção de PDFs sem usuário associado
+- **Integridade referencial** - Garantia de que todos os PDFs tenham usuário
+
+### 7.2 Políticas de Autorização
+
+- **PdfUploadPolicy** - Controle de acesso aos PDFs por usuário
+- **ExtractedMaterialPolicy** - Controle de acesso aos materiais por usuário
+- **Verificação automática** de ownership em todas as operações
+
+### 7.3 Middleware de Segurança
+
+- **`pdf.security`** - Validação específica para operações de PDF
+- **`user.ownership`** - Garantia de ownership de dados
+- **Logs de segurança** para auditoria e monitoramento
+
+### 7.4 Modelos Seguros
+
+- **Global scopes** - Filtros automáticos por usuário
+- **Validação automática** de `user_id` em criação
+- **Métodos de verificação** de propriedade
+
+## 8. Observações Técnicas
+
+### 8.1 Processamento
+
 - Arquivo armazenado em R2 imediatamente após upload
 - Arquivo temporário local usado apenas para extração de texto
 - Job de processamento desabilitado em ambiente de teste
 - Suporte a PDF com preços apenas em USD
 
-### 7.2 Segurança
-- Autenticação obrigatória (Laravel Sanctum)  
-- Rate limiting aplicado
-- Validação rigorosa de tipo MIME
-- Limite de tamanho: 25MB
+### 8.2 Segurança
 
-### 7.3 Performance
+- **Autenticação obrigatória** (Laravel Sanctum)
+- **Rate limiting aplicado**
+- **Validação rigorosa de tipo MIME**
+- **Limite de tamanho: 25MB**
+- **Campo `user_id` obrigatório** (NOT NULL)
+- **Políticas de autorização** para controle granular
+- **Middleware de segurança** específico para PDFs
+- **Isolamento automático por usuário** em todos os modelos
+- **Validação de ownership** em todas as operações CRUD
+- **Logs de segurança** para auditoria
+- **Prevenção de acesso não autorizado** a recursos
+
+### 8.3 Performance
+
 - Armazenamento distribuído via Cloudflare R2
 - URLs de acesso otimizadas (temporárias ou CDN)
 - Processamento assíncrono via jobs
