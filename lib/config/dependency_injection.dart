@@ -316,6 +316,7 @@ void setupDependencyInjection() {
   getIt.registerFactory<QuotesViewModel>(
     () => QuotesViewModel(
       getIt<QuoteUploadUseCase>(),
+      getIt<AppLogger>(),
     ),
   );
 
