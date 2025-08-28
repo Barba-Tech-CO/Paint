@@ -1,7 +1,7 @@
 class AppUrls {
   // Base URLs
   static const String baseUrl = 'https://paintpro.barbatech.company/api';
-  static const String baseUrlDev = 'http://localhost:8090/api';
+  static const String baseUrlDev = 'http://localhost:8080/api';
 
   // Auth URLs
   static const String authBaseUrl = '/auth';
