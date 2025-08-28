@@ -91,6 +91,7 @@ class QuotesModel {
   bool get isProcessing => status == PdfUploadStatus.processing;
   bool get isCompleted => status == PdfUploadStatus.completed;
   bool get isFailed => status == PdfUploadStatus.failed;
+  bool get isError => status == PdfUploadStatus.error;
   bool get hasError => errorMessage != null && errorMessage!.isNotEmpty;
   bool get hasMaterials =>
       materialsExtracted != null && materialsExtracted! > 0;
@@ -111,6 +112,7 @@ class QuotesModel {
       case PdfUploadStatus.completed:
         return 'green';
       case PdfUploadStatus.failed:
+      case PdfUploadStatus.error:
         return 'red';
       default:
         return 'grey';
