@@ -6,6 +6,7 @@ import '../data/repository/contact_repository_impl.dart';
 import '../data/repository/estimate_repository_impl.dart';
 import '../data/repository/material_repository_impl.dart';
 import '../data/repository/paint_catalog_repository_impl.dart';
+import '../data/repository/quote_repository_impl.dart';
 
 // Domain Layer
 import '../domain/repository/auth_repository.dart';
@@ -13,6 +14,7 @@ import '../domain/repository/contact_repository.dart';
 import '../domain/repository/estimate_repository.dart';
 import '../domain/repository/material_repository.dart';
 import '../domain/repository/paint_catalog_repository.dart';
+import '../domain/repository/quote_repository.dart';
 
 // Service Layer
 import '../service/app_initialization_service.dart';
@@ -27,6 +29,7 @@ import '../service/location_service.dart';
 import '../service/navigation_service.dart';
 import '../service/material_service.dart';
 import '../service/paint_catalog_service.dart';
+import '../service/pdf_upload_service.dart';
 import '../service/user_service.dart';
 
 // Logger Layer
@@ -37,6 +40,7 @@ import '../utils/logger/logger_app_logger_impl.dart';
 import '../use_case/auth/auth_use_cases.dart';
 import '../use_case/contacts/contact_operations_use_case.dart';
 import '../use_case/contacts/contact_sync_use_case.dart';
+import '../use_case/quotes/quote_upload_use_case.dart';
 
 // ViewModel Layer
 import '../viewmodel/select_colors_viewmodel.dart';
@@ -108,6 +112,11 @@ void setupDependencyInjection() {
       getIt<AppLogger>(),
     ),
   );
+  getIt.registerLazySingleton<QuoteUploadService>(
+    () => QuoteUploadService(
+      httpService: getIt<HttpService>(),
+    ),
+  );
 
   // Repositories
   getIt.registerLazySingleton<IAuthRepository>(
@@ -135,6 +144,11 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IPaintCatalogRepository>(
     () => PaintCatalogRepository(
       paintCatalogService: getIt<PaintCatalogService>(),
+    ),
+  );
+  getIt.registerLazySingleton<IQuoteRepository>(
+    () => QuoteRepository(
+      quoteUploadService: getIt<QuoteUploadService>(),
     ),
   );
 
@@ -169,6 +183,14 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<ContactSyncUseCase>(
     () => ContactSyncUseCase(
       getIt<IContactRepository>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  // Use Cases - Quotes
+  getIt.registerLazySingleton<QuoteUploadUseCase>(
+    () => QuoteUploadUseCase(
+      getIt<IQuoteRepository>(),
       getIt<AppLogger>(),
     ),
   );
@@ -292,7 +314,9 @@ void setupDependencyInjection() {
 
   // ViewModel - Quotes
   getIt.registerFactory<QuotesViewModel>(
-    () => QuotesViewModel(),
+    () => QuotesViewModel(
+      getIt<QuoteUploadUseCase>(),
+    ),
   );
 
   getIt.registerFactory<ContactsViewModel>(
