@@ -144,12 +144,23 @@ class _ProjectsViewState extends State<ProjectsView> {
                               itemBuilder: (context, index) {
                                 final project =
                                     viewModel.filteredProjects[index];
-                                return ZonesCard(
-                                  title: project.title,
+                                return ProjectCardWidget(
+                                  projectName: project.projectName,
+                                  personName: project.personName,
+                                  zonesCount: project.zonesCount,
+                                  createdDate: project.createdDate,
                                   image: project.image,
-                                  valueDimension: project.floorAreaValue,
-                                  valueArea: project.areaPaintable,
-                                  valuePaintable: project.areaPaintable,
+                                  onRename: (newName) {
+                                    viewModel.renameProject(
+                                      project.id.toString(),
+                                      newName,
+                                    );
+                                  },
+                                  onDelete: () {
+                                    viewModel.deleteProject(
+                                      project.id.toString(),
+                                    );
+                                  },
                                 );
                               },
                             )

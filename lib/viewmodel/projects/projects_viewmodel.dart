@@ -1,13 +1,24 @@
 import 'package:flutter/foundation.dart';
 
-import '../../model/models.dart';
+import '../../model/projects/project_model.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
 
 enum ProjectsState { initial, loading, loaded, error }
 
+// Data classes for operations
+class RenameProjectData {
+  final String projectId;
+  final String newName;
+
+  RenameProjectData({
+    required this.projectId,
+    required this.newName,
+  });
+}
+
 class ProjectsViewModel extends ChangeNotifier {
-  // NOTE: ProjectOperationsUseCase será injetado aqui quando estiver pronto
+  // TODO: ProjectOperationsUseCase será injetado aqui quando estiver pronto
   // final ProjectOperationsUseCase _projectUseCase;
 
   // State
@@ -15,10 +26,10 @@ class ProjectsViewModel extends ChangeNotifier {
   ProjectsState get state => _state;
 
   // Data
-  List<ProjectCardModel> _projects = [];
-  List<ProjectCardModel> get projects => _projects;
+  List<ProjectModel> _projects = [];
+  List<ProjectModel> get projects => _projects;
 
-  set projects(List<ProjectCardModel> value) {
+  set projects(List<ProjectModel> value) {
     _projects = value;
     _filteredProjects = List.from(value);
     // Use Future.microtask to defer notification
@@ -27,10 +38,10 @@ class ProjectsViewModel extends ChangeNotifier {
     });
   }
 
-  List<ProjectCardModel> _filteredProjects = [];
-  List<ProjectCardModel> get filteredProjects => _filteredProjects;
+  List<ProjectModel> _filteredProjects = [];
+  List<ProjectModel> get filteredProjects => _filteredProjects;
 
-  set filteredProjects(List<ProjectCardModel> value) {
+  set filteredProjects(List<ProjectModel> value) {
     _filteredProjects = value;
     // Use Future.microtask to defer notification
     Future.microtask(() {
@@ -38,10 +49,10 @@ class ProjectsViewModel extends ChangeNotifier {
     });
   }
 
-  ProjectCardModel? _selectedProject;
-  ProjectCardModel? get selectedProject => _selectedProject;
+  ProjectModel? _selectedProject;
+  ProjectModel? get selectedProject => _selectedProject;
 
-  set selectedProject(ProjectCardModel? value) {
+  set selectedProject(ProjectModel? value) {
     _selectedProject = value;
     // Use Future.microtask to defer notification
     Future.microtask(() {
@@ -81,17 +92,20 @@ class ProjectsViewModel extends ChangeNotifier {
 
   // Commands
   Command0<void>? _loadProjectsCommand;
-  Command1<void, ProjectCardModel>? _addProjectCommand;
-  Command1<void, ProjectCardModel>? _updateProjectCommand;
+  Command1<void, ProjectModel>? _addProjectCommand;
+  Command1<void, ProjectModel>? _updateProjectCommand;
   Command1<void, String>? _deleteProjectCommand;
   Command1<void, String>? _searchProjectsCommand;
+  Command1<void, RenameProjectData>? _renameProjectCommand;
 
   Command0<void> get loadProjectsCommand => _loadProjectsCommand!;
-  Command1<void, ProjectCardModel> get addProjectCommand => _addProjectCommand!;
-  Command1<void, ProjectCardModel> get updateProjectCommand =>
+  Command1<void, ProjectModel> get addProjectCommand => _addProjectCommand!;
+  Command1<void, ProjectModel> get updateProjectCommand =>
       _updateProjectCommand!;
   Command1<void, String> get deleteProjectCommand => _deleteProjectCommand!;
   Command1<void, String> get searchProjectsCommand => _searchProjectsCommand!;
+  Command1<void, RenameProjectData> get renameProjectCommand =>
+      _renameProjectCommand!;
 
   // Computed properties
   bool get isLoading =>
@@ -119,11 +133,11 @@ class ProjectsViewModel extends ChangeNotifier {
       return await _loadProjectsData();
     });
 
-    _addProjectCommand = Command1((ProjectCardModel project) async {
+    _addProjectCommand = Command1((ProjectModel project) async {
       return await _addProjectData(project);
     });
 
-    _updateProjectCommand = Command1((ProjectCardModel project) async {
+    _updateProjectCommand = Command1((ProjectModel project) async {
       return await _updateProjectData(project);
     });
 
@@ -134,6 +148,10 @@ class ProjectsViewModel extends ChangeNotifier {
     _searchProjectsCommand = Command1((String query) async {
       return await _searchProjectsData(query);
     });
+
+    _renameProjectCommand = Command1((RenameProjectData data) async {
+      return await _renameProjectData(data.projectId, data.newName);
+    });
   }
 
   // Public methods
@@ -143,13 +161,13 @@ class ProjectsViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> addProject(ProjectCardModel project) async {
+  Future<void> addProject(ProjectModel project) async {
     if (_addProjectCommand != null) {
       await _addProjectCommand!.execute(project);
     }
   }
 
-  Future<void> updateProject(ProjectCardModel project) async {
+  Future<void> updateProject(ProjectModel project) async {
     if (_updateProjectCommand != null) {
       await _updateProjectCommand!.execute(project);
     }
@@ -158,6 +176,14 @@ class ProjectsViewModel extends ChangeNotifier {
   Future<void> deleteProject(String projectId) async {
     if (_deleteProjectCommand != null) {
       await _deleteProjectCommand!.execute(projectId);
+    }
+  }
+
+  Future<void> renameProject(String projectId, String newName) async {
+    if (_renameProjectCommand != null) {
+      await _renameProjectCommand!.execute(
+        RenameProjectData(projectId: projectId, newName: newName),
+      );
     }
   }
 
@@ -177,7 +203,7 @@ class ProjectsViewModel extends ChangeNotifier {
     });
   }
 
-  void selectProject(ProjectCardModel? project) {
+  void selectProject(ProjectModel? project) {
     _selectedProject = project;
     // Use Future.microtask to defer notification
     Future.microtask(() {
@@ -192,19 +218,17 @@ class ProjectsViewModel extends ChangeNotifier {
     } else {
       final searchLower = query.toLowerCase();
       _filteredProjects = _projects.where((project) {
-        final title = project.title.toLowerCase();
-        final areaPaintable = project.areaPaintable.toLowerCase();
-        final floorAreaValue = project.floorAreaValue.toLowerCase();
+        final projectName = project.projectName.toLowerCase();
+        final personName = project.personName.toLowerCase();
 
-        return title.contains(searchLower) ||
-            areaPaintable.contains(searchLower) ||
-            floorAreaValue.contains(searchLower);
+        return projectName.contains(searchLower) ||
+            personName.contains(searchLower);
       }).toList();
     }
   }
 
   // Additional helper methods
-  void addProjectToList(ProjectCardModel project) {
+  void addProjectToList(ProjectModel project) {
     _projects.add(project);
     _filterProjectsByQuery(_searchQuery);
     // Use Future.microtask to defer notification
@@ -213,7 +237,7 @@ class ProjectsViewModel extends ChangeNotifier {
     });
   }
 
-  void updateProjectInList(ProjectCardModel updatedProject) {
+  void updateProjectInList(ProjectModel updatedProject) {
     final index = _projects.indexWhere((p) => p.id == updatedProject.id);
     if (index != -1) {
       _projects[index] = updatedProject;
@@ -234,7 +258,7 @@ class ProjectsViewModel extends ChangeNotifier {
     });
   }
 
-  ProjectCardModel? getProjectById(String id) {
+  ProjectModel? getProjectById(String id) {
     try {
       return _projects.firstWhere((project) => project.id.toString() == id);
     } catch (e) {
@@ -283,30 +307,26 @@ class ProjectsViewModel extends ChangeNotifier {
     }
   }
 
-  Future<Result<void>> _addProjectData(ProjectCardModel project) async {
+  Future<Result<void>> _addProjectData(ProjectModel project) async {
     try {
       // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
       // final result = await _projectUseCase.createProject(
-      //   title: project.title,
+      //   projectName: project.projectName,
+      //   personName: project.personName,
+      //   zonesCount: project.zonesCount,
+      //   createdDate: project.createdDate,
       //   image: project.image,
-      //   floorDimensionValue: project.floorDimensionValue,
-      //   floorAreaValue: project.floorAreaValue,
-      //   areaPaintable: project.areaPaintable,
-      //   ceilingArea: project.ceilingArea,
-      //   trimLength: project.trimLength,
       // );
 
       // Mock implementation
       await Future.delayed(const Duration(milliseconds: 300));
-      final newProject = ProjectCardModel(
+      final newProject = ProjectModel(
         id: DateTime.now().millisecondsSinceEpoch,
-        title: project.title,
+        projectName: project.projectName,
+        personName: project.personName,
+        zonesCount: project.zonesCount,
+        createdDate: project.createdDate,
         image: project.image,
-        floorDimensionValue: project.floorDimensionValue,
-        floorAreaValue: project.floorAreaValue,
-        areaPaintable: project.areaPaintable,
-        ceilingArea: project.ceilingArea,
-        trimLength: project.trimLength,
       );
 
       _projects.add(newProject);
@@ -320,18 +340,16 @@ class ProjectsViewModel extends ChangeNotifier {
     }
   }
 
-  Future<Result<void>> _updateProjectData(ProjectCardModel project) async {
+  Future<Result<void>> _updateProjectData(ProjectModel project) async {
     try {
       // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
       // final result = await _projectUseCase.updateProject(
       //   project.id.toString(),
-      //   title: project.title,
+      //   projectName: project.projectName,
+      //   personName: project.personName,
+      //   zonesCount: project.zonesCount,
+      //   createdDate: project.createdDate,
       //   image: project.image,
-      //   floorDimensionValue: project.floorDimensionValue,
-      //   floorAreaValue: project.floorAreaValue,
-      //   areaPaintable: project.areaPaintable,
-      //   ceilingArea: project.ceilingArea,
-      //   trimLength: project.trimLength,
       // );
 
       // Mock implementation
@@ -368,6 +386,31 @@ class ProjectsViewModel extends ChangeNotifier {
     }
   }
 
+  Future<Result<void>> _renameProjectData(
+    String projectId,
+    String newName,
+  ) async {
+    try {
+      // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
+      // final result = await _projectUseCase.renameProject(projectId, newName);
+
+      // Mock implementation
+      await Future.delayed(const Duration(milliseconds: 300));
+      final index = _projects.indexWhere((p) => p.id.toString() == projectId);
+      if (index != -1) {
+        final updatedProject = _projects[index].copyWith(projectName: newName);
+        _projects[index] = updatedProject;
+        _filteredProjects = List.from(_projects);
+        notifyListeners();
+      }
+      return Result.ok(null);
+    } catch (e) {
+      _errorMessage = 'Erro ao renomear projeto: ${e.toString()}';
+      notifyListeners();
+      return Result.error(Exception(_errorMessage));
+    }
+  }
+
   Future<Result<void>> _searchProjectsData(String query) async {
     try {
       if (query.isEmpty) {
@@ -392,47 +435,39 @@ class ProjectsViewModel extends ChangeNotifier {
 
   // TODO(gabriel): Implementar quando o repository estiver pronto
   // Mock data generator - remover quando o repository estiver pronto
-  List<ProjectCardModel> _generateMockProjects() {
+  List<ProjectModel> _generateMockProjects() {
     return [
-      ProjectCardModel(
+      ProjectModel(
         id: 1,
-        title: "Casa Silva",
+        projectName: "Project Casa Silva",
+        personName: "Beatriz Nogueira",
+        zonesCount: 3,
+        createdDate: "14/07/25",
         image: "assets/images/kitchen.png",
-        floorDimensionValue: "14' x 16'",
-        floorAreaValue: "224 sq ft",
-        areaPaintable: "485 sq ft",
-        ceilingArea: "224 sq ft",
-        trimLength: "60 linear ft",
       ),
-      ProjectCardModel(
+      ProjectModel(
         id: 2,
-        title: "Apartamento Santos",
+        projectName: "Apartamento Santos",
+        personName: "João Santos",
+        zonesCount: 2,
+        createdDate: "15/07/25",
         image: "assets/images/kitchen.png",
-        floorDimensionValue: "10' x 12'",
-        floorAreaValue: "120 sq ft",
-        areaPaintable: "320 sq ft",
-        ceilingArea: "120 sq ft",
-        trimLength: "44 linear ft",
       ),
-      ProjectCardModel(
+      ProjectModel(
         id: 3,
-        title: "Escritório Tech",
+        projectName: "Escritório Tech",
+        personName: "Maria Tech",
+        zonesCount: 4,
+        createdDate: "16/07/25",
         image: "assets/images/kitchen.png",
-        floorDimensionValue: "12' x 14'",
-        floorAreaValue: "168 sq ft",
-        areaPaintable: "420 sq ft",
-        ceilingArea: "168 sq ft",
-        trimLength: "52 linear ft",
       ),
-      ProjectCardModel(
+      ProjectModel(
         id: 4,
-        title: "Loja Comercial",
+        projectName: "Loja Comercial",
+        personName: "Carlos Lopes",
+        zonesCount: 1,
+        createdDate: "17/07/25",
         image: "assets/images/kitchen.png",
-        floorDimensionValue: "20' x 8'",
-        floorAreaValue: "160 sq ft",
-        areaPaintable: "380 sq ft",
-        ceilingArea: "160 sq ft",
-        trimLength: "56 linear ft",
       ),
     ];
   }

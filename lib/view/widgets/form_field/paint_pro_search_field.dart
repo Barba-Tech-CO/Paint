@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../config/app_colors.dart';
+
 class PaintProSearchField extends StatefulWidget {
   final TextEditingController? controller;
   final String? hintText;
@@ -70,17 +72,30 @@ class _PaintProSearchFieldState extends State<PaintProSearchField> {
       controller: _controller,
       decoration: InputDecoration(
         hintText: widget.hintText ?? 'Search',
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: _buildClearButton(),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+        prefixIcon: const Icon(
+          Icons.search,
+          color: AppColors.buttonPrimary,
         ),
+        suffixIcon: _buildClearButton(),
         filled: true,
-        fillColor: Colors.grey[100],
+        fillColor: Colors.grey[50],
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 12,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: Color(0xFFE0E0E0), // Cinza claro
+            width: 1.0,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: Color(0xFFE0E0E0), // Cinza claro
+            width: 1.0,
+          ),
         ),
       ),
     );

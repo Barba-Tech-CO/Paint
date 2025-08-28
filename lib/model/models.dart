@@ -5,6 +5,7 @@ export 'estimates/estimate_model.dart';
 export 'material_models/material_models.dart';
 export 'navigation/navigation_item_model.dart';
 export 'projects/project_card_model.dart';
+export 'projects/project_model.dart' hide ProjectListResponse;
 export 'user_model.dart';
 
 // Material Models

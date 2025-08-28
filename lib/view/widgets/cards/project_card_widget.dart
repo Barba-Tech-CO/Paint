@@ -3,14 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../config/app_colors.dart';
 
 class ProjectCardWidget extends StatelessWidget {
-  final String title;
-
-  // TODO(gabriel): verificar sobre a imagem
+  final String projectName;
+  final String personName;
+  final int zonesCount;
+  final String createdDate;
   final String image;
-  final String name;
-  final String valueDimension;
-  final String valueArea;
-  final String valuePaintable;
   final double? height;
   final double? width;
   final double? imageHeight;
@@ -22,12 +19,11 @@ class ProjectCardWidget extends StatelessWidget {
 
   const ProjectCardWidget({
     super.key,
-    required this.title,
-    required this.name,
+    required this.projectName,
+    required this.personName,
+    required this.zonesCount,
+    required this.createdDate,
     required this.image,
-    required this.valueDimension,
-    required this.valueArea,
-    required this.valuePaintable,
     this.height = 104,
     this.width = 364,
     this.imageHeight = 80,
@@ -130,26 +126,32 @@ class ProjectCardWidget extends StatelessWidget {
                   Flexible(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Text(
-                          title,
+                          personName,
+                          style: bodyStyle,
+                        ),
+                        Text(
+                          projectName,
                           style: titleStyle,
                         ),
                         SizedBox(height: spacing),
-                        Text(
-                          'Floor Dimensions . $valueDimension',
-                          style: bodyStyle,
-                        ),
-                        SizedBox(height: spacing / 2),
-                        Text(
-                          'Floor Area . $valueArea',
-                          style: bodyStyle,
-                        ),
-                        SizedBox(height: spacing / 2),
-                        Text(
-                          'Paintable . $valuePaintable',
-                          style: bodyStyle,
+                        Row(
+                          children: [
+                            Text(
+                              '$zonesCount Zones',
+                              style: bodyStyle,
+                            ),
+                            SizedBox(width: spacing * 2),
+                            Text(
+                              '• Created $createdDate',
+                              style: bodyStyle?.copyWith(
+                                color: Colors.grey[500],
+                                fontSize: fontSize - 1,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -171,17 +173,16 @@ class ProjectCardWidget extends StatelessWidget {
                     final newName = await showDialog<String>(
                       context: context,
                       builder: (context) =>
-                          _RenameZoneDialog(initialName: title),
+                          _RenameZoneDialog(initialName: projectName),
                     );
                     if (newName != null && newName.trim().isNotEmpty) {
                       onRename?.call(newName.trim());
                     }
-                  } else if (value == 'edit') {
-                    onEdit?.call();
                   } else if (value == 'delete') {
                     final confirm = await showDialog<bool>(
                       context: context,
-                      builder: (context) => _DeleteZoneDialog(zoneName: title),
+                      builder: (context) =>
+                          _DeleteZoneDialog(zoneName: projectName),
                     );
                     if (confirm == true) {
                       onDelete?.call();
@@ -195,17 +196,7 @@ class ProjectCardWidget extends StatelessWidget {
                       children: [
                         Icon(Icons.edit),
                         SizedBox(width: 8),
-                        Text('Rename'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit),
-                        SizedBox(width: 8),
-                        Text('Edit'),
+                        Text('Rename Project'),
                       ],
                     ),
                   ),
@@ -215,7 +206,7 @@ class ProjectCardWidget extends StatelessWidget {
                       children: [
                         Icon(Icons.delete),
                         SizedBox(width: 8),
-                        Text('Delete'),
+                        Text('Delete Project'),
                       ],
                     ),
                   ),
@@ -256,10 +247,10 @@ class _RenameZoneDialogState extends State<_RenameZoneDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Rename Zone'),
+      title: const Text('Rename Project'),
       content: TextField(
         controller: _controller,
-        decoration: const InputDecoration(labelText: 'Zone Name'),
+        decoration: const InputDecoration(labelText: 'Project Name'),
         autofocus: true,
       ),
       actions: [
@@ -284,7 +275,7 @@ class _DeleteZoneDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Delete Zone'),
+      title: const Text('Delete Project'),
       content: Text('Are you sure you want to delete "$zoneName"?'),
       actions: [
         TextButton(
