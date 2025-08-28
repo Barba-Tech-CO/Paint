@@ -60,7 +60,7 @@ class QuoteUploadService {
         'limit': limit,
         'page': page,
       };
-      
+
       if (status != null) {
         queryParams['status'] = status;
       }
@@ -108,7 +108,7 @@ class QuoteUploadService {
 
   /// Update display name of an uploaded PDF
   Future<Result<PdfUploadModel>> updateUpload(
-    int uploadId, 
+    int uploadId,
     String displayName,
   ) async {
     try {
@@ -165,7 +165,9 @@ class QuoteUploadService {
       );
 
       if (response.statusCode == 200) {
-        final listResponse = ExtractedMaterialListResponse.fromJson(response.data);
+        final listResponse = ExtractedMaterialListResponse.fromJson(
+          response.data,
+        );
         return Result.ok(listResponse);
       } else {
         return Result.error(
@@ -180,9 +182,13 @@ class QuoteUploadService {
   }
 
   /// Get a specific extracted material by ID
-  Future<Result<ExtractedMaterialModel>> getExtractedMaterial(int materialId) async {
+  Future<Result<ExtractedMaterialModel>> getExtractedMaterial(
+    int materialId,
+  ) async {
     try {
-      final response = await _httpService.get('/materials/extracted/$materialId');
+      final response = await _httpService.get(
+        '/materials/extracted/$materialId',
+      );
 
       if (response.statusCode == 200) {
         final data = response.data['data'] as Map<String, dynamic>;
@@ -227,23 +233,23 @@ class QuoteUploadService {
     Duration timeout = const Duration(minutes: 5),
   }) async {
     final startTime = DateTime.now();
-    
+
     while (DateTime.now().difference(startTime) < timeout) {
       final statusResult = await getUploadStatus(uploadId);
-      
+
       if (statusResult is Ok<PdfUploadModel>) {
         final upload = statusResult.value;
-        if (upload.isCompleted || upload.isFailed) {
+        if (upload.isCompleted || upload.isFailed || upload.isError) {
           return Result.ok(upload);
         }
       } else {
         return statusResult; // Return error immediately
       }
-      
+
       // Wait before next check
       await Future.delayed(interval);
     }
-    
+
     return Result.error(
       Exception('Quote processing timeout after ${timeout.inMinutes} minutes'),
     );
