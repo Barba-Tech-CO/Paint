@@ -285,6 +285,9 @@ class AuthViewModel extends ChangeNotifier {
               locationId: newAuthStatus.locationId,
               sanctumToken: authToken,
             );
+            
+            // Ensure HTTP client is ready with auth token before navigation
+            _logger.info('[AuthViewModel] Authentication complete - token saved and HTTP client configured');
           } else {
             _logger.error(
               '[AuthViewModel] OAuth callback failed or missing location_id',
