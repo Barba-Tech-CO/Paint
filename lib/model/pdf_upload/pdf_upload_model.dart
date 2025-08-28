@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 class PdfUploadModel {
   final int id;
   final int userId; // Campo obrigatório conforme documentação
@@ -15,12 +17,12 @@ class PdfUploadModel {
 
   PdfUploadModel({
     required this.id,
-    required this.userId, // Obrigatório
+    required this.userId,
     required this.originalName,
     this.displayName,
-    required this.filePath, // Obrigatório
+    required this.filePath,
     this.r2Url,
-    required this.fileHash, // Obrigatório
+    required this.fileHash,
     required this.status,
     required this.materialsExtracted,
     this.extractionMetadata,
@@ -30,14 +32,38 @@ class PdfUploadModel {
   });
 
   factory PdfUploadModel.fromJson(Map<String, dynamic> json) {
+    log('DEBUG: PdfUploadModel.fromJson - json: $json');
+
+    // Verificar campos obrigatórios
+    if (json['id'] == null) {
+      throw Exception('Missing required field: id');
+    }
+    if (json['user_id'] == null) {
+      log(
+        'DEBUG: PdfUploadModel.fromJson - user_id is null, using default value 1',
+      );
+    }
+    if (json['file_path'] == null) {
+      log(
+        'DEBUG: PdfUploadModel.fromJson - file_path is null, using default value',
+      );
+    }
+    if (json['file_hash'] == null) {
+      log(
+        'DEBUG: PdfUploadModel.fromJson - file_hash is null, using default value',
+      );
+    }
+
     return PdfUploadModel(
       id: json['id'] as int,
-      userId: json['user_id'] as int, // Obrigatório
+      userId: json['user_id'] as int? ?? 1, // Usar valor padrão se ausente
       originalName: json['original_name'] as String,
       displayName: json['display_name'] as String?,
-      filePath: json['file_path'] as String, // Obrigatório
+      filePath:
+          json['file_path'] as String? ?? '', // Usar valor padrão se ausente
       r2Url: json['r2_url'] as String?,
-      fileHash: json['file_hash'] as String, // Obrigatório
+      fileHash:
+          json['file_hash'] as String? ?? '', // Usar valor padrão se ausente
       status: PdfUploadStatusExtension.fromString(json['status'] as String),
       materialsExtracted:
           json['materials_extracted'] as int? ?? 0, // Valor padrão se nulo
@@ -190,15 +216,81 @@ class PdfUploadListResponse {
   });
 
   factory PdfUploadListResponse.fromJson(Map<String, dynamic> json) {
-    final data = json['data'] as Map<String, dynamic>;
+    print('DEBUG: PdfUploadListResponse.fromJson - json: $json');
+
+    final data = json['data'] as Map<String, dynamic>?;
+    print('DEBUG: PdfUploadListResponse.fromJson - data: $data');
+
+    if (data == null) {
+      print(
+        'DEBUG: PdfUploadListResponse.fromJson - data is null, returning empty response',
+      );
+      return PdfUploadListResponse(
+        success: json['success'] as bool? ?? false,
+        uploads: [],
+        pagination: PaginationInfo(
+          total: 0,
+          perPage: 10,
+          currentPage: 1,
+          lastPage: 1,
+        ),
+      );
+    }
+
+    final uploadsData = data['uploads'];
+    print(
+      'DEBUG: PdfUploadListResponse.fromJson - uploadsData: $uploadsData (type: ${uploadsData.runtimeType})',
+    );
+
+    if (uploadsData == null) {
+      print(
+        'DEBUG: PdfUploadListResponse.fromJson - uploadsData is null, returning empty response',
+      );
+      return PdfUploadListResponse(
+        success: json['success'] as bool? ?? false,
+        uploads: [],
+        pagination: PaginationInfo(
+          total: 0,
+          perPage: 10,
+          currentPage: 1,
+          lastPage: 1,
+        ),
+      );
+    }
+
+    if (uploadsData is! List) {
+      print(
+        'DEBUG: PdfUploadListResponse.fromJson - uploadsData is not a List, it\'s: ${uploadsData.runtimeType}',
+      );
+      // Se não for uma lista, retornar resposta vazia
+      return PdfUploadListResponse(
+        success: json['success'] as bool? ?? false,
+        uploads: [],
+        pagination: PaginationInfo(
+          total: 0,
+          perPage: 10,
+          currentPage: 1,
+          lastPage: 1,
+        ),
+      );
+    }
+
+    final paginationData = data['pagination'] as Map<String, dynamic>?;
+    final pagination = paginationData != null
+        ? PaginationInfo.fromJson(paginationData)
+        : PaginationInfo(
+            total: uploadsData.length,
+            perPage: uploadsData.length,
+            currentPage: 1,
+            lastPage: 1,
+          );
+
     return PdfUploadListResponse(
-      success: json['success'] as bool,
-      uploads: (data['uploads'] as List<dynamic>)
+      success: json['success'] as bool? ?? false,
+      uploads: (uploadsData as List<dynamic>)
           .map((item) => PdfUploadModel.fromJson(item as Map<String, dynamic>))
           .toList(),
-      pagination: PaginationInfo.fromJson(
-        data['pagination'] as Map<String, dynamic>,
-      ),
+      pagination: pagination,
     );
   }
 }

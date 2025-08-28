@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:dio/dio.dart';
 
@@ -65,10 +66,16 @@ class QuoteUploadService {
         queryParams['status'] = status;
       }
 
+      log('DEBUG: getQuotes - queryParams: $queryParams');
+      log('DEBUG: getQuotes - endpoint: /materials/uploads');
+
       final response = await _httpService.get(
         '/materials/uploads',
         queryParameters: queryParams,
       );
+
+      log('DEBUG: getQuotes - response.statusCode: ${response.statusCode}');
+      log('DEBUG: getQuotes - response.data: ${response.data}');
 
       if (response.statusCode == 200) {
         final listResponse = PdfUploadListResponse.fromJson(response.data);
@@ -79,6 +86,7 @@ class QuoteUploadService {
         );
       }
     } catch (e) {
+      log('DEBUG: getQuotes - error: $e');
       return Result.error(
         Exception('Error getting uploads: $e'),
       );
