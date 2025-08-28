@@ -11,3 +11,9 @@ export 'user_model.dart';
 export 'material_models/material_model.dart';
 export 'material_models/material_stats_model.dart';
 export 'material_models/material_price_range_model.dart';
+
+// PDF Upload Models
+export 'pdf_upload/pdf_upload_model.dart';
+export 'pdf_upload/pdf_upload_response.dart';
+export 'pdf_upload/pdf_upload_list_response.dart';
+export 'pdf_upload/pagination_info.dart';
