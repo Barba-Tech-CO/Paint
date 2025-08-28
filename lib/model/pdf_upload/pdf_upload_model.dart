@@ -1,11 +1,11 @@
 class PdfUploadModel {
   final int id;
-  final int? userId;
+  final int userId; // Campo obrigatório conforme documentação
   final String originalName;
   final String? displayName;
-  final String? filePath; // Tornando opcional
+  final String filePath; // Campo obrigatório conforme documentação
   final String? r2Url;
-  final String? fileHash; // Tornando opcional
+  final String fileHash; // Campo obrigatório conforme documentação
   final PdfUploadStatus status;
   final int materialsExtracted;
   final Map<String, dynamic>? extractionMetadata;
@@ -15,12 +15,12 @@ class PdfUploadModel {
 
   PdfUploadModel({
     required this.id,
-    this.userId,
+    required this.userId, // Obrigatório
     required this.originalName,
     this.displayName,
-    this.filePath, // Tornando opcional
+    required this.filePath, // Obrigatório
     this.r2Url,
-    this.fileHash, // Tornando opcional
+    required this.fileHash, // Obrigatório
     required this.status,
     required this.materialsExtracted,
     this.extractionMetadata,
@@ -32,12 +32,12 @@ class PdfUploadModel {
   factory PdfUploadModel.fromJson(Map<String, dynamic> json) {
     return PdfUploadModel(
       id: json['id'] as int,
-      userId: json['user_id'] as int?, // Opcional
+      userId: json['user_id'] as int, // Obrigatório
       originalName: json['original_name'] as String,
       displayName: json['display_name'] as String?,
-      filePath: json['file_path'] as String? ?? '', // Valor padrão se ausente
+      filePath: json['file_path'] as String, // Obrigatório
       r2Url: json['r2_url'] as String?,
-      fileHash: json['file_hash'] as String? ?? '', // Valor padrão se ausente
+      fileHash: json['file_hash'] as String, // Obrigatório
       status: PdfUploadStatusExtension.fromString(json['status'] as String),
       materialsExtracted:
           json['materials_extracted'] as int? ?? 0, // Valor padrão se nulo
