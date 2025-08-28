@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
@@ -57,26 +58,42 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return MainLayout(
-      currentRoute: '/home',
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: PaintProAppBar(
-          title: 'Home',
-          toolbarHeight: 126,
-        ),
-        body: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 32,
-            children: [
-              SizedBox(
-                height: 8,
-              ),
-              GreetingCardWidget(
-                greeting: "Good morning!",
-                name: "John",
-              ),
+    return ChangeNotifierProvider.value(
+      value: _userViewModel,
+      child: MainLayout(
+        currentRoute: '/home',
+        child: Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: PaintProAppBar(
+            title: 'Home',
+            toolbarHeight: 126,
+          ),
+          body: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 32,
+              children: [
+                SizedBox(
+                  height: 8,
+                ),
+                Consumer<UserViewModel>(
+                  builder: (context, userViewModel, child) {
+                    // Show loading state or actual name
+                    String displayName;
+                    if (userViewModel.isLoading) {
+                      displayName = 'Loading...';
+                    } else if (userViewModel.displayName.isNotEmpty) {
+                      displayName = userViewModel.displayName;
+                    } else {
+                      displayName = 'User';
+                    }
+                    
+                    return GreetingCardWidget(
+                      greeting: "Good morning!",
+                      name: displayName,
+                    );
+                  },
+                ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Column(
@@ -161,7 +178,8 @@ class _HomeViewState extends State<HomeView> {
                   ],
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
