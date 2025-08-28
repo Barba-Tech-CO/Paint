@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 
 import '../../model/quotes/quotes_model.dart';
 import '../../use_case/quotes/quote_upload_use_case.dart';
+import '../../utils/logger/app_logger.dart';
 
 enum QuotesState { loading, empty, loaded, error }
 
 class QuotesViewModel extends ChangeNotifier {
   final QuoteUploadUseCase _quoteUploadUseCase;
+  final AppLogger _logger;
 
   QuotesState _currentState = QuotesState.empty;
   bool _isUploading = false;
@@ -20,7 +22,7 @@ class QuotesViewModel extends ChangeNotifier {
   String _searchQuery = '';
 
   // Construtor
-  QuotesViewModel(this._quoteUploadUseCase) {
+  QuotesViewModel(this._quoteUploadUseCase, this._logger) {
     _loadQuotes();
   }
 
@@ -85,11 +87,11 @@ class QuotesViewModel extends ChangeNotifier {
       } else {
         // Usuário cancelou
         _updateState();
-        debugPrint('File selection cancelled');
+        _logger.info('File selection cancelled');
       }
     } catch (e) {
       _setError('Error selecting file: $e');
-      debugPrint('Error in pickFile: $e');
+      _logger.error('Error in pickFile: $e', e);
     } finally {
       _setLoading(false);
     }
@@ -144,8 +146,8 @@ class QuotesViewModel extends ChangeNotifier {
           _quotes.add(newQuote);
           _updateState();
 
-          debugPrint('Quote uploaded successfully: ${newQuote.titulo}');
-          debugPrint('Status: ${newQuote.statusDisplay}');
+          _logger.info('Quote uploaded successfully: ${newQuote.titulo}');
+          _logger.info('Status: ${newQuote.statusDisplay}');
 
           // Se o status for pending ou processing, inicia polling para acompanhar o progresso
           if (newQuote.isPending || newQuote.isProcessing) {
@@ -154,12 +156,12 @@ class QuotesViewModel extends ChangeNotifier {
         },
         error: (error) {
           _setError('Upload failed: ${error.toString()}');
-          debugPrint('Upload error: $error');
+          _logger.error('Upload error: $error', error);
         },
       );
     } catch (e) {
       _setError('Unexpected error during upload: $e');
-      debugPrint('Unexpected upload error: $e');
+      _logger.error('Unexpected upload error: $e', e);
     } finally {
       _setUploading(false);
     }
@@ -182,21 +184,21 @@ class QuotesViewModel extends ChangeNotifier {
             _updateState();
             notifyListeners();
 
-            debugPrint('Quote status updated: ${upload.status.value}');
+            _logger.info('Quote status updated: ${upload.status.value}');
 
             // Se o status for final, para o polling
             if (upload.isCompleted || upload.isFailed || upload.isError) {
-              debugPrint('Quote processing completed, stopping polling');
+              _logger.info('Quote processing completed, stopping polling');
             }
           }
         },
         error: (error) {
-          debugPrint('Status polling failed: $error');
+          _logger.error('Status polling failed: $error', error);
           // Não mostra erro para o usuário, apenas log
         },
       );
     } catch (e) {
-      debugPrint('Error in status polling: $e');
+      _logger.error('Error in status polling: $e', e);
     }
   }
 
@@ -216,7 +218,7 @@ class QuotesViewModel extends ChangeNotifier {
           _quotes.removeWhere((quote) => quote.id == id);
           _updateState();
           notifyListeners();
-          debugPrint('Quote deleted successfully');
+          _logger.info('Quote deleted successfully');
         },
         error: (error) {
           _setError('Failed to delete quote: ${error.toString()}');
@@ -245,7 +247,7 @@ class QuotesViewModel extends ChangeNotifier {
             _quotes[index] = QuotesModel.fromPdfUpload(upload);
             _filterQuotes(); // Re-apply filter after rename
             notifyListeners();
-            debugPrint('Quote renamed successfully');
+            _logger.info('Quote renamed successfully');
           }
         },
         error: (error) {
