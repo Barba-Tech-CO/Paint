@@ -147,8 +147,8 @@ class QuotesViewModel extends ChangeNotifier {
           debugPrint('Quote uploaded successfully: ${newQuote.titulo}');
           debugPrint('Status: ${newQuote.statusDisplay}');
 
-          // Se o status for pending, inicia polling para acompanhar o progresso
-          if (newQuote.isPending) {
+          // Se o status for pending ou processing, inicia polling para acompanhar o progresso
+          if (newQuote.isPending || newQuote.isProcessing) {
             _startStatusPolling(newQuote.id);
           }
         },
@@ -183,6 +183,11 @@ class QuotesViewModel extends ChangeNotifier {
             notifyListeners();
 
             debugPrint('Quote status updated: ${upload.status.value}');
+
+            // Se o status for final, para o polling
+            if (upload.isCompleted || upload.isFailed || upload.isError) {
+              debugPrint('Quote processing completed, stopping polling');
+            }
           }
         },
         error: (error) {
