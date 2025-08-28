@@ -51,6 +51,41 @@ class _QuotesViewState extends State<QuotesView> {
               quotesViewModel.currentState == QuotesState.loaded
                   ? SearchBarWidget(controller: _searchController)
                   : SizedBox.shrink(),
+              if (quotesViewModel.isUploading)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(16),
+                  margin: EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue[200]!),
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.blue[600]!,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Uploading PDF... Please wait',
+                          style: TextStyle(
+                            color: Colors.blue[800],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: quotesViewModel.currentState == QuotesState.loading
                     ? const LoadingWidget(message: 'Loading quotes...')
@@ -73,6 +108,9 @@ class _QuotesViewState extends State<QuotesView> {
                               id: quote.id,
                               titulo: quote.titulo,
                               dateUpload: quote.dateUpload,
+                              status: quote.status?.value,
+                              materialsExtracted: quote.materialsExtracted,
+                              errorMessage: quote.errorMessage,
                               onRename: (newName) {
                                 quotesViewModel.renameQuote(quote.id, newName);
                               },
