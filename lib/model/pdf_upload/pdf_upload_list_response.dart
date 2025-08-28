@@ -15,12 +15,14 @@ class PdfUploadListResponse {
 
   factory PdfUploadListResponse.fromJson(Map<String, dynamic> json) {
     log('DEBUG: PdfUploadListResponse.fromJson - json: $json');
-    
+
     final data = json['data'] as Map<String, dynamic>?;
     log('DEBUG: PdfUploadListResponse.fromJson - data: $data');
-    
+
     if (data == null) {
-      log('DEBUG: PdfUploadListResponse.fromJson - data is null, returning empty response');
+      log(
+        'DEBUG: PdfUploadListResponse.fromJson - data is null, returning empty response',
+      );
       return PdfUploadListResponse(
         success: json['success'] as bool? ?? false,
         uploads: [],
@@ -32,12 +34,16 @@ class PdfUploadListResponse {
         ),
       );
     }
-    
+
     final uploadsData = data['uploads'];
-    log('DEBUG: PdfUploadListResponse.fromJson - uploadsData: $uploadsData (type: ${uploadsData.runtimeType})');
-    
+    log(
+      'DEBUG: PdfUploadListResponse.fromJson - uploadsData: $uploadsData (type: ${uploadsData.runtimeType})',
+    );
+
     if (uploadsData == null) {
-      log('DEBUG: PdfUploadListResponse.fromJson - uploadsData is null, returning empty response');
+      log(
+        'DEBUG: PdfUploadListResponse.fromJson - uploadsData is null, returning empty response',
+      );
       return PdfUploadListResponse(
         success: json['success'] as bool? ?? false,
         uploads: [],
@@ -49,9 +55,11 @@ class PdfUploadListResponse {
         ),
       );
     }
-    
+
     if (uploadsData is! List) {
-      log('DEBUG: PdfUploadListResponse.fromJson - uploadsData is not a List, it\'s: ${uploadsData.runtimeType}');
+      log(
+        'DEBUG: PdfUploadListResponse.fromJson - uploadsData is not a List, it\'s: ${uploadsData.runtimeType}',
+      );
       // Se não for uma lista, retornar resposta vazia
       return PdfUploadListResponse(
         success: json['success'] as bool? ?? false,
@@ -64,9 +72,9 @@ class PdfUploadListResponse {
         ),
       );
     }
-    
+
     final paginationData = data['pagination'] as Map<String, dynamic>?;
-    final pagination = paginationData != null 
+    final pagination = paginationData != null
         ? PaginationInfo.fromJson(paginationData)
         : PaginationInfo(
             total: uploadsData.length,
@@ -74,7 +82,7 @@ class PdfUploadListResponse {
             currentPage: 1,
             lastPage: 1,
           );
-    
+
     return PdfUploadListResponse(
       success: json['success'] as bool? ?? false,
       uploads: uploadsData

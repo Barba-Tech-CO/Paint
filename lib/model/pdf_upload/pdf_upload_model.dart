@@ -1,49 +1,5 @@
 import 'dart:developer';
-
-enum PdfUploadStatus {
-  pending('pending'),
-  processing('processing'),
-  completed('completed'),
-  failed('failed'),
-  error('error'); // Adicionando status de erro
-
-  const PdfUploadStatus(this.value);
-  final String value;
-}
-
-extension PdfUploadStatusExtension on PdfUploadStatus {
-  static PdfUploadStatus fromString(String value) {
-    switch (value) {
-      case 'pending':
-        return PdfUploadStatus.pending;
-      case 'processing':
-        return PdfUploadStatus.processing;
-      case 'completed':
-        return PdfUploadStatus.completed;
-      case 'failed':
-        return PdfUploadStatus.failed;
-      case 'error':
-        return PdfUploadStatus.error;
-      default:
-        throw ArgumentError('Unknown PdfUploadStatus: $value');
-    }
-  }
-
-  String get displayName {
-    switch (this) {
-      case PdfUploadStatus.pending:
-        return 'Pending';
-      case PdfUploadStatus.processing:
-        return 'Processing';
-      case PdfUploadStatus.completed:
-        return 'Completed';
-      case PdfUploadStatus.failed:
-        return 'Failed';
-      case PdfUploadStatus.error:
-        return 'Error'; // Adicionando display name para erro
-    }
-  }
-}
+import 'pdf_upload_status.dart';
 
 class PdfUploadModel {
   final int id;
@@ -78,29 +34,37 @@ class PdfUploadModel {
 
   factory PdfUploadModel.fromJson(Map<String, dynamic> json) {
     log('DEBUG: PdfUploadModel.fromJson - json: $json');
-    
+
     // Verificar campos obrigatórios
     if (json['id'] == null) {
       throw Exception('Missing required field: id');
     }
     if (json['user_id'] == null) {
-      log('DEBUG: PdfUploadModel.fromJson - user_id is null, using default value 1');
+      log(
+        'DEBUG: PdfUploadModel.fromJson - user_id is null, using default value 1',
+      );
     }
     if (json['file_path'] == null) {
-      log('DEBUG: PdfUploadModel.fromJson - file_path is null, using default value');
+      log(
+        'DEBUG: PdfUploadModel.fromJson - file_path is null, using default value',
+      );
     }
     if (json['file_hash'] == null) {
-      log('DEBUG: PdfUploadModel.fromJson - file_hash is null, using default value');
+      log(
+        'DEBUG: PdfUploadModel.fromJson - file_hash is null, using default value',
+      );
     }
-    
+
     return PdfUploadModel(
       id: json['id'] as int,
       userId: json['user_id'] as int? ?? 1, // Usar valor padrão se ausente
       originalName: json['original_name'] as String,
       displayName: json['display_name'] as String?,
-      filePath: json['file_path'] as String? ?? '', // Usar valor padrão se ausente
+      filePath:
+          json['file_path'] as String? ?? '', // Usar valor padrão se ausente
       r2Url: json['r2_url'] as String?,
-      fileHash: json['file_hash'] as String? ?? '', // Usar valor padrão se ausente
+      fileHash:
+          json['file_hash'] as String? ?? '', // Usar valor padrão se ausente
       status: PdfUploadStatusExtension.fromString(json['status'] as String),
       materialsExtracted:
           json['materials_extracted'] as int? ?? 0, // Valor padrão se nulo
