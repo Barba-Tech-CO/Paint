@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../model/quotes/quotes_model.dart';
 import '../../use_case/quotes/quote_upload_use_case.dart';
 import '../../utils/logger/app_logger.dart';
+import '../../utils/result/result.dart';
 
 enum QuotesState { loading, empty, loaded, error }
 
@@ -36,34 +37,37 @@ class QuotesViewModel extends ChangeNotifier {
   bool get hasQuotes => _quotes.isNotEmpty;
 
   /// Carrega quotes existentes
-  Future<void> _loadQuotes() async {
+  Future<Result<void>> _loadQuotes() async {
     try {
       _setLoading(true);
       _clearError();
 
       final result = await _quoteUploadUseCase.getQuotes();
 
-      result.when(
+      return result.when(
         ok: (response) {
           _quotes.clear();
           _quotes.addAll(
             response.uploads.map((upload) => QuotesModel.fromPdfUpload(upload)),
           );
           _updateState();
+          return Result.ok(null);
         },
         error: (error) {
           _setError('Failed to load quotes: ${error.toString()}');
+          return Result.error(error);
         },
       );
     } catch (e) {
       _setError('Unexpected error loading quotes: $e');
+      return Result.error(Exception(e.toString()));
     } finally {
       _setLoading(false);
     }
   }
 
   /// Seleciona e faz upload de um arquivo PDF
-  Future<void> pickFile() async {
+  Future<Result<void>> pickFile() async {
     try {
       _setLoading(true);
       _clearError();
@@ -78,20 +82,23 @@ class QuotesViewModel extends ChangeNotifier {
         final fileName = result.files.single.name;
 
         // Validações básicas
-        if (!await _validateFile(file)) {
-          return;
+        final validationResult = await _validateFile(file);
+        if (!validationResult) {
+          return Result.error(Exception('File validation failed'));
         }
 
         // Faz upload do arquivo
-        await _uploadPdfFile(file, fileName);
+        return await _uploadPdfFile(file, fileName);
       } else {
         // Usuário cancelou
         _updateState();
         _logger.info('File selection cancelled');
+        return Result.ok(null);
       }
     } catch (e) {
       _setError('Error selecting file: $e');
       _logger.error('Error in pickFile: $e', e);
+      return Result.error(Exception(e.toString()));
     } finally {
       _setLoading(false);
     }
@@ -130,14 +137,14 @@ class QuotesViewModel extends ChangeNotifier {
   }
 
   /// Faz upload do arquivo PDF
-  Future<void> _uploadPdfFile(File file, String fileName) async {
+  Future<Result<void>> _uploadPdfFile(File file, String fileName) async {
     try {
       _setUploading(true);
       _clearError();
 
       final result = await _quoteUploadUseCase.uploadQuote(file);
 
-      result.when(
+      return result.when(
         ok: (response) {
           // Cria um novo quote com os dados da resposta
           final newQuote = QuotesModel.fromPdfUpload(response.upload);
@@ -153,29 +160,35 @@ class QuotesViewModel extends ChangeNotifier {
           if (newQuote.isPending || newQuote.isProcessing) {
             _startStatusPolling(newQuote.id);
           }
+
+          return Result.ok(null);
         },
         error: (error) {
           _setError('Upload failed: ${error.toString()}');
           _logger.error('Upload error: $error', error);
+          return Result.error(error);
         },
       );
     } catch (e) {
       _setError('Unexpected error during upload: $e');
       _logger.error('Unexpected upload error: $e', e);
+      return Result.error(Exception(e.toString()));
     } finally {
       _setUploading(false);
     }
   }
 
   /// Inicia polling do status do upload
-  Future<void> _startStatusPolling(String quoteId) async {
+  Future<Result<void>> _startStatusPolling(String quoteId) async {
     try {
       final uploadId = int.tryParse(quoteId);
-      if (uploadId == null) return;
+      if (uploadId == null) {
+        return Result.error(Exception('Invalid quote ID for polling'));
+      }
 
       final result = await _quoteUploadUseCase.pollQuoteStatus(uploadId);
 
-      result.when(
+      return result.when(
         ok: (upload) {
           // Atualiza o quote na lista com o novo status
           final index = _quotes.indexWhere((q) => q.id == quoteId);
@@ -191,56 +204,61 @@ class QuotesViewModel extends ChangeNotifier {
               _logger.info('Quote processing completed, stopping polling');
             }
           }
+
+          return Result.ok(null);
         },
         error: (error) {
           _logger.error('Status polling failed: $error', error);
           // Não mostra erro para o usuário, apenas log
+          return Result.error(error);
         },
       );
     } catch (e) {
       _logger.error('Error in status polling: $e', e);
+      return Result.error(Exception(e.toString()));
     }
   }
 
   /// Remove um quote
-  Future<void> removeQuote(String id) async {
+  Future<Result<void>> removeQuote(String id) async {
     try {
       final uploadId = int.tryParse(id);
       if (uploadId == null) {
-        _setError('Invalid quote ID');
-        return;
+        return Result.error(Exception('Invalid quote ID'));
       }
 
       final result = await _quoteUploadUseCase.deleteQuote(uploadId);
 
-      result.when(
+      return result.when(
         ok: (_) {
           _quotes.removeWhere((quote) => quote.id == id);
           _updateState();
           notifyListeners();
           _logger.info('Quote deleted successfully');
+          return Result.ok(null);
         },
         error: (error) {
           _setError('Failed to delete quote: ${error.toString()}');
+          return Result.error(error);
         },
       );
     } catch (e) {
       _setError('Unexpected error deleting quote: $e');
+      return Result.error(Exception(e.toString()));
     }
   }
 
   /// Renomeia um quote
-  Future<void> renameQuote(String id, String newTitle) async {
+  Future<Result<void>> renameQuote(String id, String newTitle) async {
     try {
       final uploadId = int.tryParse(id);
       if (uploadId == null) {
-        _setError('Invalid quote ID');
-        return;
+        return Result.error(Exception('Invalid quote ID'));
       }
 
       final result = await _quoteUploadUseCase.updateQuote(uploadId, newTitle);
 
-      result.when(
+      return result.when(
         ok: (upload) {
           final index = _quotes.indexWhere((quote) => quote.id == id);
           if (index != -1) {
@@ -249,13 +267,17 @@ class QuotesViewModel extends ChangeNotifier {
             notifyListeners();
             _logger.info('Quote renamed successfully');
           }
+
+          return Result.ok(null);
         },
         error: (error) {
           _setError('Failed to rename quote: ${error.toString()}');
+          return Result.error(error);
         },
       );
     } catch (e) {
       _setError('Unexpected error renaming quote: $e');
+      return Result.error(Exception(e.toString()));
     }
   }
 
@@ -289,8 +311,8 @@ class QuotesViewModel extends ChangeNotifier {
   }
 
   /// Recarrega quotes
-  Future<void> refresh() async {
-    await _loadQuotes();
+  Future<Result<void>> refresh() async {
+    return await _loadQuotes();
   }
 
   // Métodos privados para gerenciar estado
