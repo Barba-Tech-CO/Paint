@@ -1,7 +1,7 @@
 class ExtractedMaterialModel {
   final int id;
   final int pdfUploadId;
-  final int? userId;
+  final int userId; // Campo obrigatório conforme documentação
   final String brand;
   final String description;
   final String type;
@@ -19,7 +19,7 @@ class ExtractedMaterialModel {
   ExtractedMaterialModel({
     required this.id,
     required this.pdfUploadId,
-    this.userId,
+    required this.userId, // Obrigatório
     required this.brand,
     required this.description,
     required this.type,
@@ -39,7 +39,7 @@ class ExtractedMaterialModel {
     return ExtractedMaterialModel(
       id: json['id'] as int,
       pdfUploadId: json['pdf_upload_id'] as int,
-      userId: json['user_id'] as int?,
+      userId: json['user_id'] as int, // Obrigatório
       brand: json['brand'] as String,
       description: json['description'] as String,
       type: json['type'] as String,
