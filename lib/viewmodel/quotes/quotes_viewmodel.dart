@@ -47,9 +47,13 @@ class QuotesViewModel extends ChangeNotifier {
       return result.when(
         ok: (response) {
           _quotes.clear();
-          _quotes.addAll(
-            response.uploads.map((upload) => QuotesModel.fromPdfUpload(upload)),
-          );
+          if (response.uploads.isNotEmpty) {
+            _quotes.addAll(
+              response.uploads.map(
+                (upload) => QuotesModel.fromPdfUpload(upload),
+              ),
+            );
+          }
           _updateState();
           return Result.ok(null);
         },
@@ -80,6 +84,11 @@ class QuotesViewModel extends ChangeNotifier {
       if (result != null) {
         final file = File(result.files.single.path!);
         final fileName = result.files.single.name;
+
+        // Log file information for debugging
+        _logger.info('Selected file: $fileName');
+        _logger.info('File path: ${file.path}');
+        _logger.info('File size: ${await file.length()} bytes');
 
         // Validações básicas
         final validationResult = await _validateFile(file);
@@ -129,6 +138,46 @@ class QuotesViewModel extends ChangeNotifier {
         return false;
       }
 
+      // Verifica se o arquivo não está vazio
+      if (fileSize == 0) {
+        _setError('Selected file is empty');
+        return false;
+      }
+
+      // Verifica se o nome do arquivo é válido
+      final fileName = file.path.split('/').last;
+      if (fileName.isEmpty || fileName.length > 255) {
+        _setError('Invalid file name');
+        return false;
+      }
+
+      // Verifica se o arquivo pode ser lido
+      try {
+        final bytes = await file.readAsBytes();
+        if (bytes.isEmpty) {
+          _setError('Cannot read file content');
+          return false;
+        }
+
+        // Basic PDF header validation (PDF files start with %PDF)
+        if (bytes.length >= 4) {
+          final header = String.fromCharCodes(bytes.take(4));
+          if (header != '%PDF') {
+            _setError('File does not appear to be a valid PDF');
+            return false;
+          }
+        }
+
+        // Note: Backend validation will check for USD currency requirement
+        // Documents with other currencies (R$, €, £, etc.) will be rejected
+        _logger.info(
+          'File validation passed. Note: Backend requires USD currency in PDF content.',
+        );
+      } catch (e) {
+        _setError('Cannot read file: $e');
+        return false;
+      }
+
       return true;
     } catch (e) {
       _setError('Error validating file: $e');
@@ -142,7 +191,10 @@ class QuotesViewModel extends ChangeNotifier {
       _setUploading(true);
       _clearError();
 
-      final result = await _quoteUploadUseCase.uploadQuote(file);
+      final result = await _quoteUploadUseCase.uploadQuote(
+        file,
+        filename: fileName,
+      );
 
       return result.when(
         ok: (response) {
@@ -164,7 +216,43 @@ class QuotesViewModel extends ChangeNotifier {
           return Result.ok(null);
         },
         error: (error) {
-          _setError('Upload failed: ${error.toString()}');
+          // Provide more specific error messages based on error type
+          String errorMessage;
+          if (error.toString().contains('Validation error:')) {
+            errorMessage = error.toString().replaceFirst(
+              'Exception: Validation error: ',
+              '',
+            );
+          } else if (error.toString().contains('422')) {
+            // Check if it's an infrastructure error (like Cloudflare R2 connection issues)
+            if (error.toString().contains('Cloudflare') ||
+                error.toString().contains('TLS') ||
+                error.toString().contains('PutObject') ||
+                error.toString().contains('cURL error')) {
+              errorMessage =
+                  'Server infrastructure error. This is a temporary issue.\n\n'
+                  'Please try again in a few minutes. If the problem persists, '
+                  'contact support.';
+            } else {
+              errorMessage =
+                  'The PDF file could not be processed. This may be due to:\n'
+                  '• Non-USD currency in the document (only \$ accepted)\n'
+                  '• Invalid PDF format\n'
+                  '• File content validation failed\n\n'
+                  'Please check your PDF and try again.';
+            }
+          } else if (error.toString().contains('401') ||
+              error.toString().contains('403')) {
+            errorMessage = 'Authentication failed. Please log in again.';
+          } else if (error.toString().contains('413') ||
+              error.toString().contains('25MB')) {
+            errorMessage =
+                'File size exceeds the 25MB limit. Please choose a smaller file.';
+          } else {
+            errorMessage = 'Upload failed: ${error.toString()}';
+          }
+
+          _setError(errorMessage);
           _logger.error('Upload error: $error', error);
           return Result.error(error);
         },
