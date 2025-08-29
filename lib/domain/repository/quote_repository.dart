@@ -1,12 +1,15 @@
 import 'dart:io';
 
-import '../../model/pdf_upload/pdf_upload_model.dart';
+import '../../model/models.dart';
 import '../../model/pdf_upload/extracted_material_model.dart';
 import '../../utils/result/result.dart';
 
 abstract class IQuoteRepository {
   /// Upload a quote PDF file for material extraction
-  Future<Result<PdfUploadResponse>> uploadQuote(File quoteFile);
+  Future<Result<PdfUploadResponse>> uploadQuote(
+    File quoteFile, {
+    String? filename,
+  });
 
   /// Get list of uploaded quotes with pagination and filters
   Future<Result<PdfUploadListResponse>> getQuotes({
