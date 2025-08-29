@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/app_colors.dart';
-import '../layout/main_layout.dart';
 import '../../config/dependency_injection.dart';
 import '../../viewmodel/navigation_viewmodel.dart';
+import '../layout/main_layout.dart';
 import '../widgets/appbars/paint_pro_app_bar.dart';
-import '../widgets/navigation/floating_bottom_navigation_bar.dart';
 
 class ProjectsView extends StatefulWidget {
   const ProjectsView({super.key});
