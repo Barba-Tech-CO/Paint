@@ -43,17 +43,29 @@ class HttpService implements IHttpService {
               _authToken = token;
             }
           }
-          
+
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
             // Only log presence of token, never the actual token
             if (options.path.contains('/user')) {
-              _logger.info('[HttpService] Adding Authorization header to /user request');
+              _logger.info(
+                '[HttpService] Adding Authorization header to /user request',
+              );
+            } else if (options.path.contains('/materials')) {
+              _logger.info(
+                '[HttpService] Adding Authorization header to /materials request',
+              );
             }
           } else {
             // Log missing token for critical endpoints
             if (options.path.contains('/user')) {
-              _logger.warning('[HttpService] No auth token available for /user request');
+              _logger.warning(
+                '[HttpService] No auth token available for /user request',
+              );
+            } else if (options.path.contains('/materials')) {
+              _logger.warning(
+                '[HttpService] No auth token available for /materials request',
+              );
             }
           }
           handler.next(options);
@@ -81,12 +93,12 @@ class HttpService implements IHttpService {
   void clearGhlToken() {
     _authToken = null;
   }
-  
+
   /// Sets the auth token and forces interceptor refresh
   void setAuthToken(String token) {
     _authToken = token;
   }
-  
+
   /// Clears auth token from memory
   void clearAuthToken() {
     _authToken = null;
