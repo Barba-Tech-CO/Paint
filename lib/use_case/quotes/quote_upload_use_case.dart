@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import '../../domain/repository/quote_repository.dart';
-import '../../model/pdf_upload/pdf_upload_model.dart';
+import '../../model/models.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
@@ -12,11 +12,17 @@ class QuoteUploadUseCase {
   QuoteUploadUseCase(this._quoteRepository, this._logger);
 
   /// Upload a quote PDF file for material extraction
-  Future<Result<PdfUploadResponse>> uploadQuote(File quoteFile) async {
+  Future<Result<PdfUploadResponse>> uploadQuote(
+    File quoteFile, {
+    String? filename,
+  }) async {
     try {
       _logger.info('Starting quote upload for file: ${quoteFile.path}');
 
-      final result = await _quoteRepository.uploadQuote(quoteFile);
+      final result = await _quoteRepository.uploadQuote(
+        quoteFile,
+        filename: filename,
+      );
 
       result.when(
         ok: (response) {
