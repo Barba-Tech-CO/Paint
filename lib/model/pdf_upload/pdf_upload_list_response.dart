@@ -56,41 +56,89 @@ class PdfUploadListResponse {
       );
     }
 
-    if (uploadsData is! List) {
+    // Handle the case where uploadsData is a Map (with pagination info)
+    if (uploadsData is Map<String, dynamic>) {
       log(
-        'DEBUG: PdfUploadListResponse.fromJson - uploadsData is not a List, it\'s: ${uploadsData.runtimeType}',
+        'DEBUG: PdfUploadListResponse.fromJson - uploadsData is a Map, extracting data and pagination',
       );
-      // Se não for uma lista, retornar resposta vazia
-      return PdfUploadListResponse(
-        success: json['success'] as bool? ?? false,
-        uploads: [],
-        pagination: PaginationInfo(
-          total: 0,
-          perPage: 10,
-          currentPage: 1,
-          lastPage: 1,
-        ),
+
+      final uploadsList = uploadsData['data'] as List<dynamic>? ?? [];
+      final currentPage = uploadsData['current_page'] as int? ?? 1;
+      final perPage = uploadsData['per_page'] as int? ?? 10;
+      final total = uploadsData['total'] as int? ?? 0;
+      final lastPage = uploadsData['last_page'] as int? ?? 1;
+
+      final pagination = PaginationInfo(
+        total: total,
+        perPage: perPage,
+        currentPage: currentPage,
+        lastPage: lastPage,
       );
-    }
 
-    final paginationData = data['pagination'] as Map<String, dynamic>?;
-    final pagination = paginationData != null
-        ? PaginationInfo.fromJson(paginationData)
-        : PaginationInfo(
-            total: uploadsData.length,
-            perPage: uploadsData.length,
-            currentPage: 1,
-            lastPage: 1,
-          );
-
-    return PdfUploadListResponse(
-      success: json['success'] as bool? ?? false,
-      uploads: uploadsData
+      final uploads = uploadsList
           .map(
             (item) => PdfUploadModel.fromJson(item as Map<String, dynamic>),
           )
-          .toList(),
-      pagination: pagination,
+          .toList();
+
+      return PdfUploadListResponse(
+        success: json['success'] as bool? ?? false,
+        uploads: uploads,
+        pagination: pagination,
+      );
+    }
+
+    // Handle the case where uploadsData is a List (legacy format)
+    if (uploadsData is List) {
+      log(
+        'DEBUG: PdfUploadListResponse.fromJson - uploadsData is a List, using legacy format',
+      );
+
+      final paginationData = data['pagination'] as Map<String, dynamic>?;
+      final pagination = paginationData != null
+          ? PaginationInfo.fromJson(paginationData)
+          : PaginationInfo(
+              total: uploadsData.length,
+              perPage: uploadsData.length,
+              currentPage: 1,
+              lastPage: 1,
+            );
+
+      return PdfUploadListResponse(
+        success: json['success'] as bool? ?? false,
+        uploads: uploadsData
+            .map(
+              (item) => PdfUploadModel.fromJson(item as Map<String, dynamic>),
+            )
+            .toList(),
+        pagination: pagination,
+      );
+    }
+
+    // Fallback for unexpected data types
+    log(
+      'DEBUG: PdfUploadListResponse.fromJson - uploadsData is unexpected type: ${uploadsData.runtimeType}, returning empty response',
+    );
+
+    // Try to extract any useful information from the unexpected structure
+    if (uploadsData is Map<String, dynamic>) {
+      log(
+        'DEBUG: PdfUploadListResponse.fromJson - uploadsData keys: ${uploadsData.keys.toList()}',
+      );
+      log(
+        'DEBUG: PdfUploadListResponse.fromJson - uploadsData values: ${uploadsData.values.toList()}',
+      );
+    }
+
+    return PdfUploadListResponse(
+      success: json['success'] as bool? ?? false,
+      uploads: [],
+      pagination: PaginationInfo(
+        total: 0,
+        perPage: 10,
+        currentPage: 1,
+        lastPage: 1,
+      ),
     );
   }
 }
