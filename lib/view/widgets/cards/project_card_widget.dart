@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../config/app_colors.dart';
+import '../widgets.dart';
 
 class ProjectCardWidget extends StatelessWidget {
   final String projectName;
@@ -173,7 +174,7 @@ class ProjectCardWidget extends StatelessWidget {
                     final newName = await showDialog<String>(
                       context: context,
                       builder: (context) =>
-                          _RenameZoneDialog(initialName: projectName),
+                          RenameDialog(initialName: projectName),
                     );
                     if (newName != null && newName.trim().isNotEmpty) {
                       onRename?.call(newName.trim());
@@ -182,7 +183,7 @@ class ProjectCardWidget extends StatelessWidget {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) =>
-                          _DeleteZoneDialog(zoneName: projectName),
+                          DeleteDialog(quoteName: projectName),
                     );
                     if (confirm == true) {
                       onDelete?.call();
@@ -216,77 +217,6 @@ class ProjectCardWidget extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _RenameZoneDialog extends StatefulWidget {
-  final String initialName;
-
-  const _RenameZoneDialog({required this.initialName});
-
-  @override
-  State<_RenameZoneDialog> createState() => _RenameZoneDialogState();
-}
-
-class _RenameZoneDialogState extends State<_RenameZoneDialog> {
-  late TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialName);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Rename Project'),
-      content: TextField(
-        controller: _controller,
-        decoration: const InputDecoration(labelText: 'Project Name'),
-        autofocus: true,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context, _controller.text.trim()),
-          child: const Text('Save'),
-        ),
-      ],
-    );
-  }
-}
-
-class _DeleteZoneDialog extends StatelessWidget {
-  final String zoneName;
-
-  const _DeleteZoneDialog({required this.zoneName});
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Delete Project'),
-      content: Text('Are you sure you want to delete "$zoneName"?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Delete'),
-        ),
-      ],
     );
   }
 }
