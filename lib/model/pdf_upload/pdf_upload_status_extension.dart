@@ -1,8 +1,10 @@
+import 'dart:developer';
+
 import 'pdf_upload_status.dart';
 
 extension PdfUploadStatusExtension on PdfUploadStatus {
   static PdfUploadStatus fromString(String value) {
-    switch (value) {
+    switch (value.toLowerCase()) {
       case 'pending':
         return PdfUploadStatus.pending;
       case 'processing':
@@ -14,7 +16,11 @@ extension PdfUploadStatusExtension on PdfUploadStatus {
       case 'error':
         return PdfUploadStatus.error;
       default:
-        throw ArgumentError('Unknown PdfUploadStatus: $value');
+        // Log the unknown status and return pending as default
+        log(
+          'WARNING: Unknown PdfUploadStatus: $value, using pending as default',
+        );
+        return PdfUploadStatus.pending;
     }
   }
 
