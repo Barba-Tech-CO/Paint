@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import '../../domain/repository/quote_repository.dart';
-import '../../model/pdf_upload/pdf_upload_model.dart';
+import '../../model/models.dart';
 import '../../model/pdf_upload/extracted_material_model.dart';
 import '../../service/pdf_upload_service.dart';
 import '../../utils/result/result.dart';
@@ -14,8 +14,14 @@ class QuoteRepository implements IQuoteRepository {
   }) : _quoteUploadService = quoteUploadService;
 
   @override
-  Future<Result<PdfUploadResponse>> uploadQuote(File quoteFile) {
-    return _quoteUploadService.uploadQuote(quoteFile);
+  Future<Result<PdfUploadResponse>> uploadQuote(
+    File quoteFile, {
+    String? filename,
+  }) {
+    return _quoteUploadService.uploadQuote(
+      quoteFile,
+      filename: filename,
+    );
   }
 
   @override
@@ -37,8 +43,14 @@ class QuoteRepository implements IQuoteRepository {
   }
 
   @override
-  Future<Result<PdfUploadModel>> updateQuote(int uploadId, String displayName) {
-    return _quoteUploadService.updateUpload(uploadId, displayName);
+  Future<Result<PdfUploadModel>> updateQuote(
+    int uploadId,
+    String displayName,
+  ) {
+    return _quoteUploadService.updateUpload(
+      uploadId,
+      displayName,
+    );
   }
 
   @override
@@ -50,7 +62,9 @@ class QuoteRepository implements IQuoteRepository {
   Future<Result<ExtractedMaterialListResponse>> getExtractedMaterials({
     MaterialFilters? filters,
   }) {
-    return _quoteUploadService.getExtractedMaterials(filters: filters);
+    return _quoteUploadService.getExtractedMaterials(
+      filters: filters,
+    );
   }
 
   @override

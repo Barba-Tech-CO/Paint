@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'pdf_upload_status.dart';
+import 'pdf_upload_status_extension.dart';
 
 class PdfUploadModel {
   final int id;
