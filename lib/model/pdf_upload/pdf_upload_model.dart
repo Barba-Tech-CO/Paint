@@ -38,22 +38,34 @@ class PdfUploadModel {
 
     // Verificar campos obrigatórios
     if (json['id'] == null) {
+      log('DEBUG: PdfUploadModel.fromJson - Missing required field: id');
       throw Exception('Missing required field: id');
     }
-    if (json['user_id'] == null) {
+
+    if (json['original_name'] == null) {
       log(
-        'DEBUG: PdfUploadModel.fromJson - user_id is null, using default value 1',
+        'DEBUG: PdfUploadModel.fromJson - Missing required field: original_name',
       );
+      throw Exception('Missing required field: original_name');
     }
-    if (json['file_path'] == null) {
-      log(
-        'DEBUG: PdfUploadModel.fromJson - file_path is null, using default value',
-      );
+
+    if (json['status'] == null) {
+      log('DEBUG: PdfUploadModel.fromJson - Missing required field: status');
+      throw Exception('Missing required field: status');
     }
-    if (json['file_hash'] == null) {
+
+    if (json['created_at'] == null) {
       log(
-        'DEBUG: PdfUploadModel.fromJson - file_hash is null, using default value',
+        'DEBUG: PdfUploadModel.fromJson - Missing required field: created_at',
       );
+      throw Exception('Missing required field: created_at');
+    }
+
+    if (json['updated_at'] == null) {
+      log(
+        'DEBUG: PdfUploadModel.fromJson - Missing required field: updated_at',
+      );
+      throw Exception('Missing required field: updated_at');
     }
 
     return PdfUploadModel(
