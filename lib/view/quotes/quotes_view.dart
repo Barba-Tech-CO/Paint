@@ -87,52 +87,67 @@ class _QuotesViewState extends State<QuotesView> {
                   ),
                 ),
               Expanded(
-                child: quotesViewModel.currentState == QuotesState.loading
-                    ? const LoadingWidget(message: 'Loading quotes...')
-                    : quotesViewModel.currentState == QuotesState.empty
-                    ? EmptyStateWidget(
-                        title: 'No Quotes yet',
-                        subtitle: 'Upload your first quote to get started',
-                        buttonText: 'Upload Quote',
-                        onButtonPressed: () => quotesViewModel.pickFile(),
-                      )
-                    : quotesViewModel.currentState == QuotesState.loaded
-                    ? ListView.builder(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: quotesViewModel.quotes.length,
-                        itemBuilder: (context, index) {
-                          final quote = quotesViewModel.quotes[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
-                            child: QuoteCardWidget(
-                              id: quote.id,
-                              titulo: quote.titulo,
-                              dateUpload: quote.dateUpload,
-                              status: quote.status?.value,
-                              materialsExtracted: quote.materialsExtracted,
-                              errorMessage: quote.errorMessage,
-                              onRename: (newName) {
-                                quotesViewModel.renameQuote(quote.id, newName);
-                              },
-                              onDelete: () {
-                                quotesViewModel.removeQuote(quote.id);
-                              },
+                child: Stack(
+                  children: [
+                    quotesViewModel.currentState == QuotesState.loading
+                        ? const LoadingWidget(message: 'Loading quotes...')
+                        : quotesViewModel.currentState == QuotesState.empty
+                        ? EmptyStateWidget(
+                            title: 'No Quotes yet',
+                            subtitle: 'Upload your first quote to get started',
+                            buttonText: 'Upload Quote',
+                            onButtonPressed: () => quotesViewModel.pickFile(),
+                          )
+                        : quotesViewModel.currentState == QuotesState.loaded
+                        ? ListView.builder(
+                            padding: const EdgeInsets.only(
+                              bottom: 140,
+                              left: 16,
+                              right: 16,
                             ),
-                          );
-                        },
-                      )
-                    : TryAgainWidget(
-                        onPressed: () => quotesViewModel.clearError(),
+                            itemCount: quotesViewModel.quotes.length,
+                            itemBuilder: (context, index) {
+                              final quote = quotesViewModel.quotes[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: QuoteCardWidget(
+                                  id: quote.id,
+                                  titulo: quote.titulo,
+                                  dateUpload: quote.dateUpload,
+                                  status: quote.status?.value,
+                                  materialsExtracted: quote.materialsExtracted,
+                                  errorMessage: quote.errorMessage,
+                                  onRename: (newName) {
+                                    quotesViewModel.renameQuote(
+                                      quote.id,
+                                      newName,
+                                    );
+                                  },
+                                  onDelete: () {
+                                    quotesViewModel.removeQuote(quote.id);
+                                  },
+                                ),
+                              );
+                            },
+                          )
+                        : TryAgainWidget(
+                            onPressed: () => quotesViewModel.clearError(),
+                          ),
+                    // FAB posicionado manualmente
+                    if (quotesViewModel.currentState == QuotesState.loaded)
+                      Positioned(
+                        bottom: 120,
+                        right: 16,
+                        child: PaintProFAB(
+                          onPressed: () => quotesViewModel.pickFile(),
+                        ),
                       ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
-        floatingActionButton: quotesViewModel.currentState != QuotesState.loaded
-            ? null
-            : PaintProFAB(
-                onPressed: () => quotesViewModel.pickFile(),
-              ),
       ),
     );
   }
