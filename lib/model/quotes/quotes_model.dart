@@ -1,4 +1,6 @@
 import '../pdf_upload/pdf_upload_model.dart';
+import '../pdf_upload/pdf_upload_status.dart';
+import '../pdf_upload/pdf_upload_status_extension.dart';
 
 class QuotesModel {
   final String id;
