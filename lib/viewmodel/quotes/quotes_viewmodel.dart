@@ -47,10 +47,10 @@ class QuotesViewModel extends ChangeNotifier {
       return result.when(
         ok: (response) {
           _quotes.clear();
-          if (response.uploads.isNotEmpty) {
+          if (response.quotes.isNotEmpty) {
             _quotes.addAll(
-              response.uploads.map(
-                (upload) => QuotesModel.fromPdfUpload(upload),
+              response.quotes.map(
+                (upload) => QuotesModel.fromQuote(upload),
               ),
             );
           }
@@ -199,7 +199,7 @@ class QuotesViewModel extends ChangeNotifier {
       return result.when(
         ok: (response) {
           // Cria um novo quote com os dados da resposta
-          final newQuote = QuotesModel.fromPdfUpload(response.upload);
+          final newQuote = QuotesModel.fromQuote(response.quote);
 
           // Adiciona à lista
           _quotes.add(newQuote);
@@ -269,19 +269,21 @@ class QuotesViewModel extends ChangeNotifier {
   /// Inicia polling do status do upload
   Future<Result<void>> _startStatusPolling(String quoteId) async {
     try {
-      final uploadId = int.tryParse(quoteId);
-      if (uploadId == null) {
-        return Result.error(Exception('Invalid quote ID for polling'));
+      final parsedQuoteId = int.tryParse(quoteId);
+      if (parsedQuoteId == null) {
+        return Result.error(
+          Exception('Invalid quote ID for polling'),
+        );
       }
 
-      final result = await _quoteUploadUseCase.pollQuoteStatus(uploadId);
+      final result = await _quoteUploadUseCase.pollQuoteStatus(parsedQuoteId);
 
       return result.when(
         ok: (upload) {
           // Atualiza o quote na lista com o novo status
           final index = _quotes.indexWhere((q) => q.id == quoteId);
           if (index != -1) {
-            _quotes[index] = QuotesModel.fromPdfUpload(upload);
+            _quotes[index] = QuotesModel.fromQuote(upload);
             _updateState();
             notifyListeners();
 
@@ -310,12 +312,12 @@ class QuotesViewModel extends ChangeNotifier {
   /// Remove um quote
   Future<Result<void>> removeQuote(String id) async {
     try {
-      final uploadId = int.tryParse(id);
-      if (uploadId == null) {
+      final quoteId = int.tryParse(id);
+      if (quoteId == null) {
         return Result.error(Exception('Invalid quote ID'));
       }
 
-      final result = await _quoteUploadUseCase.deleteQuote(uploadId);
+      final result = await _quoteUploadUseCase.deleteQuote(quoteId);
 
       return result.when(
         ok: (_) {
@@ -339,18 +341,18 @@ class QuotesViewModel extends ChangeNotifier {
   /// Renomeia um quote
   Future<Result<void>> renameQuote(String id, String newTitle) async {
     try {
-      final uploadId = int.tryParse(id);
-      if (uploadId == null) {
+      final quoteId = int.tryParse(id);
+      if (quoteId == null) {
         return Result.error(Exception('Invalid quote ID'));
       }
 
-      final result = await _quoteUploadUseCase.updateQuote(uploadId, newTitle);
+      final result = await _quoteUploadUseCase.updateQuote(quoteId, newTitle);
 
       return result.when(
         ok: (upload) {
           final index = _quotes.indexWhere((quote) => quote.id == id);
           if (index != -1) {
-            _quotes[index] = QuotesModel.fromPdfUpload(upload);
+            _quotes[index] = QuotesModel.fromQuote(upload);
             _filterQuotes(); // Re-apply filter after rename
             notifyListeners();
             _logger.info('Quote renamed successfully');
