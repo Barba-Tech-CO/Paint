@@ -29,7 +29,7 @@ import '../service/location_service.dart';
 import '../service/navigation_service.dart';
 import '../service/material_service.dart';
 import '../service/paint_catalog_service.dart';
-import '../service/pdf_upload_service.dart';
+import '../service/quote_service.dart';
 import '../service/user_service.dart';
 
 // Logger Layer
@@ -90,7 +90,9 @@ void setupDependencyInjection() {
     ),
   );
   getIt.registerLazySingleton<MaterialService>(
-    () => MaterialService(),
+    () => MaterialService(
+      getIt<QuoteService>(),
+    ),
   );
   getIt.registerLazySingleton<PaintCatalogService>(
     () => PaintCatalogService(
@@ -112,8 +114,8 @@ void setupDependencyInjection() {
       getIt<AppLogger>(),
     ),
   );
-  getIt.registerLazySingleton<QuoteUploadService>(
-    () => QuoteUploadService(
+  getIt.registerLazySingleton<QuoteService>(
+    () => QuoteService(
       httpService: getIt<HttpService>(),
     ),
   );
@@ -148,7 +150,7 @@ void setupDependencyInjection() {
   );
   getIt.registerLazySingleton<IQuoteRepository>(
     () => QuoteRepository(
-      quoteUploadService: getIt<QuoteUploadService>(),
+      quoteService: getIt<QuoteService>(),
     ),
   );
 
