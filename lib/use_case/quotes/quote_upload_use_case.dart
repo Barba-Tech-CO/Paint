@@ -12,7 +12,7 @@ class QuoteUploadUseCase {
   QuoteUploadUseCase(this._quoteRepository, this._logger);
 
   /// Upload a quote PDF file for material extraction
-  Future<Result<PdfUploadResponse>> uploadQuote(
+  Future<Result<QuoteResponse>> uploadQuote(
     File quoteFile, {
     String? filename,
   }) async {
@@ -27,7 +27,7 @@ class QuoteUploadUseCase {
       result.when(
         ok: (response) {
           _logger.info(
-            'Quote upload successful: ${response.upload.originalName}',
+            'Quote upload successful: ${response.quote.originalName}',
           );
         },
         error: (error) {
@@ -43,7 +43,7 @@ class QuoteUploadUseCase {
   }
 
   /// Get list of uploaded quotes with pagination and filters
-  Future<Result<PdfUploadListResponse>> getQuotes({
+  Future<Result<QuoteListResponse>> getQuotes({
     String? status,
     int limit = 10,
     int page = 1,
@@ -59,7 +59,7 @@ class QuoteUploadUseCase {
 
       result.when(
         ok: (response) {
-          _logger.info('Retrieved ${response.uploads.length} quotes');
+          _logger.info('Retrieved ${response.quotes.length} quotes');
         },
         error: (error) {
           _logger.error('Failed to retrieve quotes: $error', error);
@@ -74,11 +74,11 @@ class QuoteUploadUseCase {
   }
 
   /// Check the processing status of a specific quote upload
-  Future<Result<PdfUploadModel>> getQuoteStatus(int uploadId) async {
+  Future<Result<QuoteModel>> getQuoteStatus(int quoteId) async {
     try {
-      _logger.info('Checking status for quote upload: $uploadId');
+      _logger.info('Checking status for quote upload: $quoteId');
 
-      final result = await _quoteRepository.getQuoteStatus(uploadId);
+      final result = await _quoteRepository.getQuoteStatus(quoteId);
 
       result.when(
         ok: (upload) {
@@ -97,14 +97,14 @@ class QuoteUploadUseCase {
   }
 
   /// Update display name of an uploaded quote
-  Future<Result<PdfUploadModel>> updateQuote(
-    int uploadId,
+  Future<Result<QuoteModel>> updateQuote(
+    int quoteId,
     String displayName,
   ) async {
     try {
-      _logger.info('Updating quote display name: $uploadId -> $displayName');
+      _logger.info('Updating quote display name: $quoteId -> $displayName');
 
-      final result = await _quoteRepository.updateQuote(uploadId, displayName);
+      final result = await _quoteRepository.updateQuote(quoteId, displayName);
 
       result.when(
         ok: (upload) {
@@ -123,11 +123,11 @@ class QuoteUploadUseCase {
   }
 
   /// Delete an uploaded quote and all extracted materials
-  Future<Result<bool>> deleteQuote(int uploadId) async {
+  Future<Result<bool>> deleteQuote(int quoteId) async {
     try {
-      _logger.info('Deleting quote upload: $uploadId');
+      _logger.info('Deleting quote upload: $quoteId');
 
-      final result = await _quoteRepository.deleteQuote(uploadId);
+      final result = await _quoteRepository.deleteQuote(quoteId);
 
       result.when(
         ok: (_) {
@@ -146,16 +146,16 @@ class QuoteUploadUseCase {
   }
 
   /// Poll quote upload status until processing is complete
-  Future<Result<PdfUploadModel>> pollQuoteStatus(
-    int uploadId, {
+  Future<Result<QuoteModel>> pollQuoteStatus(
+    int quoteId, {
     Duration interval = const Duration(seconds: 2),
     Duration timeout = const Duration(minutes: 5),
   }) async {
     try {
-      _logger.info('Starting status polling for quote: $uploadId');
+      _logger.info('Starting status polling for quote: $quoteId');
 
       final result = await _quoteRepository.pollQuoteStatus(
-        uploadId,
+        quoteId,
         interval: interval,
         timeout: timeout,
       );
