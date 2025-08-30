@@ -31,4 +31,9 @@ class MaterialRepository implements IMaterialRepository {
   Future<Result<MaterialStatsModel>> getMaterialStats() {
     return _materialService.getMaterialStats();
   }
+
+  @override
+  Future<Result<List<String>>> getAvailableBrands() {
+    return _materialService.getAvailableBrands();
+  }
 }
