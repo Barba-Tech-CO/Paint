@@ -2,35 +2,35 @@ import 'dart:io';
 
 import '../../domain/repository/quote_repository.dart';
 import '../../model/models.dart';
-import '../../model/pdf_upload/extracted_material_model.dart';
-import '../../service/pdf_upload_service.dart';
+import '../../model/quotes_data/extracted_material_model.dart';
+import '../../service/quote_service.dart';
 import '../../utils/result/result.dart';
 
 class QuoteRepository implements IQuoteRepository {
-  final QuoteUploadService _quoteUploadService;
+  final QuoteService _quoteService;
 
   QuoteRepository({
-    required QuoteUploadService quoteUploadService,
-  }) : _quoteUploadService = quoteUploadService;
+    required QuoteService quoteService,
+  }) : _quoteService = quoteService;
 
   @override
-  Future<Result<PdfUploadResponse>> uploadQuote(
+  Future<Result<QuoteResponse>> uploadQuote(
     File quoteFile, {
     String? filename,
   }) {
-    return _quoteUploadService.uploadQuote(
+    return _quoteService.uploadQuote(
       quoteFile,
       filename: filename,
     );
   }
 
   @override
-  Future<Result<PdfUploadListResponse>> getQuotes({
+  Future<Result<QuoteListResponse>> getQuotes({
     String? status,
     int limit = 10,
     int page = 1,
   }) {
-    return _quoteUploadService.getQuotes(
+    return _quoteService.getQuotes(
       status: status,
       limit: limit,
       page: page,
@@ -38,53 +38,53 @@ class QuoteRepository implements IQuoteRepository {
   }
 
   @override
-  Future<Result<PdfUploadModel>> getQuoteStatus(int uploadId) {
-    return _quoteUploadService.getUploadStatus(uploadId);
+  Future<Result<QuoteModel>> getQuoteStatus(int quoteId) {
+    return _quoteService.getQuoteStatus(quoteId);
   }
 
   @override
-  Future<Result<PdfUploadModel>> updateQuote(
-    int uploadId,
+  Future<Result<QuoteModel>> updateQuote(
+    int quoteId,
     String displayName,
   ) {
-    return _quoteUploadService.updateUpload(
-      uploadId,
+    return _quoteService.updateQuote(
+      quoteId,
       displayName,
     );
   }
 
   @override
-  Future<Result<bool>> deleteQuote(int uploadId) {
-    return _quoteUploadService.deleteUpload(uploadId);
+  Future<Result<bool>> deleteQuote(int quoteId) {
+    return _quoteService.deleteQuote(quoteId);
   }
 
   @override
   Future<Result<ExtractedMaterialListResponse>> getExtractedMaterials({
     MaterialFilters? filters,
   }) {
-    return _quoteUploadService.getExtractedMaterials(
+    return _quoteService.getExtractedMaterials(
       filters: filters,
     );
   }
 
   @override
   Future<Result<ExtractedMaterialModel>> getExtractedMaterial(int materialId) {
-    return _quoteUploadService.getExtractedMaterial(materialId);
+    return _quoteService.getExtractedMaterial(materialId);
   }
 
   @override
   Future<Result<MaterialFiltersOptions>> getFilterOptions() {
-    return _quoteUploadService.getFilterOptions();
+    return _quoteService.getFilterOptions();
   }
 
   @override
-  Future<Result<PdfUploadModel>> pollQuoteStatus(
-    int uploadId, {
+  Future<Result<QuoteModel>> pollQuoteStatus(
+    int quoteId, {
     Duration interval = const Duration(seconds: 2),
     Duration timeout = const Duration(minutes: 5),
   }) {
-    return _quoteUploadService.pollQuoteStatus(
-      uploadId,
+    return _quoteService.pollQuoteStatus(
+      quoteId,
       interval: interval,
       timeout: timeout,
     );
