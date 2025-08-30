@@ -1,12 +1,12 @@
-import '../pdf_upload/pdf_upload_model.dart';
-import '../pdf_upload/pdf_upload_status.dart';
-import '../pdf_upload/pdf_upload_status_extension.dart';
+import '../quotes_data/quote_model.dart';
+import '../quotes_data/quote_status.dart';
+import '../quotes_data/quote_status_extension.dart';
 
 class QuotesModel {
   final String id;
   final String titulo;
   final DateTime dateUpload;
-  final PdfUploadStatus? status;
+  final QuoteStatus? status;
   final int? materialsExtracted;
   final String? errorMessage;
   final String? r2Url;
@@ -23,17 +23,17 @@ class QuotesModel {
     this.filePath,
   });
 
-  /// Factory constructor para criar QuotesModel a partir de PdfUploadModel
-  factory QuotesModel.fromPdfUpload(PdfUploadModel pdfUpload) {
+  /// Factory constructor para criar QuotesModel a partir de QuoteModel
+  factory QuotesModel.fromQuote(QuoteModel quote) {
     return QuotesModel(
-      id: pdfUpload.id.toString(),
-      titulo: pdfUpload.displayName ?? pdfUpload.originalName,
-      dateUpload: pdfUpload.createdAt,
-      status: pdfUpload.status,
-      materialsExtracted: pdfUpload.materialsExtracted,
-      errorMessage: pdfUpload.errorMessage,
-      r2Url: pdfUpload.r2Url,
-      filePath: pdfUpload.filePath,
+      id: quote.id.toString(),
+      titulo: quote.displayName ?? quote.originalName,
+      dateUpload: quote.createdAt,
+      status: quote.status,
+      materialsExtracted: quote.materialsExtracted,
+      errorMessage: quote.errorMessage,
+      r2Url: quote.r2Url,
+      filePath: quote.filePath,
     );
   }
 
@@ -44,7 +44,7 @@ class QuotesModel {
       titulo: json['display_name'] ?? json['original_name'] ?? '',
       dateUpload: DateTime.parse(json['created_at'] as String),
       status: json['status'] != null
-          ? PdfUploadStatusExtension.fromString(json['status'] as String)
+          ? QuoteStatusExtension.fromString(json['status'] as String)
           : null,
       materialsExtracted: json['materials_extracted'] as int?,
       errorMessage: json['error_message'] as String?,
@@ -70,7 +70,7 @@ class QuotesModel {
     String? id,
     String? titulo,
     DateTime? dateUpload,
-    PdfUploadStatus? status,
+    QuoteStatus? status,
     int? materialsExtracted,
     String? errorMessage,
     String? r2Url,
@@ -89,11 +89,11 @@ class QuotesModel {
   }
 
   /// Getters para facilitar o uso na UI
-  bool get isPending => status == PdfUploadStatus.pending;
-  bool get isProcessing => status == PdfUploadStatus.processing;
-  bool get isCompleted => status == PdfUploadStatus.completed;
-  bool get isFailed => status == PdfUploadStatus.failed;
-  bool get isError => status == PdfUploadStatus.error;
+  bool get isPending => status == QuoteStatus.pending;
+  bool get isProcessing => status == QuoteStatus.processing;
+  bool get isCompleted => status == QuoteStatus.completed;
+  bool get isFailed => status == QuoteStatus.failed;
+  bool get isError => status == QuoteStatus.error;
   bool get hasError => errorMessage != null && errorMessage!.isNotEmpty;
   bool get hasMaterials =>
       materialsExtracted != null && materialsExtracted! > 0;
@@ -107,14 +107,14 @@ class QuotesModel {
   /// Status color para UI
   String get statusColor {
     switch (status) {
-      case PdfUploadStatus.pending:
+      case QuoteStatus.pending:
         return 'orange';
-      case PdfUploadStatus.processing:
+      case QuoteStatus.processing:
         return 'blue';
-      case PdfUploadStatus.completed:
+      case QuoteStatus.completed:
         return 'green';
-      case PdfUploadStatus.failed:
-      case PdfUploadStatus.error:
+      case QuoteStatus.failed:
+      case QuoteStatus.error:
         return 'red';
       default:
         return 'grey';
