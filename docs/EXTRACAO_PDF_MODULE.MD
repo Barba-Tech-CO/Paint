@@ -1,1260 +1,563 @@
-# MÓDULO DE EXTRAÇÃO DE PDF - EXTRACAO_PDF_MODULE
+# Módulo de Extração de PDF
 
-Este módulo gerencia o upload e extração de dados de materiais a partir de arquivos PDF, com armazenamento em **Cloudflare R2** e processamento automático de orçamentos e listas de materiais. O sistema suporta apenas arquivos com preços em **USD ($)** e todas as mensagens são em **inglês**.
+## Visão Geral
 
-## 🔒 SEGURANÇA E CONTROLE DE ACESSO
+O módulo de extração de PDF permite que usuários façam upload de arquivos PDF contendo catálogos de materiais de pintura, extraia informações dos materiais e as armazene no banco de dados para uso em estimativas de projetos.
 
-### Sistema de Autenticação e Autorização
+## Arquitetura
 
-- **Autenticação obrigatória** via Laravel Sanctum (Bearer Token)
-- **Middleware de segurança** específico para PDFs (`pdf.security`)
-- **Políticas de autorização** para controle granular de acesso
-- **Isolamento por usuário** garantindo que cada usuário veja apenas seus próprios arquivos
+### Componentes Principais
 
-### Camadas de Segurança Implementadas
+1. **QuoteStorageService** - Gerencia armazenamento de arquivos PDF (anteriormente PdfStorageService)
+2. **PdfExtractionService** - Extrai dados dos PDFs
+3. **QuoteExtractionController** - Endpoints da API para upload e gerenciamento
+4. **ProcessPdfExtractionJob** - Job assíncrono para processamento
+5. **ExtractedMaterial Model** - Modelo para materiais extraídos
 
-1. **Middleware `auth:sanctum`** - Autenticação obrigatória
-2. **Middleware `user.ownership`** - Garantia de ownership de dados
-3. **Middleware `pdf.security`** - Validação específica de segurança para PDFs
-4. **Políticas de autorização** - Controle fino de permissões por recurso
-5. **Global scopes** - Filtros automáticos por usuário em todos os modelos
-6. **Validação de FormRequest** - Garantia de que `user_id` seja sempre preenchido
+## Armazenamento de Arquivos
 
-### Garantias de Segurança
+### ⚠️ Configuração Atual: Armazenamento Local
 
-- ✅ **PDFs sempre associados a usuários** - Campo `user_id` obrigatório (NOT NULL)
-- ✅ **Isolamento automático** - Usuários só veem seus próprios arquivos
-- ✅ **Validação de ownership** - Verificação em todas as operações CRUD
-- ✅ **Logs de segurança** - Rastreamento de todas as operações críticas
-- ✅ **Prevenção de acesso não autorizado** - Bloqueio automático de tentativas de acesso
-- ✅ **Validação de recursos** - Verificação de propriedade antes de operações
+**Nota Importante**: O serviço Cloudflare R2 foi desabilitado devido a problemas de conectividade. O sistema agora utiliza armazenamento local.
 
-## 1. Modelos de Dados e Estrutura da Tabela
+#### Configuração de Armazenamento
 
-### Modelo PdfUpload (Upload de PDF)
-
-**Arquivo:** `app/PdfUpload.php`
-
-**Atributos do Model:**
-
-- `id` (integer, not null) - ID único do upload
-- `user_id` (integer, **NOT NULL**) - **ID do usuário proprietário (obrigatório)**
-- `original_name` (string, not null) - Nome original do arquivo
-- `display_name` (string, nullable) - Nome de exibição personalizado
-- `file_path` (string, not null) - **Chave R2 do arquivo** (formato: `pdfs/{Y}/{m}/{d}/{uuid}-{nome}.pdf`)
-- `r2_url` (string, nullable) - **URL de acesso R2** (temporária ou pública via CDN)
-- `file_hash` (string, not null, unique) - Hash único do arquivo
-- `status` (string, not null) - Status do processamento (pending, processing, completed, failed)
-- `materials_extracted` (integer, not null) - Número de materiais extraídos
-- `extraction_metadata` (array, nullable) - Metadados da extração
-- `error_message` (text, nullable) - Mensagem de erro se houver
-- `created_at` (timestamp, not null) - Data de upload
-- `updated_at` (timestamp, not null) - Data de atualização
-
-**Estrutura da Tabela `pdf_uploads`:**
-
-```sql
-CREATE TABLE pdf_uploads (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT NOT NULL, -- Campo obrigatório para segurança
-    original_name VARCHAR(255) NOT NULL,
-    display_name VARCHAR(255) NULL,
-    file_path VARCHAR(255) NOT NULL, -- Chave R2 do arquivo
-    r2_url VARCHAR(512) NULL, -- URL de acesso R2
-    file_hash VARCHAR(255) NOT NULL UNIQUE,
-    status VARCHAR(255) DEFAULT 'pending',
-    materials_extracted INT DEFAULT 0,
-    extraction_metadata JSON NULL,
-    error_message TEXT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    INDEX idx_user_id (user_id),
-    INDEX idx_status (status),
-    INDEX idx_created_at (created_at)
-);
+```php
+// app/Services/QuoteStorageService.php
+private const DISK = 'local'; // Alterado de 'r2' para 'local'
 ```
 
-### Modelo ExtractedMaterial (Material Extraído)
+#### Estrutura de Arquivos
 
-**Arquivo:** `app/ExtractedMaterial.php`
+Os PDFs são armazenados em:
 
-**Atributos do Model:**
+- **Localização**: `storage/app/public/quotes/YYYY/MM/DD/`
+- **Nomenclatura**: `{uuid}-{nome-sanitizado}.pdf`
+- **URLs de Acesso**: `https://paintpro.barbatech.company/storage/quotes/...`
 
-- `id` (integer, not null) - ID único do material
-- `pdf_upload_id` (integer, not null) - ID do upload de PDF
-- `user_id` (integer, **NOT NULL**) - **ID do usuário proprietário (obrigatório)**
-- `brand` (string, not null) - Marca do material
-- `description` (string, not null) - Descrição do material
-- `type` (string, not null) - Tipo do material (padrão: 'liquid')
-- `unit` (string, not null) - Unidade de medida
-- `unit_price` (decimal, not null) - Preço unitário
-- `finish` (string, nullable) - Acabamento do material
-- `quality_grade` (string, nullable) - Grau de qualidade
-- `category` (string, nullable) - Categoria do material
-- `specifications` (array, nullable) - Especificações técnicas
-- `line_number` (integer, not null) - Número da linha no documento
-- `created_at` (timestamp, not null) - Data de criação
-- `updated_at` (timestamp, not null) - Data de atualização
+### Funcionalidades do QuoteStorageService
 
-**Estrutura da Tabela `extracted_materials`:**
-
-```sql
-CREATE TABLE extracted_materials (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    pdf_upload_id BIGINT NOT NULL,
-    user_id BIGINT NOT NULL, -- Campo obrigatório para segurança
-    brand VARCHAR(255) NOT NULL,
-    description VARCHAR(255) NOT NULL,
-    type VARCHAR(255) DEFAULT 'liquid',
-    unit VARCHAR(255) NOT NULL,
-    unit_price DECIMAL(10,2) NOT NULL,
-    finish VARCHAR(255) NULL,
-    quality_grade VARCHAR(255) NULL,
-    category VARCHAR(255) NULL,
-    specifications JSON NULL,
-    line_number INTEGER NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    FOREIGN KEY (pdf_upload_id) REFERENCES pdf_uploads(id) ON DELETE CASCADE,
-    INDEX idx_pdf_upload (pdf_upload_id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_brand (brand),
-    INDEX idx_category (category)
-);
-```
-
-## 2. Políticas de Autorização e Segurança
-
-### 2.1 Políticas Implementadas
-
-**PdfUploadPolicy** - Controla acesso aos PDFs:
-
-- `view` - Usuário só pode ver PDFs que pertencem a ele
-- `create` - Usuário autenticado pode criar PDFs
-- `update` - Usuário só pode atualizar PDFs que pertencem a ele
-- `delete` - Usuário só pode excluir PDFs que pertencem a ele
-
-**ExtractedMaterialPolicy** - Controla acesso aos materiais:
-
-- `view` - Usuário só pode ver materiais que pertencem a ele
-- `create` - Usuário autenticado pode criar materiais
-- `update` - Usuário só pode atualizar materiais que pertencem a ele
-- `delete` - Usuário só pode excluir materiais que pertencem a ele
-
-### 2.2 Middleware de Segurança
-
-**`pdf.security`** - Validação específica para operações de PDF:
-
-- Verificação de autenticação obrigatória
-- Logs de segurança para operações críticas
-- Validação de acesso a recursos antes de operações
-- Prevenção de tentativas de acesso não autorizado
-
-**`user.ownership`** - Garantia de ownership de dados:
-
-- Auto-merge automático de `user_id` em todas as requisições
-- Filtros automáticos por usuário em todas as consultas
-
-### 2.3 Validações de Segurança
-
-- **Campo `user_id` obrigatório** em todos os FormRequests
-- **Validação automática** de ownership em todas as operações
-- **Global scopes** nos modelos garantindo isolamento por usuário
-- **Verificação de propriedade** antes de operações de modificação
-
-## 3. Endpoints da API
-
-### 3.1 Upload de PDF
-
-**Título:** Fazer Upload de Arquivo PDF  
-**Descrição:** Faz upload de um arquivo PDF para extração de materiais
-
-**URL e Método HTTP:** `POST /api/materials/upload`  
-**Parâmetros da Rota:** Nenhum
-
-### 3.2 Listar Uploads
-
-**Título:** Listar Uploads de PDF  
-**Descrição:** Retorna lista paginada de uploads de PDF com status de processamento
-
-**URL e Método HTTP:** `GET /api/materials/uploads`  
-**Parâmetros da Rota:** Nenhum  
-**Query Parameters:**
-
-- `status` (string, opcional) - Filtrar por status (pending, processing, completed, failed)
-- `limit` (integer, opcional) - Número de itens por página (padrão: 10)
-- `page` (integer, opcional) - Número da página (padrão: 1)
-
-**Segurança:** Apenas retorna PDFs do usuário autenticado
-
-### 3.3 Verificar Status
-
-**Título:** Verificar Status do Processamento  
-**Descrição:** Retorna o status e resultados do processamento de um PDF específico
-
-**URL e Método HTTP:** `GET /api/materials/status/{pdfUpload}`  
-**Parâmetros da Rota:**
-
-- `pdfUpload` (integer, obrigatório) - ID do upload de PDF
-
-### 3.4 Atualizar Upload
-
-**Título:** Atualizar Dados do Upload  
-**Descrição:** Atualiza informações de um upload de PDF (como nome de exibição)
-
-**URL e Método HTTP:** `PUT /api/materials/update/{pdfUpload}`  
-**Parâmetros da Rota:**
-
-- `pdfUpload` (integer, obrigatório) - ID do upload de PDF
-
-### 3.5 Excluir Upload
-
-**Título:** Excluir Upload de PDF  
-**Descrição:** Remove um upload de PDF e todos os materiais extraídos
-
-**URL e Método HTTP:** `DELETE /api/materials/delete/{pdfUpload}`  
-**Parâmetros da Rota:**
-
-- `pdfUpload` (integer, obrigatório) - ID do upload de PDF
-
-### 3.6 Listar Materiais Extraídos
-
-**Título:** Listar Materiais Extraídos  
-**Descrição:** Retorna lista paginada e filtrada de todos os materiais extraídos dos PDFs
-
-**URL e Método HTTP:** `GET /api/materials/extracted`  
-**Parâmetros da Rota:** Nenhum  
-**Query Parameters:**
-
-- `brand` (string, opcional) - Filtrar por marca específica (dropdown)
-- `ambient` (string, opcional) - Filtrar por ambiente/categoria (dropdown: Interior, Exterior, etc.)
-- `finish` (string, opcional) - Filtrar por acabamento (dropdown: Flat, Satin, Semi-Gloss, Gloss)
-- `quality` (string|array, opcional) - Filtrar por qualidade (chips selecionáveis: Economic, Standard, High, Premium)
-- `search` (string, opcional) - Busca textual em descrição e marca (campo de busca no topo)
-- `sort_by` (string, opcional) - Campo para ordenação (created_at, brand, finish, unit_price, description, line_number)
-- `sort_order` (string, opcional) - Ordem (asc, desc) - padrão: desc
-- `page` (integer, opcional) - Número da página (padrão: 1, fixo 20 itens por página)
-
-### 3.7 Obter Material Específico
-
-**Título:** Obter Detalhes de Material Extraído  
-**Descrição:** Retorna detalhes completos de um material extraído específico
-
-**URL e Método HTTP:** `GET /api/materials/extracted/{material}`  
-**Parâmetros da Rota:**
-
-- `material` (integer, obrigatório) - ID do material extraído
-
-### 3.8 Obter Filtros Disponíveis
-
-**Título:** Obter Opções de Filtros  
-**Descrição:** Retorna todos os valores únicos disponíveis para filtros (marcas, tipos, acabamentos, etc.)
-
-**URL e Método HTTP:** `GET /api/materials/filters`  
-**Parâmetros da Rota:** Nenhum
-
-## 4. Requisição Esperada
-
-### 4.1 Upload de PDF
-
-**Headers:**
-
-```
-Accept: application/json
-Content-Type: multipart/form-data
-Authorization: Bearer {auth_token}
-```
-
-**Corpo da Requisição:**
-
-```
-pdf: [arquivo PDF] // Arquivo PDF (obrigatório, máximo 25MB, apenas .pdf)
-```
-
-**Validações:**
-
-- Arquivo obrigatório
-- Apenas tipo MIME `application/pdf`
-- Tamanho máximo: 25MB (25.600 KB)
-- Apenas preços em USD ($) são aceitos
-- Rejeita documentos com moedas não-USD (R$, €, £, etc.)
-- **Campo `user_id` obrigatório** (preenchido automaticamente)
-- **Autenticação obrigatória** via Bearer Token
-- **Validação de ownership** do usuário
-
-### 3.2 Listar Uploads
-
-**Headers:**
-
-```
-Accept: application/json
-Authorization: Bearer {auth_token}
-```
-
-**Corpo da Requisição:** Nenhum
-
-### 3.3 Verificar Status
-
-**Headers:**
-
-```
-Accept: application/json
-Authorization: Bearer {auth_token}
-```
-
-**Corpo da Requisição:** Nenhum
-
-### 3.4 Atualizar Upload
-
-**Headers:**
-
-```
-Accept: application/json
-Content-Type: application/json
-Authorization: Bearer {auth_token}
-```
-
-**Corpo da Requisição:**
-
-```json
+```php
+class QuoteStorageService
 {
-  "display_name": "Orçamento Atualizado - Casa Maria Silva" // Nome de exibição (obrigatório)
+    // Armazenar PDF
+    public function storeUploadedQuote(UploadedFile $file, ?array $context = []): array
+
+    // Verificar existência
+    public function exists(string $key): bool
+
+    // Deletar arquivo
+    public function delete(string $key): void
+
+    // Gerar URL de acesso
+    public function temporaryUrl(string $key, DateTimeInterface $expires): string
 }
 ```
 
-### 3.5 Excluir Upload
+## Fluxo de Upload
 
-**Headers:**
+### 1. Upload do Arquivo
 
-```
-Accept: application/json
-Authorization: Bearer {auth_token}
-```
+```http
+POST /api/materials/upload
+Content-Type: multipart/form-data
 
-**Corpo da Requisição:** Nenhum
-
-### 3.6 Listar Materiais Extraídos
-
-**Headers:**
-
-```
-Accept: application/json
-Authorization: Bearer {auth_token}
+{
+    "quote": [arquivo PDF]
+}
 ```
 
-**Corpo da Requisição:** Nenhum
+**Nota**: O parâmetro é `quote`, não `pdf` como documentado anteriormente.
 
-**Exemplos de Uso dos Filtros:**
+### 2. Processamento
 
-**1. Filtrar por marca específica (dropdown):**
+1. **Validação**: Verificação de tipo de arquivo, tamanho e formato
+2. **Detecção de Duplicatas**: Check por hash MD5 do arquivo
+3. **Armazenamento Local**: Salvamento em `storage/app/public/quotes/`
+4. **Registro no Banco**: Criação de entrada na tabela `pdf_uploads`
+5. **Job Assíncrono**: Dispatch do `ProcessPdfExtractionJob`
 
-```
-GET /api/materials/extracted?brand=Benjamin Moore
-# Encontra apenas materiais da marca "Benjamin Moore"
-```
-
-**2. Filtrar por ambiente/categoria (dropdown):**
-
-```
-GET /api/materials/extracted?ambient=Exterior
-# Encontra apenas materiais para uso exterior
-```
-
-**3. Filtrar por acabamento (dropdown):**
-
-```
-GET /api/materials/extracted?finish=Flat
-# Encontra apenas materiais com acabamento "Flat"
-```
-
-**4. Filtrar por qualidade única (chip selecionado):**
-
-```
-GET /api/materials/extracted?quality=Premium
-# Encontra apenas materiais de qualidade "Premium"
-```
-
-**5. Filtrar por múltiplas qualidades (múltiplos chips):**
-
-```
-GET /api/materials/extracted?quality[]=Premium&quality[]=High
-# Encontra materiais de qualidade "Premium" OU "High"
-```
-
-**6. Busca textual (campo search no topo):**
-
-```
-GET /api/materials/extracted?search=interior paint
-# Busca "interior paint" na descrição e marca
-```
-
-**7. Múltiplos filtros combinados:**
-
-```
-GET /api/materials/extracted?brand=Benjamin Moore&ambient=Interior&finish=Satin&quality[]=Premium&quality[]=High&search=paint&sort_by=unit_price&sort_order=asc&page=1
-```
-
-**9. Navegação entre páginas:**
-
-```
-# Primeira página (padrão)
-GET /api/materials/extracted?page=1
-
-# Segunda página
-GET /api/materials/extracted?page=2
-
-# Terceira página com filtros
-GET /api/materials/extracted?brand=Benjamin Moore&finish=Satin&page=3
-```
-
-**8. Ordenação personalizada:**
-
-```
-# Ordenar por preço (menor para maior)
-GET /api/materials/extracted?sort_by=unit_price&sort_order=asc
-
-# Ordenar por marca (A-Z)
-GET /api/materials/extracted?sort_by=brand&sort_order=asc
-
-# Ordenar por acabamento (A-Z)
-GET /api/materials/extracted?sort_by=finish&sort_order=asc
-```
-
-### 3.7 Obter Material Específico
-
-**Headers:**
-
-```
-Accept: application/json
-Authorization: Bearer {auth_token}
-```
-
-**Corpo da Requisição:** Nenhum
-
-### 3.8 Obter Filtros Disponíveis
-
-**Headers:**
-
-```
-Accept: application/json
-Authorization: Bearer {auth_token}
-```
-
-**Corpo da Requisição:** Nenhum
-
-## 4. Respostas Esperadas
-
-### 4.1 Upload de PDF
-
-**Status 201 (Created):**
+### 3. Resposta
 
 ```json
 {
   "success": true,
   "data": {
     "upload": {
-      "id": 15,
+      "id": 123,
       "user_id": 1,
-      "original_name": "quote-materials.pdf",
-      "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
-      "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
-      "file_hash": "a1b2c3d4e5f6...",
+      "original_name": "catalogo.pdf",
+      "display_name": null,
+      "file_path": "quotes/2025/08/29/uuid-catalogo.pdf",
+      "r2_url": "https://paintpro.barbatech.company/storage/quotes/2025/08/29/uuid-catalogo.pdf",
+      "file_hash": "abc123...",
       "status": "pending",
       "materials_extracted": 0,
-      "created_at": "2025-08-27T16:30:00Z",
-      "updated_at": "2025-08-27T16:30:00Z"
-    },
-    "message": "PDF uploaded successfully. Processing started.",
-    "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
-    "size": 1048576
-  }
-}
-```
-
-**Status 422 (Validation Error):**
-
-```json
-{
-  "message": "The PDF field is required.",
-  "errors": {
-    "pdf": ["The PDF field is required."]
-  }
-}
-```
-
-**Status 422 (File Size Error):**
-
-```json
-{
-  "message": "The PDF must not exceed 25MB.",
-  "errors": {
-    "pdf": ["The PDF must not exceed 25MB."]
-  }
-}
-```
-
-**Status 422 (Invalid File Type):**
-
-```json
-{
-  "message": "The PDF must be a valid PDF file.",
-  "errors": {
-    "pdf": ["The PDF must be a valid PDF file."]
-  }
-}
-```
-
-**Status 422 (Invalid Currency):**
-
-```json
-{
-  "success": false,
-  "message": "Upload failed: Invalid currency detected: Brazilian Real (R$). Only USD ($) is supported for material pricing."
-}
-```
-
-**Status 200 (Duplicate File - Already Processed):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "upload": {
-      "id": 12,
-      "original_name": "quote-materials.pdf",
-      "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
-      "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
-      "status": "completed",
-      "materials_extracted": 25
-    },
-    "message": "File already uploaded and processed"
-  }
-}
-```
-
-### 4.2 Listar Uploads
-
-**Status 200 (Success):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "uploads": [
-      {
-        "id": 15,
-        "original_name": "quote-materials.pdf",
-        "display_name": "Quote Materials - Project Alpha",
-        "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
-        "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
-        "status": "completed",
-        "materials_extracted": 25,
-        "created_at": "2025-08-27T16:30:00Z",
-        "updated_at": "2025-08-27T16:45:00Z"
-      },
-      {
-        "id": 14,
-        "original_name": "paint-list.pdf",
-        "display_name": "Premium Paint List",
-        "file_path": "pdfs/2025/08/27/uuid-paint-list.pdf",
-        "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-paint-list.pdf",
-        "status": "processing",
-        "materials_extracted": 0,
-        "created_at": "2025-08-27T15:15:00Z",
-        "updated_at": "2025-08-27T15:20:00Z"
-      }
-    ],
-    "pagination": {
-      "total": 45,
-      "per_page": 15,
-      "current_page": 1,
-      "last_page": 3
-    }
-  }
-}
-```
-
-### 4.3 Verificar Status
-
-**Status 200 (Success) - Processamento Concluído:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "upload": {
-      "id": 15,
-      "original_name": "quote-materials.pdf",
-      "display_name": "Quote Materials - Project Alpha",
-      "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
-      "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
-      "status": "completed",
-      "materials_extracted": 25,
+      "extraction_metadata": null,
       "error_message": null,
-      "r2_key": "pdfs/2025/08/27/uuid-quote-materials.pdf",
-      "extraction_metadata": {
-        "brand": "Sherwin-Williams",
-        "total_materials": 25,
-        "extraction_timestamp": "2025-08-27T16:45:00Z"
-      },
-      "created_at": "2025-08-27T16:30:00Z",
-      "updated_at": "2025-08-27T16:45:00Z"
-    }
-  }
-}
-```
-
-**Status 200 (Success) - Processamento em Andamento:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "upload": {
-      "id": 14,
-      "original_name": "paint-list.pdf",
-      "display_name": "Premium Paint List",
-      "file_path": "pdfs/2025/08/27/uuid-paint-list.pdf",
-      "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-paint-list.pdf",
-      "status": "processing",
-      "materials_extracted": 0,
-      "error_message": null,
-      "r2_key": "pdfs/2025/08/27/uuid-paint-list.pdf",
-      "created_at": "2025-08-27T15:15:00Z",
-      "updated_at": "2025-08-27T16:50:00Z"
-    }
-  }
-}
-```
-
-**Status 200 (Success) - Processamento com Erro:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "upload": {
-      "id": 13,
-      "original_name": "corrupted-file.pdf",
-      "display_name": "Problematic File",
-      "file_path": "pdfs/2025/08/27/uuid-corrupted-file.pdf",
-      "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-corrupted-file.pdf",
-      "status": "error",
-      "materials_extracted": 0,
-      "error_message": "Invalid currency detected: Brazilian Real (R$). Only USD ($) is supported for material pricing.",
-      "r2_key": "pdfs/2025/08/27/uuid-corrupted-file.pdf",
-      "created_at": "2025-08-27T14:00:00Z",
-      "updated_at": "2025-08-27T14:05:00Z"
-    }
-  }
-}
-```
-
-**Status 404 (Not Found):**
-
-```json
-{
-  "success": false,
-  "message": "Failed to retrieve status: No query results for model [App\\PdfUpload]."
-}
-```
-
-### 4.4 Atualizar Upload
-
-**Status 200 (Success):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "upload": {
-      "id": 15,
-      "original_name": "quote-materials.pdf",
-      "display_name": "Updated Quote - Project Alpha",
-      "file_path": "pdfs/2025/08/27/uuid-quote-materials.pdf",
-      "r2_url": "https://cdn.example.com/pdfs/2025/08/27/uuid-quote-materials.pdf",
-      "status": "completed",
-      "updated_at": "2025-08-27T17:00:00Z"
+      "created_at": "2025-01-20T10:00:00.000000Z",
+      "updated_at": "2025-01-20T10:00:00.000000Z"
     },
-    "message": "PDF display name updated successfully"
+    "message": "Quote uploaded successfully. Processing started.",
+    "url": "https://paintpro.barbatech.company/storage/quotes/2025/08/29/uuid-catalogo.pdf",
+    "size": 1024000
   }
 }
 ```
 
-**Status 422 (Validation Error):**
+## Extração de Materiais
 
-```json
+### PdfExtractionService
+
+O serviço extrai informações estruturadas dos PDFs:
+
+```php
+class PdfExtractionService
 {
-  "message": "The display name field is required.",
-  "errors": {
-    "display_name": ["The display name field is required."]
-  }
-}
-```
-
-**Status 404 (Not Found):**
-
-```json
-{
-  "success": false,
-  "message": "Failed to update PDF: No query results for model [App\\PdfUpload]."
-}
-```
-
-### 4.5 Excluir Upload
-
-**Status 200 (Success):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "message": "PDF and all related materials deleted successfully"
-  }
-}
-```
-
-**Status 404 (Not Found):**
-
-```json
-{
-  "success": false,
-  "message": "Failed to delete PDF: No query results for model [App\\PdfUpload]."
-}
-```
-
-**Status 422 (Server Error):**
-
-```json
-{
-  "success": false,
-  "message": "Failed to delete PDF: [error details]"
-}
-```
-
-### 4.6 Listar Materiais Extraídos
-
-**Status 200 (Success):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "materials": [
-      {
-        "id": 15,
-        "pdf_upload_id": 3,
-        "user_id": 1,
-        "brand": "Sherwin-Williams",
-        "description": "ProClassic Interior Acrylic Latex Enamel",
-        "type": "liquid",
-        "unit": "gallon",
-        "unit_price": 52.99,
-        "finish": "satin",
-        "quality_grade": "premium",
-        "category": "interior-paint",
-        "specifications": {
-          "coverage": "350-400 sq ft per gallon",
-          "dry_time": "2-4 hours",
-          "voc_content": "<50 g/L"
-        },
-        "line_number": 3,
-        "created_at": "2025-08-27T16:45:00Z",
-        "updated_at": "2025-08-27T16:45:00Z",
-        "pdf_upload": {
-          "id": 3,
-          "original_name": "sherwin-quote.pdf",
-          "display_name": "Sherwin Williams Quote - Living Room",
-          "created_at": "2025-08-27T16:30:00Z"
-        }
-      },
-      {
-        "id": 16,
-        "pdf_upload_id": 3,
-        "user_id": 1,
-        "brand": "Benjamin Moore",
-        "description": "Advance Waterborne Interior Alkyd Paint",
-        "type": "liquid",
-        "unit": "quart",
-        "unit_price": 28.99,
-        "finish": "semi-gloss",
-        "quality_grade": "professional",
-        "category": "trim-paint",
-        "specifications": {
-          "coverage": "75-100 sq ft per quart",
-          "dry_time": "1-2 hours",
-          "durability": "high"
-        },
-        "line_number": 7,
-        "created_at": "2025-08-27T16:45:00Z",
-        "updated_at": "2025-08-27T16:45:00Z",
-        "pdf_upload": {
-          "id": 3,
-          "original_name": "sherwin-quote.pdf",
-          "display_name": "Sherwin Williams Quote - Living Room",
-          "created_at": "2025-08-27T16:30:00Z"
-        }
-      }
-    ],
-    "pagination": {
-      "total": 125,
-      "per_page": 20,
-      "current_page": 1,
-      "last_page": 7,
-      "from": 1,
-      "to": 20
-    },
-    "filters_applied": {
-      "brand": "Benjamin Moore",
-      "ambient": "Interior",
-      "finish": "Satin",
-      "quality": ["Premium"]
+    public function extractMaterials(string $filePath): array
+    {
+        // 1. Validação de moeda (apenas USD aceita)
+        // 2. Extração de texto do PDF
+        // 3. Parsing de materiais com regex
+        // 4. Tradução de termos portugueses
+        // 5. Estruturação dos dados
     }
-  }
 }
 ```
 
-**Status 422 (Error):**
+### Campos Extraídos
 
-```json
+- **Descrição**: Nome/descrição do material
+- **Marca**: Fabricante do produto
+- **Tipo**: Tipo do material (padrão: 'liquid')
+- **Acabamento**: Tipo de acabamento (acetinado, fosco, etc.)
+- **Categoria**: Ambiente de uso (interior, exterior)
+- **Preço Unitário**: Valor em USD
+- **Unidade**: Unidade de medida (gallon, quart)
+- **Nota de Qualidade**: A-F baseada em características
+- **Especificações**: Dados adicionais em formato JSON
+- **Linha**: Número da linha no PDF original
+
+## Validações
+
+### Upload
+
+- **Tipo**: Apenas PDFs (`application/pdf`)
+- **Tamanho**: Máximo configurável (`UPLOAD_MAX_SIZE`)
+- **Moeda**: Apenas catálogos em USD
+- **Duplicatas**: Prevenção via hash MD5
+
+### Extração
+
+- **Moeda**: Rejeita PDFs com BRL, EUR, GBP
+- **Formato**: Valida estrutura esperada do catálogo
+- **Dados**: Garante campos obrigatórios
+
+## Endpoints da API
+
+### Upload
+
+```http
+POST /api/materials/upload
+Authorization: Bearer {token}
+Content-Type: multipart/form-data
+```
+
+### Listagem de Uploads
+
+```http
+GET /api/materials/uploads
+Authorization: Bearer {token}
+```
+
+### Status do Upload
+
+```http
+GET /api/materials/status/{pdfUpload}
+Authorization: Bearer {token}
+```
+
+### Atualizar Nome de Exibição
+
+```http
+PUT /api/materials/update/{pdfUpload}
+Authorization: Bearer {token}
+Content-Type: application/json
+
 {
-  "success": false,
-  "message": "Failed to retrieve materials: [error details]"
+    "display_name": "Novo Nome"
 }
 ```
 
-### 4.7 Obter Material Específico
+### Deletar Upload
 
-**Status 200 (Success):**
+```http
+DELETE /api/materials/delete/{pdfUpload}
+Authorization: Bearer {token}
+```
 
-```json
+### Listar Materiais Extraídos
+
+```http
+GET /api/materials/extracted
+Authorization: Bearer {token}
+?brand=marca&ambient=categoria&finish=acabamento&quality[]=A&search=termo
+```
+
+### Obter Material Específico
+
+```http
+GET /api/materials/extracted/{material}
+Authorization: Bearer {token}
+```
+
+### Filtros Disponíveis
+
+```http
+GET /api/materials/filters
+Authorization: Bearer {token}
+```
+
+## Modelos de Dados
+
+**Nota**: Todos os modelos possuem um campo `id` (chave primária auto-increment) e campos `created_at` e `updated_at` (timestamps) que são gerenciados automaticamente pelo Laravel. Estes campos não precisam estar no array `$fillable`.
+
+### PdfUpload
+
+```php
+class PdfUpload extends Model
 {
-  "success": true,
-  "data": {
-    "material": {
-      "id": 15,
-      "pdf_upload_id": 3,
-      "user_id": 1,
-      "brand": "Sherwin-Williams",
-      "description": "ProClassic Interior Acrylic Latex Enamel",
-      "type": "liquid",
-      "unit": "gallon",
-      "unit_price": 52.99,
-      "finish": "satin",
-      "quality_grade": "premium",
-      "category": "interior-paint",
-      "specifications": {
-        "coverage": "350-400 sq ft per gallon",
-        "dry_time": "2-4 hours",
-        "voc_content": "<50 g/L",
-        "color_family": "white",
-        "sheen_level": "25-35%"
-      },
-      "line_number": 3,
-      "created_at": "2025-08-27T16:45:00Z",
-      "updated_at": "2025-08-27T16:45:00Z",
-      "pdf_upload": {
-        "id": 3,
-        "original_name": "sherwin-quote.pdf",
-        "display_name": "Sherwin Williams Quote - Living Room",
-        "created_at": "2025-08-27T16:30:00Z"
-      }
-    }
-  }
+    protected $fillable = [
+        'user_id',
+        'original_name',
+        'display_name',
+        'file_path',        // Chave de armazenamento local
+        'r2_url',          // URL de acesso (agora local)
+        'file_hash',
+        'status',          // pending, processing, completed, failed
+        'materials_extracted',
+        'extraction_metadata', // Metadados da extração em formato JSON
+        'error_message',
+        'created_at',          // Timestamp de criação
+        'updated_at'           // Timestamp de atualização
+    ];
+
+    // Campos automáticos do Laravel (não fillable):
+    // - id: Chave primária auto-increment
+    // - timestamps: created_at, updated_at
 }
 ```
 
-**Status 404 (Not Found):**
+### ExtractedMaterial
 
-```json
+```php
+class ExtractedMaterial extends Model
 {
-  "success": false,
-  "message": "Failed to retrieve material: No query results for model [App\\ExtractedMaterial]."
+    protected $fillable = [
+        'user_id',
+        'pdf_upload_id',
+        'brand',
+        'description',
+        'type',
+        'unit',
+        'unit_price',
+        'finish',
+        'quality_grade',
+        'category',
+        'specifications',
+        'line_number',
+        'created_at',          // Timestamp de criação
+        'updated_at'           // Timestamp de atualização
+    ];
+
+    // Campos automáticos do Laravel (não fillable):
+    // - id: Chave primária auto-increment
+    // - timestamps: created_at, updated_at
 }
 ```
 
-### 4.8 Obter Filtros Disponíveis
+## Configuração de Ambiente
 
-**Status 200 (Success):**
+### Variáveis de Ambiente (.env)
 
-```json
+#### Produção
+
+```bash
+# Application Configuration
+APP_URL=https://your-production-domain.com
+
+# Upload Configuration
+UPLOAD_MAX_SIZE=25M
+
+# R2 Storage (DESABILITADO - mantido para compatibilidade)
+# R2_ACCESS_KEY_ID=your_r2_access_key
+# R2_SECRET_ACCESS_KEY=your_r2_secret_key
+# R2_ACCOUNT_ID=your_r2_account_id
+# R2_BUCKET=your-production-bucket
+# R2_ENDPOINT=https://your_account_id.r2.cloudflarestorage.com
+# R2_REGION=auto
+# R2_PUBLIC_BASE_URL=https://your-production-cdn.com
+```
+
+#### Desenvolvimento Local
+
+```bash
+# Application Configuration
+APP_URL=http://localhost:8000
+
+# Upload Configuration
+UPLOAD_MAX_SIZE=25M
+
+# R2 Storage (DESABILITADO)
+# Mantém configurações comentadas para desenvolvimento local
+```
+
+### Filesystem Configuration
+
+```php
+// config/filesystems.php
+'local' => [
+    'driver' => 'local',
+    'root' => storage_path('app/public'),
+    'url' => env('APP_URL').'/storage',
+    'visibility' => 'public',
+    'serve' => true,
+    'throw' => false,
+],
+
+// R2 configuration (commented out - production ready)
+'r2' => [
+    'driver' => 's3',
+    'key' => env('R2_ACCESS_KEY_ID', 'testing'),
+    'secret' => env('R2_SECRET_ACCESS_KEY', 'testing'),
+    'region' => env('AWS_DEFAULT_REGION', 'auto'),
+    'bucket' => env('R2_BUCKET', 'test-bucket'),
+    'endpoint' => env('R2_ENDPOINT', 'http://localhost'),
+    'use_path_style_endpoint' => true,
+    'throw' => true,
+],
+```
+
+## Jobs e Queues
+
+### ProcessPdfExtractionJob
+
+```php
+class ProcessPdfExtractionJob implements ShouldQueue
 {
-  "success": true,
-  "data": {
-    "filters": {
-      "brands": ["Benjamin Moore", "Sherwin-Williams"],
-      "ambients": ["Interior", "Exterior"],
-      "finishes": ["Flat", "Satin", "Semi-Gloss", "Gloss"],
-      "qualities": ["Economic", "Standard", "High", "Premium"]
+    public function handle(): void
+    {
+        // 1. Extrair materiais do PDF
+        // 2. Salvar no banco de dados
+        // 3. Atualizar status do upload
+        // 4. Tratar erros e retry
     }
-  }
 }
 ```
 
-**Status 422 (Error):**
+### Configuração
 
-```json
-{
-  "success": false,
-  "message": "Failed to retrieve filters: [error details]"
+- **Queue**: `default`
+- **Retry**: 3 tentativas
+- **Timeout**: 300 segundos
+
+## Segurança
+
+### Autenticação
+
+- Todos endpoints requerem autenticação Bearer token
+- Middleware `auth:sanctum` aplicado
+
+### Autorização
+
+- Usuários só acessam seus próprios uploads
+- Policies aplicadas para `PdfUpload` e `ExtractedMaterial`
+- Validação manual de propriedade do usuário implementada
+
+### Validação de Arquivos
+
+- Tipo MIME verificado
+- Tamanho limitado
+- Conteúdo validado antes da extração
+
+## Tratamento de Erros
+
+### Códigos de Status
+
+- **200**: Sucesso
+- **201**: Upload criado com sucesso
+- **400**: Dados inválidos
+- **401**: Não autenticado
+- **403**: Sem permissão
+- **404**: Recurso não encontrado
+- **422**: Falha na validação
+- **500**: Erro interno
+
+### Logs
+
+Todos os eventos são logados em:
+
+- Upload de arquivos
+- Processamento de extração
+- Erros de validação
+- Falhas de armazenamento
+
+## Testes
+
+### Unit Tests
+
+- `QuoteStorageServiceTest`: Testa funcionalidades de armazenamento local
+- `PdfExtractionServiceTest`: Testa extração e validação
+
+### Feature Tests
+
+- `PdfUploadTest`: Testa endpoints de upload
+- `MaterialsApiTest`: Testa API completa de materiais
+
+### Executar Testes
+
+```bash
+php artisan test --filter="Pdf"
+```
+
+## Migração do R2 para Local Storage
+
+### Alterações Realizadas
+
+1. **QuoteStorageService**:
+
+   - Disk alterado de 'r2' para 'local'
+   - Métodos R2-específicos comentados
+   - URLs simplificadas para storage local
+
+2. **Controller**:
+
+   - Lógica dual de armazenamento removida
+   - Resposta atualizada para URLs locais
+
+3. **Tests**:
+   - Storage::fake('r2') alterado para 'local'
+   - Assertivas atualizadas para URLs locais
+
+### Reativação do R2 (Futuro)
+
+Para reativar o R2:
+
+1. Descomentar configurações em `config/filesystems.php`
+2. Reverter `DISK = 'local'` para `DISK = 'r2'` em `QuoteStorageService`
+3. Descomentar métodos R2-específicos
+4. Atualizar testes para usar R2 novamente
+5. Configurar variáveis de ambiente R2
+
+## Performance
+
+### Otimizações
+
+- Upload assíncrono com jobs
+- Prevenção de duplicatas por hash
+- Caching de filtros de materiais
+- Paginação em listagens
+
+### Monitoramento
+
+- Logs detalhados de operações
+- Métricas de tempo de processamento
+- Tracking de erros e falhas
+
+## Considerações de Produção
+
+### Requisitos de Infraestrutura
+
+1. **Armazenamento**:
+
+   - Espaço em disco suficiente para PDFs
+   - Backup regular dos arquivos em `storage/app/public/quotes/`
+   - Monitoramento de uso de disco
+
+2. **Web Server**:
+
+   - Configuração do symbolic link: `php artisan storage:link`
+   - Permissions corretas para `storage/` e `public/storage/`
+   - HTTPS obrigatório para segurança
+
+3. **Performance**:
+   - CDN recomendado para servir arquivos estáticos
+   - Cache de headers apropriado
+   - Compressão de arquivos
+
+### Configuração de Segurança
+
+```nginx
+# Nginx - Servir arquivos PDF com headers de segurança
+location /storage/quotes/ {
+    add_header X-Content-Type-Options nosniff;
+    add_header X-Frame-Options DENY;
+    add_header X-XSS-Protection "1; mode=block";
+    expires 1y;
+    access_log off;
 }
 ```
 
-## 5. Configuração do Cloudflare R2
+### Deploy Checklist
 
-### 5.1 Variáveis de Ambiente
+1. **Configuração Inicial**:
 
-Adicione ao `.env`:
+   ```bash
+   # Criar symbolic link para storage
+   php artisan storage:link
 
-```env
-# Cloudflare R2 Storage Configuration
-R2_ACCESS_KEY_ID=your_r2_access_key_id
-R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
-R2_ACCOUNT_ID=your_cloudflare_account_id
-R2_BUCKET=your_r2_bucket_name
-R2_ENDPOINT=https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
-R2_REGION=auto
-R2_PUBLIC_BASE_URL=https://your-custom-domain.com
-```
+   # Definir permissões corretas
+   chmod -R 775 storage/
+   chmod -R 775 public/storage/
 
-### 5.2 Estrutura de Armazenamento
+   # Verificar APP_URL no .env
+   APP_URL=https://your-production-domain.com
+   ```
 
-**Formato da Chave R2:**
+2. **Monitoramento**:
 
-```
-pdfs/{year}/{month}/{day}/{uuid}-{sanitized-filename}.pdf
-```
+   - Configurar alertas de espaço em disco
+   - Monitorar logs de upload e processamento
+   - Backup automatizado da pasta `storage/app/public/quotes/`
 
-**Exemplo:**
+3. **Testes Pós-Deploy**:
 
-```
-pdfs/2025/08/27/03aa1e55-fcc2-47e4-be98-5346dc76ba05-quote-materials.pdf
-```
+   ```bash
+   # Testar upload de PDF
+   curl -X POST https://paintpro.barbatech.company/api/materials/upload \
+     -H "Authorization: Bearer {token}" \
+     -F "quote=@test.pdf"
 
-### 5.3 URLs de Acesso
+   # Verificar acesso aos arquivos
+   curl -I https://paintpro.barbatech.company/storage/quotes/2025/08/29/test-file.pdf
+   ```
 
-- **URL Temporária (Privada)**: Válida por 15 minutos para buckets privados
-- **URL Pública (CDN)**: Via domínio personalizado quando `R2_PUBLIC_BASE_URL` configurado
+## Limitações Atuais
 
-### 5.4 Funcionalidades do Sistema
+1. **Armazenamento**: Limitado ao servidor local (sem CDN nativo)
+2. **Moeda**: Apenas USD suportado
+3. **Formato**: Dependente de estrutura específica do PDF
+4. **Idioma**: Otimizado para inglês/português
+5. **Escalabilidade**: Arquivos armazenados no mesmo servidor da aplicação
 
-- ✅ **Armazenamento Duplo**: R2 (permanente) + Local (temporário para processamento)
-- ✅ **Detecção de Duplicatas**: Baseada em hash MD5 do arquivo
-- ✅ **Validação de Moeda**: Apenas USD aceito, rejeita R$, €, £, etc.
-- ✅ **Mensagens em Inglês**: Logs, validações, e respostas API
-- ✅ **Sanitização de Nomes**: Remove caracteres especiais
-- ✅ **Organização Temporal**: Estrutura de pastas por data
-- ✅ **Cleanup Automático**: Remove arquivos locais após processamento
-- ✅ **Marca Suportadas**: Sherwin-Williams e Benjamin Moore
+## Roadmap
 
-## 9. Exemplos de Implementação Flutter
+- [ ] Suporte para múltiplas moedas
+- [ ] OCR para PDFs escaneados
+- [ ] Upload via URL
+- [ ] Batch processing
+- [ ] Integração com CDN
+- [ ] Reativação do Cloudflare R2
 
-### 9.1 Classe Dart para Requisições
+## Notas de Atualização
 
-```dart
-class MaterialFilters {
-  String? brand;        // Dropdown: marca específica
-  String? ambient;      // Dropdown: Interior, Exterior, etc.
-  String? finish;       // Dropdown: Flat, Satin, Semi-Gloss, Gloss
-  List<String>? quality; // Chips: Economic, Standard, High, Premium (múltiplo)
-  String? search;       // Campo de busca textual
-  String sortBy;        // Ordenação
-  String sortOrder;     // Direção da ordenação
-  int page;             // Página atual (fixo 20 itens por página)
+### Versão Atual: 2.2
 
-  MaterialFilters({
-    this.brand,
-    this.ambient,
-    this.finish,
-    this.quality,
-    this.search,
-    this.sortBy = 'created_at',
-    this.sortOrder = 'desc',
-    this.page = 1,
-  });
-
-  Map<String, dynamic> toQueryParams() {
-    final params = <String, dynamic>{};
-
-    if (brand != null && brand!.isNotEmpty) params['brand'] = brand;
-    if (ambient != null && ambient!.isNotEmpty) params['ambient'] = ambient;
-    if (finish != null && finish!.isNotEmpty) params['finish'] = finish;
-    if (search != null && search!.isNotEmpty) params['search'] = search;
-
-    // Qualidade pode ser múltipla (array)
-    if (quality != null && quality!.isNotEmpty) {
-      if (quality!.length == 1) {
-        params['quality'] = quality!.first;
-      } else {
-        for (int i = 0; i < quality!.length; i++) {
-          params['quality[]'] = quality![i];
-        }
-      }
-    }
-
-    params['sort_by'] = sortBy;
-    params['sort_order'] = sortOrder;
-    params['page'] = page.toString();
-
-    return params;
-  }
-}
-```
-
-### 9.2 Exemplos de Uso no Flutter
-
-```dart
-// 1. Buscar tintas Benjamin Moore com acabamento Satin
-final filters = MaterialFilters(
-  brand: 'Benjamin Moore',
-  finish: 'Satin',
-  ambient: 'Interior'
-);
-
-final materials = await apiClient.getMaterials(filters);
-
-// 2. Buscar materiais Premium ou High qualidade
-final qualityFilters = MaterialFilters(
-  quality: ['Premium', 'High'],
-  sortBy: 'unit_price',
-  sortOrder: 'asc'
-);
-
-// 3. Busca textual por "interior paint" - página 2
-final searchFilters = MaterialFilters(
-  search: 'interior paint',
-  page: 2
-);
-
-// 4. Filtros combinados da interface
-final combinedFilters = MaterialFilters(
-  brand: 'Benjamin Moore',
-  ambient: 'Exterior',
-  finish: 'Flat',
-  quality: ['Premium'],
-  search: 'EG-SHEL',
-  sortBy: 'brand',
-  sortOrder: 'asc'
-);
-```
-
-### 9.3 Construção de URLs
-
-```dart
-String buildMaterialsUrl(MaterialFilters filters) {
-  final baseUrl = 'https://paintpro.barbatech.company/api/materials/extracted';
-  final params = filters.toQueryParams();
-
-  if (params.isEmpty) return baseUrl;
-
-  final queryString = params.entries
-      .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
-      .join('&');
-
-  return '$baseUrl?$queryString';
-}
-
-// Exemplo de URL gerada:
-// https://paintpro.barbatech.company/api/materials/extracted?brand=Benjamin Moore&ambient=Interior&finish=Satin&quality[]=Premium&quality[]=High&sort_by=unit_price&sort_order=asc&page=2
-```
-
-### 9.4 Filtros Dinâmicos com Dropdown
-
-```dart
-// 1. Primeiro, buscar opções disponíveis para filtros
-final filterOptions = await apiClient.getFilterOptions();
-
-// 2. Popular dropdowns conforme a interface
-Widget buildBrandDropdown() {
-  return DropdownButton<String>(
-    value: selectedBrand,
-    hint: Text('Brand'),
-    items: filterOptions.brands.map((brand) {
-      return DropdownMenuItem(value: brand, child: Text(brand));
-    }).toList(),
-    onChanged: (value) {
-      setState(() => selectedBrand = value);
-      applyFilters();
-    },
-  );
-}
-
-Widget buildAmbientDropdown() {
-  return DropdownButton<String>(
-    value: selectedAmbient,
-    hint: Text('Ambient'),
-    items: filterOptions.ambients.map((ambient) {
-      return DropdownMenuItem(value: ambient, child: Text(ambient));
-    }).toList(),
-    onChanged: (value) {
-      setState(() => selectedAmbient = value);
-      applyFilters();
-    },
-  );
-}
-
-Widget buildFinishDropdown() {
-  return DropdownButton<String>(
-    value: selectedFinish,
-    hint: Text('Finish'),
-    items: filterOptions.finishes.map((finish) {
-      return DropdownMenuItem(value: finish, child: Text(finish));
-    }).toList(),
-    onChanged: (value) {
-      setState(() => selectedFinish = value);
-      applyFilters();
-    },
-  );
-}
-
-// 3. Chips de qualidade (seleção múltipla)
-Widget buildQualityChips() {
-  return Wrap(
-    spacing: 8.0,
-    children: filterOptions.qualities.map((quality) {
-      final isSelected = selectedQualities.contains(quality);
-      return FilterChip(
-        label: Text(quality),
-        selected: isSelected,
-        onSelected: (selected) {
-          setState(() {
-            if (selected) {
-              selectedQualities.add(quality);
-            } else {
-              selectedQualities.remove(quality);
-            }
-          });
-          applyFilters();
-        },
-      );
-    }).toList(),
-  );
-}
-
-// 4. Aplicar filtros quando mudarem
-void applyFilters() {
-  final filters = MaterialFilters(
-    brand: selectedBrand,
-    ambient: selectedAmbient,
-    finish: selectedFinish,
-    quality: selectedQualities.isEmpty ? null : selectedQualities,
-    search: searchController.text.isEmpty ? null : searchController.text,
-  );
-
-  // Recarregar lista
-  loadMaterials(filters);
-}
-
-// 5. Implementação de paginação
-class MaterialsPagination {
-  int currentPage = 1;
-  int? totalPages;
-  bool isLoading = false;
-
-  // Carregar próxima página
-  void loadNextPage() {
-    if (totalPages != null && currentPage < totalPages! && !isLoading) {
-      currentPage++;
-      final filters = getCurrentFilters();
-      filters.page = currentPage;
-      loadMaterials(filters);
-    }
-  }
-
-  // Carregar página anterior
-  void loadPreviousPage() {
-    if (currentPage > 1 && !isLoading) {
-      currentPage--;
-      final filters = getCurrentFilters();
-      filters.page = currentPage;
-      loadMaterials(filters);
-    }
-  }
-
-  // Ir para página específica
-  void goToPage(int page) {
-    if (page >= 1 && (totalPages == null || page <= totalPages!) && !isLoading) {
-      currentPage = page;
-      final filters = getCurrentFilters();
-      filters.page = page;
-      loadMaterials(filters);
-    }
-  }
-
-  // Widget de paginação
-  Widget buildPagination() {
-    if (totalPages == null || totalPages! <= 1) return SizedBox.shrink();
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        IconButton(
-          onPressed: currentPage > 1 ? loadPreviousPage : null,
-          icon: Icon(Icons.chevron_left),
-        ),
-        Text('Página $currentPage de $totalPages'),
-        IconButton(
-          onPressed: currentPage < totalPages! ? loadNextPage : null,
-          icon: Icon(Icons.chevron_right),
-        ),
-      ],
-    );
-  }
-}
-```
-
-## 7. Melhorias de Segurança Implementadas
-
-### 7.1 Migração de Segurança
-
-- **Campo `user_id` obrigatório** - Migração executada para tornar NOT NULL
-- **Limpeza de registros órfãos** - Remoção de PDFs sem usuário associado
-- **Integridade referencial** - Garantia de que todos os PDFs tenham usuário
-
-### 7.2 Políticas de Autorização
-
-- **PdfUploadPolicy** - Controle de acesso aos PDFs por usuário
-- **ExtractedMaterialPolicy** - Controle de acesso aos materiais por usuário
-- **Verificação automática** de ownership em todas as operações
-
-### 7.3 Middleware de Segurança
-
-- **`pdf.security`** - Validação específica para operações de PDF
-- **`user.ownership`** - Garantia de ownership de dados
-- **Logs de segurança** para auditoria e monitoramento
-
-### 7.4 Modelos Seguros
-
-- **Global scopes** - Filtros automáticos por usuário
-- **Validação automática** de `user_id` em criação
-- **Métodos de verificação** de propriedade
-
-## 8. Observações Técnicas
-
-### 8.1 Processamento
-
-- Arquivo armazenado em R2 imediatamente após upload
-- Arquivo temporário local usado apenas para extração de texto
-- Job de processamento desabilitado em ambiente de teste
-- Suporte a PDF com preços apenas em USD
-
-### 8.2 Segurança
-
-- **Autenticação obrigatória** (Laravel Sanctum)
-- **Rate limiting aplicado**
-- **Validação rigorosa de tipo MIME**
-- **Limite de tamanho: 25MB**
-- **Campo `user_id` obrigatório** (NOT NULL)
-- **Políticas de autorização** para controle granular
-- **Middleware de segurança** específico para PDFs
-- **Isolamento automático por usuário** em todos os modelos
-- **Validação de ownership** em todas as operações CRUD
-- **Logs de segurança** para auditoria
-- **Prevenção de acesso não autorizado** a recursos
-
-### 8.3 Performance
-
-- Armazenamento distribuído via Cloudflare R2
-- URLs de acesso otimizadas (temporárias ou CDN)
-- Processamento assíncrono via jobs
-- Cache de metadados no banco de dados
+- **Data**: Janeiro 2025
+- **Principais Mudanças**:
+  - Renomeado de `PdfStorageService` para `QuoteStorageService`
+  - Endpoints atualizados para usar `{pdfUpload}` como parâmetro
+  - Parâmetro de upload alterado de `pdf` para `quote`
+  - Adicionados endpoints `/extracted` para materiais
+  - Armazenamento local ativo, R2 desabilitado
+  - Multi-tenancy implementada com `user_id` em todas as tabelas
