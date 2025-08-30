@@ -1,31 +1,31 @@
 import 'dart:io';
 
 import '../../model/models.dart';
-import '../../model/pdf_upload/extracted_material_model.dart';
+import '../../model/quotes_data/extracted_material_model.dart';
 import '../../utils/result/result.dart';
 
 abstract class IQuoteRepository {
   /// Upload a quote PDF file for material extraction
-  Future<Result<PdfUploadResponse>> uploadQuote(
+  Future<Result<QuoteResponse>> uploadQuote(
     File quoteFile, {
     String? filename,
   });
 
   /// Get list of uploaded quotes with pagination and filters
-  Future<Result<PdfUploadListResponse>> getQuotes({
+  Future<Result<QuoteListResponse>> getQuotes({
     String? status,
     int limit = 10,
     int page = 1,
   });
 
   /// Check the processing status of a specific quote upload
-  Future<Result<PdfUploadModel>> getQuoteStatus(int uploadId);
+  Future<Result<QuoteModel>> getQuoteStatus(int quoteId);
 
   /// Update display name of an uploaded quote
-  Future<Result<PdfUploadModel>> updateQuote(int uploadId, String displayName);
+  Future<Result<QuoteModel>> updateQuote(int quoteId, String displayName);
 
   /// Delete an uploaded quote and all extracted materials
-  Future<Result<bool>> deleteQuote(int uploadId);
+  Future<Result<bool>> deleteQuote(int quoteId);
 
   /// Get extracted materials from quotes with filtering and pagination
   Future<Result<ExtractedMaterialListResponse>> getExtractedMaterials({
@@ -39,8 +39,8 @@ abstract class IQuoteRepository {
   Future<Result<MaterialFiltersOptions>> getFilterOptions();
 
   /// Poll quote upload status until processing is complete
-  Future<Result<PdfUploadModel>> pollQuoteStatus(
-    int uploadId, {
+  Future<Result<QuoteModel>> pollQuoteStatus(
+    int quoteId, {
     Duration interval = const Duration(seconds: 2),
     Duration timeout = const Duration(minutes: 5),
   });
