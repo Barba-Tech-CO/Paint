@@ -113,7 +113,7 @@ class _LoadingWidgetState extends State<LoadingWidget>
           backgroundColor: AppColors.primary,
           elevation: 0,
           centerTitle: true,
-          toolbarHeight: 90,
+          toolbarHeight: 80,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(64),

@@ -1,5 +1,4 @@
-import '../../model/auth_model.dart';
-import '../../model/auth_state.dart';
+import '../../model/models.dart';
 
 class AuthViewState {
   final AuthState state;
@@ -49,4 +48,7 @@ class AuthViewState {
       popupUrl: popupUrl ?? this.popupUrl,
     );
   }
+
+  bool get isError => state == AuthState.error;
+  bool get canRetry => isError && errorMessage != null;
 }

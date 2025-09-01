@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
-import '../../model/zones_card_model.dart';
+import '../../model/models.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../viewmodel/zones/zones_viewmodels.dart';
 import '../widgets/buttons/paint_pro_delete_button.dart';
@@ -11,7 +11,7 @@ import '../widgets/widgets.dart';
 import 'widgets/rename_zone_dialog.dart';
 
 class ZonesDetailsView extends StatefulWidget {
-  final ZonesCardModel? zone;
+  final ProjectCardModel? zone;
   const ZonesDetailsView({super.key, this.zone});
 
   @override
@@ -64,7 +64,7 @@ class _ZonesDetailsViewState extends State<ZonesDetailsView> {
     };
 
     // When zone is updated, update in list
-    _detailViewModel.onZoneUpdated = (ZonesCardModel updatedZone) {
+    _detailViewModel.onZoneUpdated = (ProjectCardModel updatedZone) {
       if (mounted) {
         _listViewModel.updateZone(updatedZone);
       }

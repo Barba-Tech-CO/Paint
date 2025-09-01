@@ -15,7 +15,7 @@ class NavigationService {
   }
 
   void navigateToDashboard(BuildContext context) {
-    context.go('/dashboard');
+    context.go('/home');
   }
 
   void navigateToProjects(BuildContext context) {
@@ -30,12 +30,12 @@ class NavigationService {
     context.go('/contacts');
   }
 
-  void navigateToHighlights(BuildContext context) {
-    context.go('/highlights');
+  void navigateToQuotes(BuildContext context) {
+    context.go('/quotes');
   }
 
   void replaceToDashboard(BuildContext context) {
-    context.go('/dashboard');
+    context.go('/home');
   }
 
   void replaceToAuth(BuildContext context) {

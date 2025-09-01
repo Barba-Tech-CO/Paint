@@ -1,4 +1,4 @@
-import '../../model/auth_state.dart';
+import '../../model/models.dart';
 import '../../utils/result/result.dart';
 
 /// UseCase unificado para gerenciar estado de autenticação

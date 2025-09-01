@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
-import '../../model/zones_card_model.dart';
-import '../../utils/result/result.dart';
+
+import '../../model/models.dart';
 import '../../utils/command/command.dart';
+import '../../utils/result/result.dart';
 
 enum ZonesSummaryState { initial, loading, loaded, error }
 
@@ -14,10 +15,10 @@ class ZonesSummaryViewModel extends ChangeNotifier {
   ZonesSummaryState get state => _state;
 
   // Data
-  ZonesSummaryModel? _summary;
-  ZonesSummaryModel? get summary => _summary;
+  ProjectsSummaryModel? _summary;
+  ProjectsSummaryModel? get summary => _summary;
 
-  List<ZonesCardModel> _zones = [];
+  List<ProjectCardModel> _zones = [];
 
   // Error
   String? _errorMessage;
@@ -59,7 +60,7 @@ class ZonesSummaryViewModel extends ChangeNotifier {
     }
   }
 
-  void updateZonesList(List<ZonesCardModel> zones) {
+  void updateZonesList(List<ProjectCardModel> zones) {
     _zones = List.from(zones);
     // Recalculate summary when zones list changes
     _calculateSummaryFromZones();
@@ -95,7 +96,7 @@ class ZonesSummaryViewModel extends ChangeNotifier {
 
   void _calculateSummaryFromZones() {
     if (_zones.isEmpty) {
-      _summary = ZonesSummaryModel(
+      _summary = ProjectsSummaryModel(
         avgDimensions: "0' x 0'",
         totalArea: "0 sq ft",
         totalPaintable: "0 sq ft",
@@ -111,7 +112,7 @@ class ZonesSummaryViewModel extends ChangeNotifier {
       final totalAreaValue = zonesCount * 168; // Mock calculation
       final totalPaintableValue = zonesCount * 420; // Mock calculation
 
-      _summary = ZonesSummaryModel(
+      _summary = ProjectsSummaryModel(
         avgDimensions: "$avgWidth' x $avgHeight'",
         totalArea: "$totalAreaValue sq ft",
         totalPaintable: "$totalPaintableValue sq ft",

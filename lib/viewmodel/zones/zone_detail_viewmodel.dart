@@ -1,16 +1,17 @@
 import 'package:flutter/foundation.dart';
-import '../../model/zones_card_model.dart';
-import '../../utils/result/result.dart';
-import '../../utils/command/command.dart';
+
 import '../../helpers/zones/zone_data_classes.dart';
+import '../../model/models.dart';
+import '../../utils/command/command.dart';
+import '../../utils/result/result.dart';
 
 class ZoneDetailViewModel extends ChangeNotifier {
   // Service seria injetado aqui quando estiver pronto
   // final ZonesService _zonesService;
 
   // Data
-  ZonesCardModel? _currentZone;
-  ZonesCardModel? get currentZone => _currentZone;
+  ProjectCardModel? _currentZone;
+  ProjectCardModel? get currentZone => _currentZone;
 
   // Error
   String? _errorMessage;
@@ -30,7 +31,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
 
   // Callbacks for notifying parent ViewModels about changes
   Function(int zoneId)? onZoneDeleted;
-  Function(ZonesCardModel updatedZone)? onZoneUpdated;
+  Function(ProjectCardModel updatedZone)? onZoneUpdated;
 
   // Computed properties
   bool get hasZone => _currentZone != null;
@@ -59,7 +60,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
   }
 
   // Public methods
-  void setCurrentZone(ZonesCardModel? zone) {
+  void setCurrentZone(ProjectCardModel? zone) {
     _currentZone = zone;
     _clearError();
     _safeNotifyListeners();

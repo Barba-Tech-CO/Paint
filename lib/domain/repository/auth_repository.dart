@@ -1,4 +1,4 @@
-import '../../model/auth_model.dart';
+import '../../model/models.dart';
 import '../../utils/result/result.dart';
 
 abstract class IAuthRepository {
@@ -22,4 +22,7 @@ abstract class IAuthRepository {
 
   /// Obtém o location_id atual
   Future<Result<String?>> getCurrentLocationId();
+
+  /// Obtém dados completos do usuário autenticado
+  Future<Result<UserModel>> getUser();
 }

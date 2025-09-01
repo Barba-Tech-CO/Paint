@@ -1,45 +1,73 @@
 import 'package:flutter/foundation.dart';
+
+import '../../model/contacts/contact_model.dart';
+import '../../service/location_service.dart';
+import '../../use_case/contacts/contact_operations_use_case.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
-import '../../model/contact_model.dart';
-import '../../domain/repository/contact_repository.dart';
 
 class ContactDetailViewModel extends ChangeNotifier {
-  final IContactRepository _contactRepository;
+  final ContactOperationsUseCase _contactUseCase;
+  final LocationService _locationService;
+  final AppLogger _logger;
 
   ContactModel? _selectedContact;
   bool _isLoading = false;
   String? _error;
 
-  ContactDetailViewModel(this._contactRepository);
+  ContactDetailViewModel(
+    this._contactUseCase,
+    this._locationService,
+    this._logger,
+  );
 
   // Getters
   ContactModel? get selectedContact => _selectedContact;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  String? get currentLocationId => _locationService.currentLocationId;
+  bool get hasLocationId => _locationService.hasLocationId;
 
   /// Cria um novo contato
   Future<bool> createContact({
     String? name,
-    String? firstName,
-    String? lastName,
-    String? email,
     String? phone,
+    List<String?>? additionalPhones,
+    String? email,
+    List<String?>? additionalEmails,
     String? companyName,
     String? address,
+    String? city,
+    String? state,
+    String? postalCode,
     List<Map<String, dynamic>>? customFields,
   }) async {
     _setLoading(true);
     clearError();
 
     try {
-      final result = await _contactRepository.createContact(
+      // Convert nullable string lists to non-nullable string lists
+      final emailsList = additionalEmails
+          ?.where((email) => email != null && email.isNotEmpty)
+          .map((email) => email!)
+          .toList();
+
+      final phonesList = additionalPhones
+          ?.where((phone) => phone != null && phone.isNotEmpty)
+          .map((phone) => phone!)
+          .toList();
+
+      final result = await _contactUseCase.createContact(
         name: name,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
         phone: phone,
+        additionalPhones: phonesList,
+        email: email,
+        additionalEmails: emailsList,
         companyName: companyName,
         address: address,
+        city: city,
+        state: state,
+        postalCode: postalCode,
         customFields: customFields,
       );
 
@@ -48,11 +76,20 @@ class ContactDetailViewModel extends ChangeNotifier {
         notifyListeners();
         return true;
       } else {
-        _setError(result.asError.error.toString());
+        // Log technical error to console for debugging
+        _logger.error(
+          'Contact creation failed: ${result.asError.error}',
+          result.asError.error,
+        );
+        // Set user-friendly error message
+        _setError(_getUserFriendlyErrorMessage(result.asError.error));
         return false;
       }
     } catch (e) {
-      _setError('Error creating contact: $e');
+      // Log technical error to console for debugging
+      _logger.error('Exception in contact creation: $e', e);
+      // Set user-friendly error message
+      _setError(_getUserFriendlyErrorMessage(e));
       return false;
     } finally {
       _setLoading(false);
@@ -65,7 +102,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     clearError();
 
     try {
-      final result = await _contactRepository.getContact(contactId);
+      final result = await _contactUseCase.getContact(contactId);
       if (result is Ok) {
         _selectedContact = result.asOk.value;
         notifyListeners();
@@ -83,27 +120,44 @@ class ContactDetailViewModel extends ChangeNotifier {
   Future<bool> updateContact(
     String contactId, {
     String? name,
-    String? firstName,
-    String? lastName,
-    String? email,
     String? phone,
+    List<String?>? additionalPhones,
+    String? email,
+    List<String?>? additionalEmails,
     String? companyName,
     String? address,
+    String? city,
+    String? state,
+    String? postalCode,
     List<Map<String, dynamic>>? customFields,
   }) async {
     _setLoading(true);
     clearError();
 
     try {
-      final result = await _contactRepository.updateContact(
+      // Convert nullable string lists to non-nullable string lists
+      final emailsList = additionalEmails
+          ?.where((email) => email != null && email.isNotEmpty)
+          .map((email) => email!)
+          .toList();
+
+      final phonesList = additionalPhones
+          ?.where((phone) => phone != null && phone.isNotEmpty)
+          .map((phone) => phone!)
+          .toList();
+
+      final result = await _contactUseCase.updateContact(
         contactId,
         name: name,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
         phone: phone,
+        additionalPhones: phonesList,
+        email: email,
+        additionalEmails: emailsList,
         companyName: companyName,
         address: address,
+        city: city,
+        state: state,
+        postalCode: postalCode,
         customFields: customFields,
       );
 
@@ -129,7 +183,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     clearError();
 
     try {
-      final result = await _contactRepository.deleteContact(contactId);
+      final result = await _contactUseCase.deleteContact(contactId);
 
       if (result is Ok && result.asOk.value) {
         if (_selectedContact?.id == contactId) {
@@ -170,13 +224,30 @@ class ContactDetailViewModel extends ChangeNotifier {
   /// Obtém as iniciais do contato
   String get initials {
     if (_selectedContact == null) return '';
-    final firstName = _selectedContact!.firstName?.isNotEmpty == true
-        ? _selectedContact!.firstName![0].toUpperCase()
+    final name = _selectedContact!.name;
+    if (name == null || name.isEmpty) return '';
+
+    final nameParts = name.split(' ');
+    if (nameParts.isEmpty) return '';
+
+    final firstInitial = nameParts.first[0].toUpperCase();
+    final lastInitial = nameParts.length > 1
+        ? nameParts.last[0].toUpperCase()
         : '';
-    final lastName = _selectedContact!.lastName?.isNotEmpty == true
-        ? _selectedContact!.lastName![0].toUpperCase()
-        : '';
-    return '$firstName$lastName';
+
+    return '$firstInitial$lastInitial';
+  }
+
+  /// Verifica se o location ID está disponível para operações da API
+  bool get isLocationAvailable => _locationService.hasLocationId;
+
+  /// Obtém informações de debug sobre o location
+  String get locationDebugInfo {
+    if (_locationService.hasLocationId) {
+      return 'Location ID: ${_locationService.currentLocationId}';
+    } else {
+      return 'No location ID available';
+    }
   }
 
   /// Sincroniza contatos pendentes
@@ -185,7 +256,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     clearError();
 
     try {
-      final result = await _contactRepository.syncPendingContacts();
+      final result = await _contactUseCase.syncPendingContacts();
       if (result is Error) {
         _setError(result.asError.error.toString());
       }
@@ -195,6 +266,43 @@ class ContactDetailViewModel extends ChangeNotifier {
       _setLoading(false);
     }
   }
+
+  /// Converts technical errors to user-friendly messages
+  String _getUserFriendlyErrorMessage(dynamic error) {
+    final errorString = error.toString().toLowerCase();
+
+    // Log the full technical error for debugging
+    _logger.error('Technical error: $error', error);
+
+    // Map common error types to friendly messages
+    if (errorString.contains('location id not available')) {
+      return 'Please log in again to continue.';
+    } else if (errorString.contains('database') ||
+        errorString.contains('sql')) {
+      return 'Unable to save contact. Please try again.';
+    } else if (errorString.contains('network') ||
+        errorString.contains('connection')) {
+      return 'Network connection issue. Please check your internet and try again.';
+    } else if (errorString.contains('authentication') ||
+        errorString.contains('unauthorized')) {
+      return 'Session expired. Please log in again.';
+    } else if (errorString.contains('validation') ||
+        errorString.contains('invalid')) {
+      return 'Please check your information and try again.';
+    } else if (errorString.contains('method not allowed') ||
+        errorString.contains('405')) {
+      return 'Contact saved locally. Will sync when connection is restored.';
+    } else if (errorString.contains('endpoint not found') ||
+        errorString.contains('404')) {
+      return 'Contact saved locally. Will sync when connection is restored.';
+    } else {
+      return 'Contact saved locally. Will sync when connection is restored.';
+    }
+  }
+
+  /// Gets a user-friendly error message
+  String get userFriendlyError =>
+      _error != null ? _getUserFriendlyErrorMessage(_error) : '';
 
   // Métodos privados para gerenciar estado
   void _setLoading(bool loading) {

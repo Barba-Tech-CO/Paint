@@ -1,4 +1,4 @@
-import '../../model/paint_catalog_model.dart';
+import '../../model/paint_catalog/paint_catalog_model.dart';
 import '../../utils/result/result.dart';
 
 abstract class IPaintCatalogRepository {

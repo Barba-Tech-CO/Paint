@@ -1,6 +1,10 @@
-import 'package:sqflite/sqflite.dart';
+import 'dart:developer';
+
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
-import '../model/contact_model.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../model/models.dart';
 
 class ContactDatabaseService {
   static Database? _database;
@@ -18,8 +22,9 @@ class ContactDatabaseService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 3, // Updated version to force migration for API contract compliance
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -27,48 +32,80 @@ class ContactDatabaseService {
     await db.execute('''
       CREATE TABLE $_tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ghl_id TEXT UNIQUE NOT NULL,
-        location_id TEXT NOT NULL,
+        user_id INTEGER, -- Isolamento por usuário
+        
+        -- Identificadores GoHighLevel
+        ghl_id TEXT UNIQUE NOT NULL, -- ID único no GoHighLevel
+        location_id TEXT NOT NULL, -- ID da localização no GHL
+        
+        -- Informações Pessoais
         first_name TEXT,
         last_name TEXT,
         email TEXT,
         phone TEXT,
         phone_label TEXT,
+        
+        -- Informações Empresa
         company_name TEXT,
         business_name TEXT,
+        
+        -- Endereço Completo
         address TEXT,
         city TEXT,
         state TEXT,
         postal_code TEXT,
         country TEXT,
-        additional_emails TEXT,
-        additional_phones TEXT,
-        custom_fields TEXT,
-        tags TEXT,
-        type TEXT,
-        source TEXT,
-        dnd INTEGER DEFAULT 0,
-        dnd_settings TEXT,
-        sync_status TEXT DEFAULT 'synced',
-        last_synced_at TEXT,
+        
+        -- Dados Complexos (JSON como TEXT no SQLite)
+        additional_emails TEXT, -- JSON: ["email1@example.com", "email2@example.com"]
+        additional_phones TEXT, -- JSON: ["+1234567890", "+0987654321"]
+        custom_fields TEXT, -- JSON: [{"id":"field1", "key":"project_type", "field_value":"exterior"}]
+        tags TEXT, -- JSON: ["prospect", "paint-service"]
+        
+        -- Configurações
+        type TEXT, -- lead, contact, etc
+        source TEXT, -- Fonte do contato
+        dnd INTEGER DEFAULT 0, -- Do Not Disturb (0=false, 1=true)
+        dnd_settings TEXT, -- JSON: {"Call": {"status": "active"}, "Email": {"status": "inactive"}}
+        
+        -- Controle de Sincronização Offline-First
+        sync_status TEXT DEFAULT 'synced', -- synced, pending, error
+        last_synced_at TEXT, -- ISO 8601 timestamp
         sync_error TEXT,
-        ghl_created_at TEXT,
-        ghl_updated_at TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        
+        -- Timestamps GoHighLevel
+        ghl_created_at TEXT, -- ISO 8601 timestamp
+        ghl_updated_at TEXT, -- ISO 8601 timestamp
+        created_at TEXT, -- ISO 8601 timestamp
+        updated_at TEXT -- ISO 8601 timestamp
       )
     ''');
 
-    // Create indexes for better performance
-    await db.execute('CREATE INDEX idx_ghl_id ON $_tableName (ghl_id)');
-    await db.execute(
-      'CREATE INDEX idx_location_id ON $_tableName (location_id)',
-    );
-    await db.execute('CREATE INDEX idx_email ON $_tableName (email)');
-    await db.execute('CREATE INDEX idx_phone ON $_tableName (phone)');
-    await db.execute(
-      'CREATE INDEX idx_sync_status ON $_tableName (sync_status)',
-    );
+    // Create indexes for better performance - Following API contract requirements
+    await db.execute('CREATE INDEX idx_ghl_contacts_user_id ON $_tableName(user_id)');
+    await db.execute('CREATE INDEX idx_ghl_contacts_ghl_id ON $_tableName(ghl_id)');
+    await db.execute('CREATE INDEX idx_ghl_contacts_location_id ON $_tableName(location_id)');
+    await db.execute('CREATE INDEX idx_ghl_contacts_email ON $_tableName(email)');
+    await db.execute('CREATE INDEX idx_ghl_contacts_phone ON $_tableName(phone)');
+    await db.execute('CREATE INDEX idx_ghl_contacts_sync_status ON $_tableName(sync_status)');
+    await db.execute('CREATE INDEX idx_ghl_contacts_location_sync ON $_tableName(location_id, sync_status)');
+    await db.execute('CREATE INDEX idx_ghl_contacts_user_sync ON $_tableName(user_id, sync_status, updated_at)');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 3) {
+      // For API contract compliance, recreate the table with updated schema
+      await db.execute('DROP TABLE IF EXISTS $_tableName');
+      await _onCreate(db, newVersion);
+    }
+  }
+
+  /// Clears all data from the database (useful for testing or major schema changes)
+  Future<void> clearDatabase() async {
+    final db = await database;
+    await db.execute('DROP TABLE IF EXISTS $_tableName');
+    await db.execute('DELETE FROM sqlite_sequence WHERE name = "$_tableName"');
+    _database = null; // Force recreation on next access
   }
 
   /// Inserts a new contact into the local database
@@ -82,6 +119,12 @@ class ContactDatabaseService {
 
     final data = contact.toMap();
     data.remove('id'); // Remove localId as it's auto-generated
+
+    // Debug logging
+    if (kDebugMode) {
+      log('Debug: Inserting contact with data: $data');
+      log('Debug: Table columns: ${await db.query(_tableName, limit: 0)}');
+    }
 
     return await db.insert(_tableName, data);
   }
@@ -200,14 +243,12 @@ class ContactDatabaseService {
     final maps = await db.query(
       _tableName,
       where: '''
-        first_name LIKE ? OR 
-        last_name LIKE ? OR 
+        name LIKE ? OR 
         email LIKE ? OR 
         phone LIKE ? OR
         company_name LIKE ?
       ''',
       whereArgs: [
-        searchQuery,
         searchQuery,
         searchQuery,
         searchQuery,

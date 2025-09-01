@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
-import '../../model/zones_card_model.dart';
+import '../../model/models.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../viewmodel/zones/zones_viewmodels.dart';
 import '../widgets/buttons/paint_pro_delete_button.dart';
@@ -12,7 +12,7 @@ import 'widgets/photos_gallery_widget.dart';
 import 'widgets/surface_area_display_widget.dart';
 
 class EditZoneView extends StatefulWidget {
-  final ZonesCardModel? zone;
+  final ProjectCardModel? zone;
 
   const EditZoneView({super.key, this.zone});
 
@@ -68,7 +68,7 @@ class _EditZoneViewState extends State<EditZoneView> {
     };
 
     // When zone is updated, we could refresh the data here if needed
-    _viewModel.onZoneUpdated = (ZonesCardModel updatedZone) {
+    _viewModel.onZoneUpdated = (ProjectCardModel updatedZone) {
       if (mounted) {
         // Also notify the list ViewModel
         try {

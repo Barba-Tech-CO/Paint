@@ -2,25 +2,43 @@ import 'package:dio/dio.dart';
 
 import '../config/app_config.dart';
 import '../utils/logger/app_logger.dart';
+import 'auth_persistence_service.dart';
 import 'i_http_service.dart';
 
 class HttpService implements IHttpService {
   static final HttpService _instance = HttpService._internal();
   late final Dio dio;
   late final AppLogger _logger;
+  String? _ghlToken;
+  late final AuthPersistenceService _authPersistenceService;
 
   factory HttpService() {
     return _instance;
   }
 
   HttpService._internal() {
+    _authPersistenceService = AuthPersistenceService();
+
     dio = Dio(
       BaseOptions(
         baseUrl: AppConfig.baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'application/json',
+        },
+      ),
+    );
+
+    // Add interceptor to include GHL token in all requests
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          if (_ghlToken != null) {
+            options.headers['Authorization'] = 'Bearer $_ghlToken';
+          }
+          handler.next(options);
         },
       ),
     );
@@ -30,6 +48,22 @@ class HttpService implements IHttpService {
     _logger = logger;
   }
 
+  /// Sets the GoHighLevel token for API authentication
+  @override
+  void setGhlToken(String token) {
+    _ghlToken = token;
+  }
+
+  /// Gets the current GoHighLevel token
+  @override
+  String? get ghlToken => _ghlToken;
+
+  /// Clears the GoHighLevel token
+  @override
+  void clearGhlToken() {
+    _ghlToken = null;
+  }
+
   @override
   Future<Response> get(
     String path, {
@@ -37,28 +71,32 @@ class HttpService implements IHttpService {
     Options? options,
   }) async {
     try {
-      final startTime = DateTime.now();
       final response = await dio.get(
         path,
         queryParameters: queryParameters,
         options: options,
       );
-      final duration = DateTime.now().difference(startTime);
-
-      _logger.info('API Call: GET $path - Status: ${response.statusCode}');
-      if (queryParameters != null) {
-        _logger.info('Request Data: $queryParameters');
+      // Only log errors and important status codes
+      if (response.statusCode != 200) {
+        _logger.info('API Call: GET $path - Status: ${response.statusCode}');
       }
-      _logger.info('Response Data: ${response.data}');
-      _logger.info(
-        'Performance: HTTP GET $path took ${duration.inMilliseconds}ms',
-      );
 
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: GET $path', e, e.stackTrace);
-      rethrow;
+      return _handleDioException(e, path);
     }
+  }
+
+  /// Handles DioException and returns a proper Response
+  Response _handleDioException(DioException e, String path) {
+    // Create a mock response with error details
+    return Response(
+      requestOptions: RequestOptions(path: path),
+      statusCode: e.response?.statusCode ?? 500,
+      statusMessage: e.message,
+      data: {'error': e.message},
+    );
   }
 
   @override
@@ -68,8 +106,6 @@ class HttpService implements IHttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final fullPath = '${dio.options.baseUrl}$path';
-
     try {
       final response = await dio.post(
         path,
@@ -78,8 +114,12 @@ class HttpService implements IHttpService {
         options: options,
       );
 
+      if (response.statusCode != 200) {
+        _logger.info('POST $path - Status: ${response.statusCode}');
+      }
       return response;
     } on DioException catch (e) {
+      _logger.error('HttpService Error: POST $path', e, e.stackTrace);
       rethrow;
     }
   }
@@ -91,8 +131,6 @@ class HttpService implements IHttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final fullPath = '${dio.options.baseUrl}$path';
-
     try {
       final response = await dio.put(
         path,
@@ -101,8 +139,12 @@ class HttpService implements IHttpService {
         options: options,
       );
 
+      if (response.statusCode != 200) {
+        _logger.info('PUT $path - Status: ${response.statusCode}');
+      }
       return response;
     } on DioException catch (e) {
+      _logger.error('HttpService Error: PUT $path', e, e.stackTrace);
       rethrow;
     }
   }
@@ -114,8 +156,6 @@ class HttpService implements IHttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final fullPath = '${dio.options.baseUrl}$path';
-
     try {
       final response = await dio.patch(
         path,
@@ -124,8 +164,12 @@ class HttpService implements IHttpService {
         options: options,
       );
 
+      if (response.statusCode != 200) {
+        _logger.info('PATCH $path - Status: ${response.statusCode}');
+      }
       return response;
     } on DioException catch (e) {
+      _logger.error('HttpService Error: PATCH $path', e, e.stackTrace);
       rethrow;
     }
   }
@@ -137,8 +181,6 @@ class HttpService implements IHttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final fullPath = '${dio.options.baseUrl}$path';
-
     try {
       final response = await dio.delete(
         path,
@@ -147,8 +189,12 @@ class HttpService implements IHttpService {
         options: options,
       );
 
+      if (response.statusCode != 200) {
+        _logger.info('DELETE $path - Status: ${response.statusCode}');
+      }
       return response;
     } on DioException catch (e) {
+      _logger.error('HttpService Error: DELETE $path', e, e.stackTrace);
       rethrow;
     }
   }

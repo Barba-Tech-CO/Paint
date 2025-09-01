@@ -97,60 +97,138 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
       backgroundColor: Theme.of(context).primaryColor,
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Logo animado
-              ScaleTransition(
-                scale: _logoAnimation,
-                child: SvgPicture.asset(
-                  'assets/logo/paint.svg',
-                  width: 120,
-                  height: 120,
-                  colorFilter: const ColorFilter.mode(
-                    Colors.white,
-                    BlendMode.srcIn,
+        child: Stack(
+          children: [
+            // Marca d'água no topo
+            Positioned(
+              top: 60,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Opacity(
+                  opacity: 0.7,
+                  child: Text(
+                    'Developed By',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Nome do app
-              AnimatedBuilder(
-                animation: _logoAnimation,
-                builder: (context, child) {
-                  return Opacity(
-                    opacity: _logoAnimation.value,
-                    child: const Text(
-                      'Painter Pro',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+            ),
+            Positioned(
+              top: 80,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Column(
+                  children: [
+                    Opacity(
+                      opacity: 0.8,
+                      child: Text(
+                        'Barba Tech',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 48),
-
-              // Indicador de carregamento
-              AnimatedBuilder(
-                animation: _logoAnimation,
-                builder: (context, child) {
-                  return Opacity(
-                    opacity: _logoAnimation.value,
-                    child: const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      strokeWidth: 3,
+                    Opacity(
+                      opacity: 0.8,
+                      child: Text(
+                        'Company',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
                     ),
-                  );
-                },
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+
+            // Conteúdo principal centralizado
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo animado
+                  ScaleTransition(
+                    scale: _logoAnimation,
+                    child: SvgPicture.asset(
+                      'assets/logo/paint.svg',
+                      width: 120,
+                      height: 120,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Nome do app
+                  AnimatedBuilder(
+                    animation: _logoAnimation,
+                    builder: (context, child) {
+                      return Opacity(
+                        opacity: _logoAnimation.value,
+                        child: const Text(
+                          'Paint Estimator',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 48),
+
+                  // Indicador de carregamento
+                  AnimatedBuilder(
+                    animation: _logoAnimation,
+                    builder: (context, child) {
+                      return Opacity(
+                        opacity: _logoAnimation.value,
+                        child: const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                          strokeWidth: 3,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            // Marca d'água no rodapé
+            Positioned(
+              bottom: 40,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Opacity(
+                  opacity: 0.8,
+                  child: Image.asset(
+                    'assets/images/barba_tech_logopng.png',
+                    height: 100,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
