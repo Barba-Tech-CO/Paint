@@ -117,6 +117,10 @@ class _QuotesViewState extends State<QuotesView> {
                                   status: quote.status?.value,
                                   materialsExtracted: quote.materialsExtracted,
                                   errorMessage: quote.errorMessage,
+                                  isDeleting: quotesViewModel
+                                      .isQuoteBeingDeleted(
+                                        quote.id,
+                                      ), // Use specific quote state
                                   onRename: (newName) {
                                     quotesViewModel.renameQuote(
                                       quote.id,
