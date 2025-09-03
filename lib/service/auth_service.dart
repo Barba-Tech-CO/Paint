@@ -45,8 +45,9 @@ class AuthService {
       const String clientId = '6845ab8de6772c0d5c8548d7-mbnty1f6';
 
       // Use the correct redirect URI based on the environment
+      // Fix: Use the base URL directly since it already includes /api
       final String redirectUri =
-          '${_httpService.dio.options.baseUrl.replaceAll('/api', '')}/api/auth/callback';
+          '${_httpService.dio.options.baseUrl}/auth/callback';
 
       const String scope =
           'contacts.write+associations.write+associations.readonly+oauth.readonly+oauth.write+invoices%2Festimate.write+invoices%2Festimate.readonly+invoices.readonly+associations%2Frelation.write+associations%2Frelation.readonly+contacts.readonly+invoices.write';
@@ -85,9 +86,10 @@ class AuthService {
       // The location_id should come from the OAuth response or user selection
       if (callbackResponse.success) {
         // Extract auth_token and location_id from the response
-        final authToken = response.data['auth_token'] ?? 
-                         response.data['sanctum_token'] ?? 
-                         callbackResponse.authToken;
+        final authToken =
+            response.data['auth_token'] ??
+            response.data['sanctum_token'] ??
+            callbackResponse.authToken;
         final locationId =
             response.data['location_id'] ??
             response.data['locationId'] ??
@@ -101,9 +103,13 @@ class AuthService {
           final sanitizedToken = TokenSanitizer.sanitizeToken(authToken);
           if (sanitizedToken != null) {
             _httpService.setAuthToken(sanitizedToken);
-            _logger.info('[AuthService] Auth token sanitized and set in HTTP client for API requests');
+            _logger.info(
+              '[AuthService] Auth token sanitized and set in HTTP client for API requests',
+            );
           } else {
-            _logger.warning('[AuthService] Invalid or missing auth token from OAuth callback - token: ${authToken?.length ?? 0} chars');
+            _logger.warning(
+              '[AuthService] Invalid or missing auth token from OAuth callback - token: ${authToken?.length ?? 0} chars',
+            );
           }
 
           // Call the success endpoint
