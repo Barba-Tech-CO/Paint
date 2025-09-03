@@ -13,6 +13,7 @@ class QuoteCardWidget extends StatelessWidget {
   final VoidCallback? onTap;
   final Function(String)? onRename;
   final VoidCallback? onDelete;
+  final bool isDeleting; // Add deleting state parameter
 
   const QuoteCardWidget({
     super.key,
@@ -27,6 +28,7 @@ class QuoteCardWidget extends StatelessWidget {
     this.onTap,
     this.onRename,
     this.onDelete,
+    this.isDeleting = false, // Default to false
   });
 
   String _formatDateTime(DateTime dateTime) {
@@ -214,6 +216,9 @@ class QuoteCardWidget extends StatelessWidget {
                     onRename?.call(newName.trim());
                   }
                 } else if (value == 'delete') {
+                  // Don't allow delete if already deleting
+                  if (isDeleting) return;
+
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (context) => DeleteDialog(quoteName: titulo),
@@ -237,20 +242,33 @@ class QuoteCardWidget extends StatelessWidget {
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
+                  enabled: !isDeleting, // Disable when deleting
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.delete,
-                        size: 18,
-                        color: Colors.red,
-                      ),
+                      if (isDeleting)
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.red,
+                            ),
+                          ),
+                        )
+                      else
+                        Icon(
+                          Icons.delete,
+                          size: 18,
+                          color: Colors.red,
+                        ),
                       SizedBox(width: 8),
                       Text(
-                        'Delete',
+                        isDeleting ? 'Deleting...' : 'Delete',
                         style: TextStyle(
-                          color: Colors.red,
+                          color: isDeleting ? Colors.grey : Colors.red,
                         ),
                       ),
                     ],
