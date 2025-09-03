@@ -347,25 +347,201 @@ class QuoteService {
     Duration timeout = const Duration(minutes: 5),
   }) async {
     final startTime = DateTime.now();
+    int attemptCount = 0;
+    const int maxAttempts = 30;
 
-    while (DateTime.now().difference(startTime) < timeout) {
-      final statusResult = await getQuoteStatus(quoteId);
+    // Track status changes to detect stuck status
+    String? lastStatus;
+    DateTime? lastStatusChangeTime;
+    const Duration maxStatusStuckTime = Duration(
+      minutes: 2,
+    ); // Stop if status doesn't change for 2 minutes
+    const Duration initialProcessingTimeout = Duration(
+      seconds: 30,
+    ); // Give backend 30 seconds to start processing
 
-      if (statusResult is Ok<QuoteModel>) {
-        final quote = statusResult.value;
-        if (quote.isCompleted || quote.isFailed || quote.isError) {
-          return Result.ok(quote);
+    // Add initial delay to allow backend processing to start
+    log(
+      'DEBUG: Waiting 3 seconds before starting status polling for quote: $quoteId',
+    );
+    await Future.delayed(const Duration(seconds: 3));
+
+    while (DateTime.now().difference(startTime) < timeout &&
+        attemptCount < maxAttempts) {
+      attemptCount++;
+
+      try {
+        final statusResult = await getQuoteStatus(quoteId);
+
+        if (statusResult is Ok<QuoteModel>) {
+          final quote = statusResult.value;
+          final currentStatus = quote.status.value;
+
+          // Track status changes
+          if (lastStatus != currentStatus) {
+            lastStatus = currentStatus;
+            lastStatusChangeTime = DateTime.now();
+            log(
+              'DEBUG: Quote $quoteId status changed to: $currentStatus',
+            );
+          }
+
+          // Log progress every 5 attempts to avoid spam
+          if (attemptCount % 5 == 0) {
+            log(
+              'DEBUG: Quote $quoteId status check attempt $attemptCount - Status: $currentStatus',
+            );
+          }
+
+          // Check if processing is complete
+          if (quote.isCompleted || quote.isFailed || quote.isError) {
+            log(
+              'DEBUG: Quote $quoteId processing completed with status: $currentStatus',
+            );
+            return Result.ok(quote);
+          }
+
+          // Check if status has been stuck for too long
+          if (lastStatusChangeTime != null &&
+              DateTime.now().difference(lastStatusChangeTime) >
+                  maxStatusStuckTime) {
+            log(
+              'DEBUG: Quote $quoteId status stuck on "$currentStatus" for ${maxStatusStuckTime.inMinutes} minutes, stopping polling',
+            );
+            return Result.error(
+              Exception(
+                'Quote processing appears to be stuck on status: $currentStatus',
+              ),
+            );
+          }
+
+          // Check if initial processing timeout has been reached (status still pending after 30 seconds)
+          if (currentStatus == 'pending' &&
+              DateTime.now().difference(startTime) > initialProcessingTimeout) {
+            log(
+              'DEBUG: Quote $quoteId still pending after ${initialProcessingTimeout.inSeconds} seconds, backend may not be processing',
+            );
+            log(
+              'DEBUG: Total time elapsed: ${DateTime.now().difference(startTime).inSeconds} seconds',
+            );
+
+            // Check if this is a systemic issue by looking at other quotes
+            try {
+              final otherQuotesResponse = await _httpService.get(
+                '/materials/uploads?limit=10',
+              );
+              if (otherQuotesResponse.statusCode == 200) {
+                final data = otherQuotesResponse.data;
+                if (data is Map<String, dynamic> && data['data'] != null) {
+                  final quotes = data['data']['uploads'] as List?;
+                  if (quotes != null) {
+                    int pendingCount = 0;
+                    int totalCount = quotes.length;
+                    for (final quote in quotes) {
+                      if (quote['status'] == 'pending') {
+                        pendingCount++;
+                      }
+                    }
+                    log(
+                      'DEBUG: Found $pendingCount pending quotes out of $totalCount total quotes',
+                    );
+                    if (pendingCount > totalCount * 0.5) {
+                      log(
+                        'DEBUG: High percentage of pending quotes suggests backend processing issue',
+                      );
+                    }
+                  }
+                }
+              }
+            } catch (e) {
+              log('DEBUG: Could not check other quotes status: $e');
+            }
+
+            return Result.error(
+              Exception(
+                'Quote upload accepted but backend processing appears to be delayed or stuck. Please try again later.',
+              ),
+            );
+          }
+
+          // Warning when approaching timeout
+          if (currentStatus == 'pending' &&
+              DateTime.now().difference(startTime) > Duration(seconds: 20)) {
+            log(
+              'DEBUG: WARNING: Quote $quoteId approaching timeout (${initialProcessingTimeout.inSeconds}s) - Status: $currentStatus',
+            );
+          }
+
+          // If still pending/processing, continue polling
+          if (quote.isPending || quote.isProcessing) {
+            // Log the current polling state for debugging
+            if (attemptCount % 3 == 0) {
+              // Log every 3rd attempt to avoid spam
+              log(
+                'DEBUG: Quote $quoteId attempt $attemptCount - Status: $currentStatus, Time elapsed: ${DateTime.now().difference(startTime).inSeconds}s',
+              );
+            }
+
+            // Wait before next check
+            await Future.delayed(interval);
+            continue;
+          }
+
+          // If we reach here, status is unknown, log and continue
+          log(
+            'DEBUG: Quote $quoteId has unknown status: $currentStatus',
+          );
+        } else {
+          // If we get an error, log it but don't fail immediately
+          // This prevents the loop from breaking on temporary network issues
+          final error = statusResult.asError.error;
+          log(
+            'DEBUG: Quote $quoteId status check attempt $attemptCount failed: $error',
+          );
+
+          // Only fail immediately on critical errors (401, 403, 404)
+          if (error.toString().contains('401') ||
+              error.toString().contains('403') ||
+              error.toString().contains('404')) {
+            return statusResult;
+          }
+
+          // For other errors, wait and retry
+          await Future.delayed(interval);
+          continue;
         }
-      } else {
-        return statusResult; // Return error immediately
-      }
+      } catch (e) {
+        log(
+          'DEBUG: Quote $quoteId status check attempt $attemptCount threw exception: $e',
+        );
 
-      // Wait before next check
-      await Future.delayed(interval);
+        // Only fail on critical exceptions
+        if (e.toString().contains('SocketException') ||
+            e.toString().contains('TimeoutException')) {
+          return Result.error(
+            Exception('Network error during status polling: $e'),
+          );
+        }
+
+        // For other exceptions, wait and retry
+        await Future.delayed(interval);
+        continue;
+      }
     }
 
-    return Result.error(
-      Exception('Quote processing timeout after ${timeout.inMinutes} minutes'),
-    );
+    // If we reach here, either timeout or max attempts reached
+    if (attemptCount >= maxAttempts) {
+      return Result.error(
+        Exception(
+          'Quote processing exceeded maximum attempts ($maxAttempts) after ${timeout.inMinutes} minutes',
+        ),
+      );
+    } else {
+      return Result.error(
+        Exception(
+          'Quote processing timeout after ${timeout.inMinutes} minutes',
+        ),
+      );
+    }
   }
 }
