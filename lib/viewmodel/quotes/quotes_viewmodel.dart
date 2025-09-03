@@ -13,28 +13,51 @@ class QuotesViewModel extends ChangeNotifier {
   final QuoteUploadUseCase _quoteUploadUseCase;
   final AppLogger _logger;
 
-  QuotesState _currentState = QuotesState.empty;
+  // State management
+  QuotesState _currentState = QuotesState.loading;
+  final bool _isLoading = false;
   bool _isUploading = false;
-  String? _errorMessage;
+  bool _isDeleting = false; // Add deleting state
+  String? _error;
 
-  // Lista de quotes
+  // Data
   final List<QuotesModel> _quotes = [];
   final List<QuotesModel> _filteredQuotes = [];
   String _searchQuery = '';
+
+  // Polling management - prevent multiple polling instances for the same quote
+  final Set<String> _pollingQuotes = <String>{};
+
+  // Delete management - track which quote is being deleted
+  final Set<String> _deletingQuotes = <String>{};
+
+  // Debounce mechanism to prevent excessive UI updates
+  DateTime? _lastUpdateTime;
+  static const Duration _updateDebounceTime = Duration(milliseconds: 500);
+
+  // Getters
+  QuotesState get currentState => _currentState;
+  bool get isLoading => _isLoading;
+  bool get isUploading => _isUploading;
+  bool get isDeleting => _isDeleting; // Add getter for deleting state
+  String? get error => _error;
+  List<QuotesModel> get quotes => _quotes;
+  List<QuotesModel> get filteredQuotes => _filteredQuotes;
+  String get searchQuery => _searchQuery;
+
+  /// Check if a specific quote is being deleted
+  bool isQuoteBeingDeleted(String quoteId) => _deletingQuotes.contains(quoteId);
 
   // Construtor
   QuotesViewModel(this._quoteUploadUseCase, this._logger) {
     _loadQuotes();
   }
 
-  // Getters
-  QuotesState get currentState => _currentState;
-  List<QuotesModel> get quotes => _searchQuery.isEmpty
-      ? List.unmodifiable(_quotes)
-      : List.unmodifiable(_filteredQuotes);
-  bool get isUploading => _isUploading;
-  String? get errorMessage => _errorMessage;
-  bool get hasQuotes => _quotes.isNotEmpty;
+  @override
+  void dispose() {
+    _stopAllPolling();
+    super.dispose();
+  }
 
   /// Carrega quotes existentes
   Future<Result<void>> _loadQuotes() async {
@@ -210,7 +233,14 @@ class QuotesViewModel extends ChangeNotifier {
 
           // Se o status for pending ou processing, inicia polling para acompanhar o progresso
           if (newQuote.isPending || newQuote.isProcessing) {
+            _logger.info(
+              'Starting status polling for new quote: ${newQuote.id} (${newQuote.statusDisplay})',
+            );
             _startStatusPolling(newQuote.id);
+          } else {
+            _logger.info(
+              'Quote ${newQuote.id} has final status: ${newQuote.statusDisplay}, no polling needed',
+            );
           }
 
           return Result.ok(null);
@@ -266,15 +296,77 @@ class QuotesViewModel extends ChangeNotifier {
     }
   }
 
+  /// Stops polling for a specific quote
+  void _stopPolling(String quoteId) {
+    if (_pollingQuotes.remove(quoteId)) {
+      _logger.info('Stopped polling for quote: $quoteId');
+    }
+  }
+
+  /// Stops polling for a specific quote (public method)
+  void stopPollingForQuote(String quoteId) {
+    _stopPolling(quoteId);
+  }
+
+  /// Stops all active polling
+  void _stopAllPolling() {
+    if (_pollingQuotes.isNotEmpty) {
+      _logger.info(
+        'Stopping all active polling for ${_pollingQuotes.length} quotes',
+      );
+      _pollingQuotes.clear();
+    }
+  }
+
+  /// Force stops all polling (public method for emergency situations)
+  void forceStopAllPolling() {
+    _logger.warning(
+      'Force stopping all polling - this may indicate a backend issue',
+    );
+    _stopAllPolling();
+  }
+
+  /// Gets current polling status for debugging
+  Set<String> get currentPollingQuotes => Set.from(_pollingQuotes);
+
+  /// Gets detailed polling status for debugging
+  Map<String, dynamic> get pollingStatus {
+    return {
+      'active_polling_count': _pollingQuotes.length,
+      'active_polling_quotes': _pollingQuotes.toList(),
+      'last_update_time': _lastUpdateTime?.toIso8601String(),
+      'current_state': _currentState.toString(),
+    };
+  }
+
+  /// Shows current polling status in logs for debugging
+  void logPollingStatus() {
+    _logger.info('Current polling status: $pollingStatus');
+  }
+
   /// Inicia polling do status do upload
   Future<Result<void>> _startStatusPolling(String quoteId) async {
+    // Prevent multiple polling instances for the same quote
+    if (_pollingQuotes.contains(quoteId)) {
+      _logger.info(
+        'Quote $quoteId is already being polled, skipping duplicate request',
+      );
+      return Result.ok(null);
+    }
+
+    // Mark this quote as being polled
+    _pollingQuotes.add(quoteId);
+
     try {
       final parsedQuoteId = int.tryParse(quoteId);
       if (parsedQuoteId == null) {
+        _pollingQuotes.remove(quoteId); // Clean up
         return Result.error(
           Exception('Invalid quote ID for polling'),
         );
       }
+
+      _logger.info('Starting status polling for quote: $quoteId');
 
       final result = await _quoteUploadUseCase.pollQuoteStatus(parsedQuoteId);
 
@@ -299,6 +391,16 @@ class QuotesViewModel extends ChangeNotifier {
         },
         error: (error) {
           _logger.error('Status polling failed: $error', error);
+          // Log the specific error to help debug
+          if (error.toString().contains('stuck')) {
+            _logger.warning(
+              'Quote $quoteId polling stopped due to stuck status - this may indicate a backend issue',
+            );
+          } else if (error.toString().contains('delayed')) {
+            _logger.warning(
+              'Quote $quoteId polling stopped due to processing delay - backend may not be processing PDFs',
+            );
+          }
           // Não mostra erro para o usuário, apenas log
           return Result.error(error);
         },
@@ -306,35 +408,58 @@ class QuotesViewModel extends ChangeNotifier {
     } catch (e) {
       _logger.error('Error in status polling: $e', e);
       return Result.error(Exception(e.toString()));
+    } finally {
+      // Always clean up the polling set
+      _pollingQuotes.remove(quoteId);
     }
   }
 
   /// Remove um quote
   Future<Result<void>> removeQuote(String id) async {
     try {
+      _setDeleting(true);
+      _deletingQuotes.add(id); // Track this specific quote
+      _clearError();
+
       final quoteId = int.tryParse(id);
       if (quoteId == null) {
         return Result.error(Exception('Invalid quote ID'));
       }
 
+      _logger.info('Starting delete operation for quote: $id');
+
       final result = await _quoteUploadUseCase.deleteQuote(quoteId);
 
       return result.when(
         ok: (_) {
+          // Remove the quote from the list
           _quotes.removeWhere((quote) => quote.id == id);
+
+          // Stop polling for this specific quote if it was being polled
+          _stopPolling(id);
+
           _updateState();
           notifyListeners();
-          _logger.info('Quote deleted successfully');
+          _logger.info('Quote deleted successfully: $id');
+
           return Result.ok(null);
         },
         error: (error) {
           _setError('Failed to delete quote: ${error.toString()}');
+          _logger.error('Delete operation failed for quote $id: $error', error);
           return Result.error(error);
         },
       );
     } catch (e) {
       _setError('Unexpected error deleting quote: $e');
+      _logger.error(
+        'Unexpected error in delete operation for quote $id: $e',
+        e,
+      );
       return Result.error(Exception(e.toString()));
+    } finally {
+      _setDeleting(false); // Reset deleting state
+      _deletingQuotes.remove(id); // Remove from deleting set
     }
   }
 
@@ -396,7 +521,7 @@ class QuotesViewModel extends ChangeNotifier {
 
   /// Limpa mensagem de erro
   void clearError() {
-    _errorMessage = null;
+    _error = null;
     _updateState();
   }
 
@@ -412,7 +537,14 @@ class QuotesViewModel extends ChangeNotifier {
     } else {
       _currentState = QuotesState.loaded;
     }
-    notifyListeners();
+
+    // Use debouncing to prevent excessive UI updates during polling
+    final now = DateTime.now();
+    if (_lastUpdateTime == null ||
+        now.difference(_lastUpdateTime!) > _updateDebounceTime) {
+      _lastUpdateTime = now;
+      notifyListeners();
+    }
   }
 
   void _setLoading(bool loading) {
@@ -427,15 +559,20 @@ class QuotesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _setDeleting(bool deleting) {
+    _isDeleting = deleting;
+    notifyListeners();
+  }
+
   void _setError(String message) {
-    _errorMessage = message;
+    _error = message;
     _currentState = QuotesState.error;
     _isUploading = false;
     notifyListeners();
   }
 
   void _clearError() {
-    _errorMessage = null;
+    _error = null;
     notifyListeners();
   }
 }
