@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../../helpers/date_helper.dart';
+import '../../../helpers/status_helper.dart';
 import '../../widgets/widgets.dart';
 
-class QuoteCardWidget extends StatelessWidget {
+class QuoteCardWidget extends StatefulWidget {
   final String id;
   final String titulo;
   final DateTime dateUpload;
   final String? status;
-  final int? materialsExtracted;
   final String? errorMessage;
   final double? width;
   final double? height;
@@ -21,7 +22,6 @@ class QuoteCardWidget extends StatelessWidget {
     required this.titulo,
     required this.dateUpload,
     this.status,
-    this.materialsExtracted,
     this.errorMessage,
     this.width = 336,
     this.height = 84,
@@ -31,45 +31,41 @@ class QuoteCardWidget extends StatelessWidget {
     this.isDeleting = false, // Default to false
   });
 
-  String _formatDateTime(DateTime dateTime) {
-    // Formato: "Uploaded at 07/14/2025 - 10:30 AM"
-    String day = dateTime.day.toString().padLeft(2, '0');
-    String month = dateTime.month.toString().padLeft(2, '0');
-    String year = dateTime.year.toString(); // Ano completo
+  @override
+  State<QuoteCardWidget> createState() => _QuoteCardWidgetState();
+}
 
-    int hour = dateTime.hour;
-    String minute = dateTime.minute.toString().padLeft(2, '0');
-    String period = hour >= 12 ? 'PM' : 'AM';
+class _QuoteCardWidgetState extends State<QuoteCardWidget> {
+  bool _showTemporaryStatus = false;
+  String? _previousStatus;
 
-    // Converter para formato 12 horas
-    if (hour > 12) {
-      hour = hour - 12;
-    } else if (hour == 0) {
-      hour = 12;
-    }
-
-    return "Uploaded at $month/$day/$year - $hour:$minute $period";
+  @override
+  void initState() {
+    super.initState();
+    _previousStatus = widget.status;
   }
 
-  Color _getStatusColor() {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return Colors.orange;
-      case 'processing':
-        return Colors.blue;
-      case 'completed':
-        return Colors.green;
-      case 'failed':
-      case 'error':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
+  @override
+  void didUpdateWidget(QuoteCardWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
 
-  String _getStatusDisplay() {
-    if (status == null) return 'Unknown';
-    return status!.toUpperCase();
+    // Check if status changed to completed using helper
+    if (StatusHelper.hasStatusChangedToCompleted(
+      currentStatus: widget.status,
+      previousStatus: _previousStatus,
+    )) {
+      _showTemporaryStatus = true;
+      // Hide the temporary status after 3 seconds
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _showTemporaryStatus = false;
+          });
+        }
+      });
+    }
+
+    _previousStatus = widget.status;
   }
 
   @override
@@ -79,10 +75,10 @@ class QuoteCardWidget extends StatelessWidget {
         vertical: 12,
         horizontal: 16,
       ),
-      width: width,
+      width: widget.width,
       constraints: BoxConstraints(
-        minHeight: height ?? 84,
-        minWidth: width ?? 336,
+        minHeight: widget.height ?? 84,
+        minWidth: widget.width ?? 336,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -112,7 +108,7 @@ class QuoteCardWidget extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          'Quote #$id',
+                          'Quote #${widget.id}',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -120,26 +116,36 @@ class QuoteCardWidget extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(width: 8),
-                        if (status != null)
+                        if (StatusHelper.shouldShowStatus(
+                          currentStatus: widget.status,
+                          previousStatus: _previousStatus,
+                          showTemporaryStatus: _showTemporaryStatus,
+                        ))
                           Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: _getStatusColor().withValues(alpha: 0.1),
+                              color: StatusHelper.getStatusColor(
+                                widget.status,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: _getStatusColor(),
+                                color: StatusHelper.getStatusColor(
+                                  widget.status,
+                                ),
                                 width: 1,
                               ),
                             ),
                             child: Text(
-                              _getStatusDisplay(),
+                              StatusHelper.getStatusDisplay(widget.status),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: _getStatusColor(),
+                                color: StatusHelper.getStatusColor(
+                                  widget.status,
+                                ),
                               ),
                             ),
                           ),
@@ -147,7 +153,7 @@ class QuoteCardWidget extends StatelessWidget {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      titulo,
+                      widget.titulo,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -156,30 +162,19 @@ class QuoteCardWidget extends StatelessWidget {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      _formatDateTime(dateUpload),
+                      DateHelper.formatUploadDateTime(widget.dateUpload),
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (materialsExtracted != null && materialsExtracted! > 0)
+                    if (widget.errorMessage != null &&
+                        widget.errorMessage!.isNotEmpty)
                       Padding(
                         padding: EdgeInsets.only(top: 4),
                         child: Text(
-                          '$materialsExtracted materials extracted',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.green[700],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    if (errorMessage != null && errorMessage!.isNotEmpty)
-                      Padding(
-                        padding: EdgeInsets.only(top: 4),
-                        child: Text(
-                          'Error: $errorMessage',
+                          'Error: ${widget.errorMessage}',
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.red[700],
@@ -210,21 +205,23 @@ class QuoteCardWidget extends StatelessWidget {
                 if (value == 'rename') {
                   final newName = await showDialog<String>(
                     context: context,
-                    builder: (context) => RenameDialog(initialName: titulo),
+                    builder: (context) =>
+                        RenameDialog(initialName: widget.titulo),
                   );
                   if (newName != null && newName.trim().isNotEmpty) {
-                    onRename?.call(newName.trim());
+                    widget.onRename?.call(newName.trim());
                   }
                 } else if (value == 'delete') {
                   // Don't allow delete if already deleting
-                  if (isDeleting) return;
+                  if (widget.isDeleting) return;
 
                   final confirm = await showDialog<bool>(
                     context: context,
-                    builder: (context) => DeleteDialog(quoteName: titulo),
+                    builder: (context) =>
+                        DeleteDialog(quoteName: widget.titulo),
                   );
                   if (confirm == true) {
-                    onDelete?.call();
+                    widget.onDelete?.call();
                   }
                 }
               },
@@ -244,10 +241,10 @@ class QuoteCardWidget extends StatelessWidget {
                 ),
                 PopupMenuItem(
                   value: 'delete',
-                  enabled: !isDeleting, // Disable when deleting
+                  enabled: !widget.isDeleting, // Disable when deleting
                   child: Row(
                     children: [
-                      if (isDeleting)
+                      if (widget.isDeleting)
                         SizedBox(
                           width: 16,
                           height: 16,
@@ -266,9 +263,9 @@ class QuoteCardWidget extends StatelessWidget {
                         ),
                       SizedBox(width: 8),
                       Text(
-                        isDeleting ? 'Deleting...' : 'Delete',
+                        widget.isDeleting ? 'Deleting...' : 'Delete',
                         style: TextStyle(
-                          color: isDeleting ? Colors.grey : Colors.red,
+                          color: widget.isDeleting ? Colors.grey : Colors.red,
                         ),
                       ),
                     ],
