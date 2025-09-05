@@ -1,3 +1,4 @@
+import 'dart:developer';
 import '../quotes_data/quote_model.dart';
 import '../quotes_data/quote_status.dart';
 import '../quotes_data/quote_status_extension.dart';
@@ -23,6 +24,21 @@ class QuotesModel {
     this.filePath,
   });
 
+  /// Parse DateTime from string, handling timezone correctly
+  static DateTime _parseDateTime(String dateString) {
+    try {
+      // Try to parse as ISO 8601 first
+      final parsed = DateTime.parse(dateString);
+      // If it's already in local time, return as is
+      // If it's in UTC, convert to local
+      return parsed.isUtc ? parsed.toLocal() : parsed;
+    } catch (e) {
+      log('ERROR: Failed to parse date: $dateString, error: $e');
+      // Fallback to current time if parsing fails
+      return DateTime.now();
+    }
+  }
+
   /// Factory constructor para criar QuotesModel a partir de QuoteModel
   factory QuotesModel.fromQuote(QuoteModel quote) {
     return QuotesModel(
@@ -39,10 +55,19 @@ class QuotesModel {
 
   /// Factory constructor para criar QuotesModel a partir de JSON
   factory QuotesModel.fromJson(Map<String, dynamic> json) {
+    // Validate required fields
+    if (json['id'] == null) {
+      throw Exception('Missing required field: id');
+    }
+
+    if (json['created_at'] == null) {
+      throw Exception('Missing required field: created_at');
+    }
+
     return QuotesModel(
-      id: json['id']?.toString() ?? '',
+      id: json['id'].toString(),
       titulo: json['display_name'] ?? json['original_name'] ?? '',
-      dateUpload: DateTime.parse(json['created_at'] as String),
+      dateUpload: _parseDateTime(json['created_at'] as String),
       status: json['status'] != null
           ? QuoteStatusExtension.fromString(json['status'] as String)
           : null,
