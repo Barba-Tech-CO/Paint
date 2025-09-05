@@ -33,6 +33,21 @@ class QuoteModel {
     required this.updatedAt,
   });
 
+  /// Parse DateTime from string, handling timezone correctly
+  static DateTime _parseDateTime(String dateString) {
+    try {
+      // Try to parse as ISO 8601 first
+      final parsed = DateTime.parse(dateString);
+      // If it's already in local time, return as is
+      // If it's in UTC, convert to local
+      return parsed.isUtc ? parsed.toLocal() : parsed;
+    } catch (e) {
+      log('ERROR: Failed to parse date: $dateString, error: $e');
+      // Fallback to current time if parsing fails
+      return DateTime.now();
+    }
+  }
+
   factory QuoteModel.fromJson(Map<String, dynamic> json) {
     log('DEBUG: QuoteModel.fromJson - json: $json');
 
@@ -68,23 +83,33 @@ class QuoteModel {
       throw Exception('Missing required field: updated_at');
     }
 
+    // Validate required fields
+    if (json['user_id'] == null) {
+      throw Exception('Missing required field: user_id');
+    }
+
+    if (json['file_path'] == null) {
+      throw Exception('Missing required field: file_path');
+    }
+
+    if (json['file_hash'] == null) {
+      throw Exception('Missing required field: file_hash');
+    }
+
     return QuoteModel(
       id: json['id'] as int,
-      userId: json['user_id'] as int? ?? 1, // Usar valor padrão se ausente
+      userId: json['user_id'] as int,
       originalName: json['original_name'] as String,
       displayName: json['display_name'] as String?,
-      filePath:
-          json['file_path'] as String? ?? '', // Usar valor padrão se ausente
+      filePath: json['file_path'] as String,
       r2Url: json['r2_url'] as String?,
-      fileHash:
-          json['file_hash'] as String? ?? '', // Usar valor padrão se ausente
+      fileHash: json['file_hash'] as String,
       status: QuoteStatusExtension.fromString(json['status'] as String),
-      materialsExtracted:
-          json['materials_extracted'] as int? ?? 0, // Valor padrão se nulo
+      materialsExtracted: json['materials_extracted'] as int? ?? 0,
       extractionMetadata: json['extraction_metadata'] as Map<String, dynamic>?,
       errorMessage: json['error_message'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: _parseDateTime(json['created_at'] as String),
+      updatedAt: _parseDateTime(json['updated_at'] as String),
     );
   }
 
