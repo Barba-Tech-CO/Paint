@@ -1,7 +1,8 @@
 class DateHelper {
   /// Formata uma data para o formato "Uploaded at MM/DD/YYYY - H:MM AM/PM"
+  /// Sempre usa o timezone local do dispositivo
   static String formatUploadDateTime(DateTime dateTime) {
-    // Converter para timezone local se necessário
+    // Sempre converter para timezone local do dispositivo
     final localDateTime = dateTime.toLocal();
 
     String day = localDateTime.day.toString().padLeft(2, '0');
