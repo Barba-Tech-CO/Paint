@@ -115,7 +115,6 @@ class _QuotesViewState extends State<QuotesView> {
                                   titulo: quote.titulo,
                                   dateUpload: quote.dateUpload,
                                   status: quote.status?.value,
-                                  materialsExtracted: quote.materialsExtracted,
                                   errorMessage: quote.errorMessage,
                                   isDeleting: quotesViewModel
                                       .isQuoteBeingDeleted(
