@@ -39,7 +39,6 @@ import '../use_case/contacts/contact_operations_use_case.dart';
 import '../use_case/contacts/contact_sync_use_case.dart';
 
 // ViewModel Layer
-import '../viewmodel/select_colors_viewmodel.dart';
 import '../viewmodel/viewmodels.dart';
 
 final GetIt getIt = GetIt.instance;

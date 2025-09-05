@@ -32,4 +32,7 @@ export 'overview_zones_viewmodel.dart';
 export 'zones/zones_viewmodels.dart';
 
 // Quotes ViewModels
-export 'quotes/quotes_viewmodel.dart';
+export 'quotes/quotes_viewmodels.dart';
+
+// Select Colors ViewModel
+export 'select_colors/select_colors_viewmodels.dart';
