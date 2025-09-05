@@ -24,17 +24,16 @@ class QuotesModel {
     this.filePath,
   });
 
-  /// Parse DateTime from string, handling timezone correctly
+  /// Parse DateTime from string, always converting to device local timezone
   static DateTime _parseDateTime(String dateString) {
     try {
-      // Try to parse as ISO 8601 first
+      // Parse the date string
       final parsed = DateTime.parse(dateString);
-      // If it's already in local time, return as is
-      // If it's in UTC, convert to local
-      return parsed.isUtc ? parsed.toLocal() : parsed;
+      // Always convert to local timezone of the device
+      return parsed.toLocal();
     } catch (e) {
       log('ERROR: Failed to parse date: $dateString, error: $e');
-      // Fallback to current time if parsing fails
+      // Fallback to current local time if parsing fails
       return DateTime.now();
     }
   }
