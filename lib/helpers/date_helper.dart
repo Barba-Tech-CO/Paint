@@ -1,12 +1,15 @@
 class DateHelper {
   /// Formata uma data para o formato "Uploaded at MM/DD/YYYY - H:MM AM/PM"
   static String formatUploadDateTime(DateTime dateTime) {
-    String day = dateTime.day.toString().padLeft(2, '0');
-    String month = dateTime.month.toString().padLeft(2, '0');
-    String year = dateTime.year.toString();
+    // Converter para timezone local se necessário
+    final localDateTime = dateTime.toLocal();
 
-    int hour = dateTime.hour;
-    String minute = dateTime.minute.toString().padLeft(2, '0');
+    String day = localDateTime.day.toString().padLeft(2, '0');
+    String month = localDateTime.month.toString().padLeft(2, '0');
+    String year = localDateTime.year.toString();
+
+    int hour = localDateTime.hour;
+    String minute = localDateTime.minute.toString().padLeft(2, '0');
     String period = hour >= 12 ? 'PM' : 'AM';
 
     // Converter para formato 12 horas
