@@ -4,12 +4,12 @@ import 'quote_status_extension.dart';
 
 class QuoteModel {
   final int id;
-  final int userId;
+  final int? userId;
   final String originalName;
   final String? displayName;
   final String filePath;
   final String? r2Url;
-  final String fileHash;
+  final String? fileHash;
   final QuoteStatus status;
   final int materialsExtracted;
   final Map<String, dynamic>? extractionMetadata;
@@ -19,12 +19,12 @@ class QuoteModel {
 
   QuoteModel({
     required this.id,
-    required this.userId,
+    this.userId,
     required this.originalName,
     this.displayName,
     required this.filePath,
     this.r2Url,
-    required this.fileHash,
+    this.fileHash,
     required this.status,
     required this.materialsExtracted,
     this.extractionMetadata,
@@ -36,10 +36,16 @@ class QuoteModel {
   /// Parse DateTime from string, always converting to device local timezone
   static DateTime _parseDateTime(String dateString) {
     try {
+      log('DEBUG: _parseDateTime - parsing dateString: $dateString');
       // Parse the date string
       final parsed = DateTime.parse(dateString);
+      log('DEBUG: _parseDateTime - parsed: $parsed, isUtc: ${parsed.isUtc}');
+
       // Always convert to local timezone of the device
-      return parsed.toLocal();
+      final localDateTime = parsed.toLocal();
+      log('DEBUG: _parseDateTime - localDateTime: $localDateTime');
+
+      return localDateTime;
     } catch (e) {
       log('ERROR: Failed to parse date: $dateString, error: $e');
       // Fallback to current local time if parsing fails
@@ -83,26 +89,18 @@ class QuoteModel {
     }
 
     // Validate required fields
-    if (json['user_id'] == null) {
-      throw Exception('Missing required field: user_id');
-    }
-
     if (json['file_path'] == null) {
       throw Exception('Missing required field: file_path');
     }
 
-    if (json['file_hash'] == null) {
-      throw Exception('Missing required field: file_hash');
-    }
-
     return QuoteModel(
       id: json['id'] as int,
-      userId: json['user_id'] as int,
+      userId: json['user_id'] as int?,
       originalName: json['original_name'] as String,
       displayName: json['display_name'] as String?,
       filePath: json['file_path'] as String,
       r2Url: json['r2_url'] as String?,
-      fileHash: json['file_hash'] as String,
+      fileHash: json['file_hash'] as String?,
       status: QuoteStatusExtension.fromString(json['status'] as String),
       materialsExtracted: json['materials_extracted'] as int? ?? 0,
       extractionMetadata: json['extraction_metadata'] as Map<String, dynamic>?,
