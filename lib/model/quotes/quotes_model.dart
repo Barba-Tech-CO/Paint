@@ -27,12 +27,22 @@ class QuotesModel {
   /// Parse DateTime from string, always converting to device local timezone
   static DateTime _parseDateTime(String dateString) {
     try {
+      log(
+        'DEBUG: QuotesModel._parseDateTime - parsing dateString: $dateString',
+      );
       // Parse the date string
       final parsed = DateTime.parse(dateString);
+      log(
+        'DEBUG: QuotesModel._parseDateTime - parsed: $parsed, isUtc: ${parsed.isUtc}',
+      );
+
       // Always convert to local timezone of the device
-      return parsed.toLocal();
+      final localDateTime = parsed.toLocal();
+      log('DEBUG: QuotesModel._parseDateTime - localDateTime: $localDateTime');
+
+      return localDateTime;
     } catch (e) {
-      log('ERROR: Failed to parse date: $dateString, error: $e');
+      log('ERROR: QuotesModel failed to parse date: $dateString, error: $e');
       // Fallback to current local time if parsing fails
       return DateTime.now();
     }
