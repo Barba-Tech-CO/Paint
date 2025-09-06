@@ -16,11 +16,11 @@ extension QuoteStatusExtension on QuoteStatus {
       case 'error':
         return QuoteStatus.error;
       default:
-        // Log the unknown status and return pending as default
+        // Log the unknown status and throw exception for better error handling
         log(
-          'WARNING: Unknown QuoteStatus: $value, using pending as default',
+          'ERROR: Unknown QuoteStatus: $value',
         );
-        return QuoteStatus.pending;
+        throw Exception('Unknown QuoteStatus: $value');
     }
   }
 
