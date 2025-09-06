@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
+import '../config/app_urls.dart';
 import '../model/models.dart';
 import '../model/quotes_data/extracted_material_model.dart';
 import '../utils/result/result.dart';
@@ -51,7 +52,7 @@ class QuoteService {
       log('DEBUG: uploadQuote - File: $finalFilename, Size: $fileSize bytes');
 
       final response = await _httpService.post(
-        '/materials/upload',
+        AppUrls.materialsUploadUrl,
         data: formData,
       );
 
@@ -67,57 +68,91 @@ class QuoteService {
       // Handle Dio-specific errors with essential detail
       log('DEBUG: uploadQuote - Error ${e.response?.statusCode}: ${e.message}');
 
-      if (e.response?.statusCode == 422) {
-        // Handle validation errors specifically
-        final responseData = e.response?.data;
-        log('DEBUG: uploadQuote - Validation error details: $responseData');
+      // Handle specific HTTP status codes
+      switch (e.response?.statusCode) {
+        case 400:
+          return Result.error(
+            Exception(
+              'Invalid request: Please check your file format and try again',
+            ),
+          );
+        case 401:
+          return Result.error(
+            Exception('Authentication failed: Please log in again'),
+          );
+        case 403:
+          return Result.error(
+            Exception(
+              'Access denied: You do not have permission to upload files',
+            ),
+          );
+        case 413:
+          return Result.error(
+            Exception('File too large: Maximum size is 25MB'),
+          );
+        case 422:
+          // Handle validation errors specifically
+          final responseData = e.response?.data;
+          log('DEBUG: uploadQuote - Validation error details: $responseData');
 
-        if (responseData is Map<String, dynamic>) {
-          final errors =
-              responseData['errors'] ??
-              responseData['message'] ??
-              'Validation failed';
+          if (responseData is Map<String, dynamic>) {
+            final errors =
+                responseData['errors'] ??
+                responseData['message'] ??
+                'Validation failed';
 
-          // Try to extract specific validation error details
-          if (responseData['errors'] is Map<String, dynamic>) {
-            final errorDetails = <String>[];
-            for (final entry in responseData['errors'].entries) {
-              errorDetails.add('${entry.key}: ${entry.value}');
+            // Try to extract specific validation error details
+            if (responseData['errors'] is Map<String, dynamic>) {
+              final errorDetails = <String>[];
+              for (final entry in responseData['errors'].entries) {
+                errorDetails.add('${entry.key}: ${entry.value}');
+              }
+              return Result.error(
+                Exception('Validation error: ${errorDetails.join(', ')}'),
+              );
             }
+
             return Result.error(
-              Exception('Validation error: ${errorDetails.join(', ')}'),
+              Exception('Validation error: $errors'),
+            );
+          }
+          return Result.error(
+            Exception('Validation error: Invalid request format'),
+          );
+        case 500:
+          return Result.error(
+            Exception('Server error: Please try again later'),
+          );
+        case 503:
+          return Result.error(
+            Exception('Service unavailable: Please try again later'),
+          );
+        default:
+          // Handle network errors
+          if (e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.sendTimeout) {
+            return Result.error(
+              Exception(
+                'Connection timeout: Please check your internet connection',
+              ),
+            );
+          } else if (e.type == DioExceptionType.connectionError) {
+            return Result.error(
+              Exception(
+                'Connection error: Please check your internet connection',
+              ),
             );
           }
 
           return Result.error(
-            Exception('Validation error: $errors'),
+            Exception('Error uploading PDF: ${e.message ?? 'Unknown error'}'),
           );
-        }
-        return Result.error(
-          Exception('Validation error: Invalid request format'),
-        );
-      } else if (e.response?.statusCode == 401) {
-        return Result.error(
-          Exception('Authentication failed: Please log in again'),
-        );
-      } else if (e.response?.statusCode == 403) {
-        return Result.error(
-          Exception(
-            'Access denied: You do not have permission to upload files',
-          ),
-        );
-      } else if (e.response?.statusCode == 413) {
-        return Result.error(
-          Exception('File too large: Maximum size is 25MB'),
-        );
       }
-
-      return Result.error(
-        Exception('Error uploading PDF: ${e.message}'),
-      );
     } catch (e) {
+      log('DEBUG: uploadQuote - Unexpected error: $e');
       return Result.error(
-        Exception('Error uploading PDF: $e'),
+        Exception('Unexpected error uploading PDF: $e'),
       );
     }
   }
@@ -139,10 +174,10 @@ class QuoteService {
       }
 
       log('DEBUG: getQuotes - queryParams: $queryParams');
-      log('DEBUG: getQuotes - endpoint: /materials/uploads');
+      log('DEBUG: getQuotes - endpoint: ${AppUrls.materialsUploadsUrl}');
 
       final response = await _httpService.get(
-        '/materials/uploads',
+        AppUrls.materialsUploadsUrl,
         queryParameters: queryParams,
       );
 
@@ -202,7 +237,9 @@ class QuoteService {
   /// Check the processing status of a specific PDF upload
   Future<Result<QuoteModel>> getQuoteStatus(int quoteId) async {
     try {
-      final response = await _httpService.get('/materials/status/$quoteId');
+      final response = await _httpService.get(
+        '${AppUrls.materialsStatusUrl}/$quoteId',
+      );
 
       if (response.statusCode == 200) {
         final data = response.data['data'] as Map<String, dynamic>;
@@ -227,7 +264,7 @@ class QuoteService {
   ) async {
     try {
       final response = await _httpService.put(
-        '/materials/update/$quoteId',
+        '${AppUrls.materialsUpdateUrl}/$quoteId',
         data: {'display_name': displayName},
       );
 
@@ -250,7 +287,9 @@ class QuoteService {
   /// Delete an uploaded PDF and all extracted materials
   Future<Result<bool>> deleteQuote(int quoteId) async {
     try {
-      final response = await _httpService.delete('/materials/delete/$quoteId');
+      final response = await _httpService.delete(
+        '${AppUrls.materialsDeleteUrl}/$quoteId',
+      );
 
       if (response.statusCode == 200) {
         return Result.ok(true);
@@ -274,7 +313,7 @@ class QuoteService {
       final queryParams = filters?.toQueryParams() ?? <String, dynamic>{};
 
       final response = await _httpService.get(
-        '/materials/extracted',
+        AppUrls.materialsExtractedUrl,
         queryParameters: queryParams,
       );
 
@@ -301,7 +340,7 @@ class QuoteService {
   ) async {
     try {
       final response = await _httpService.get(
-        '/materials/extracted/$materialId',
+        '${AppUrls.materialsExtractedUrl}/$materialId',
       );
 
       if (response.statusCode == 200) {
@@ -323,7 +362,7 @@ class QuoteService {
   /// Get available filter options for extracted materials
   Future<Result<MaterialFiltersOptions>> getFilterOptions() async {
     try {
-      final response = await _httpService.get('/materials/filters');
+      final response = await _httpService.get(AppUrls.materialsFiltersUrl);
 
       if (response.statusCode == 200) {
         final options = MaterialFiltersOptions.fromJson(response.data);
@@ -428,7 +467,7 @@ class QuoteService {
             // Check if this is a systemic issue by looking at other quotes
             try {
               final otherQuotesResponse = await _httpService.get(
-                '/materials/uploads?limit=10',
+                '${AppUrls.materialsUploadsUrl}?limit=10',
               );
               if (otherQuotesResponse.statusCode == 200) {
                 final data = otherQuotesResponse.data;
