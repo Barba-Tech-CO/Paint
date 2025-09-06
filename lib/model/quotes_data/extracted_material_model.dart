@@ -36,10 +36,31 @@ class ExtractedMaterialModel {
   });
 
   factory ExtractedMaterialModel.fromJson(Map<String, dynamic> json) {
+    // Validate required fields
+    final requiredFields = [
+      'id',
+      'pdf_upload_id',
+      'user_id',
+      'brand',
+      'description',
+      'type',
+      'unit',
+      'unit_price',
+      'line_number',
+      'created_at',
+      'updated_at',
+    ];
+
+    for (final field in requiredFields) {
+      if (json[field] == null) {
+        throw Exception('Missing required field: $field');
+      }
+    }
+
     return ExtractedMaterialModel(
       id: json['id'] as int,
       pdfUploadId: json['pdf_upload_id'] as int,
-      userId: json['user_id'] as int, // Obrigatório
+      userId: json['user_id'] as int,
       brand: json['brand'] as String,
       description: json['description'] as String,
       type: json['type'] as String,
@@ -143,6 +164,15 @@ class PdfUploadInfo {
   });
 
   factory PdfUploadInfo.fromJson(Map<String, dynamic> json) {
+    // Validate required fields
+    final requiredFields = ['id', 'original_name', 'created_at'];
+
+    for (final field in requiredFields) {
+      if (json[field] == null) {
+        throw Exception('Missing required field: $field');
+      }
+    }
+
     return PdfUploadInfo(
       id: json['id'] as int,
       originalName: json['original_name'] as String,
@@ -175,7 +205,24 @@ class ExtractedMaterialListResponse {
   });
 
   factory ExtractedMaterialListResponse.fromJson(Map<String, dynamic> json) {
-    final data = json['data'] as Map<String, dynamic>;
+    // Validate required fields
+    if (json['success'] == null) {
+      throw Exception('Missing required field: success');
+    }
+
+    final data = json['data'] as Map<String, dynamic>?;
+    if (data == null) {
+      throw Exception('Missing required field: data');
+    }
+
+    if (data['materials'] == null) {
+      throw Exception('Missing required field: data.materials');
+    }
+
+    if (data['pagination'] == null) {
+      throw Exception('Missing required field: data.pagination');
+    }
+
     return ExtractedMaterialListResponse(
       success: json['success'] as bool,
       materials: (data['materials'] as List)
@@ -283,14 +330,26 @@ class MaterialFiltersOptions {
   });
 
   factory MaterialFiltersOptions.fromJson(Map<String, dynamic> json) {
-    final data = json['data'] as Map<String, dynamic>;
-    final filters = data['filters'] as Map<String, dynamic>;
+    // Validate required fields
+    if (json['success'] == null) {
+      throw Exception('Missing required field: success');
+    }
+
+    final data = json['data'] as Map<String, dynamic>?;
+    if (data == null) {
+      throw Exception('Missing required field: data');
+    }
+
+    final filters = data['filters'] as Map<String, dynamic>?;
+    if (filters == null) {
+      throw Exception('Missing required field: data.filters');
+    }
 
     return MaterialFiltersOptions(
-      brands: List<String>.from(filters['brands'] as List),
-      ambients: List<String>.from(filters['ambients'] as List),
-      finishes: List<String>.from(filters['finishes'] as List),
-      qualities: List<String>.from(filters['qualities'] as List),
+      brands: List<String>.from(filters['brands'] as List? ?? []),
+      ambients: List<String>.from(filters['ambients'] as List? ?? []),
+      finishes: List<String>.from(filters['finishes'] as List? ?? []),
+      qualities: List<String>.from(filters['qualities'] as List? ?? []),
     );
   }
 }
@@ -313,6 +372,15 @@ class PaginationInfo {
   });
 
   factory PaginationInfo.fromJson(Map<String, dynamic> json) {
+    // Validate required fields
+    final requiredFields = ['total', 'per_page', 'current_page', 'last_page'];
+
+    for (final field in requiredFields) {
+      if (json[field] == null) {
+        throw Exception('Missing required field: $field');
+      }
+    }
+
     return PaginationInfo(
       total: json['total'] as int,
       perPage: json['per_page'] as int,
