@@ -16,11 +16,20 @@ class PaginationInfo {
   });
 
   factory PaginationInfo.fromJson(Map<String, dynamic> json) {
+    // Validate required fields
+    final requiredFields = ['total', 'per_page', 'current_page', 'last_page'];
+
+    for (final field in requiredFields) {
+      if (json[field] == null) {
+        throw Exception('Missing required field: $field');
+      }
+    }
+
     return PaginationInfo(
-      total: json['total'] as int? ?? 0,
-      perPage: json['per_page'] as int? ?? 10,
-      currentPage: json['current_page'] as int? ?? 1,
-      lastPage: json['last_page'] as int? ?? 1,
+      total: json['total'] as int,
+      perPage: json['per_page'] as int,
+      currentPage: json['current_page'] as int,
+      lastPage: json['last_page'] as int,
       from: json['from'] as int?,
       to: json['to'] as int?,
     );
