@@ -155,19 +155,96 @@ class PdfExtractionService
 
 ## Endpoints da API
 
-### Upload
+### Middleware Aplicado
+
+Todos os endpoints utilizam os seguintes middlewares:
+
+- `auth:sanctum` - Autenticação via Bearer token
+- `user.ownership` - Verificação de propriedade do usuário
+- `api.sessions` - Gerenciamento de sessões da API
+- `throttle.custom:write` - Rate limiting para operações de escrita
+
+### Upload de PDF
 
 ```http
 POST /api/materials/upload
 Authorization: Bearer {token}
 Content-Type: multipart/form-data
+
+Form Data:
+- quote: [arquivo PDF] (obrigatório, máximo 25MB)
+```
+
+**Resposta de Sucesso (201):**
+
+```json
+{
+  "success": true,
+  "message": "Quote uploaded successfully. Processing started.",
+  "data": {
+    "upload": {
+      "id": 123,
+      "user_id": 1,
+      "original_name": "catalogo.pdf",
+      "display_name": null,
+      "file_path": "quotes/2025/01/20/uuid-catalogo.pdf",
+      "r2_url": "https://paintpro.barbatech.company/storage/quotes/2025/01/20/uuid-catalogo.pdf",
+      "file_hash": "abc123...",
+      "status": "pending",
+      "materials_extracted": 0,
+      "extraction_metadata": null,
+      "error_message": null,
+      "created_at": "2025-01-20T10:00:00.000000Z",
+      "updated_at": "2025-01-20T10:00:00.000000Z"
+    },
+    "url": "https://paintpro.barbatech.company/storage/quotes/2025/01/20/uuid-catalogo.pdf",
+    "size": 1024000
+  }
+}
 ```
 
 ### Listagem de Uploads
 
 ```http
-GET /api/materials/uploads
+GET /api/materials/uploads?page=1
 Authorization: Bearer {token}
+```
+
+**Parâmetros de Query:**
+
+- `page` (opcional): Número da página para paginação (padrão: 1)
+
+**Resposta (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "uploads": {
+      "data": [
+        {
+          "id": 1,
+          "user_id": 1,
+          "original_name": "quote.pdf",
+          "display_name": "Project Alpha Quote",
+          "file_path": "quotes/2025/01/20/uuid-quote.pdf",
+          "r2_url": "https://paintpro.barbatech.company/storage/quotes/2025/01/20/uuid-quote.pdf",
+          "file_hash": "def456...",
+          "status": "completed",
+          "materials_extracted": 15,
+          "extraction_metadata": {...},
+          "error_message": null,
+          "created_at": "2025-01-20T10:30:00.000000Z",
+          "updated_at": "2025-01-20T10:35:00.000000Z"
+        }
+      ],
+      "current_page": 1,
+      "total": 50,
+      "per_page": 15,
+      "last_page": 4
+    }
+  }
+}
 ```
 
 ### Status do Upload
@@ -175,6 +252,31 @@ Authorization: Bearer {token}
 ```http
 GET /api/materials/status/{pdfUpload}
 Authorization: Bearer {token}
+```
+
+**Parâmetros de Path:**
+
+- `pdfUpload`: ID do upload de PDF
+
+**Resposta (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "upload": {
+      "id": 1,
+      "status": "completed",
+      "materials_extracted": 15,
+      "extraction_metadata": {
+        "total_lines_processed": 150,
+        "extraction_time": "00:02:30",
+        "currency_validated": "USD"
+      },
+      "error_message": null
+    }
+  }
+}
 ```
 
 ### Atualizar Nome de Exibição
@@ -185,9 +287,17 @@ Authorization: Bearer {token}
 Content-Type: application/json
 
 {
-    "display_name": "Novo Nome"
+    "display_name": "Novo Nome do Projeto"
 }
 ```
+
+**Parâmetros de Path:**
+
+- `pdfUpload`: ID do upload de PDF
+
+**Body (JSON):**
+
+- `display_name` (opcional): Novo nome de exibição
 
 ### Deletar Upload
 
@@ -196,12 +306,88 @@ DELETE /api/materials/delete/{pdfUpload}
 Authorization: Bearer {token}
 ```
 
+**Parâmetros de Path:**
+
+- `pdfUpload`: ID do upload de PDF
+
+**Resposta (200):**
+
+```json
+{
+  "success": true,
+  "message": "Upload deleted successfully"
+}
+```
+
 ### Listar Materiais Extraídos
 
 ```http
-GET /api/materials/extracted
+GET /api/materials/extracted?page=1&brand=Sherwin Williams&ambient=Interior&finish=Eggshell&quality[]=Premium&quality[]=Standard&search=white paint&sort_by=unit_price&sort_order=asc
 Authorization: Bearer {token}
-?brand=marca&ambient=categoria&finish=acabamento&quality[]=A&search=termo
+```
+
+**Parâmetros de Query:**
+
+- `page` (opcional): Número da página (padrão: 1)
+- `brand` (opcional): Filtrar por marca específica
+- `ambient` (opcional): Filtrar por categoria/ambiente
+- `finish` (opcional): Filtrar por tipo de acabamento
+- `quality[]` (opcional): Filtrar por qualidade (pode ser múltiplo)
+- `search` (opcional): Busca textual em descrição e marca
+- `sort_by` (opcional): Campo para ordenação (`created_at`, `brand`, `finish`, `unit_price`, `description`, `line_number`)
+- `sort_order` (opcional): Ordem da classificação (`asc`, `desc`)
+
+**Resposta (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "materials": [
+      {
+        "id": 1,
+        "user_id": 1,
+        "pdf_upload_id": 1,
+        "brand": "Sherwin Williams",
+        "description": "Premium White Interior Paint",
+        "type": "liquid",
+        "unit": "gallon",
+        "unit_price": "45.99",
+        "finish": "Eggshell",
+        "quality_grade": "Premium",
+        "category": "Interior",
+        "specifications": {
+          "coverage": "400 sq ft",
+          "dry_time": "2 hours"
+        },
+        "line_number": 15,
+        "created_at": "2025-01-20T10:35:00.000000Z",
+        "updated_at": "2025-01-20T10:35:00.000000Z",
+        "pdf_upload": {
+          "id": 1,
+          "original_name": "quote.pdf",
+          "display_name": "Project Alpha Quote",
+          "created_at": "2025-01-20T10:30:00.000000Z"
+        }
+      }
+    ],
+    "pagination": {
+      "total": 150,
+      "per_page": 20,
+      "current_page": 1,
+      "last_page": 8,
+      "from": 1,
+      "to": 20
+    },
+    "filters_applied": {
+      "brand": "Sherwin Williams",
+      "ambient": "Interior",
+      "finish": "Eggshell",
+      "quality": ["Premium"],
+      "search": "white paint"
+    }
+  }
+}
 ```
 
 ### Obter Material Específico
@@ -211,11 +397,68 @@ GET /api/materials/extracted/{material}
 Authorization: Bearer {token}
 ```
 
+**Parâmetros de Path:**
+
+- `material`: ID do material extraído
+
+**Resposta (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "material": {
+      "id": 1,
+      "user_id": 1,
+      "pdf_upload_id": 1,
+      "brand": "Sherwin Williams",
+      "description": "Premium White Interior Paint",
+      "type": "liquid",
+      "unit": "gallon",
+      "unit_price": "45.99",
+      "finish": "Eggshell",
+      "quality_grade": "Premium",
+      "category": "Interior",
+      "specifications": {
+        "coverage": "400 sq ft",
+        "dry_time": "2 hours",
+        "primer_required": false
+      },
+      "line_number": 15,
+      "created_at": "2025-01-20T10:35:00.000000Z",
+      "updated_at": "2025-01-20T10:35:00.000000Z",
+      "pdf_upload": {
+        "id": 1,
+        "original_name": "quote.pdf",
+        "display_name": "Project Alpha Quote",
+        "created_at": "2025-01-20T10:30:00.000000Z"
+      }
+    }
+  }
+}
+```
+
 ### Filtros Disponíveis
 
 ```http
 GET /api/materials/filters
 Authorization: Bearer {token}
+```
+
+**Resposta (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "filters": {
+      "brands": ["Benjamin Moore", "Sherwin Williams", "Valspar"],
+      "ambients": ["Exterior", "Interior"],
+      "finishes": ["Eggshell", "Flat", "Gloss", "Satin"],
+      "qualities": ["Economy", "Premium", "Standard"]
+    }
+  }
+}
 ```
 
 ## Modelos de Dados
@@ -227,24 +470,58 @@ Authorization: Bearer {token}
 ```php
 class PdfUpload extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'user_id',
-        'original_name',
-        'display_name',
-        'file_path',        // Chave de armazenamento local
-        'r2_url',          // URL de acesso (agora local)
-        'file_hash',
-        'status',          // pending, processing, completed, failed
-        'materials_extracted',
+        'user_id',              // ID do usuário proprietário (obrigatório)
+        'original_name',        // Nome original do arquivo
+        'display_name',         // Nome de exibição personalizado
+        'file_path',           // Chave de armazenamento local
+        'r2_url',             // URL de acesso (agora local)
+        'file_hash',          // Hash MD5 para detecção de duplicatas
+        'status',             // pending, processing, completed, failed
+        'materials_extracted', // Quantidade de materiais extraídos
         'extraction_metadata', // Metadados da extração em formato JSON
-        'error_message',
-        'created_at',          // Timestamp de criação
-        'updated_at'           // Timestamp de atualização
+        'error_message',      // Mensagem de erro se houver falha
+    ];
+
+    protected $casts = [
+        'extraction_metadata' => 'array',
     ];
 
     // Campos automáticos do Laravel (não fillable):
     // - id: Chave primária auto-increment
     // - timestamps: created_at, updated_at
+
+    // Relacionamentos
+    public function extractedMaterials()
+    {
+        return $this->hasMany(ExtractedMaterial::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Modules\Shared\Models\User::class);
+    }
+
+    // Scopes e métodos auxiliares
+    public function isOwnedBy($user): bool
+    {
+        return $this->user_id === $user->id;
+    }
+
+    public function scopeByUser($query, $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    public function scopeOwnedByCurrentUser($query)
+    {
+        if (auth()->check()) {
+            return $query->where('user_id', auth()->id());
+        }
+        return $query->whereNull('user_id'); // Retorna vazio se não autenticado
+    }
 }
 ```
 
@@ -253,28 +530,92 @@ class PdfUpload extends Model
 ```php
 class ExtractedMaterial extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'user_id',
-        'pdf_upload_id',
-        'brand',
-        'description',
-        'type',
-        'unit',
-        'unit_price',
-        'finish',
-        'quality_grade',
-        'category',
-        'specifications',
-        'line_number',
-        'created_at',          // Timestamp de criação
-        'updated_at'           // Timestamp de atualização
+        'user_id',          // ID do usuário proprietário (obrigatório)
+        'pdf_upload_id',    // ID do upload de PDF relacionado
+        'brand',           // Marca do material
+        'description',     // Descrição do material
+        'type',           // Tipo do material (padrão: 'liquid')
+        'unit',           // Unidade de medida (gallon, quart, etc.)
+        'unit_price',     // Preço unitário em USD
+        'finish',         // Tipo de acabamento (acetinado, fosco, etc.)
+        'quality_grade',  // Nota de qualidade (A-F)
+        'category',       // Categoria/ambiente (interior, exterior)
+        'specifications', // Especificações adicionais em JSON
+        'line_number',    // Número da linha no PDF original
+    ];
+
+    protected $casts = [
+        'unit_price' => 'decimal:2',
+        'specifications' => 'array',
     ];
 
     // Campos automáticos do Laravel (não fillable):
     // - id: Chave primária auto-increment
     // - timestamps: created_at, updated_at
+
+    // Relacionamentos
+    public function pdfUpload()
+    {
+        return $this->belongsTo(PdfUpload::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Modules\Shared\Models\User::class);
+    }
+
+    // Scopes e métodos auxiliares
+    public function isOwnedBy($user): bool
+    {
+        return $this->user_id === $user->id;
+    }
+
+    public function scopeByUser($query, $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    public function scopeOwnedByCurrentUser($query)
+    {
+        if (auth()->check()) {
+            return $query->where('user_id', auth()->id());
+        }
+        return $query->whereNull('user_id'); // Retorna vazio se não autenticado
+    }
 }
 ```
+
+### Relacionamentos
+
+#### PdfUpload → ExtractedMaterial
+
+- **Tipo**: One-to-Many
+- **Descrição**: Um PDF pode ter múltiplos materiais extraídos
+- **Chave Estrangeira**: `pdf_upload_id` na tabela `extracted_materials`
+
+#### User → PdfUpload
+
+- **Tipo**: One-to-Many
+- **Descrição**: Um usuário pode ter múltiplos uploads de PDF
+- **Chave Estrangeira**: `user_id` na tabela `pdf_uploads`
+
+#### User → ExtractedMaterial
+
+- **Tipo**: One-to-Many
+- **Descrição**: Um usuário pode ter múltiplos materiais extraídos
+- **Chave Estrangeira**: `user_id` na tabela `extracted_materials`
+
+### Multi-tenancy
+
+Ambos os modelos implementam multi-tenancy através de:
+
+1. **Global Scope**: Filtro automático por `user_id` do usuário autenticado
+2. **Auto-fill**: Campo `user_id` preenchido automaticamente na criação
+3. **Scopes**: Métodos para filtrar por usuário específico
+4. **Validação**: Verificação de propriedade através do método `isOwnedBy()`
 
 ## Configuração de Ambiente
 
@@ -365,20 +706,79 @@ class ProcessPdfExtractionJob implements ShouldQueue
 
 ### Autenticação
 
-- Todos endpoints requerem autenticação Bearer token
-- Middleware `auth:sanctum` aplicado
+- **Bearer Token**: Todos endpoints requerem autenticação via `auth:sanctum`
+- **Sessões**: Middleware `api.sessions` para gerenciamento de sessões
+- **Rate Limiting**: Middleware `throttle.custom:write` para operações de escrita
 
 ### Autorização
 
-- Usuários só acessam seus próprios uploads
-- Policies aplicadas para `PdfUpload` e `ExtractedMaterial`
-- Validação manual de propriedade do usuário implementada
+- **Multi-tenancy**: Usuários só acessam seus próprios dados
+- **Middleware**: `user.ownership` verifica propriedade dos recursos
+- **Global Scopes**: Filtro automático por `user_id` nos modelos
+- **Validação**: Verificação de propriedade através do método `isOwnedBy()`
 
 ### Validação de Arquivos
 
-- Tipo MIME verificado
-- Tamanho limitado
-- Conteúdo validado antes da extração
+- **Tipo MIME**: Verificação de `application/pdf`
+- **Tamanho**: Limitado pela configuração `UPLOAD_MAX_SIZE` (padrão: 25MB)
+- **Conteúdo**: Validação de estrutura do PDF antes da extração
+- **Duplicatas**: Prevenção via hash MD5 do arquivo
+
+### Middleware Stack
+
+```php
+// Aplicado a todos os endpoints de materiais
+Route::middleware([
+    'auth:sanctum',           // Autenticação via Bearer token
+    'user.ownership',         // Verificação de propriedade
+    'api.sessions',          // Gerenciamento de sessões
+    'throttle.custom:write'  // Rate limiting para operações de escrita
+])->group(function () {
+    // Rotas de materiais
+});
+```
+
+### Políticas de Acesso
+
+#### PdfUpload
+
+- Usuários só podem visualizar, editar e deletar seus próprios uploads
+- Validação automática de propriedade via `user_id`
+
+#### ExtractedMaterial
+
+- Usuários só podem acessar materiais extraídos de seus próprios PDFs
+- Filtro automático por `user_id` em todas as consultas
+
+### Validação de Entrada
+
+#### Upload de PDF
+
+```php
+// UploadQuoteRequest
+- quote: required|file|mimes:pdf|max:25600 // 25MB
+```
+
+#### Atualização de Nome
+
+```php
+// Validação no controller
+- display_name: nullable|string|max:255
+```
+
+#### Filtros de Materiais
+
+```php
+// Parâmetros validados
+- page: integer|min:1
+- brand: string|max:255
+- ambient: string|max:255
+- finish: string|max:255
+- quality: array|in:A,B,C,D,E,F,Premium,Standard,Economy
+- search: string|max:255
+- sort_by: string|in:created_at,brand,finish,unit_price,description,line_number
+- sort_order: string|in:asc,desc
+```
 
 ## Tratamento de Erros
 
@@ -551,7 +951,20 @@ location /storage/quotes/ {
 
 ## Notas de Atualização
 
-### Versão Atual: 2.2
+### Versão Atual: 2.3
+
+- **Data**: Janeiro 2025
+- **Principais Mudanças**:
+  - **Middleware Stack**: Implementação completa de middlewares de segurança
+  - **Multi-tenancy**: Campo `user_id` obrigatório em todas as tabelas
+  - **Filtros Avançados**: Endpoint `/filters` com opções dinâmicas
+  - **Ordenação**: Suporte a múltiplos campos de ordenação
+  - **Paginação**: Implementação completa com metadados
+  - **Validação**: Validação robusta de parâmetros de entrada
+  - **Relacionamentos**: Eager loading otimizado com `pdfUpload`
+  - **Global Scopes**: Filtro automático por usuário autenticado
+
+### Versão 2.2
 
 - **Data**: Janeiro 2025
 - **Principais Mudanças**:
@@ -561,3 +974,34 @@ location /storage/quotes/ {
   - Adicionados endpoints `/extracted` para materiais
   - Armazenamento local ativo, R2 desabilitado
   - Multi-tenancy implementada com `user_id` em todas as tabelas
+
+### Histórico de Versões
+
+#### v2.3 (Janeiro 2025)
+
+- ✅ Middleware stack completo implementado
+- ✅ Campo `user_id` obrigatório via migração
+- ✅ Endpoint de filtros dinâmicos
+- ✅ Ordenação e paginação avançadas
+- ✅ Validação robusta de parâmetros
+- ✅ Eager loading otimizado
+
+#### v2.2 (Janeiro 2025)
+
+- ✅ Renomeação de serviços
+- ✅ Atualização de endpoints
+- ✅ Migração para armazenamento local
+- ✅ Implementação de multi-tenancy
+
+#### v2.1 (Dezembro 2024)
+
+- ✅ Extração de materiais implementada
+- ✅ Jobs assíncronos para processamento
+- ✅ Validação de moeda USD
+- ✅ Detecção de duplicatas
+
+#### v2.0 (Dezembro 2024)
+
+- ✅ Upload de PDFs implementado
+- ✅ Armazenamento R2 configurado
+- ✅ Estrutura base da API
