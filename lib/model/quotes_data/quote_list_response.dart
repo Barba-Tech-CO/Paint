@@ -16,15 +16,20 @@ class QuoteListResponse {
   factory QuoteListResponse.fromJson(Map<String, dynamic> json) {
     log('DEBUG: QuoteListResponse.fromJson - json: $json');
 
+    // Validate required fields
+    if (json['success'] == null) {
+      throw Exception('Missing required field: success');
+    }
+
     final data = json['data'] as Map<String, dynamic>?;
     log('DEBUG: QuoteListResponse.fromJson - data: $data');
 
     if (data == null) {
       log(
-        'DEBUG: PdfUploadListResponse.fromJson - data is null, returning empty response',
+        'DEBUG: QuoteListResponse.fromJson - data is null, returning empty response',
       );
       return QuoteListResponse(
-        success: json['success'] as bool? ?? false,
+        success: json['success'] as bool,
         quotes: [],
         pagination: PaginationInfo(
           total: 0,
@@ -45,7 +50,7 @@ class QuoteListResponse {
         'DEBUG: PdfUploadListResponse.fromJson - uploadsData is null, returning empty response',
       );
       return QuoteListResponse(
-        success: json['success'] as bool? ?? false,
+        success: json['success'] as bool,
         quotes: [],
         pagination: PaginationInfo(
           total: 0,
@@ -105,7 +110,7 @@ class QuoteListResponse {
             );
 
       return QuoteListResponse(
-        success: json['success'] as bool? ?? false,
+        success: json['success'] as bool,
         quotes: uploadsData
             .map(
               (item) => QuoteModel.fromJson(item as Map<String, dynamic>),
@@ -131,7 +136,7 @@ class QuoteListResponse {
     }
 
     return QuoteListResponse(
-      success: json['success'] as bool? ?? false,
+      success: json['success'] as bool,
       quotes: [],
       pagination: PaginationInfo(
         total: 0,
