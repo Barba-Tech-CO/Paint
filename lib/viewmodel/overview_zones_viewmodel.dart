@@ -3,10 +3,10 @@ import '../model/models.dart';
 
 class OverviewZonesViewModel extends ChangeNotifier {
   List<MaterialModel> _selectedMaterials = [];
-  List<ZonesCardModel> _selectedZones = [];
+  List<ProjectCardModel> _selectedZones = [];
 
   List<MaterialModel> get selectedMaterials => _selectedMaterials;
-  List<ZonesCardModel> get selectedZones => _selectedZones;
+  List<ProjectCardModel> get selectedZones => _selectedZones;
   int get materialsCount => _selectedMaterials.length;
   int get zonesCount => _selectedZones.length;
   double get totalMaterialsCost {
@@ -36,19 +36,19 @@ class OverviewZonesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setSelectedZones(List<ZonesCardModel> zones) {
+  void setSelectedZones(List<ProjectCardModel> zones) {
     _selectedZones = zones;
     notifyListeners();
   }
 
-  void addZone(ZonesCardModel zone) {
+  void addZone(ProjectCardModel zone) {
     if (!_selectedZones.contains(zone)) {
       _selectedZones.add(zone);
       notifyListeners();
     }
   }
 
-  void removeZone(ZonesCardModel zone) {
+  void removeZone(ProjectCardModel zone) {
     _selectedZones.remove(zone);
     notifyListeners();
   }

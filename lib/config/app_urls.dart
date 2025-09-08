@@ -1,7 +1,7 @@
 class AppUrls {
   // Base URLs
   static const String baseUrl = 'https://paintpro.barbatech.company/api';
-  static const String baseUrlDev = 'http://localhost:8090/api';
+  static const String baseUrlDev = 'http://localhost:8080/api';
 
   // Auth URLs
   static const String authBaseUrl = '/auth';
@@ -38,8 +38,13 @@ class AppUrls {
 
   // Material URLs
   static const String materialsBaseUrl = '/materials';
-  static const String materialsListUrl = '$materialsBaseUrl/list';
-  static const String materialsStatsUrl = '$materialsBaseUrl/stats';
+  static const String materialsUploadUrl = '$materialsBaseUrl/upload';
+  static const String materialsUploadsUrl = '$materialsBaseUrl/uploads';
+  static const String materialsStatusUrl = '$materialsBaseUrl/status';
+  static const String materialsUpdateUrl = '$materialsBaseUrl/update';
+  static const String materialsDeleteUrl = '$materialsBaseUrl/delete';
+  static const String materialsExtractedUrl = '$materialsBaseUrl/extracted';
+  static const String materialsFiltersUrl = '$materialsBaseUrl/filters';
 
   // Paint Catalog URLs
   static const String paintCatalogBaseUrl = '/paint-catalog';

@@ -38,7 +38,7 @@ class NavigationItemModel {
       route: '/contacts',
     ),
     const NavigationItemModel(
-      id: 'uploads',
+      id: 'quotes',
       icon: Icons.folder,
       activeIcon: Icons.create_new_folder_sharp,
       label: 'Uploads',

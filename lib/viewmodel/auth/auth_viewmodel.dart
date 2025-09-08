@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../config/app_config.dart';
 import '../../config/app_urls.dart';
 import '../../model/models.dart';
-import '../../model/user_model.dart';
 import '../../service/auth_persistence_service.dart';
 import '../../service/deep_link_service.dart';
 import '../../use_case/auth/auth_use_cases.dart';
@@ -68,7 +68,9 @@ class AuthViewModel extends ChangeNotifier {
   void _initializeAuth() async {
     _updateState(
       _state.copyWith(
-        authorizeUrl: AppUrls.goHighLevelAuthorizeUrl,
+        authorizeUrl: AppConfig.isProduction
+            ? AppUrls.goHighLevelAuthorizeUrl
+            : AppUrls.goHighLevelAuthorizeUrlDev,
       ),
     );
 
@@ -92,6 +94,22 @@ class AuthViewModel extends ChangeNotifier {
         ),
       );
     } else {
+      // Check if token was expired and cleared
+      final wasTokenExpired = await _authPersistenceService.isTokenExpired();
+      if (wasTokenExpired) {
+        _logger.warning(
+          '[AuthViewModel] Token was expired, forcing re-authentication',
+        );
+        _updateState(
+          _state.copyWith(
+            state: AuthState.unauthenticated,
+            isLoading: false,
+            errorMessage: 'Your session has expired. Please log in again.',
+          ),
+        );
+        return;
+      }
+
       // Check backend status if no persisted authentication
       checkAuthStatusCommand.execute();
     }
@@ -285,9 +303,11 @@ class AuthViewModel extends ChangeNotifier {
               locationId: newAuthStatus.locationId,
               sanctumToken: authToken,
             );
-            
+
             // Ensure HTTP client is ready with auth token before navigation
-            _logger.info('[AuthViewModel] Authentication complete - token saved and HTTP client configured');
+            _logger.info(
+              '[AuthViewModel] Authentication complete - token saved and HTTP client configured',
+            );
           } else {
             _logger.error(
               '[AuthViewModel] OAuth callback failed or missing location_id',
@@ -350,9 +370,9 @@ class AuthViewModel extends ChangeNotifier {
         errorMessage: null,
       ),
     );
-    
+
     final result = await _authOperationsUseCase.refreshToken();
-    
+
     result.when(
       ok: (response) {
         checkAuthStatusCommand.execute();
@@ -366,7 +386,7 @@ class AuthViewModel extends ChangeNotifier {
         );
       },
     );
-    
+
     return result;
   }
 
@@ -440,21 +460,42 @@ class AuthViewModel extends ChangeNotifier {
     _deepLinkService.triggerSuccessCallback();
   }
 
-  /// Retries the authentication flow by clearing error state and reloading
+  /// Retries the authentication flow by completely restarting the auth process
   Future<void> retryAuthentication() async {
+    _logger.info(
+      '[AuthViewModel] Retrying authentication - restarting complete flow',
+    );
+
+    // Clear any existing authentication state
+    await _authPersistenceService.forceLogout();
+
+    // Reset state to initial
     _updateState(
       _state.copyWith(
         state: AuthState.initial,
         errorMessage: null,
         isLoading: false,
+        authStatus: null,
+        authorizeUrl: null,
       ),
     );
 
-    // Reload the WebView by updating the authorize URL
+    // Generate new authorization URL using the same logic as initialization
     final newUrl = await getAuthorizeUrl();
     if (newUrl != null) {
       _updateState(
-        _state.copyWith(authorizeUrl: newUrl),
+        _state.copyWith(
+          authorizeUrl: newUrl,
+          state: AuthState.unauthenticated,
+          isLoading: false,
+        ),
+      );
+    } else {
+      _updateState(
+        _state.copyWith(
+          state: AuthState.error,
+          errorMessage: 'Failed to generate authorization URL',
+        ),
       );
     }
   }
@@ -485,6 +526,40 @@ class AuthViewModel extends ChangeNotifier {
         _logger.error('[AuthViewModel] Error getting user data: $error');
         return Result.error(error);
       },
+    );
+  }
+
+  /// Force logout by clearing all authentication data
+  Future<void> logout() async {
+    _logger.info('[AuthViewModel] Logout initiated');
+
+    // Use AuthOperationsUseCase to handle logout (clears HTTP tokens)
+    final result = await _authOperationsUseCase.logout();
+
+    // Clear authentication state from persistence
+    await _authPersistenceService.forceLogout();
+
+    // Update state to unauthenticated
+    _updateState(
+      _state.copyWith(
+        authStatus: AuthModel(
+          authenticated: false,
+          needsLogin: true,
+          expiresAt: null,
+          locationId: null,
+          sanctumToken: null,
+        ),
+        state: AuthState.unauthenticated,
+        isLoading: false,
+        errorMessage: null,
+      ),
+    );
+
+    result.when(
+      ok: (_) => _logger.info('[AuthViewModel] Logout completed successfully'),
+      error: (error) => _logger.error(
+        '[AuthViewModel] Error during logout: $error',
+      ),
     );
   }
 

@@ -18,14 +18,14 @@ class ZonesCardViewmodel extends ChangeNotifier {
   ZonesState get state => _state;
 
   // Data
-  List<ZonesCardModel> _zones = [];
-  List<ZonesCardModel> get zones => _zones;
+  List<ProjectCardModel> _zones = [];
+  List<ProjectCardModel> get zones => _zones;
 
-  ZonesSummaryModel? _summary;
-  ZonesSummaryModel? get summary => _summary;
+  ProjectsSummaryModel? _summary;
+  ProjectsSummaryModel? get summary => _summary;
 
-  ZonesCardModel? _selectedZone;
-  ZonesCardModel? get selectedZone => _selectedZone;
+  ProjectCardModel? _selectedZone;
+  ProjectCardModel? get selectedZone => _selectedZone;
 
   // Error
   String? _errorMessage;
@@ -122,7 +122,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
     await _loadSummaryCommand.execute();
   }
 
-  void selectZone(ZonesCardModel zone) {
+  void selectZone(ProjectCardModel zone) {
     _selectedZone = zone;
     notifyListeners();
   }
@@ -222,7 +222,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
           ? _zones.map((z) => z.id).reduce((a, b) => a > b ? a : b) + 1
           : 1;
 
-      final newZone = ZonesCardModel(
+      final newZone = ProjectCardModel(
         id: newId,
         title: data.title,
         image: data.image,
@@ -255,7 +255,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
       // Simulando dados de resumo - delay para mostrar loading junto com zones
       await Future.delayed(const Duration(seconds: 2));
 
-      _summary = ZonesSummaryModel(
+      _summary = ProjectsSummaryModel(
         avgDimensions: "12' x 14'",
         totalArea: "${_zones.length * 168} sq ft",
         totalPaintable: "${_zones.length * 420} sq ft",
@@ -270,7 +270,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
   }
 
   // Helper methods
-  ZonesCardModel? getZoneById(int id) {
+  ProjectCardModel? getZoneById(int id) {
     try {
       return _zones.firstWhere((zone) => zone.id == id);
     } catch (e) {
@@ -278,16 +278,16 @@ class ZonesCardViewmodel extends ChangeNotifier {
     }
   }
 
-  List<ZonesCardModel> getZonesByTitle(String title) {
+  List<ProjectCardModel> getZonesByTitle(String title) {
     return _zones
         .where((zone) => zone.title.toLowerCase().contains(title.toLowerCase()))
         .toList();
   }
 
   // Mock data generator (remover quando o service estiver pronto)
-  List<ZonesCardModel> _generateMockZones() {
+  List<ProjectCardModel> _generateMockZones() {
     return [
-      ZonesCardModel(
+      ProjectCardModel(
         id: 1,
         title: "Living Room",
         image: "assets/images/kitchen.png",
@@ -297,7 +297,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
         ceilingArea: "224 sq ft",
         trimLength: "60 linear ft",
       ),
-      ZonesCardModel(
+      ProjectCardModel(
         id: 2,
         title: "Kitchen",
         image: "assets/images/kitchen.png",
@@ -307,7 +307,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
         ceilingArea: "120 sq ft",
         trimLength: "44 linear ft",
       ),
-      ZonesCardModel(
+      ProjectCardModel(
         id: 3,
         title: "Bedroom",
         image: "assets/images/kitchen.png",
