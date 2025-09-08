@@ -12,3 +12,10 @@ export 'user_model.dart';
 export 'material_models/material_model.dart';
 export 'material_models/material_stats_model.dart';
 export 'material_models/material_price_range_model.dart';
+
+// Quote Data Models
+export 'quotes_data/pagination_info.dart';
+export 'quotes_data/quote_list_response.dart';
+export 'quotes_data/quote_model.dart';
+export 'quotes_data/quote_response.dart';
+export 'quotes_data/quote_status.dart';

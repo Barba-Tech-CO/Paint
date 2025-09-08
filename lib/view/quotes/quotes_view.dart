@@ -51,50 +51,106 @@ class _QuotesViewState extends State<QuotesView> {
               quotesViewModel.currentState == QuotesState.loaded
                   ? SearchBarWidget(controller: _searchController)
                   : SizedBox.shrink(),
-              Expanded(
-                child: quotesViewModel.currentState == QuotesState.loading
-                    ? const LoadingWidget(message: 'Loading quotes...')
-                    : quotesViewModel.currentState == QuotesState.empty
-                    ? EmptyStateWidget(
-                        title: 'No Quotes yet',
-                        subtitle: 'Upload your first quote to get started',
-                        buttonText: 'Upload Quote',
-                        onButtonPressed: () => quotesViewModel.pickFile(),
-                      )
-                    : quotesViewModel.currentState == QuotesState.loaded
-                    ? ListView.builder(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: quotesViewModel.quotes.length,
-                        itemBuilder: (context, index) {
-                          final quote = quotesViewModel.quotes[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
-                            child: QuoteCardWidget(
-                              id: quote.id,
-                              titulo: quote.titulo,
-                              dateUpload: quote.dateUpload,
-                              onRename: (newName) {
-                                quotesViewModel.renameQuote(quote.id, newName);
-                              },
-                              onDelete: () {
-                                quotesViewModel.removeQuote(quote.id);
-                              },
-                            ),
-                          );
-                        },
-                      )
-                    : TryAgainWidget(
-                        onPressed: () => quotesViewModel.clearError(),
+              if (quotesViewModel.isUploading)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(16),
+                  margin: EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue[200]!),
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.blue[600]!,
+                          ),
+                        ),
                       ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Uploading PDF... Please wait',
+                          style: TextStyle(
+                            color: Colors.blue[800],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Expanded(
+                child: Stack(
+                  children: [
+                    quotesViewModel.currentState == QuotesState.loading
+                        ? const LoadingWidget(message: 'Loading quotes...')
+                        : quotesViewModel.currentState == QuotesState.empty
+                        ? EmptyStateWidget(
+                            title: 'No Quotes yet',
+                            subtitle: 'Upload your first quote to get started',
+                            buttonText: 'Upload Quote',
+                            onButtonPressed: () => quotesViewModel.pickFile(),
+                          )
+                        : quotesViewModel.currentState == QuotesState.loaded
+                        ? ListView.builder(
+                            padding: const EdgeInsets.only(
+                              bottom: 140,
+                              left: 16,
+                              right: 16,
+                            ),
+                            itemCount: quotesViewModel.quotes.length,
+                            itemBuilder: (context, index) {
+                              final quote = quotesViewModel.quotes[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: QuoteCardWidget(
+                                  id: quote.id,
+                                  titulo: quote.titulo,
+                                  dateUpload: quote.dateUpload,
+                                  status: quote.status?.value,
+                                  errorMessage: quote.errorMessage,
+                                  isDeleting: quotesViewModel
+                                      .isQuoteBeingDeleted(
+                                        quote.id,
+                                      ), // Use specific quote state
+                                  onRename: (newName) {
+                                    quotesViewModel.renameQuote(
+                                      quote.id,
+                                      newName,
+                                    );
+                                  },
+                                  onDelete: () {
+                                    quotesViewModel.removeQuote(quote.id);
+                                  },
+                                ),
+                              );
+                            },
+                          )
+                        : TryAgainWidget(
+                            onPressed: () => quotesViewModel.clearError(),
+                          ),
+                    // FAB posicionado manualmente
+                    if (quotesViewModel.currentState == QuotesState.loaded)
+                      Positioned(
+                        bottom: 120,
+                        right: 16,
+                        child: PaintProFAB(
+                          onPressed: () => quotesViewModel.pickFile(),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
-        floatingActionButton: quotesViewModel.currentState != QuotesState.loaded
-            ? null
-            : PaintProFAB(
-                onPressed: () => quotesViewModel.pickFile(),
-              ),
       ),
     );
   }

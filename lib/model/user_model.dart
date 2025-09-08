@@ -1,12 +1,12 @@
 import 'business_info.dart';
 
 class UserModel {
-  final int id;
+  final int? id;
   final String name;
   final String email;
   final DateTime? emailVerifiedAt;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
   final String? ghlLocationId;
   final String? ghlBusinessId;
   final String? ghlPhone;
@@ -24,12 +24,12 @@ class UserModel {
   final bool? ghlError;
 
   UserModel({
-    required this.id,
+    this.id,
     required this.name,
     required this.email,
     this.emailVerifiedAt,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
     this.ghlLocationId,
     this.ghlBusinessId,
     this.ghlPhone,
@@ -55,8 +55,12 @@ class UserModel {
       emailVerifiedAt: json['email_verified_at'] != null
           ? DateTime.parse(json['email_verified_at'])
           : null,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
+          : null,
       ghlLocationId: json['ghl_location_id'],
       ghlBusinessId: json['ghl_business_id'],
       ghlPhone: json['ghl_phone'],
@@ -85,8 +89,8 @@ class UserModel {
       'name': name,
       'email': email,
       'email_verified_at': emailVerifiedAt?.toIso8601String(),
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
       'ghl_location_id': ghlLocationId,
       'ghl_business_id': ghlBusinessId,
       'ghl_phone': ghlPhone,

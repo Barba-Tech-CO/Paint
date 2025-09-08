@@ -3,9 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
-import '../layout/main_layout.dart';
 import '../../config/dependency_injection.dart';
 import '../../viewmodel/viewmodels.dart';
+import '../layout/main_layout.dart';
 import '../widgets/widgets.dart';
 
 class ProjectsView extends StatefulWidget {

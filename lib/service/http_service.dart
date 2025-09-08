@@ -9,7 +9,7 @@ class HttpService implements IHttpService {
   static final HttpService _instance = HttpService._internal();
   late final Dio dio;
   late final AppLogger _logger;
-  String? _ghlToken;
+  String? _authToken;
   late final AuthPersistenceService _authPersistenceService;
 
   factory HttpService() {
@@ -31,12 +31,42 @@ class HttpService implements IHttpService {
       ),
     );
 
-    // Add interceptor to include GHL token in all requests
+    // Add interceptor to include auth token in all requests
     dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler) {
-          if (_ghlToken != null) {
-            options.headers['Authorization'] = 'Bearer $_ghlToken';
+        onRequest: (options, handler) async {
+          // Get token from memory first, then from storage if not available
+          String? token = _authToken;
+          if (token == null) {
+            token = await _authPersistenceService.getSanctumToken();
+            if (token != null) {
+              _authToken = token;
+            }
+          }
+
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+            // Only log presence of token, never the actual token
+            if (options.path.contains('/user')) {
+              _logger.info(
+                '[HttpService] Adding Authorization header to /user request',
+              );
+            } else if (options.path.contains('/materials')) {
+              _logger.info(
+                '[HttpService] Adding Authorization header to /materials request',
+              );
+            }
+          } else {
+            // Log missing token for critical endpoints
+            if (options.path.contains('/user')) {
+              _logger.warning(
+                '[HttpService] No auth token available for /user request',
+              );
+            } else if (options.path.contains('/materials')) {
+              _logger.warning(
+                '[HttpService] No auth token available for /materials request',
+              );
+            }
           }
           handler.next(options);
         },
@@ -48,20 +78,30 @@ class HttpService implements IHttpService {
     _logger = logger;
   }
 
-  /// Sets the GoHighLevel token for API authentication
+  /// Sets the auth token for API authentication
   @override
   void setGhlToken(String token) {
-    _ghlToken = token;
+    _authToken = token;
   }
 
-  /// Gets the current GoHighLevel token
+  /// Gets the current auth token
   @override
-  String? get ghlToken => _ghlToken;
+  String? get ghlToken => _authToken;
 
-  /// Clears the GoHighLevel token
+  /// Clears the auth token
   @override
   void clearGhlToken() {
-    _ghlToken = null;
+    _authToken = null;
+  }
+
+  /// Sets the auth token and forces interceptor refresh
+  void setAuthToken(String token) {
+    _authToken = token;
+  }
+
+  /// Clears auth token from memory
+  void clearAuthToken() {
+    _authToken = null;
   }
 
   @override

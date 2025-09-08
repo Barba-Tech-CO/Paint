@@ -1,5 +1,6 @@
 import '../config/app_urls.dart';
 import '../model/models.dart';
+import '../utils/auth/token_sanitizer.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/result/result.dart';
 import 'auth_service_exception.dart';
@@ -44,8 +45,9 @@ class AuthService {
       const String clientId = '6845ab8de6772c0d5c8548d7-mbnty1f6';
 
       // Use the correct redirect URI based on the environment
+      // Fix: Use the base URL directly since it already includes /api
       final String redirectUri =
-          '${_httpService.dio.options.baseUrl.replaceAll('/api', '')}/api/auth/callback';
+          '${_httpService.dio.options.baseUrl}/auth/callback';
 
       const String scope =
           'contacts.write+associations.write+associations.readonly+oauth.readonly+oauth.write+invoices%2Festimate.write+invoices%2Festimate.readonly+invoices.readonly+associations%2Frelation.write+associations%2Frelation.readonly+contacts.readonly+invoices.write';
@@ -83,7 +85,11 @@ class AuthService {
       // After successful token exchange, call the /success endpoint with location_id
       // The location_id should come from the OAuth response or user selection
       if (callbackResponse.success) {
-        // Extract location_id from the response
+        // Extract auth_token and location_id from the response
+        final authToken =
+            response.data['auth_token'] ??
+            response.data['sanctum_token'] ??
+            callbackResponse.authToken;
         final locationId =
             response.data['location_id'] ??
             response.data['locationId'] ??
@@ -92,6 +98,19 @@ class AuthService {
         if (locationId != null && locationId.isNotEmpty) {
           // Store the location ID in the LocationService
           _locationService.setLocationId(locationId);
+
+          // CRITICAL FIX: Sanitize and set the auth token in the HTTP service for all future requests
+          final sanitizedToken = TokenSanitizer.sanitizeToken(authToken);
+          if (sanitizedToken != null) {
+            _httpService.setAuthToken(sanitizedToken);
+            _logger.info(
+              '[AuthService] Auth token sanitized and set in HTTP client for API requests',
+            );
+          } else {
+            _logger.warning(
+              '[AuthService] Invalid or missing auth token from OAuth callback - token: ${authToken?.length ?? 0} chars',
+            );
+          }
 
           // Call the success endpoint
           await _callSuccessEndpoint(locationId);
@@ -118,9 +137,9 @@ class AuthService {
   /// Chama o endpoint de sucesso com o location_id
   Future<Result> _callSuccessEndpoint(String locationId) async {
     try {
-      // Make the actual HTTP request to the /success endpoint
+      // Use the status endpoint instead of the non-existent success endpoint
       final response = await _httpService.get(
-        '/auth/success?location_id=$locationId',
+        '/auth/status?location_id=$locationId',
       );
 
       return Result.ok(response.data);
