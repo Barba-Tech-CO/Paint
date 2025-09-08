@@ -12,6 +12,7 @@ export 'cards/project_summary_card_widget.dart';
 export 'cards/stats_card_widget.dart';
 export 'cards/surface_areas_widget.dart';
 export 'cards/zones_card.dart';
+export 'cards/project_card_widget.dart';
 
 // Buttons
 export 'buttons/paint_pro_button.dart';
@@ -38,3 +39,9 @@ export 'summary/summary_total_row_widget.dart';
 
 export 'dialogs/delete_dialog_widget.dart';
 export 'dialogs/rename_dialog_widget.dart';
+
+// Form Fields
+export 'form_field/paint_pro_search_field.dart';
+export 'form_field/paint_pro_number_field.dart';
+export 'form_field/paint_pro_text_field.dart';
+export 'form_field/paint_pro_phone_field.dart';

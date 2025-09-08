@@ -33,3 +33,6 @@ export 'zones/zones_viewmodels.dart';
 
 // Quotes ViewModels
 export 'quotes/quotes_viewmodel.dart';
+
+// Projects ViewModels
+export 'projects/projects_viewmodel.dart';

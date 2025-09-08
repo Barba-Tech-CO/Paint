@@ -10,8 +10,8 @@ class ZoneDetailViewModel extends ChangeNotifier {
   // final ZonesService _zonesService;
 
   // Data
-  ZonesCardModel? _currentZone;
-  ZonesCardModel? get currentZone => _currentZone;
+  ProjectCardModel? _currentZone;
+  ProjectCardModel? get currentZone => _currentZone;
 
   // Error
   String? _errorMessage;
@@ -31,7 +31,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
 
   // Callbacks for notifying parent ViewModels about changes
   Function(int zoneId)? onZoneDeleted;
-  Function(ZonesCardModel updatedZone)? onZoneUpdated;
+  Function(ProjectCardModel updatedZone)? onZoneUpdated;
 
   // Computed properties
   bool get hasZone => _currentZone != null;
@@ -60,7 +60,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
   }
 
   // Public methods
-  void setCurrentZone(ZonesCardModel? zone) {
+  void setCurrentZone(ProjectCardModel? zone) {
     _currentZone = zone;
     _clearError();
     _safeNotifyListeners();

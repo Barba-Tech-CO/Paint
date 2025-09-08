@@ -12,7 +12,7 @@ import 'widgets/photos_gallery_widget.dart';
 import 'widgets/surface_area_display_widget.dart';
 
 class EditZoneView extends StatefulWidget {
-  final ZonesCardModel? zone;
+  final ProjectCardModel? zone;
 
   const EditZoneView({super.key, this.zone});
 
@@ -68,7 +68,7 @@ class _EditZoneViewState extends State<EditZoneView> {
     };
 
     // When zone is updated, we could refresh the data here if needed
-    _viewModel.onZoneUpdated = (ZonesCardModel updatedZone) {
+    _viewModel.onZoneUpdated = (ProjectCardModel updatedZone) {
       if (mounted) {
         // Also notify the list ViewModel
         try {
