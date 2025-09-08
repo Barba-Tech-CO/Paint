@@ -4,10 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
-import '../../viewmodel/navigation_viewmodel.dart';
-import '../layout/main_layout.dart';
-import '../widgets/appbars/paint_pro_app_bar.dart';
 import '../../viewmodel/viewmodels.dart';
+import '../layout/main_layout.dart';
 import '../widgets/widgets.dart';
 
 class ProjectsView extends StatefulWidget {
