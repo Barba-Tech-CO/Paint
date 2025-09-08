@@ -105,4 +105,21 @@ class AuthOperationsUseCase {
       return Result.error(Exception(error.toString()));
     }
   }
+
+  /// Executa logout limpando tokens e estado de autenticação
+  Future<Result<void>> logout() async {
+    _logger.info('[AuthOperationsUseCase] Logout initiated');
+    try {
+      await _authService.logout();
+      _logger.info('[AuthOperationsUseCase] Logout completed successfully');
+      return Result.ok(null);
+    } catch (error, stackTrace) {
+      _logger.error(
+        '[AuthOperationsUseCase] Exception during logout',
+        error,
+        stackTrace,
+      );
+      return Result.error(Exception(error.toString()));
+    }
+  }
 }
