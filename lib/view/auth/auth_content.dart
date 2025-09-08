@@ -23,7 +23,7 @@ class AuthContent extends StatelessWidget {
       onError: (error) => ErrorOverlay(
         error: error.toString(),
         onRetry: () {
-          viewModel.checkAuthStatusCommand.execute();
+          viewModel.retryAuthentication();
         },
       ),
       child: (result) {
@@ -31,7 +31,7 @@ class AuthContent extends StatelessWidget {
           return ErrorOverlay(
             error: viewModel.state.errorMessage!,
             onRetry: () {
-              viewModel.checkAuthStatusCommand.execute();
+              viewModel.retryAuthentication();
             },
           );
         }
@@ -42,4 +42,4 @@ class AuthContent extends StatelessWidget {
       },
     );
   }
-} 
+}

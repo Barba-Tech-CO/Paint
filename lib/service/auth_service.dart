@@ -1,3 +1,4 @@
+import '../config/app_config.dart';
 import '../config/app_urls.dart';
 import '../model/models.dart';
 import '../utils/auth/token_sanitizer.dart';
@@ -38,36 +39,18 @@ class AuthService {
   /// Obtém a URL de autorização
   Future<Result<String>> getAuthorizeUrl() async {
     try {
-      // Construct the OAuth2 authorization URL directly
-      // No need to make an HTTP request for OAuth2 authorization URLs
-      const String baseUrl =
-          'https://marketplace.gohighlevel.com/oauth/chooselocation';
-      const String clientId = '6845ab8de6772c0d5c8548d7-mbnty1f6';
+      // Use the pre-configured URLs from AppUrls
+      final String authUrl = AppConfig.isProduction
+          ? AppUrls.goHighLevelAuthorizeUrl
+          : AppUrls.goHighLevelAuthorizeUrlDev;
 
-      // Use the correct redirect URI based on the environment
-      // Fix: Use the base URL directly since it already includes /api
-      final String redirectUri =
-          '${_httpService.dio.options.baseUrl}/auth/callback';
+      _logger.info('[AuthService] Authorization URL: $authUrl');
 
-      const String scope =
-          'contacts.write+associations.write+associations.readonly+oauth.readonly+oauth.write+invoices%2Festimate.write+invoices%2Festimate.readonly+invoices.readonly+associations%2Frelation.write+associations%2Frelation.readonly+contacts.readonly+invoices.write';
-
-      final Uri authUri = Uri.parse(baseUrl).replace(
-        queryParameters: {
-          'response_type': 'code',
-          'redirect_uri': redirectUri,
-          'client_id': clientId,
-          'scope': scope,
-        },
-      );
-
-      _logger.info('[AuthService] Authorization URL: $authUri');
-
-      return Result.ok(authUri.toString());
+      return Result.ok(authUrl);
     } catch (e) {
-      _logger.error('Error generating authorization URL: $e');
+      _logger.error('Error getting authorization URL: $e');
       return Result.error(
-        Exception('Error generating authorization URL: $e'),
+        Exception('Error getting authorization URL: $e'),
       );
     }
   }
@@ -272,5 +255,15 @@ class AuthService {
         Exception('Error getting user data: $e'),
       );
     }
+  }
+
+  /// Executa logout limpando tokens e estado de autenticação
+  Future<void> logout() async {
+    _logger.info('[AuthService] Logout initiated');
+
+    // Clear HTTP service token
+    _httpService.clearAuthToken();
+
+    _logger.info('[AuthService] Logout completed - HTTP token cleared');
   }
 }
