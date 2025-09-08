@@ -4,7 +4,7 @@ import '../model/models.dart';
 import '../view/views.dart';
 
 final router = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/projects',
   routes: [
     GoRoute(
       path: '/splash',
@@ -60,13 +60,13 @@ final router = GoRouter(
         // Aceita tanto List<MaterialModel> quanto Map com materiais e zonas
         final extra = state.extra;
         List<MaterialModel>? selectedMaterials;
-        List<ZonesCardModel>? selectedZones;
+        List<ProjectCardModel>? selectedZones;
 
         if (extra is List<MaterialModel>) {
           selectedMaterials = extra;
         } else if (extra is Map) {
           selectedMaterials = extra['materials'] as List<MaterialModel>?;
-          selectedZones = extra['zones'] as List<ZonesCardModel>?;
+          selectedZones = extra['zones'] as List<ProjectCardModel>?;
         }
 
         return OverviewZonesView(
@@ -94,14 +94,14 @@ final router = GoRouter(
     GoRoute(
       path: '/zones-details',
       builder: (context, state) {
-        final zone = state.extra as ZonesCardModel?;
+        final zone = state.extra as ProjectCardModel?;
         return ZonesDetailsView(zone: zone);
       },
     ),
     GoRoute(
       path: '/edit-zone',
       builder: (context, state) {
-        final zone = state.extra as ZonesCardModel?;
+        final zone = state.extra as ProjectCardModel?;
         return EditZoneView(zone: zone);
       },
     ),

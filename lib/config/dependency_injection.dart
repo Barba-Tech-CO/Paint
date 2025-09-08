@@ -322,9 +322,15 @@ void setupDependencyInjection() {
     ),
   );
 
+  // ViewModels - Contacts
   getIt.registerFactory<ContactsViewModel>(
     () => ContactsViewModel(
       getIt<ContactOperationsUseCase>(),
     ),
+  );
+
+  // ViewModel - Projects
+  getIt.registerFactory<ProjectsViewModel>(
+    () => ProjectsViewModel(),
   );
 }
