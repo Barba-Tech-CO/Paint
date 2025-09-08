@@ -200,6 +200,7 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AppInitializationService>(
     () => AppInitializationService(
       getIt<AuthService>(),
+      getIt<AuthPersistenceService>(),
       getIt<NavigationService>(),
       getIt<DeepLinkService>(),
     ),
