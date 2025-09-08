@@ -10,8 +10,6 @@ import '../../config/app_colors.dart';
 import '../../helpers/snackbar_helper.dart';
 import '../../model/models.dart';
 import '../../viewmodel/contact/contact_detail_viewmodel.dart';
-import '../widgets/form_field/paint_pro_number_field.dart';
-import '../widgets/form_field/paint_pro_text_field.dart';
 import '../widgets/section_title_widget.dart';
 import '../widgets/widgets.dart';
 
