@@ -9,7 +9,7 @@ import '../widgets/widgets.dart';
 
 class OverviewZonesView extends StatefulWidget {
   final List<MaterialModel>? selectedMaterials;
-  final List<ZonesCardModel>? selectedZones;
+  final List<ProjectCardModel>? selectedZones;
 
   const OverviewZonesView({
     super.key,

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/foundation.dart';
 import '../../model/models.dart';
 import '../../domain/repository/material_repository.dart';
@@ -100,6 +102,26 @@ class MaterialListViewModel extends ChangeNotifier {
       _loadFallbackMaterials();
     } finally {
       _setLoading(false);
+    }
+  }
+
+  /// Carrega marcas disponíveis
+  Future<void> loadAvailableBrands() async {
+    try {
+      final result = await _materialRepository.getAvailableBrands();
+      result.when(
+        ok: (brands) {
+          _availableBrands.clear();
+          _availableBrands.addAll(brands);
+          notifyListeners();
+        },
+        error: (error) {
+          // Não mostra erro para marcas, apenas log
+          log('Erro ao carregar marcas: $error');
+        },
+      );
+    } catch (e) {
+      log('Erro inesperado ao carregar marcas: $e');
     }
   }
 
@@ -253,6 +275,7 @@ class MaterialListViewModel extends ChangeNotifier {
       try {
         await loadStats();
       } catch (e) {
+        loadAvailableBrands();
         print('Erro ao carregar stats: $e');
       }
     }

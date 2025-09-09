@@ -235,44 +235,15 @@ class _EditContactViewState extends State<EditContactView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 16),
-
-                      // Debug section - only show in debug mode
-                      if (kDebugMode) ...[
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          margin: const EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.withOpacity(0.1),
-                            border: Border.all(color: Colors.orange),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Debug Information:',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Location ID: ${viewModel.currentLocationId ?? 'null'}',
-                              ),
-                              Text('Has Location: ${viewModel.hasLocationId}'),
-                              Text(
-                                'Location Info: ${viewModel.locationDebugInfo}',
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-
-                      const SectionTitleWidget(title: 'Client Information'),
-                      const SizedBox(height: 16),
-
+                      const SizedBox(
+                        height: 16,
+                      ),
+                      const SectionTitleWidget(
+                        title: 'Client Information',
+                      ),
+                      const SizedBox(
+                        height: 16,
+                      ),
                       PaintProTextField(
                         label: 'Name: *',
                         hintText: 'John Demnize',
@@ -287,12 +258,14 @@ class _EditContactViewState extends State<EditContactView> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
-
+                      const SizedBox(
+                        height: 16,
+                      ),
                       // Contact Section
                       const SectionTitleWidget(title: 'Contact'),
-                      const SizedBox(height: 16),
-
+                      const SizedBox(
+                        height: 16,
+                      ),
                       PaintProNumberField(
                         label: 'Phone: *',
                         hintText: '(555) 123-4567',
@@ -302,13 +275,11 @@ class _EditContactViewState extends State<EditContactView> {
                           if (value == null || value.isEmpty) {
                             return 'Phone is required';
                           }
-
                           // Remove all non-digit characters for validation
                           final digitsOnly = value.replaceAll(
                             RegExp(r'[^\d]'),
                             '',
                           );
-
                           // Check if it's a valid phone number (at least 7 digits)
                           if (digitsOnly.length >= 7) {
                             return null;
@@ -317,7 +288,9 @@ class _EditContactViewState extends State<EditContactView> {
                           }
                         },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(
+                        height: 16,
+                      ),
                       PaintProNumberField(
                         label: 'Additional Phones:',
                         hintText: '(555) 123-4567, (555) 123-4589',
@@ -337,7 +310,6 @@ class _EditContactViewState extends State<EditContactView> {
                               RegExp(r'[^\d]'),
                               '',
                             );
-
                             // Check if it's a valid phone number (at least 7 digits)
                             if (digitsOnly.length < 7) {
                               return 'Please enter valid phone numbers separated by commas (at least 7 digits each)';
@@ -346,7 +318,6 @@ class _EditContactViewState extends State<EditContactView> {
                           return null;
                         },
                       ),
-
                       PaintProTextField(
                         label: 'Email: *',
                         hintText: 'example@mail.com',
@@ -360,7 +331,9 @@ class _EditContactViewState extends State<EditContactView> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(
+                        height: 16,
+                      ),
                       PaintProTextField(
                         label: 'Adtional Emails:',
                         hintText: 'example@mail.com, example2@mail.com',
@@ -382,75 +355,96 @@ class _EditContactViewState extends State<EditContactView> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
-
+                      const SizedBox(
+                        height: 16,
+                      ),
                       const SectionTitleWidget(
                         title: 'Business Information',
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(
+                        height: 16,
+                      ),
                       PaintProTextField(
                         label: 'Company Name:',
                         hintText: 'Painter Pro LTDA',
                         controller: _companyNameController,
-                        validator: Validatorless.multiple([
-                          Validatorless.required('Company Name is required'),
-                          Validatorless.min(
-                            3,
-                            'Company Name must be at least 3 characters',
-                          ),
-                        ]),
+                        validator: Validatorless.multiple(
+                          [
+                            Validatorless.required('Company Name is required'),
+                            Validatorless.min(
+                              3,
+                              'Company Name must be at least 3 characters',
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(
+                        height: 16,
+                      ),
                       PaintProTextField(
                         label: 'Address: *',
                         hintText: '123 Main St',
                         controller: _addressController,
-                        validator: Validatorless.multiple([
-                          Validatorless.required('Address is required'),
-                          Validatorless.min(
-                            3,
-                            'Address must be at least 3 characters',
-                          ),
-                        ]),
+                        validator: Validatorless.multiple(
+                          [
+                            Validatorless.required('Address is required'),
+                            Validatorless.min(
+                              3,
+                              'Address must be at least 3 characters',
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(
+                        height: 16,
+                      ),
                       PaintProTextField(
                         label: 'City: *',
                         hintText: 'Anytown',
                         controller: _cityController,
-                        validator: Validatorless.multiple([
-                          Validatorless.required('City is required'),
-                          Validatorless.min(
-                            3,
-                            'City must be at least 3 characters',
-                          ),
-                        ]),
+                        validator: Validatorless.multiple(
+                          [
+                            Validatorless.required('City is required'),
+                            Validatorless.min(
+                              3,
+                              'City must be at least 3 characters',
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(
+                        height: 16,
+                      ),
                       PaintProTextField(
                         label: 'State: *',
                         hintText: 'Anytown',
                         controller: _stateController,
-                        validator: Validatorless.multiple([
-                          Validatorless.required('State is required'),
-                          Validatorless.min(
-                            3,
-                            'State must be at least 3 characters',
-                          ),
-                        ]),
+                        validator: Validatorless.multiple(
+                          [
+                            Validatorless.required('State is required'),
+                            Validatorless.min(
+                              3,
+                              'State must be at least 3 characters',
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(
+                        height: 16,
+                      ),
                       PaintProTextField(
                         label: 'Postal Code: *',
                         hintText: '12345',
                         controller: _zipCodeController,
-                        validator: Validatorless.multiple([
-                          Validatorless.required('Postal Code is required'),
-                          Validatorless.min(
-                            3,
-                            'Postal Code must be at least 3 characters',
-                          ),
-                        ]),
+                        validator: Validatorless.multiple(
+                          [
+                            Validatorless.required('Postal Code is required'),
+                            Validatorless.min(
+                              3,
+                              'Postal Code must be at least 3 characters',
+                            ),
+                          ],
+                        ),
                       ),
                       // Add some bottom padding to ensure content is not hidden by bottomNavigationBar
                       const SizedBox(height: 100),
@@ -460,7 +454,9 @@ class _EditContactViewState extends State<EditContactView> {
               ),
             ),
             bottomNavigationBar: Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(
+                16,
+              ),
               child: PaintProButton(
                 text: viewModel.isLoading ? 'Updating...' : 'Update',
                 onPressed: viewModel.isLoading ? null : _updateContact,

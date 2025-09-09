@@ -1,4 +1,4 @@
-class ZonesCardModel {
+class ProjectCardModel {
   final int id;
   final String title;
   final String image;
@@ -8,7 +8,7 @@ class ZonesCardModel {
   final String? ceilingArea;
   final String? trimLength;
 
-  ZonesCardModel({
+  ProjectCardModel({
     required this.id,
     required this.title,
     required this.image,
@@ -19,8 +19,8 @@ class ZonesCardModel {
     this.trimLength,
   });
 
-  factory ZonesCardModel.fromJson(Map<String, dynamic> json) {
-    return ZonesCardModel(
+  factory ProjectCardModel.fromJson(Map<String, dynamic> json) {
+    return ProjectCardModel(
       id: json['id'] ?? 0,
       title: json['title'] ?? '',
       image: json['image'] ?? '',
@@ -46,7 +46,7 @@ class ZonesCardModel {
   }
 
   // Método para criar uma cópia com alterações
-  ZonesCardModel copyWith({
+  ProjectCardModel copyWith({
     int? id,
     String? title,
     String? image,
@@ -56,7 +56,7 @@ class ZonesCardModel {
     String? ceilingArea,
     String? trimLength,
   }) {
-    return ZonesCardModel(
+    return ProjectCardModel(
       id: id ?? this.id,
       title: title ?? this.title,
       image: image ?? this.image,
@@ -71,30 +71,30 @@ class ZonesCardModel {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is ZonesCardModel && other.id == id;
+    return other is ProjectCardModel && other.id == id;
   }
 
   @override
   int get hashCode => id.hashCode;
 }
 
-class ZonesListResponse {
+class ProjectListResponse {
   final bool success;
-  final List<ZonesCardModel> data;
+  final List<ProjectCardModel> data;
   final String? message;
 
-  ZonesListResponse({
+  ProjectListResponse({
     required this.success,
     required this.data,
     this.message,
   });
 
-  factory ZonesListResponse.fromJson(Map<String, dynamic> json) {
-    return ZonesListResponse(
+  factory ProjectListResponse.fromJson(Map<String, dynamic> json) {
+    return ProjectListResponse(
       success: json['success'] ?? false,
       data:
           (json['data'] as List<dynamic>?)
-              ?.map((item) => ZonesCardModel.fromJson(item))
+              ?.map((item) => ProjectCardModel.fromJson(item))
               .toList() ??
           [],
       message: json['message'],
@@ -102,19 +102,19 @@ class ZonesListResponse {
   }
 }
 
-class ZonesSummaryModel {
+class ProjectsSummaryModel {
   final String avgDimensions;
   final String totalArea;
   final String totalPaintable;
 
-  ZonesSummaryModel({
+  ProjectsSummaryModel({
     required this.avgDimensions,
     required this.totalArea,
     required this.totalPaintable,
   });
 
-  factory ZonesSummaryModel.fromJson(Map<String, dynamic> json) {
-    return ZonesSummaryModel(
+  factory ProjectsSummaryModel.fromJson(Map<String, dynamic> json) {
+    return ProjectsSummaryModel(
       avgDimensions: json['avg_dimensions'] ?? '',
       totalArea: json['total_area'] ?? '',
       totalPaintable: json['total_paintable'] ?? '',
@@ -133,7 +133,7 @@ class ZonesSummaryModel {
 class ZonesOperationResponse {
   final bool success;
   final String message;
-  final ZonesCardModel? data;
+  final ProjectCardModel? data;
 
   ZonesOperationResponse({
     required this.success,
@@ -145,7 +145,9 @@ class ZonesOperationResponse {
     return ZonesOperationResponse(
       success: json['success'] ?? false,
       message: json['message'] ?? '',
-      data: json['data'] != null ? ZonesCardModel.fromJson(json['data']) : null,
+      data: json['data'] != null
+          ? ProjectCardModel.fromJson(json['data'])
+          : null,
     );
   }
 }

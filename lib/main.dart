@@ -91,6 +91,9 @@ class PaintProApp extends StatelessWidget {
         ChangeNotifierProvider<LocationService>(
           create: (_) => getIt<LocationService>(),
         ),
+        ChangeNotifierProvider<ProjectsViewModel>(
+          create: (_) => getIt<ProjectsViewModel>(),
+        ),
       ],
       child: MaterialApp.router(
         title: 'Paint Estimator',

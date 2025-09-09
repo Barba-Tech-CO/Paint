@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+
 import '../utils/result/result.dart';
+import 'auth_persistence_service.dart';
 import 'auth_service.dart';
-import 'navigation_service.dart';
 import 'deep_link_service.dart';
+import 'navigation_service.dart';
 
 class AppInitializationService {
   final AuthService _authService;
+  final AuthPersistenceService _authPersistenceService;
   final NavigationService _navigationService;
   final DeepLinkService _deepLinkService;
 
   AppInitializationService(
     this._authService,
+    this._authPersistenceService,
     this._navigationService,
     this._deepLinkService,
   );
@@ -20,6 +24,19 @@ class AppInitializationService {
     // Inicializa o serviço de Deep Links
     await _deepLinkService.initialize();
 
+    // First check local persistence for token expiration
+    final isLocallyAuthenticated = await _authPersistenceService
+        .isUserAuthenticated();
+
+    if (!isLocallyAuthenticated) {
+      // Token expired or no local authentication, go to auth
+      if (context.mounted) {
+        _navigationService.navigateToAuth(context);
+      }
+      return;
+    }
+
+    // If locally authenticated, verify with backend
     final authResult = await _authService.isAuthenticated();
 
     if (authResult is Ok) {

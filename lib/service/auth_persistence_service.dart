@@ -91,13 +91,26 @@ class AuthPersistenceService {
     final state = await loadAuthState();
     final authenticated = state['authenticated'] as bool;
     final needsLogin = state['needsLogin'] as bool;
+    final expiresAt = state['expiresAt'] as DateTime?;
 
     log(
-      '[AuthPersistenceService] Checking if user authenticated: authenticated=$authenticated, needsLogin=$needsLogin',
+      '[AuthPersistenceService] Checking if user authenticated: authenticated=$authenticated, needsLogin=$needsLogin, expiresAt=$expiresAt',
     );
 
-    // For now, ignore expiration since backend provides incorrect dates
-    // Just check if user was authenticated and doesn't need login
+    // Check if token has expired
+    if (expiresAt != null) {
+      final now = DateTime.now();
+      if (expiresAt.isBefore(now)) {
+        log(
+          '[AuthPersistenceService] Token has expired. ExpiresAt: $expiresAt, Current time: $now',
+        );
+        // Clear expired authentication state
+        await clearAuthState();
+        return false;
+      }
+    }
+
+    // Check if user was authenticated and doesn't need login
     final result = authenticated && !needsLogin;
     log('[AuthPersistenceService] User authenticated result: $result');
     return result;
@@ -113,5 +126,30 @@ class AuthPersistenceService {
       log('[AuthPersistenceService] No token found in storage');
     }
     return token;
+  }
+
+  // Check if token is expired without clearing the state
+  Future<bool> isTokenExpired() async {
+    final state = await loadAuthState();
+    final expiresAt = state['expiresAt'] as DateTime?;
+
+    if (expiresAt == null) {
+      return false; // No expiration date means not expired
+    }
+
+    final now = DateTime.now();
+    final isExpired = expiresAt.isBefore(now);
+
+    log(
+      '[AuthPersistenceService] Token expiration check: expiresAt=$expiresAt, currentTime=$now, isExpired=$isExpired',
+    );
+    return isExpired;
+  }
+
+  // Force logout by clearing all authentication data
+  Future<void> forceLogout() async {
+    log('[AuthPersistenceService] Force logout initiated');
+    await clearAuthState();
+    log('[AuthPersistenceService] Force logout completed');
   }
 }

@@ -11,7 +11,7 @@ import '../widgets/widgets.dart';
 import 'widgets/rename_zone_dialog.dart';
 
 class ZonesDetailsView extends StatefulWidget {
-  final ZonesCardModel? zone;
+  final ProjectCardModel? zone;
   const ZonesDetailsView({super.key, this.zone});
 
   @override
@@ -64,7 +64,7 @@ class _ZonesDetailsViewState extends State<ZonesDetailsView> {
     };
 
     // When zone is updated, update in list
-    _detailViewModel.onZoneUpdated = (ZonesCardModel updatedZone) {
+    _detailViewModel.onZoneUpdated = (ProjectCardModel updatedZone) {
       if (mounted) {
         _listViewModel.updateZone(updatedZone);
       }

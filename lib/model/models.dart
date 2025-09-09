@@ -4,10 +4,18 @@ export 'contacts/contacts.dart';
 export 'estimates/estimate_model.dart';
 export 'material_models/material_models.dart';
 export 'navigation/navigation_item_model.dart';
-export 'zones/zones_card_model.dart';
+export 'projects/project_card_model.dart';
+export 'projects/project_model.dart' hide ProjectListResponse;
 export 'user_model.dart';
 
 // Material Models
 export 'material_models/material_model.dart';
 export 'material_models/material_stats_model.dart';
 export 'material_models/material_price_range_model.dart';
+
+// Quote Data Models
+export 'quotes_data/pagination_info.dart';
+export 'quotes_data/quote_list_response.dart';
+export 'quotes_data/quote_model.dart';
+export 'quotes_data/quote_response.dart';
+export 'quotes_data/quote_status.dart';
