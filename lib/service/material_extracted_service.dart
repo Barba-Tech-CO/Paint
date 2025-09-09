@@ -4,7 +4,7 @@ import 'http_service.dart';
 
 class MaterialExtractedService {
   final HttpService _httpService;
-  static const String _baseUrl = '/api/materials';
+  static const String _baseUrl = '/api/materials/uploads';
 
   MaterialExtractedService(this._httpService);
 
@@ -35,16 +35,64 @@ class MaterialExtractedService {
       if (sortBy != null) queryParams['sort_by'] = sortBy;
       if (sortOrder != null) queryParams['sort_order'] = sortOrder;
 
+      print(
+        '[MaterialExtractedService] Fazendo request para: $_baseUrl/extracted',
+      );
+      print('[MaterialExtractedService] Query params: $queryParams');
+
       final response = await _httpService.get(
         '$_baseUrl/extracted',
         queryParameters: queryParams,
       );
 
+      print(
+        '[MaterialExtractedService] Response status: ${response.statusCode}',
+      );
+      print(
+        '[MaterialExtractedService] Response data type: ${response.data.runtimeType}',
+      );
+      print('[MaterialExtractedService] Response data: ${response.data}');
+
+      if (response.data == null) {
+        throw Exception('Response data is null');
+      }
+
+      // Verifica se a resposta é um erro (como 404)
+      if (response.data is Map<String, dynamic> &&
+          response.data.containsKey('error')) {
+        throw Exception('API Error: ${response.data['error']}');
+      }
+
       final extractedResponse = MaterialExtractedResponse.fromJson(
         response.data,
       );
+
+      print(
+        '[MaterialExtractedService] Parsed response - success: ${extractedResponse.success}',
+      );
+      print(
+        '[MaterialExtractedService] Materials count: ${extractedResponse.data.materials.length}',
+      );
+
       return Result.ok(extractedResponse);
+    } on Exception catch (e) {
+      // Captura exceções específicas (HTTP errors, parsing errors, etc.)
+      print('[MaterialExtractedService] Exception: $e');
+
+      String errorMessage;
+      if (e.toString().contains('404')) {
+        errorMessage = 'Endpoint not found (404)';
+      } else if (e.toString().contains('500')) {
+        errorMessage = 'Server error (500)';
+      } else if (e.toString().contains('API Error:')) {
+        errorMessage = e.toString();
+      } else {
+        errorMessage = 'Error loading extracted materials: $e';
+      }
+
+      return Result.error(Exception(errorMessage));
     } catch (e) {
+      print('[MaterialExtractedService] General error: $e');
       return Result.error(Exception('Error loading extracted materials: $e'));
     }
   }
@@ -54,6 +102,17 @@ class MaterialExtractedService {
     try {
       // Busca todos os materiais para extrair as marcas únicas
       final response = await _httpService.get('$_baseUrl/extracted');
+
+      if (response.data == null) {
+        throw Exception('Response data is null');
+      }
+
+      // Verifica se a resposta é um erro
+      if (response.data is Map<String, dynamic> &&
+          response.data.containsKey('error')) {
+        throw Exception('API Error: ${response.data['error']}');
+      }
+
       final extractedResponse = MaterialExtractedResponse.fromJson(
         response.data,
       );
@@ -74,6 +133,17 @@ class MaterialExtractedService {
   Future<Result<List<String>>> getAvailableCategories() async {
     try {
       final response = await _httpService.get('$_baseUrl/extracted');
+
+      if (response.data == null) {
+        throw Exception('Response data is null');
+      }
+
+      // Verifica se a resposta é um erro
+      if (response.data is Map<String, dynamic> &&
+          response.data.containsKey('error')) {
+        throw Exception('API Error: ${response.data['error']}');
+      }
+
       final extractedResponse = MaterialExtractedResponse.fromJson(
         response.data,
       );

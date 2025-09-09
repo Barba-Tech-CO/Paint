@@ -283,7 +283,10 @@ void setupDependencyInjection() {
 
   // ViewModels - Material
   getIt.registerFactory<MaterialListViewModel>(
-    () => MaterialListViewModel(getIt<IMaterialRepository>()),
+    () => MaterialListViewModel(
+      getIt<IMaterialRepository>(),
+      getIt<IMaterialExtractedRepository>(),
+    ),
   );
 
   // ViewModels - Select Colors
