@@ -13,6 +13,7 @@ export 'overview_zones/overview_zones_view.dart';
 export 'projects/projects_view.dart';
 export 'quotes/quotes_view.dart';
 export 'room_adjust/room_adjust_view.dart';
+export 'roomplan/roomplan_view.dart';
 export 'select_colors/select_colors_view.dart';
 export 'select_material/select_material_view.dart';
 export 'splash/splash_view.dart';

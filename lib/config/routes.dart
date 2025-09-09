@@ -43,6 +43,13 @@ final router = GoRouter(
       builder: (context, state) => const CreateProjectView(),
     ),
     GoRoute(
+      path: '/roomplan',
+      builder: (context, state) {
+        final project = state.extra as ProjectModel;
+        return RoomPlanView(project: project);
+      },
+    ),
+    GoRoute(
       path: '/zones',
       builder: (context, state) => const ZonesView(),
     ),

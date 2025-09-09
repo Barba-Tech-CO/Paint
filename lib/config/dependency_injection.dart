@@ -9,6 +9,9 @@ import '../data/repository/material_extracted_repository_impl.dart';
 import '../data/repository/paint_catalog_repository_impl.dart';
 import '../data/repository/quote_repository_impl.dart';
 
+// Project Repository Implementation
+import '../repository/project_repository_impl.dart';
+
 // Domain Layer
 import '../domain/repository/auth_repository.dart';
 import '../domain/repository/contact_repository.dart';
@@ -17,6 +20,9 @@ import '../domain/repository/material_repository.dart';
 import '../domain/repository/material_extracted_repository.dart';
 import '../domain/repository/paint_catalog_repository.dart';
 import '../domain/repository/quote_repository.dart';
+
+// Project Repository
+import '../repository/project_repository.dart';
 
 // Service Layer
 import '../service/app_initialization_service.dart';
@@ -44,6 +50,9 @@ import '../use_case/auth/auth_use_cases.dart';
 import '../use_case/contacts/contact_operations_use_case.dart';
 import '../use_case/contacts/contact_sync_use_case.dart';
 import '../use_case/quotes/quote_upload_use_case.dart';
+
+// Project Use Case
+import '../use_case/projects/project_operations_use_case.dart';
 
 // ViewModel Layer
 import '../viewmodel/viewmodels.dart';
@@ -166,6 +175,11 @@ void setupDependencyInjection() {
     ),
   );
 
+  // Project Repository
+  getIt.registerLazySingleton<ProjectRepository>(
+    () => ProjectRepositoryImpl(getIt<HttpService>()),
+  );
+
   // Use Cases - Auth
   getIt.registerLazySingleton<AuthOperationsUseCase>(
     () => AuthOperationsUseCase(
@@ -206,6 +220,13 @@ void setupDependencyInjection() {
     () => QuoteUploadUseCase(
       getIt<IQuoteRepository>(),
       getIt<AppLogger>(),
+    ),
+  );
+
+  // Use Cases - Projects
+  getIt.registerLazySingleton<ProjectOperationsUseCase>(
+    () => ProjectOperationsUseCase(
+      getIt<ProjectRepository>(),
     ),
   );
 
@@ -347,6 +368,8 @@ void setupDependencyInjection() {
 
   // ViewModel - Projects
   getIt.registerFactory<ProjectsViewModel>(
-    () => ProjectsViewModel(),
+    () => ProjectsViewModel(
+      getIt<ProjectOperationsUseCase>(),
+    ),
   );
 }

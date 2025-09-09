@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -41,6 +42,16 @@ class _ProjectsViewState extends State<ProjectsView> {
         child: Scaffold(
           backgroundColor: AppColors.background,
           appBar: const PaintProAppBar(title: 'Projects'),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              context.push('/create-project');
+            },
+            backgroundColor: AppColors.primary,
+            child: const Icon(
+              Icons.add,
+              color: Colors.white,
+            ),
+          ),
           body: Consumer<ProjectsViewModel>(
             builder: (context, viewModel, _) {
               if (viewModel.isLoading) {
@@ -150,6 +161,10 @@ class _ProjectsViewState extends State<ProjectsView> {
                                   zonesCount: project.zonesCount,
                                   createdDate: project.createdDate,
                                   image: project.image,
+                                  onTap: () {
+                                    // Navigate to project details or zones
+                                    context.push('/zones', extra: project);
+                                  },
                                   onRename: (newName) {
                                     viewModel.renameProject(
                                       project.id.toString(),
