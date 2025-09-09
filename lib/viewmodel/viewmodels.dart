@@ -32,14 +32,9 @@ export 'overview_zones_viewmodel.dart';
 export 'zones/zones_viewmodels.dart';
 
 // Quotes ViewModels
-<<<<<<< HEAD
 export 'quotes/quotes_viewmodels.dart';
 
-// Select Colors ViewModel
 export 'select_colors/select_colors_viewmodels.dart';
-=======
-export 'quotes/quotes_viewmodel.dart';
 
 // Projects ViewModels
 export 'projects/projects_viewmodel.dart';
->>>>>>> 1dce626a21fef9cd131cc799bd2bf1dcc0a2da57
