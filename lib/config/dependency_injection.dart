@@ -6,7 +6,6 @@ import '../data/repository/contact_repository_impl.dart';
 import '../data/repository/estimate_repository_impl.dart';
 import '../data/repository/material_repository_impl.dart';
 import '../data/repository/material_extracted_repository_impl.dart';
-import '../data/repository/paint_catalog_repository_impl.dart';
 import '../data/repository/quote_repository_impl.dart';
 
 // Project Repository Implementation
@@ -18,7 +17,6 @@ import '../domain/repository/contact_repository.dart';
 import '../domain/repository/estimate_repository.dart';
 import '../domain/repository/material_repository.dart';
 import '../domain/repository/material_extracted_repository.dart';
-import '../domain/repository/paint_catalog_repository.dart';
 import '../domain/repository/quote_repository.dart';
 
 // Project Repository
@@ -37,7 +35,6 @@ import '../service/location_service.dart';
 import '../service/navigation_service.dart';
 import '../service/material_service.dart';
 import '../service/material_extracted_service.dart';
-import '../service/paint_catalog_service.dart';
 import '../service/quote_service.dart';
 import '../service/user_service.dart';
 
@@ -50,12 +47,32 @@ import '../use_case/auth/auth_use_cases.dart';
 import '../use_case/contacts/contact_operations_use_case.dart';
 import '../use_case/contacts/contact_sync_use_case.dart';
 import '../use_case/quotes/quote_upload_use_case.dart';
+import '../use_case/estimates/estimate_creation_use_case.dart';
 
 // Project Use Case
 import '../use_case/projects/project_operations_use_case.dart';
 
 // ViewModel Layer
-import '../viewmodel/viewmodels.dart';
+import '../viewmodel/auth/auth_viewmodel.dart';
+import '../viewmodel/contact/contact_list_viewmodel.dart';
+import '../viewmodel/contact/contact_detail_viewmodel.dart';
+import '../viewmodel/contacts/contacts_viewmodel.dart';
+import '../viewmodel/estimate/estimate_list_viewmodel.dart';
+import '../viewmodel/estimate/estimate_detail_viewmodel.dart';
+import '../viewmodel/estimate/estimate_upload_viewmodel.dart';
+import '../viewmodel/estimate/estimate_calculation_viewmodel.dart';
+import '../viewmodel/material/material_list_viewmodel.dart';
+import '../viewmodel/user/user_viewmodel.dart';
+import '../viewmodel/navigation_viewmodel.dart';
+import '../viewmodel/measurements/measurements_viewmodel.dart';
+import '../viewmodel/zones/zones_card_viewmodel.dart';
+import '../viewmodel/zones/zones_list_viewmodel.dart';
+import '../viewmodel/zones/zone_detail_viewmodel.dart';
+import '../viewmodel/zones/zones_summary_viewmodel.dart';
+import '../viewmodel/quotes/quotes_viewmodel.dart';
+import '../viewmodel/select_colors/select_colors_viewmodel.dart';
+import '../viewmodel/projects/projects_viewmodel.dart';
+import '../viewmodel/estimate_creation_viewmodel.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -110,11 +127,6 @@ void setupDependencyInjection() {
       getIt<HttpService>(),
     ),
   );
-  getIt.registerLazySingleton<PaintCatalogService>(
-    () => PaintCatalogService(
-      getIt<HttpService>(),
-    ),
-  );
   getIt.registerLazySingleton<NavigationService>(
     () => NavigationService(),
   );
@@ -162,11 +174,6 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IMaterialExtractedRepository>(
     () => MaterialExtractedRepository(
       materialExtractedService: getIt<MaterialExtractedService>(),
-    ),
-  );
-  getIt.registerLazySingleton<IPaintCatalogRepository>(
-    () => PaintCatalogRepository(
-      paintCatalogService: getIt<PaintCatalogService>(),
     ),
   );
   getIt.registerLazySingleton<IQuoteRepository>(
@@ -230,6 +237,14 @@ void setupDependencyInjection() {
     ),
   );
 
+  // Use Cases - Estimates
+  getIt.registerLazySingleton<EstimateCreationUseCase>(
+    () => EstimateCreationUseCase(
+      getIt<IEstimateRepository>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
   getIt.registerLazySingleton<AppInitializationService>(
     () => AppInitializationService(
       getIt<AuthService>(),
@@ -286,16 +301,10 @@ void setupDependencyInjection() {
       getIt<IEstimateRepository>(),
     ),
   );
-
-  // ViewModels - Paint Catalog
-  getIt.registerFactory<PaintCatalogListViewModel>(
-    () => PaintCatalogListViewModel(
-      getIt<IPaintCatalogRepository>(),
-    ),
-  );
-  getIt.registerFactory<PaintCatalogDetailViewModel>(
-    () => PaintCatalogDetailViewModel(
-      getIt<IPaintCatalogRepository>(),
+  getIt.registerFactory<EstimateCreationViewModel>(
+    () => EstimateCreationViewModel(
+      getIt<EstimateCreationUseCase>(),
+      getIt<AppLogger>(),
     ),
   );
 
