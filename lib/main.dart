@@ -1,14 +1,29 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'firebase_options.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'config/dependency_injection.dart';
-import 'config/theme.dart';
 import 'config/routes.dart';
-import 'service/navigation_service.dart';
+import 'config/theme.dart';
+import 'firebase_options.dart';
 import 'service/location_service.dart';
-import 'viewmodel/viewmodels.dart';
+import 'service/navigation_service.dart';
+import 'viewmodel/auth/auth_viewmodel.dart';
+import 'viewmodel/contact/contact_detail_viewmodel.dart';
+import 'viewmodel/contact/contact_list_viewmodel.dart';
+import 'viewmodel/contacts/contacts_viewmodel.dart';
+import 'viewmodel/estimate/estimate_calculation_viewmodel.dart';
+import 'viewmodel/estimate/estimate_detail_viewmodel.dart';
+import 'viewmodel/estimate/estimate_list_viewmodel.dart';
+import 'viewmodel/estimate/estimate_upload_viewmodel.dart';
+import 'viewmodel/measurements/measurements_viewmodel.dart';
+import 'viewmodel/navigation_viewmodel.dart';
+import 'viewmodel/paint_catalog/paint_catalog_detail_viewmodel.dart';
+import 'viewmodel/paint_catalog/paint_catalog_list_viewmodel.dart';
+import 'viewmodel/projects/projects_viewmodel.dart';
+import 'viewmodel/quotes/quotes_viewmodel.dart';
+import 'viewmodel/zones/zones_card_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
