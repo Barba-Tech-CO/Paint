@@ -4,7 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../config/app_urls.dart';
-import '../model/models.dart';
+import '../model/contacts/contact_list_response.dart';
+import '../model/contacts/contact_model.dart';
 import '../utils/result/result.dart';
 import 'http_service.dart';
 import 'location_service.dart';
