@@ -1,4 +1,4 @@
-import '../../model/models.dart';
+import '../../model/estimates/estimate_model.dart';
 import '../../utils/result/result.dart';
 
 abstract class IEstimateRepository {
