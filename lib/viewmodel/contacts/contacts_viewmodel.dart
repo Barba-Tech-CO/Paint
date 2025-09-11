@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../model/models.dart';
+import '../../model/contacts/contact_model.dart';
 import '../../use_case/contacts/contact_operations_use_case.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
