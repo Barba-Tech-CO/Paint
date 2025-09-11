@@ -1,7 +1,28 @@
 import 'package:go_router/go_router.dart';
 
-import '../model/models.dart';
-import '../view/views.dart';
+import '../model/contacts/contact_model.dart';
+import '../model/material_models/material_model.dart';
+import '../model/projects/project_card_model.dart';
+import '../view/auth/auth_view.dart';
+import '../view/camera/camera_view.dart';
+import '../view/contact_details/contact_details_view.dart';
+import '../view/contacts/contacts_view.dart';
+import '../view/create_project/create_project_view.dart';
+import '../view/edit_contact/edit_contact_view.dart';
+import '../view/edit_zone/edit_zone_view.dart';
+import '../view/home/home_view.dart';
+import '../view/new_contact/new_contact_view.dart';
+import '../view/overview_zones/overview_zones_view.dart';
+import '../view/projects/projects_view.dart';
+import '../view/quotes/quotes_view.dart';
+import '../view/room_adjust/room_adjust_view.dart';
+import '../view/select_colors/select_colors_view.dart';
+import '../view/select_material/select_material_view.dart';
+import '../view/splash/splash_view.dart';
+import '../view/success/success_view.dart';
+import '../widgets/loading/loading_widget.dart';
+import '../view/zones/zones_view.dart';
+import '../view/zones_details/zones_details_view.dart';
 
 final router = GoRouter(
   initialLocation: '/projects',
