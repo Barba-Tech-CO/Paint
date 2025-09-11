@@ -4,9 +4,12 @@ import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
-import '../../viewmodel/viewmodels.dart';
+import '../../viewmodel/navigation_viewmodel.dart';
+import '../../viewmodel/projects/projects_viewmodel.dart';
 import '../layout/main_layout.dart';
-import '../widgets/widgets.dart';
+import '../../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/cards/project_card_widget.dart';
+import '../../widgets/form_field/paint_pro_search_field.dart';
 
 class ProjectsView extends StatefulWidget {
   const ProjectsView({super.key});
