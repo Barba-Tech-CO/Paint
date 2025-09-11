@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import '../../domain/repository/quote_repository.dart';
-import '../../model/models.dart';
+import '../../model/quotes_data/quote_list_response.dart';
+import '../../model/quotes_data/quote_model.dart';
+import '../../model/quotes_data/quote_response.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
