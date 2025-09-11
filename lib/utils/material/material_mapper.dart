@@ -1,4 +1,4 @@
-import '../../model/models.dart';
+import '../../model/material_models/material_model.dart';
 
 /// Utilitários para mapear campos de materiais extraídos para MaterialModel
 class MaterialMapper {
