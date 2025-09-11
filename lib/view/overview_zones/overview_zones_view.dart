@@ -3,8 +3,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
 import '../../helpers/loading_helper.dart';
-import '../../model/models.dart';
-import '../../viewmodel/viewmodels.dart';
+import '../../model/material_models/material_model.dart';
+import '../../model/projects/project_card_model.dart';
+import '../../viewmodel/overview_zones_viewmodel.dart';
+import '../../viewmodel/zones/zones_list_viewmodel.dart';
 import '../widgets/widgets.dart';
 
 class OverviewZonesView extends StatefulWidget {
@@ -198,7 +200,7 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                         (material) => MaterialItemRowWidget(
                           title: material.name,
                           subtitle: '${material.code} - ${material.priceUnit}',
-                          price: '\$${material.price.toStringAsFixed(2)}',
+                          price: '\$${(material.price).toStringAsFixed(2)}',
                         ),
                       ),
 
