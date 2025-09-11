@@ -1,4 +1,5 @@
-import '../../model/models.dart';
+import '../../model/contacts/contact_model.dart';
+import '../../model/contacts/contact_list_response.dart';
 import '../../utils/result/result.dart';
 
 abstract class IContactRepository {
