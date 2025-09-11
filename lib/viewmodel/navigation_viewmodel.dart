@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../model/models.dart';
+import '../model/navigation/navigation_item_model.dart';
 
 class NavigationViewModel extends ChangeNotifier {
   String _currentRoute = '/home';
