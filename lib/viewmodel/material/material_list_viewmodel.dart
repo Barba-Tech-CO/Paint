@@ -1,8 +1,10 @@
 import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
-import '../../model/models.dart';
+
 import '../../domain/repository/material_repository.dart';
+import '../../model/material_models/material_model.dart';
+import '../../model/material_models/material_stats_model.dart';
 
 class MaterialListViewModel extends ChangeNotifier {
   final IMaterialRepository _materialRepository;
