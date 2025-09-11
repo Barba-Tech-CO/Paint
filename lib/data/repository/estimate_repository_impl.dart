@@ -1,5 +1,6 @@
 import '../../domain/repository/estimate_repository.dart';
-import '../../model/models.dart';
+import '../../model/estimates/estimate_create_request.dart';
+import '../../model/estimates/estimate_model.dart';
 import '../../service/estimate_service.dart';
 import '../../utils/result/result.dart';
 
@@ -82,5 +83,12 @@ class EstimateRepository implements IEstimateRepository {
   @override
   Future<Result<bool>> sendToGHL(String estimateId) {
     return _estimateService.sendToGHL(estimateId);
+  }
+
+  @override
+  Future<Result<EstimateModel>> createEstimateMultipart(
+    EstimateCreateRequest request,
+  ) {
+    return _estimateService.createEstimateMultipart(request);
   }
 }
