@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/app_colors.dart';
-import '../widgets/widgets.dart';
+import '../../widgets/buttons/paint_pro_button.dart';
 
 class SuccessView extends StatelessWidget {
   const SuccessView({super.key});
