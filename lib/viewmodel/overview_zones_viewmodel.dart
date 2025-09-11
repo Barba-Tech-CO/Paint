@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
-import '../model/models.dart';
+
+import '../model/material_models/material_model.dart';
+import '../model/projects/project_card_model.dart';
 
 class OverviewZonesViewModel extends ChangeNotifier {
   List<MaterialModel> _selectedMaterials = [];
