@@ -1,4 +1,6 @@
-import '../model/models.dart';
+import '../model/material_models/material_model.dart';
+import '../model/material_models/material_price_range_model.dart';
+import '../model/material_models/material_stats_model.dart';
 import '../utils/material/material_mapper.dart';
 import '../utils/result/result.dart';
 import 'quote_service.dart';
