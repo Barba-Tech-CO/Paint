@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../widgets/appbars/paint_pro_app_bar.dart';
-import '../widgets/buttons/paint_pro_button.dart';
-import '../widgets/cards/input_card_widget.dart';
-import 'widgets/simple_checkbox_list_widget.dart';
-import 'widgets/wall_condition_widget.dart';
+import '../../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/buttons/paint_pro_button.dart';
+import '../../widgets/cards/input_card_widget.dart';
+import '../../widgets/room/checkbox_row_widget.dart';
+import '../../widgets/room/wall_condition_widget.dart';
 
 class RoomAdjustView extends StatefulWidget {
   const RoomAdjustView({super.key});
@@ -74,7 +74,7 @@ class _RoomAdjustViewState extends State<RoomAdjustView> {
                       ),
                     ],
                   ),
-                  child: SimpleCheckboxListWidget(
+                  child: CheckboxRowWidget(
                     items: elements,
                     onItemChanged: (key, value) {
                       setState(() {
