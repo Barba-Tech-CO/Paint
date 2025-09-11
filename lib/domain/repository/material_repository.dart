@@ -1,6 +1,6 @@
+import '../../model/material_models/material_model.dart';
+import '../../model/material_models/material_stats_model.dart';
 import '../../utils/result/result.dart';
-import '../../model/models.dart';
-
 abstract class IMaterialRepository {
   /// Busca todos os materiais disponíveis
   Future<Result<List<MaterialModel>>> getAllMaterials();
