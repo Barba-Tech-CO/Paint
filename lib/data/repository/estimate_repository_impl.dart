@@ -1,5 +1,5 @@
 import '../../domain/repository/estimate_repository.dart';
-import '../../model/models.dart';
+import '../../model/estimates/estimate_model.dart';
 import '../../service/estimate_service.dart';
 import '../../utils/result/result.dart';
 
