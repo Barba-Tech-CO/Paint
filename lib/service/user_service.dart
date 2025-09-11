@@ -2,7 +2,7 @@ import '../model/user_model.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/result/result.dart';
 import 'auth_service_exception.dart';
-import 'services.dart';
+import 'http_service.dart';
 
 class UserService {
   final HttpService _httpService;
