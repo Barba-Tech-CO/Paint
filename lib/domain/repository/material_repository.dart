@@ -1,5 +1,6 @@
 import '../../utils/result/result.dart';
-import '../../model/models.dart';
+import '../../model/material_models/material_model.dart';
+import '../../model/material_models/material_stats_model.dart';
 
 abstract class IMaterialRepository {
   /// Busca todos os materiais disponíveis
