@@ -125,6 +125,7 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<MaterialExtractedService>(
     () => MaterialExtractedService(
       getIt<HttpService>(),
+      getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<NavigationService>(
@@ -341,6 +342,7 @@ void setupDependencyInjection() {
     () => MaterialListViewModel(
       getIt<IMaterialRepository>(),
       getIt<IMaterialExtractedRepository>(),
+      getIt<AppLogger>(),
     ),
   );
 
