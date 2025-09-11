@@ -18,14 +18,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Configura o cache do Bundler para acelerar a instalação das gems
+      # 2. Instala Flutter (necessário para build do IPA)
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # 3. Configura o cache do Bundler para acelerar a instalação das gems
       - name: Setup Ruby and Bundler Cache
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.0'
           bundler-cache: true
 
-      # 3. Executa a lane do Fastlane
+      # 4. Executa a lane do Fastlane
       - name: Run Fastlane Deploy Lane
         # Passa os secrets do GitHub como variáveis de ambiente para o Fastlane
         env:

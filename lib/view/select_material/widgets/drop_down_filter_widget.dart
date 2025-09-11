@@ -31,7 +31,7 @@ class DropDownFilterWidget<T> extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<T?>(
-          value: value,
+          initialValue: value,
           decoration: InputDecoration(
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
