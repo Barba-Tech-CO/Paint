@@ -1,12 +1,14 @@
 import '../model/material_models/material_extracted_model.dart';
 import '../utils/result/result.dart';
+import '../utils/logger/app_logger.dart';
 import 'http_service.dart';
 
 class MaterialExtractedService {
   final HttpService _httpService;
+  final AppLogger _logger;
   static const String _baseUrl = '/api/materials/uploads';
 
-  MaterialExtractedService(this._httpService);
+  MaterialExtractedService(this._httpService, this._logger);
 
   /// Lista materiais extraídos com filtros
   Future<Result<MaterialExtractedResponse>> getExtractedMaterials({
@@ -35,23 +37,25 @@ class MaterialExtractedService {
       if (sortBy != null) queryParams['sort_by'] = sortBy;
       if (sortOrder != null) queryParams['sort_order'] = sortOrder;
 
-      print(
+      _logger.info(
         '[MaterialExtractedService] Fazendo request para: $_baseUrl/extracted',
       );
-      print('[MaterialExtractedService] Query params: $queryParams');
+      _logger.info('[MaterialExtractedService] Query params: $queryParams');
 
       final response = await _httpService.get(
         '$_baseUrl/extracted',
         queryParameters: queryParams,
       );
 
-      print(
+      _logger.info(
         '[MaterialExtractedService] Response status: ${response.statusCode}',
       );
-      print(
+      _logger.info(
         '[MaterialExtractedService] Response data type: ${response.data.runtimeType}',
       );
-      print('[MaterialExtractedService] Response data: ${response.data}');
+      _logger.info(
+        '[MaterialExtractedService] Response data: ${response.data}',
+      );
 
       if (response.data == null) {
         throw Exception('Response data is null');
@@ -67,17 +71,17 @@ class MaterialExtractedService {
         response.data,
       );
 
-      print(
+      _logger.info(
         '[MaterialExtractedService] Parsed response - success: ${extractedResponse.success}',
       );
-      print(
+      _logger.info(
         '[MaterialExtractedService] Materials count: ${extractedResponse.data.materials.length}',
       );
 
       return Result.ok(extractedResponse);
     } on Exception catch (e) {
       // Captura exceções específicas (HTTP errors, parsing errors, etc.)
-      print('[MaterialExtractedService] Exception: $e');
+      _logger.error('[MaterialExtractedService] Exception: $e');
 
       String errorMessage;
       if (e.toString().contains('404')) {
@@ -92,7 +96,7 @@ class MaterialExtractedService {
 
       return Result.error(Exception(errorMessage));
     } catch (e) {
-      print('[MaterialExtractedService] General error: $e');
+      _logger.error('[MaterialExtractedService] General error: $e');
       return Result.error(Exception('Error loading extracted materials: $e'));
     }
   }
