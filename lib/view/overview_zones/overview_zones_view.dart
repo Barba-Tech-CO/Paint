@@ -3,9 +3,18 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
 import '../../helpers/loading_helper.dart';
-import '../../model/models.dart';
-import '../../viewmodel/viewmodels.dart';
-import '../widgets/widgets.dart';
+import '../../model/material_models/material_model.dart';
+import '../../model/projects/project_card_model.dart';
+import '../../viewmodel/overview_zones_viewmodel.dart';
+import '../../viewmodel/zones/zones_list_viewmodel.dart';
+import '../../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/buttons/paint_pro_button.dart';
+import '../../widgets/cards/project_summary_card_widget.dart';
+import '../../widgets/summary/material_item_row_widget.dart';
+import '../../widgets/summary/project_cost_summary_widget.dart';
+import '../../widgets/summary/room_overview_row_widget.dart';
+import '../../widgets/summary/summary_info_row_widget.dart';
+import '../../widgets/summary/summary_total_row_widget.dart';
 
 class OverviewZonesView extends StatefulWidget {
   final List<MaterialModel>? selectedMaterials;
