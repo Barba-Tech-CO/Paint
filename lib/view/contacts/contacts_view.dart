@@ -6,8 +6,8 @@ import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
 import '../../helpers/contacts/split_full_name.dart';
-import '../../model/models.dart';
-import '../../viewmodel/viewmodels.dart';
+import '../../model/contacts/contact_model.dart';
+import '../../viewmodel/contacts/contacts_viewmodel.dart';
 import '../layout/main_layout.dart';
 import '../widgets/widgets.dart';
 import 'widgets/contact_item_widget.dart';
