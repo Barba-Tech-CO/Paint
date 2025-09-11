@@ -1,4 +1,5 @@
-import '../../model/models.dart';
+import '../../model/estimates/estimate_create_request.dart';
+import '../../model/estimates/estimate_model.dart';
 import '../../utils/result/result.dart';
 
 abstract class IEstimateRepository {
@@ -50,4 +51,9 @@ abstract class IEstimateRepository {
 
   /// Envia o orçamento para o GHL
   Future<Result<bool>> sendToGHL(String estimateId);
+
+  /// Cria um estimate completo com upload multipart
+  Future<Result<EstimateModel>> createEstimateMultipart(
+    EstimateCreateRequest request,
+  );
 }
