@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../utils/result/result.dart';
-import '../../model/models.dart';
+import '../../model/estimates/estimate_model.dart';
 import '../../domain/repository/estimate_repository.dart';
 import '../../utils/command/command.dart';
 
