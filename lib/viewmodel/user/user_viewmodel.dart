@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../model/business_info.dart';
+import '../../model/business_info_model.dart';
 import '../../model/user_model.dart';
 import '../../service/user_service.dart';
 import '../../utils/logger/app_logger.dart';
@@ -23,7 +23,7 @@ class UserViewModel extends ChangeNotifier {
   String get displayName => _user?.name ?? '';
 
   bool get isGhlUser => _user?.isGhlUser ?? false;
-  BusinessInfo? get businessInfo => _user?.businessInfo;
+  BusinessInfoModel? get businessInfo => _user?.businessInfo;
 
   // New properties for special GHL states
   bool get hasGhlDataIncomplete => _user?.ghlDataIncomplete ?? false;
