@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../model/models.dart';
+import '../model/contacts/contact_model.dart';
 
 class ContactDatabaseService {
   static Database? _database;
@@ -22,7 +22,8 @@ class ContactDatabaseService {
 
     return await openDatabase(
       path,
-      version: 3, // Updated version to force migration for API contract compliance
+      version:
+          3, // Updated version to force migration for API contract compliance
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -82,14 +83,30 @@ class ContactDatabaseService {
     ''');
 
     // Create indexes for better performance - Following API contract requirements
-    await db.execute('CREATE INDEX idx_ghl_contacts_user_id ON $_tableName(user_id)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_ghl_id ON $_tableName(ghl_id)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_location_id ON $_tableName(location_id)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_email ON $_tableName(email)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_phone ON $_tableName(phone)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_sync_status ON $_tableName(sync_status)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_location_sync ON $_tableName(location_id, sync_status)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_user_sync ON $_tableName(user_id, sync_status, updated_at)');
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_user_id ON $_tableName(user_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_ghl_id ON $_tableName(ghl_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_location_id ON $_tableName(location_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_email ON $_tableName(email)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_phone ON $_tableName(phone)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_sync_status ON $_tableName(sync_status)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_location_sync ON $_tableName(location_id, sync_status)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_user_sync ON $_tableName(user_id, sync_status, updated_at)',
+    );
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
