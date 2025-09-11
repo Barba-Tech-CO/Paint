@@ -599,6 +599,95 @@ Isso acelera significativamente a implementação.
 
 ---
 
+## 🧩 Atualização: Estimates — Criação e Anexo de Fotos (URLs Locais)
+
+Com base no fluxo atual do backend (EstimateController) e no padrão Offline‑First, o endpoint de “projeto” é o próprio `/api/estimates`, que concentra dados do orçamento/projeto e agrega fotos e medições. Abaixo, os contratos e recomendações alinhados ao `paint_pro_api`.
+
+### Decisão de Fluxo
+
+- Criação do estimate: `POST /api/estimates` (multipart/form-data) recebe dados do projeto, materiais, medições (RoomPlan) e fotos iniciais (mín. 3).
+- Anexar novas fotos depois: `PUT /api/estimates/{id}` (multipart/form-data) com `photos[]` (opcional) para adicionar mais fotos ao estimate existente. (Opcional: aceitar também `PATCH` para semântica parcial.)
+- Leitura do detalhe: `GET /api/estimates/{id}` retorna o estimate completo incluindo `photos_data` por padrão.
+- Lista leve: `GET /api/estimates` retorna paginação e atributos do estimate; pode-se expor `photos_count` e uma `cover_photo_thumb_url` para card.
+
+### Contratos de API (existentes e propostos)
+
+- POST `/api/estimates` (multipart/form-data)
+  - Já implementado (CreateEstimateRequest). Campos atuais obrigatórios: `contact`, `wall_condition`, `has_accent_wall`, `materials_calculation[*]`, `total_cost`, `complete` e `photos[]` (mín. 3).
+  - Recomendação: tornar `project_name`, `client_name`, `project_type`, `ghl_contact_id` obrigatórios (hoje estão como nullable).
+  - Resposta 201: `{ success, message, data: Estimate }` com `photos_data` preenchido (URLs locais).
+
+- PUT `/api/estimates/{id}` (multipart/form-data)
+  - Já implementado (UpdateEstimateRequest). Suporta atualizar campos e anexar fotos adicionais via `photos[]` (validação `sometimes|array|min:1|...`).
+  - Recomendação: se anexar apenas fotos, enviar somente `photos[]`; o backend deve mesclar em `photos_data` e atualizar `photos_uploaded_at` quando aplicável.
+  - Resposta 200: `{ success, message, data: Estimate }` com `photos_data` atualizado.
+
+- GET `/api/estimates/{id}`
+  - Já implementado. Retorna `{ success, estimate }` com `photos_data` e demais arrays (`measurements`, `paint_elements`).
+
+- GET `/api/estimates`
+  - Já implementado com filtros (`client_name`, `project_type`, `status`, `search`) e `limit/per_page`.
+
+### Armazenamento de Imagens — URLs Locais (Laravel disk `public`)
+
+- Conforme docs do módulo, usar `storage:link` para expor `storage/app/public` via `/storage`.
+- Estrutura sugerida por estimate: `storage/app/public/estimates/{id}/photos` e `storage/app/public/estimates/{id}/thumbs`.
+- No service/controller, salvar com `$file->store("estimates/$id/photos", 'public')` e gerar thumbs (Ex.: Intervention Image) em `estimates/$id/thumbs/$filename`.
+- `photos_data`: array de strings com caminhos públicos, ex.: `/storage/estimates/1/photos/photo1.jpg`.
+
+### Validações (reforço ao que já existe)
+
+- Criação (CreateEstimateRequest): `photos` → `required|array|min:3|max:9`; `photos.*` → `image|mimes:jpeg,png,jpg,webp|max:5120|dimensions:min_width=800,min_height=600,max_width=4096,max_height=4096`.
+- Atualização (UpdateEstimateRequest): `photos` → `sometimes|array|min:1|max:10`; mesmas regras de `photos.*` acima.
+- Recomendação: mover a regra de “mínimo 3 fotos” para a transição de status `complete` caso queiram permitir criar draft sem fotos, mas o app hoje já exige 3 na UX.
+
+### Modelo de Dados — DB (existente)
+
+- Tabela `paint_pro_estimates` com colunas JSON: `photos_data` (array de URLs), `measurements`, `paint_elements`; timestamps específicos: `photos_uploaded_at`, `measurements_completed_at`, etc. Status no enum `EstimateStatus`.
+- Métodos utilitários no modelo (`hasPhotos`, `getPhotosCount`, `getDetailedSummary`) já expõem contagens e arrays para a API.
+
+### Offline‑First — App
+
+- Salvar localmente as fotos e dados; quando online, chamar `POST /api/estimates` com multipart. Para anexos posteriores, usar `PUT /api/estimates/{id}` apenas com `photos[]`.
+- Outbox com retry/backoff; renderização usa `local_path` enquanto `pending` e passa a usar URLs locais de `photos_data` após upload.
+
+### Segurança e Limites
+
+- Autenticação obrigatória (Sanctum) e ownership por usuário.
+- Limitar tamanho do request (ex.: 25MB) e número total de fotos por estimate (ex.: até 30 no agregado) se necessário.
+- Sanitizar nomes e evitar path traversal com `store(..., 'public')`.
+
+### Exemplo cURL — Anexar Fotos (PUT)
+
+```
+curl -X PUT \
+     -H "Authorization: Bearer <TOKEN>" \
+     -H "Accept: application/json" \
+     -F "photos[]=@/path/p1.jpg" \
+     -F "photos[]=@/path/p2.jpg" \
+     https://api.exemplo.com/api/estimates/123
+```
+
+Resposta 200 (exemplo):
+
+```
+{
+  "success": true,
+  "message": "Estimate updated successfully",
+  "data": {
+    "id": 123,
+    "project_name": "Casa Silva",
+    "photos_data": [
+      "/storage/estimates/123/photos/p1.jpg",
+      "/storage/estimates/123/photos/p2.jpg",
+      "/storage/estimates/123/photos/p3.jpg"
+    ],
+    "photos_uploaded_at": "2025-09-11 18:22:00",
+    ...
+  }
+}
+```
+
 **📝 Este documento serve como roadmap completo para a transição do fluxo mockado para integração real com APIs, incluindo planejamento detalhado para o módulo RoomPlan.**
 
 ---
