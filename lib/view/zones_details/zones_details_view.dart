@@ -3,12 +3,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
-import '../../model/models.dart';
+import '../../model/projects/project_card_model.dart';
 import '../../utils/logger/app_logger.dart';
-import '../../viewmodel/zones/zones_viewmodels.dart';
-import '../widgets/buttons/paint_pro_delete_button.dart';
-import '../widgets/widgets.dart';
-import 'widgets/rename_zone_dialog.dart';
+import '../../viewmodel/zones/zone_detail_viewmodel.dart';
+import '../../viewmodel/zones/zones_list_viewmodel.dart';
+import '../../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/buttons/paint_pro_button.dart';
+import '../../widgets/buttons/paint_pro_delete_button.dart';
+import '../../widgets/cards/surface_areas_widget.dart';
+import '../../widgets/summary/room_overview_row_widget.dart';
+import '../../widgets/zones/rename_zone_dialog.dart';
 
 class ZonesDetailsView extends StatefulWidget {
   final ProjectCardModel? zone;
