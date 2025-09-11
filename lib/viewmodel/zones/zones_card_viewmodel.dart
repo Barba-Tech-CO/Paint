@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../helpers/zones/zone_data_classes.dart';
-import '../../model/models.dart';
+import '../../model/projects/project_card_model.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
 
