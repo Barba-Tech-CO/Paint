@@ -1,5 +1,6 @@
 import '../../domain/repository/contact_repository.dart';
-import '../../model/models.dart';
+import '../../model/contacts/contact_list_response.dart';
+import '../../model/contacts/contact_model.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
