@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../widgets/widgets.dart';
-import '../../viewmodel/viewmodels.dart';
+
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
+import '../../viewmodel/material/material_list_viewmodel.dart';
+import '../widgets/widgets.dart';
 import 'widgets/select_material_widgets.dart';
 
 class SelectMaterialView extends StatefulWidget {
