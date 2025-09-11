@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../model/models.dart';
+import '../model/contacts/contact_model.dart';
 
 class ContactDatabaseService {
   static Database? _database;
