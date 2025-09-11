@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/app_colors.dart';
-import '../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/appbars/paint_pro_app_bar.dart';
 
 class CameraView extends StatelessWidget {
   const CameraView({super.key});
