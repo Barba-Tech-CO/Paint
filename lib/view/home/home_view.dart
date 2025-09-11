@@ -9,10 +9,10 @@ import '../../service/auth_persistence_service.dart';
 import '../../viewmodel/navigation_viewmodel.dart';
 import '../../viewmodel/user/user_viewmodel.dart';
 import '../layout/main_layout.dart';
-import '../widgets/appbars/paint_pro_app_bar.dart';
-import '../widgets/cards/greeting_card_widget.dart';
-import '../widgets/cards/project_state_card_widget.dart';
-import '../widgets/cards/stats_card_widget.dart';
+import '../../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/cards/greeting_card_widget.dart';
+import '../../widgets/cards/project_state_card_widget.dart';
+import '../../widgets/cards/stats_card_widget.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
