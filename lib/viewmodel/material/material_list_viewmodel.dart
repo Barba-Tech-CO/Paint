@@ -1,14 +1,15 @@
-import 'dart:developer';
-
 import 'package:flutter/foundation.dart';
+
+import '../../domain/repository/material_extracted_repository.dart';
+import '../../domain/repository/material_repository.dart';
 import '../../model/material_models/material_model.dart';
 import '../../model/material_models/material_stats_model.dart';
-import '../../domain/repository/material_repository.dart';
-import '../../domain/repository/material_extracted_repository.dart';
+import '../../utils/logger/app_logger.dart';
 
 class MaterialListViewModel extends ChangeNotifier {
   final IMaterialRepository _materialRepository;
   final IMaterialExtractedRepository _materialExtractedRepository;
+  final AppLogger _logger;
   final List<MaterialModel> _selectedMaterials = [];
   final List<String> _availableBrands = [];
   List<MaterialModel> _materials = [];
@@ -22,6 +23,7 @@ class MaterialListViewModel extends ChangeNotifier {
   MaterialListViewModel(
     this._materialRepository,
     this._materialExtractedRepository,
+    this._logger,
   );
 
   // Getters
@@ -47,8 +49,10 @@ class MaterialListViewModel extends ChangeNotifier {
       );
       result.when(
         ok: (response) {
-          print('[MaterialListViewModel] API Response received successfully');
-          print(
+          _logger.info(
+            '[MaterialListViewModel] API Response received successfully',
+          );
+          _logger.info(
             '[MaterialListViewModel] Materials count: ${response.data.materials.length}',
           );
 
@@ -58,7 +62,7 @@ class MaterialListViewModel extends ChangeNotifier {
 
           // Se a API retornar array vazio, carrega dados de fallback
           if (_materials.isEmpty) {
-            print(
+            _logger.warning(
               '[MaterialListViewModel] API returned empty materials, loading fallback data',
             );
             _setError(
@@ -73,7 +77,7 @@ class MaterialListViewModel extends ChangeNotifier {
           notifyListeners();
         },
         error: (error) {
-          print('Erro na API: $error');
+          _logger.error('Erro na API: $error');
 
           // Se for erro 404, significa que endpoint não existe ou está mal configurado
           if (error.toString().contains('404') ||
@@ -97,7 +101,7 @@ class MaterialListViewModel extends ChangeNotifier {
         },
       );
     } catch (e) {
-      print('Exceção durante carregamento: $e');
+      _logger.error('Exceção durante carregamento: $e');
       _setError('Erro inesperado ao carregar materiais: $e');
       // Tenta carregar dados de fallback
       _loadFallbackMaterials();
@@ -118,11 +122,11 @@ class MaterialListViewModel extends ChangeNotifier {
         },
         error: (error) {
           // Não mostra erro para marcas, apenas log
-          log('Erro ao carregar marcas: $error');
+          _logger.warning('Erro ao carregar marcas: $error');
         },
       );
     } catch (e) {
-      log('Erro inesperado ao carregar marcas: $e');
+      _logger.error('Erro inesperado ao carregar marcas: $e');
     }
   }
 
@@ -277,7 +281,7 @@ class MaterialListViewModel extends ChangeNotifier {
         await loadStats();
       } catch (e) {
         loadAvailableBrands();
-        print('Erro ao carregar stats: $e');
+        _logger.warning('Erro ao carregar stats: $e');
       }
     }
   }
@@ -338,7 +342,7 @@ class MaterialListViewModel extends ChangeNotifier {
         }
       } catch (e) {
         // Em caso de erro, cria um material padrão
-        print('Erro ao converter material: $e');
+        _logger.error('Erro ao converter material: $e');
         return MaterialModel(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           name: 'Material - Erro de Conversão',
@@ -452,12 +456,12 @@ class MaterialListViewModel extends ChangeNotifier {
         'Valspar',
       ]);
 
-      print(
+      _logger.info(
         '[MaterialListViewModel] Loaded ${_materials.length} fallback materials',
       );
       notifyListeners();
     } catch (e) {
-      print('Erro ao carregar dados de fallback: $e');
+      _logger.error('Erro ao carregar dados de fallback: $e');
     }
   }
 }
