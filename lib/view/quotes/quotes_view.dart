@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodel/viewmodels.dart';
+import '../../viewmodel/quotes/quotes_viewmodel.dart';
 import '../layout/main_layout.dart';
-import '../widgets/widgets.dart';
-import 'widgets/widgets.dart';
+import '../../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/buttons/paint_pro_fab.dart';
+import '../../widgets/states/empty_state_widget.dart';
+import '../../widgets/states/loading_widget.dart';
+import '../../widgets/quotes/quote_card_widget.dart';
+import '../../widgets/quotes/search_bar_widget.dart';
+import '../../widgets/quotes/try_again_widget.dart';
 
 class QuotesView extends StatefulWidget {
   const QuotesView({super.key});
@@ -90,7 +95,9 @@ class _QuotesViewState extends State<QuotesView> {
                 child: Stack(
                   children: [
                     quotesViewModel.currentState == QuotesState.loading
-                        ? const LoadingWidget(message: 'Loading quotes...')
+                        ? const LoadingWidget(
+                            message: 'Loading quotes...',
+                          )
                         : quotesViewModel.currentState == QuotesState.empty
                         ? EmptyStateWidget(
                             title: 'No Quotes yet',
