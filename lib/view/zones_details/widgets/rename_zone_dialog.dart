@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../viewmodel/zones/zones_viewmodels.dart';
+import '../../../viewmodel/zones/zone_detail_viewmodel.dart';
 
 class RenameZoneDialog extends StatefulWidget {
   final ZoneDetailViewModel viewModel;
