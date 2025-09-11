@@ -5,7 +5,9 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../config/app_config.dart';
 import '../../config/app_urls.dart';
-import '../../model/models.dart';
+import '../../model/auth_model/auth_model.dart';
+import '../../model/auth_model/auth_state.dart';
+import '../../model/user_model.dart';
 import '../../service/auth_persistence_service.dart';
 import '../../service/deep_link_service.dart';
 import '../../use_case/auth/auth_use_cases.dart';
