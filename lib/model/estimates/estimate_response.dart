@@ -2,7 +2,7 @@ import 'estimate_model.dart';
 import 'estimate_status.dart';
 import 'estimate_totals.dart';
 import 'material_create_item.dart';
-import 'zone_response_model.dart';
+import 'zones/zone_response_model.dart';
 
 /// Complete estimate response from backend
 class EstimateResponse {
