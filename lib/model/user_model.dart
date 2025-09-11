@@ -1,4 +1,4 @@
-import 'business_info.dart';
+import 'business_info_model.dart';
 
 class UserModel {
   final int? id;
@@ -19,7 +19,7 @@ class UserModel {
   final String? ghlDescription;
   final DateTime? ghlLastSyncAt;
   final bool isGhlUser;
-  final BusinessInfo? businessInfo;
+  final BusinessInfoModel? businessInfo;
   final bool? ghlDataIncomplete;
   final bool? ghlError;
 
@@ -76,7 +76,7 @@ class UserModel {
           : null,
       isGhlUser: json['is_ghl_user'] ?? false,
       businessInfo: json['business_info'] != null
-          ? BusinessInfo.fromJson(json['business_info'])
+          ? BusinessInfoModel.fromJson(json['business_info'])
           : null,
       ghlDataIncomplete: json['ghl_data_incomplete'],
       ghlError: json['ghl_error'],
