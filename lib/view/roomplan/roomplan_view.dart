@@ -9,7 +9,7 @@ import '../widgets/buttons/paint_pro_button.dart';
 class RoomPlanView extends StatefulWidget {
   final ProjectModel project;
 
-  const RoomPlanView({Key? key, required this.project}) : super(key: key);
+  const RoomPlanView({super.key, required this.project});
 
   @override
   State<RoomPlanView> createState() => _RoomPlanViewState();
@@ -47,7 +47,7 @@ class _RoomPlanViewState extends State<RoomPlanView> {
               gradient: LinearGradient(
                 colors: [
                   AppColors.primary,
-                  AppColors.primary.withOpacity(0.8),
+                  AppColors.primary.withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -97,7 +97,7 @@ class _RoomPlanViewState extends State<RoomPlanView> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   width: 2,
                 ),
               ),
@@ -120,7 +120,7 @@ class _RoomPlanViewState extends State<RoomPlanView> {
                   color: Colors.grey[50],
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppColors.primary.withOpacity(0.2),
+                    color: AppColors.primary.withValues(alpha: 0.2),
                   ),
                 ),
                 child: _buildMeasurementsDisplay(),
@@ -443,7 +443,7 @@ class ScanningGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.primary.withOpacity(0.3)
+      ..color = AppColors.primary.withValues(alpha: 0.3)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
