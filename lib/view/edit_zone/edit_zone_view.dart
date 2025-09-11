@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
-import '../../model/models.dart';
+import '../../model/projects/project_card_model.dart';
 import '../../utils/logger/app_logger.dart';
-import '../../viewmodel/zones/zones_viewmodels.dart';
+import '../../viewmodel/zones/zone_detail_viewmodel.dart';
+import '../../viewmodel/zones/zones_list_viewmodel.dart';
 import '../widgets/buttons/paint_pro_delete_button.dart';
 import '../widgets/widgets.dart';
 import 'widgets/floor_dimension_widget.dart';
