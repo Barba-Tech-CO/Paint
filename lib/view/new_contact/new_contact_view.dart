@@ -1,14 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:validatorless/validatorless.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../config/app_colors.dart';
 import '../../helpers/snackbar_helper.dart';
 import '../../viewmodel/contact/contact_detail_viewmodel.dart';
-import '../widgets/section_title_widget.dart';
-import '../widgets/widgets.dart';
+import '../../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/buttons/paint_pro_button.dart';
+import '../../widgets/form_field/paint_pro_number_field.dart';
+import '../../widgets/form_field/paint_pro_text_field.dart';
+import '../../widgets/overlays/loading_overlay.dart';
+import '../../widgets/section_title_widget.dart';
 
 class NewContactView extends StatefulWidget {
   const NewContactView({super.key});
