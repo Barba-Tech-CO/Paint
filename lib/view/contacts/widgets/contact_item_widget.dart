@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../model/contacts/contact_model.dart';
 import '../../widgets/widgets.dart';
-import '../../../model/models.dart';
 
 class ContactItemWidget extends StatelessWidget {
   final Map<String, String> contact;
