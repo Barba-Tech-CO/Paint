@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import '../model/models.dart';
+import '../model/estimates/estimate_model.dart';
 import '../utils/result/result.dart';
 import 'http_service.dart';
 
