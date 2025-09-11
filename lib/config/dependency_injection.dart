@@ -37,14 +37,36 @@ import '../utils/logger/app_logger.dart';
 import '../utils/logger/logger_app_logger_impl.dart';
 
 // Use Case Layer
-import '../use_case/auth/auth_use_cases.dart';
+import '../use_case/auth/auth_operations_use_case.dart';
+import '../use_case/auth/manage_auth_state_use_case.dart';
+import '../use_case/auth/handle_deep_link_use_case.dart';
+import '../use_case/auth/handle_webview_navigation_use_case.dart';
 import '../use_case/contacts/contact_operations_use_case.dart';
 import '../use_case/contacts/contact_sync_use_case.dart';
 import '../use_case/quotes/quote_upload_use_case.dart';
 
 // ViewModel Layer
 import '../viewmodel/select_colors_viewmodel.dart';
-import '../viewmodel/viewmodels.dart';
+import '../viewmodel/auth/auth_viewmodel.dart';
+import '../viewmodel/contact/contact_list_viewmodel.dart';
+import '../viewmodel/contact/contact_detail_viewmodel.dart';
+import '../viewmodel/estimate/estimate_list_viewmodel.dart';
+import '../viewmodel/estimate/estimate_detail_viewmodel.dart';
+import '../viewmodel/estimate/estimate_upload_viewmodel.dart';
+import '../viewmodel/estimate/estimate_calculation_viewmodel.dart';
+import '../viewmodel/paint_catalog/paint_catalog_list_viewmodel.dart';
+import '../viewmodel/paint_catalog/paint_catalog_detail_viewmodel.dart';
+import '../viewmodel/navigation_viewmodel.dart';
+import '../viewmodel/measurements/measurements_viewmodel.dart';
+import '../viewmodel/zones/zones_list_viewmodel.dart';
+import '../viewmodel/zones/zone_detail_viewmodel.dart';
+import '../viewmodel/zones/zones_summary_viewmodel.dart';
+import '../viewmodel/zones/zones_card_viewmodel.dart';
+import '../viewmodel/material/material_list_viewmodel.dart';
+import '../viewmodel/user/user_viewmodel.dart';
+import '../viewmodel/quotes/quotes_viewmodel.dart';
+import '../viewmodel/contacts/contacts_viewmodel.dart';
+import '../viewmodel/projects/projects_viewmodel.dart';
 
 final GetIt getIt = GetIt.instance;
 
