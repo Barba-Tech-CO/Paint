@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../viewmodel/navigation_viewmodel.dart';
-import '../widgets/navigation/floating_bottom_navigation_bar.dart';
+import '../../widgets/navigation/floating_bottom_navigation_bar.dart';
 
 class MainLayout extends StatefulWidget {
   final Widget child;
