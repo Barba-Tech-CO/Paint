@@ -15,6 +15,11 @@ abstract class IEstimateRepository {
   /// Cria um novo orçamento
   Future<Result<EstimateModel>> createEstimate(Map<String, dynamic> data);
 
+  /// Cria um novo orçamento via multipart/form-data
+  Future<Result<EstimateModel>> createEstimateMultipart(
+    EstimateModel estimate,
+  );
+
   /// Obtém detalhes de um orçamento
   Future<Result<EstimateModel>> getEstimate(String estimateId);
 
