@@ -20,12 +20,12 @@ import '../view/select_colors/select_colors_view.dart';
 import '../view/select_material/select_material_view.dart';
 import '../view/splash/splash_view.dart';
 import '../view/success/success_view.dart';
-import '../widgets/loading/loading_widget.dart';
 import '../view/zones/zones_view.dart';
 import '../view/zones_details/zones_details_view.dart';
+import '../widgets/loading/loading_widget.dart';
 
 final router = GoRouter(
-  initialLocation: '/projects',
+  initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',
