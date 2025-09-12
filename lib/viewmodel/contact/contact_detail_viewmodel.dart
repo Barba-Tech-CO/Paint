@@ -11,7 +11,7 @@ class ContactDetailViewModel extends ChangeNotifier {
   final LocationService _locationService;
   final AppLogger _logger;
 
-  ContactModel? _selectedContact;
+  ContactModel _selectedContact;
   bool _isLoading = false;
   String? _error;
 
@@ -19,10 +19,11 @@ class ContactDetailViewModel extends ChangeNotifier {
     this._contactUseCase,
     this._locationService,
     this._logger,
-  );
+    ContactModel contact,
+  ) : _selectedContact = contact;
 
   // Getters
-  ContactModel? get selectedContact => _selectedContact;
+  ContactModel get selectedContact => _selectedContact;
   bool get isLoading => _isLoading;
   String? get error => _error;
   String? get currentLocationId => _locationService.currentLocationId;
@@ -186,8 +187,9 @@ class ContactDetailViewModel extends ChangeNotifier {
       final result = await _contactUseCase.deleteContact(contactId);
 
       if (result is Ok && result.asOk.value) {
-        if (_selectedContact?.id == contactId) {
-          _selectedContact = null;
+        if (_selectedContact.id == contactId) {
+          // Contact was deleted, but we can't clear it since it's required
+          // This should be handled by the calling code
         }
         notifyListeners();
         return true;
@@ -209,23 +211,15 @@ class ContactDetailViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Limpa a seleção de contato
-  void clearSelection() {
-    _selectedContact = null;
-    notifyListeners();
-  }
-
   /// Obtém o nome completo do contato
   String get fullName {
-    if (_selectedContact == null) return '';
-    return _selectedContact!.fullName;
+    return _selectedContact.fullName;
   }
 
   /// Obtém as iniciais do contato
   String get initials {
-    if (_selectedContact == null) return '';
-    final name = _selectedContact!.name;
-    if (name == null || name.isEmpty) return '';
+    final name = _selectedContact.name;
+    if (name.isEmpty) return '';
 
     final nameParts = name.split(' ');
     if (nameParts.isEmpty) return '';
