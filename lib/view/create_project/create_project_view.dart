@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
+import '../../helpers/contact_helper.dart';
+import '../../model/contacts/contact_model.dart';
+import '../../service/contact_database_service.dart';
+import '../../service/contact_service.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/buttons/paint_pro_button.dart';
 import '../../widgets/cards/input_card_widget.dart';
+import '../../widgets/form_field/contact_dropdown_widget.dart';
 
 class CreateProjectView extends StatefulWidget {
   const CreateProjectView({super.key});
@@ -14,26 +20,66 @@ class CreateProjectView extends StatefulWidget {
 }
 
 class _CreateProjectViewState extends State<CreateProjectView> {
-  final TextEditingController _projectNameController = TextEditingController();
-  final TextEditingController _projectDetailsController =
-      TextEditingController();
-  final TextEditingController _additionalNotesController =
-      TextEditingController();
+  final _projectDetailsController = TextEditingController();
+  final _additionalNotesController = TextEditingController();
 
   // Estado para controlar a seleção do tipo de projeto
   String _selectedProjectType = '';
 
-  bool get _isFormValid {
-    return _projectNameController.text.trim().isNotEmpty &&
-        _projectDetailsController.text.trim().isNotEmpty;
+  // Estado para contatos
+  List<ContactModel> _contacts = [];
+  ContactModel? _selectedClient;
+  bool _isLoadingContacts = false;
+  String? _contactsError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContacts();
   }
 
   @override
   void dispose() {
-    _projectNameController.dispose();
     _additionalNotesController.dispose();
     _projectDetailsController.dispose();
     super.dispose();
+  }
+
+  bool get _isFormValid {
+    return _selectedClient != null &&
+        _projectDetailsController.text.trim().isNotEmpty &&
+        _selectedProjectType.isNotEmpty;
+  }
+
+  Future<void> _loadContacts() async {
+    if (_isLoadingContacts) return;
+
+    setState(() {
+      _isLoadingContacts = true;
+      _contactsError = null;
+    });
+
+    try {
+      final contactService = context.read<ContactService>();
+      final contactDatabaseService = context.read<ContactDatabaseService>();
+
+      final contacts = await ContactHelper.loadContacts(
+        contactService: contactService,
+        contactDatabaseService: contactDatabaseService,
+      );
+
+      setState(() {
+        _contacts = contacts;
+      });
+    } catch (e) {
+      setState(() {
+        _contactsError = 'Failed to load contacts';
+      });
+    } finally {
+      setState(() {
+        _isLoadingContacts = false;
+      });
+    }
   }
 
   @override
@@ -59,13 +105,22 @@ class _CreateProjectViewState extends State<CreateProjectView> {
             children: [
               const SizedBox.shrink(),
 
-              // Card de Notas Adicionais
+              // Client Information Card with Dropdown
               InputCardWidget(
                 title: 'Client Information',
                 description: 'Client Name*',
-                controller: _projectNameController,
-                hintText: 'John',
-                maxLines: 1,
+                widget: ContactDropdownWidget(
+                  label: 'Client Name',
+                  selectedContact: _selectedClient,
+                  contacts: _contacts,
+                  isLoading: _isLoadingContacts,
+                  errorText: _contactsError,
+                  onChanged: (contact) {
+                    setState(() {
+                      _selectedClient = contact;
+                    });
+                  },
+                ),
               ),
 
               InputCardWidget(
