@@ -29,7 +29,7 @@ class AppUrls {
   static const String contactsDeleteUrl = contactsBaseUrl;
 
   // Estimate URLs
-  static const String estimatesBaseUrl = '/estimates';
+  static const String estimatesBaseUrl = '/api/estimates';
   static const String estimatesListUrl = '$estimatesBaseUrl/list';
   static const String estimatesCreateUrl = '$estimatesBaseUrl/create';
   static const String estimatesUpdateUrl = '$estimatesBaseUrl/update';
