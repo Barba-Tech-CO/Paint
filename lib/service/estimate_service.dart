@@ -1,19 +1,21 @@
 import 'package:dio/dio.dart';
 
+import '../config/app_urls.dart';
 import '../model/estimates/estimate_model.dart';
 import '../utils/result/result.dart';
 import 'http_service.dart';
 
 class EstimateService {
   final HttpService _httpService;
-  static const String _baseUrl = '/paint-pro';
 
   EstimateService(this._httpService);
 
   /// Obtém dados do dashboard
   Future<Result<Map<String, dynamic>>> getDashboardData() async {
     try {
-      final response = await _httpService.get('$_baseUrl/dashboard');
+      final response = await _httpService.get(
+        '${AppUrls.estimatesBaseUrl}/dashboard',
+      );
       return Result.ok(response.data);
     } catch (e) {
       return Result.error(
@@ -35,7 +37,7 @@ class EstimateService {
       if (status != null) queryParams['status'] = status;
 
       final response = await _httpService.get(
-        '$_baseUrl/estimates',
+        AppUrls.estimatesBaseUrl,
         queryParameters: queryParams,
       );
 
@@ -56,7 +58,7 @@ class EstimateService {
   ) async {
     try {
       final response = await _httpService.post(
-        '$_baseUrl/estimates',
+        AppUrls.estimatesBaseUrl,
         data: data,
       );
 
@@ -73,7 +75,7 @@ class EstimateService {
   Future<Result<EstimateModel>> getEstimate(String estimateId) async {
     try {
       final response = await _httpService.get(
-        '$_baseUrl/estimates/$estimateId',
+        '${AppUrls.estimatesBaseUrl}/$estimateId',
       );
       final estimate = EstimateModel.fromJson(response.data);
       return Result.ok(estimate);
@@ -91,7 +93,7 @@ class EstimateService {
   ) async {
     try {
       final response = await _httpService.put(
-        '$_baseUrl/estimates/$estimateId',
+        '${AppUrls.estimatesBaseUrl}/$estimateId',
         data: data,
       );
 
@@ -107,7 +109,7 @@ class EstimateService {
   /// Remove um orçamento
   Future<Result<bool>> deleteEstimate(String estimateId) async {
     try {
-      await _httpService.delete('$_baseUrl/estimates/$estimateId');
+      await _httpService.delete('${AppUrls.estimatesBaseUrl}/$estimateId');
       return Result.ok(true);
     } catch (e) {
       return Result.error(
@@ -123,7 +125,7 @@ class EstimateService {
   ) async {
     try {
       final response = await _httpService.patch(
-        '$_baseUrl/estimates/$estimateId/status',
+        '${AppUrls.estimatesBaseUrl}/$estimateId/status',
         data: {'status': status},
       );
 
@@ -142,14 +144,16 @@ class EstimateService {
     List<String> photoPaths,
   ) async {
     try {
+      final files = await Future.wait(
+        photoPaths.map((path) => MultipartFile.fromFile(path)),
+      );
+
       final formData = FormData.fromMap({
-        'photos': photoPaths
-            .map((path) => MultipartFile.fromFile(path))
-            .toList(),
+        'photos': files,
       });
 
       final response = await _httpService.post(
-        '$_baseUrl/estimates/$estimateId/photos',
+        '${AppUrls.estimatesBaseUrl}/$estimateId/photos',
         data: formData,
       );
 
@@ -169,7 +173,7 @@ class EstimateService {
   ) async {
     try {
       final response = await _httpService.post(
-        '$_baseUrl/estimates/$estimateId/elements',
+        '${AppUrls.estimatesBaseUrl}/$estimateId/elements',
         data: {'elementIds': elementIds},
       );
 
@@ -185,7 +189,7 @@ class EstimateService {
   Future<Result<EstimateModel>> finalizeEstimate(String estimateId) async {
     try {
       final response = await _httpService.post(
-        '$_baseUrl/estimates/$estimateId/finalize',
+        '${AppUrls.estimatesBaseUrl}/$estimateId/finalize',
       );
 
       final estimate = EstimateModel.fromJson(response.data);
@@ -201,13 +205,51 @@ class EstimateService {
   Future<Result<bool>> sendToGHL(String estimateId) async {
     try {
       final response = await _httpService.post(
-        '$_baseUrl/estimates/$estimateId/send-to-ghl',
+        '${AppUrls.estimatesBaseUrl}/$estimateId/send-to-ghl',
       );
 
       return Result.ok(response.data['success'] == true);
     } catch (e) {
       return Result.error(
         Exception('Error sending estimate to GHL: $e'),
+      );
+    }
+  }
+
+  /// Cria um novo orçamento via multipart/form-data com zonas, materiais e fotos
+  Future<Result<EstimateModel>> createEstimateMultipart(
+    EstimateModel estimate,
+  ) async {
+    try {
+      final formData = await estimate.toFormData();
+
+      final response = await _httpService.post(
+        AppUrls.estimatesBaseUrl,
+        data: formData,
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // O backend pode retornar { success, message, data } ou o objeto direto
+        final data = response.data;
+        if (data is Map<String, dynamic>) {
+          if (data['data'] is Map<String, dynamic>) {
+            return Result.ok(EstimateModel.fromJson(data['data']));
+          }
+          return Result.ok(EstimateModel.fromJson(data));
+        }
+        return Result.error(Exception('Unexpected response format'));
+      }
+
+      return Result.error(
+        Exception('Create estimate failed: ${response.statusCode}'),
+      );
+    } on DioException catch (e) {
+      return Result.error(
+        Exception('Error creating estimate (multipart): ${e.message}'),
+      );
+    } catch (e) {
+      return Result.error(
+        Exception('Unexpected error creating estimate (multipart): $e'),
       );
     }
   }
