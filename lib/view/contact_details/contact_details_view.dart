@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../../viewmodel/contact/contact_detail_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/contacts/info_card_widget.dart';
+import '../../widgets/contacts/info_row_widget.dart';
+import '../../widgets/contacts/section_header_widget.dart';
 
 class ContactDetailsView extends StatelessWidget {
   const ContactDetailsView({super.key});
@@ -10,67 +15,16 @@ class ContactDetailsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Dados mockados - serão substituídos pelo viewmodel posteriormente
-    const contactData = {
-      'name': 'Sebastião Marcos Ferreira',
-      'gender': 'Masculino',
-      'email': 'sebastiao_ferreira@live.com.br',
-      'phone': '(65) 99268-1400',
-      'address': 'Rua Seis',
-      'zipCode': '78055-865',
-      'city': 'Cuiabá',
-      'state': 'Mato Grosso',
-      'country': 'Brasil',
-      'locationId': 'LocationId',
-      'company': 'Pietro e Caroline Ferragens Ltda',
-    };
+    final vm = context.watch<ContactDetailViewModel>();
+    final contact = vm.selectedContact;
 
-    // Constrói um card de informações
-    Widget buildInfoCard(ThemeData theme, {required List<Widget> children}) {
-      return Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: children,
-          ),
-        ),
-      );
-    }
-
-    // Constrói uma linha de informação
-    Widget buildInfoRow(ThemeData theme, String label, String? value) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 8.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 100,
-              child: Text(
-                '$label:',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[700],
-                ),
-              ),
-            ),
-            Expanded(
-              child: Text(
-                value ?? '-',
-                style: theme.textTheme.bodyMedium,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+    final hasCompanyName = contact.companyName?.isNotEmpty ?? false;
+    final hasBusinessName = contact.businessName?.isNotEmpty ?? false;
+    final showAdditionalInfo = hasCompanyName || hasBusinessName;
 
     return Scaffold(
       appBar: PaintProAppBar(
-        title: 'Contacts Details',
+        title: 'Contact Details',
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => context.pop(),
@@ -82,22 +36,22 @@ class ContactDetailsView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Nome e informação de gênero
+              // Nome e informação de tipo
               Center(
                 child: Column(
                   children: [
                     Text(
-                      contactData['name']!,
+                      contact.name,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    if (contactData['gender'] != null)
+                    if (contact.type != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4.0),
                         child: Text(
-                          contactData['gender']!,
+                          contact.type!,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: Colors.grey[700],
                           ),
@@ -109,120 +63,61 @@ class ContactDetailsView extends StatelessWidget {
 
               const SizedBox(height: 32),
 
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.contact_phone,
-                      color: theme.primaryColor,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'Contato',
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.primaryColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              const SectionHeaderWidget(
+                icon: Icons.contact_phone,
+                title: 'Contact',
               ),
-              buildInfoCard(
-                theme,
+              InfoCardWidget(
                 children: [
-                  buildInfoRow(theme, 'Email', contactData['email']),
-                  buildInfoRow(theme, 'Telefone', contactData['phone']),
+                  InfoRowWidget(label: 'Email', value: contact.email),
+                  InfoRowWidget(label: 'Phone', value: contact.phone),
                 ],
               ),
 
               const SizedBox(height: 16),
 
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.home,
-                      color: theme.primaryColor,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'Endereço',
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.primaryColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              buildInfoCard(
-                theme,
+              const SectionHeaderWidget(icon: Icons.home, title: 'Address'),
+              InfoCardWidget(
                 children: [
-                  buildInfoRow(theme, 'Logradouro', contactData['address']),
-                  buildInfoRow(theme, 'CEP', contactData['zipCode']),
-                  buildInfoRow(theme, 'Cidade', contactData['city']),
-                  buildInfoRow(theme, 'Estado', contactData['state']),
-                  buildInfoRow(theme, 'País', contactData['country']),
+                  InfoRowWidget(label: 'Street', value: contact.address),
+                  InfoRowWidget(label: 'ZIP Code', value: contact.postalCode),
+                  InfoRowWidget(label: 'City', value: contact.city),
+                  InfoRowWidget(label: 'State', value: contact.state),
+                  InfoRowWidget(label: 'Country', value: contact.country),
                 ],
               ),
 
-              const SizedBox(height: 16),
+              if (showAdditionalInfo) ...[
+                const SizedBox(height: 16),
 
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Row(
+                const SectionHeaderWidget(
+                  icon: Icons.business,
+                  title: 'Additional Info',
+                ),
+                InfoCardWidget(
                   children: [
-                    Icon(
-                      Icons.business,
-                      color: theme.primaryColor,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'Informações Adicionais',
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.primaryColor,
-                        ),
+                    if (hasCompanyName)
+                      InfoRowWidget(
+                        label: 'Company',
+                        value: contact.companyName,
                       ),
-                    ),
+                    if (hasBusinessName)
+                      InfoRowWidget(
+                        label: 'Business Name',
+                        value: contact.businessName,
+                      ),
                   ],
                 ),
-              ),
-              buildInfoCard(
-                theme,
-                children: [
-                  buildInfoRow(
-                    theme,
-                    'ID de Localização',
-                    contactData['locationId'],
-                  ),
-                  buildInfoRow(theme, 'Empresa', contactData['company']),
-                ],
-              ),
+              ],
             ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // A ser implementado com o viewmodel para edição
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Funcionalidade de edição em breve'),
-            ),
+          context.push(
+            '/edit-contact',
+            extra: contact,
           );
         },
         backgroundColor: theme.primaryColor,
