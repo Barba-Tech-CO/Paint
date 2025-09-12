@@ -1,100 +1,88 @@
 import 'package:flutter/foundation.dart';
+
+import '../../model/estimates/estimate_model.dart';
+import '../../use_case/estimates/estimate_upload_use_case.dart';
+import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
-import '../../domain/repository/estimate_repository.dart';
+
+enum EstimateUploadState { initial, editing, reviewing, uploading, success, error }
 
 class EstimateUploadViewModel extends ChangeNotifier {
-  final IEstimateRepository _estimateRepository;
+  final EstimateUploadUseCase _useCase;
 
-  final List<String> _selectedPhotos = [];
-  bool _isUploading = false;
-  String? _error;
-  double _uploadProgress = 0.0;
+  EstimateUploadState _state = EstimateUploadState.initial;
+  String? _errorMessage;
+  EstimateModel? _uploaded;
 
-  EstimateUploadViewModel(this._estimateRepository);
+  late final Command1<EstimateModel, EstimateModel> _uploadCommand;
+
+  EstimateUploadViewModel(this._useCase) {
+    _initCommands();
+  }
 
   // Getters
-  List<String> get selectedPhotos => _selectedPhotos;
-  bool get isUploading => _isUploading;
-  String? get error => _error;
-  double get uploadProgress => _uploadProgress;
-  bool get hasPhotos => _selectedPhotos.isNotEmpty;
+  EstimateUploadState get state => _state;
+  String? get errorMessage => _errorMessage;
+  EstimateModel? get uploadedEstimate => _uploaded;
+  Command1<EstimateModel, EstimateModel> get uploadCommand => _uploadCommand;
 
-  /// Adiciona fotos à lista
-  void addPhotos(List<String> photoPaths) {
-    _selectedPhotos.addAll(photoPaths);
-    notifyListeners();
-  }
+  // Computed
+  bool get isUploading => _state == EstimateUploadState.uploading || _uploadCommand.running;
+  bool get hasError => _state == EstimateUploadState.error && _errorMessage != null;
 
-  /// Remove uma foto da lista
-  void removePhoto(int index) {
-    if (index >= 0 && index < _selectedPhotos.length) {
-      _selectedPhotos.removeAt(index);
-      notifyListeners();
-    }
-  }
+  void _initCommands() {
+    _uploadCommand = Command1((EstimateModel estimate) async {
+      _setState(EstimateUploadState.uploading);
+      _clearError();
 
-  /// Remove todas as fotos
-  void clearPhotos() {
-    _selectedPhotos.clear();
-    notifyListeners();
-  }
-
-  /// Faz upload das fotos para um orçamento
-  Future<bool> uploadPhotos(String estimateId) async {
-    if (_selectedPhotos.isEmpty) {
-      _setError('No photos selected');
-      return false;
-    }
-
-    _setUploading(true);
-    _clearError();
-    _setUploadProgress(0.0);
-
-    try {
-      final result = await _estimateRepository.uploadPhotos(
-        estimateId,
-        _selectedPhotos,
-      );
-
-      if (result is Ok) {
-        _setUploadProgress(1.0);
-        notifyListeners();
-        return true;
-      } else if (result is Error) {
-        _setError(result.asError.error.toString());
+      try {
+        final result = await _useCase.upload(estimate);
+        return result.when(
+          ok: (model) {
+            _uploaded = model;
+            _setState(EstimateUploadState.success);
+            return Result.ok(model);
+          },
+          error: (e) {
+            _setError(e.toString());
+            _setState(EstimateUploadState.error);
+            return Result.error(e);
+          },
+        );
+      } catch (e) {
+        _setError('Unexpected error: $e');
+        _setState(EstimateUploadState.error);
+        return Result.error(Exception(e.toString()));
       }
-      return false;
-    } catch (e) {
-      _setError('Error uploading photos: $e');
-      return false;
-    } finally {
-      _setUploading(false);
-    }
+    });
   }
 
-  /// Simula progresso de upload (para UI)
-  void updateUploadProgress(double progress) {
-    _setUploadProgress(progress);
+  // Public API
+  Future<void> upload(EstimateModel estimate) async {
+    await _uploadCommand.execute(estimate);
   }
 
-  // Métodos privados para gerenciar estado
-  void _setUploading(bool uploading) {
-    _isUploading = uploading;
+  void setEditing() => _setState(EstimateUploadState.editing);
+  void setReviewing() => _setState(EstimateUploadState.reviewing);
+  void reset() {
+    _uploaded = null;
+    _clearError();
+    _setState(EstimateUploadState.initial);
+  }
+
+  // State helpers
+  void _setState(EstimateUploadState newState) {
+    _state = newState;
     notifyListeners();
   }
 
-  void _setError(String error) {
-    _error = error;
+  void _setError(String message) {
+    _errorMessage = message;
     notifyListeners();
   }
 
   void _clearError() {
-    _error = null;
-    notifyListeners();
-  }
-
-  void _setUploadProgress(double progress) {
-    _uploadProgress = progress;
+    _errorMessage = null;
     notifyListeners();
   }
 }
