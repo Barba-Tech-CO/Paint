@@ -144,12 +144,8 @@ class ZonesCardViewmodel extends ChangeNotifier {
       _setState(ZonesState.loading);
       _clearError();
 
-      // Simulando dados enquanto não temos o service - 1 segundos para mostrar loading
-      await Future.delayed(const Duration(seconds: 1));
-
-      final mockZones = _generateMockZones();
-
-      _zones = mockZones;
+      // Não há API de zonas: iniciar vazio e aguardar adições do usuário
+      _zones = [];
       _setState(ZonesState.loaded);
 
       return Result.ok(null);
@@ -249,16 +245,29 @@ class ZonesCardViewmodel extends ChangeNotifier {
 
   Future<Result<void>> _loadSummaryData() async {
     try {
-      // Aqui seria a chamada para o service
-      // final result = await _zonesService.getSummary();
+      int count = _zones.length;
+      double sumArea = 0;
+      double sumPaintable = 0;
+      double sumWidth = 0;
+      double sumLength = 0;
 
-      // Simulando dados de resumo - delay para mostrar loading junto com zones
-      await Future.delayed(const Duration(seconds: 2));
+      for (final z in _zones) {
+        sumArea += _parseSqFt(z.floorAreaValue);
+        sumPaintable += _parseSqFt(z.areaPaintable);
+        final dims = _parseDimensions(z.floorDimensionValue);
+        sumWidth += dims.$1;
+        sumLength += dims.$2;
+      }
+
+      final avgWidth = count > 0 ? (sumWidth / count).round() : 0;
+      final avgLength = count > 0 ? (sumLength / count).round() : 0;
+      final totalAreaStr = '${sumArea.round()} sq ft';
+      final totalPaintableStr = '${sumPaintable.round()} sq ft';
 
       _summary = ProjectsSummaryModel(
-        avgDimensions: "12' x 14'",
-        totalArea: "${_zones.length * 168} sq ft",
-        totalPaintable: "${_zones.length * 420} sq ft",
+        avgDimensions: "${avgWidth}' x ${avgLength}'",
+        totalArea: totalAreaStr,
+        totalPaintable: totalPaintableStr,
       );
 
       notifyListeners();
@@ -284,40 +293,21 @@ class ZonesCardViewmodel extends ChangeNotifier {
         .toList();
   }
 
-  // Mock data generator (remover quando o service estiver pronto)
-  List<ProjectCardModel> _generateMockZones() {
-    return [
-      ProjectCardModel(
-        id: 1,
-        title: "Living Room",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "14' x 16'",
-        floorAreaValue: "224 sq ft",
-        areaPaintable: "485 sq ft",
-        ceilingArea: "224 sq ft",
-        trimLength: "60 linear ft",
-      ),
-      ProjectCardModel(
-        id: 2,
-        title: "Kitchen",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "10' x 12'",
-        floorAreaValue: "120 sq ft",
-        areaPaintable: "320 sq ft",
-        ceilingArea: "120 sq ft",
-        trimLength: "44 linear ft",
-      ),
-      ProjectCardModel(
-        id: 3,
-        title: "Bedroom",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "12' x 14'",
-        floorAreaValue: "168 sq ft",
-        areaPaintable: "420 sq ft",
-        ceilingArea: "168 sq ft",
-        trimLength: "52 linear ft",
-      ),
-    ];
+  // Helpers de parse
+  double _parseSqFt(String value) {
+    final numStr = value.replaceAll(RegExp(r'[^0-9\.]'), '');
+    return double.tryParse(numStr) ?? 0;
+  }
+
+  (double, double) _parseDimensions(String value) {
+    final cleaned = value.replaceAll("'", '');
+    final parts = cleaned.split('x');
+    if (parts.length >= 2) {
+      final w = double.tryParse(parts[0].trim()) ?? 0;
+      final l = double.tryParse(parts[1].trim()) ?? 0;
+      return (w, l);
+    }
+    return (0, 0);
   }
 
   // State management methods
