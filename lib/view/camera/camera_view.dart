@@ -3,10 +3,49 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/app_colors.dart';
+import '../../config/dependency_injection.dart';
+import '../../service/camera_service.dart';
+import '../../service/photo_service.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 
 class CameraView extends StatelessWidget {
   const CameraView({super.key});
+
+  Future<void> _capturePhoto(BuildContext context) async {
+    try {
+      final cameraService = getIt<CameraService>();
+      final photoService = getIt<PhotoService>();
+
+      // Capture photo from camera
+      final photoPath = await cameraService.capturePhoto();
+
+      if (photoPath != null) {
+        // Add photo to PhotoService
+        await photoService.addPhoto(photoPath);
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Photo captured successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navigate to zones after capturing photo
+          context.push('/zones');
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to capture photo: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +57,7 @@ class CameraView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             InkWell(
-              onTap: () => context.push('/zones'),
+              onTap: () => _capturePhoto(context),
               child: Container(
                 width: 120,
                 height: 120,
