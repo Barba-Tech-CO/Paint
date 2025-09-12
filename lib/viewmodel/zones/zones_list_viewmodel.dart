@@ -154,12 +154,8 @@ class ZonesListViewModel extends ChangeNotifier {
       _setState(ZonesListState.loading);
       _clearError();
 
-      // Simulando dados enquanto não temos o service - 1 segundo para mostrar loading
-      await Future.delayed(const Duration(seconds: 1));
-
-      final mockZones = _generateMockZones();
-
-      _zones = mockZones;
+      // Sem API de zonas: iniciar vazio e aguardar adições do usuário
+      _zones = [];
       _setState(ZonesListState.loaded);
 
       return Result.ok(null);
@@ -205,41 +201,7 @@ class ZonesListViewModel extends ChangeNotifier {
     }
   }
 
-  // Mock data generator (remover quando o service estiver pronto)
-  List<ProjectCardModel> _generateMockZones() {
-    return [
-      ProjectCardModel(
-        id: 1,
-        title: "Living Room",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "14' x 16'",
-        floorAreaValue: "224 sq ft",
-        areaPaintable: "485 sq ft",
-        ceilingArea: "224 sq ft",
-        trimLength: "60 linear ft",
-      ),
-      ProjectCardModel(
-        id: 2,
-        title: "Kitchen",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "10' x 12'",
-        floorAreaValue: "120 sq ft",
-        areaPaintable: "320 sq ft",
-        ceilingArea: "120 sq ft",
-        trimLength: "44 linear ft",
-      ),
-      ProjectCardModel(
-        id: 3,
-        title: "Bedroom",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "12' x 14'",
-        floorAreaValue: "168 sq ft",
-        areaPaintable: "420 sq ft",
-        ceilingArea: "168 sq ft",
-        trimLength: "52 linear ft",
-      ),
-    ];
-  }
+  // Mock generator removido: zonas serão criadas pelo usuário em runtime
 
   // State management methods
   void _setState(ZonesListState state) {
