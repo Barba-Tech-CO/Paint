@@ -91,14 +91,14 @@ class _EditContactViewState extends State<EditContactView> {
       log('  - Postal Code: ${contact.postalCode}');
     }
 
-    _nameController.text = contact.name ?? '';
-    _phoneController.text = contact.phone ?? '';
-    _emailController.text = contact.email ?? '';
+    _nameController.text = contact.name;
+    _phoneController.text = contact.phone;
+    _emailController.text = contact.email;
     _companyNameController.text = contact.companyName ?? '';
-    _addressController.text = contact.address ?? '';
-    _cityController.text = contact.city ?? '';
-    _stateController.text = contact.state ?? '';
-    _zipCodeController.text = contact.postalCode ?? '';
+    _addressController.text = contact.address;
+    _cityController.text = contact.city;
+    _stateController.text = contact.state;
+    _zipCodeController.text = contact.postalCode;
 
     // Preencher campos adicionais
     if (contact.additionalEmails != null &&

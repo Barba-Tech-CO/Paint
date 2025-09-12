@@ -191,9 +191,9 @@ class ContactsViewModel extends ChangeNotifier {
     } else {
       final searchLower = query.toLowerCase();
       _filteredContacts = _contacts.where((contact) {
-        final fullName = contact.name?.toLowerCase() ?? '';
-        final phone = contact.phone?.toLowerCase() ?? '';
-        final email = contact.email?.toLowerCase() ?? '';
+        final fullName = contact.name.toLowerCase();
+        final phone = contact.phone.toLowerCase();
+        final email = contact.email.toLowerCase();
 
         return fullName.contains(searchLower) ||
             phone.contains(searchLower) ||

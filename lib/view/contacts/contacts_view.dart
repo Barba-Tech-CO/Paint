@@ -54,10 +54,10 @@ class _ContactsViewState extends State<ContactsView> {
 
   Map<String, String> _convertContactModelToMap(ContactModel contact) {
     return {
-      'name': contact.name ?? 'No Name',
-      'phone': contact.phone ?? '',
+      'name': contact.name,
+      'phone': contact.phone,
       'address':
-          '${contact.address ?? ''}, ${contact.city ?? ''}, ${contact.country ?? ''}'
+          '${contact.address}, ${contact.city}, ${contact.country}'
               .replaceAll(RegExp(r',\s*,'), ',')
               .replaceAll(RegExp(r'^,\s*|,\s*$'), ''),
     };
