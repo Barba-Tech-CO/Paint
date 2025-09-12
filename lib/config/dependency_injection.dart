@@ -17,6 +17,7 @@ import '../domain/repository/paint_catalog_repository.dart';
 import '../domain/repository/quote_repository.dart';
 
 // Service Layer
+import '../model/contacts/contact_model.dart';
 import '../service/app_initialization_service.dart';
 import '../service/auth_service.dart';
 import '../service/auth_persistence_service.dart';
@@ -29,8 +30,11 @@ import '../service/location_service.dart';
 import '../service/navigation_service.dart';
 import '../service/material_service.dart';
 import '../service/paint_catalog_service.dart';
+import '../service/photo_service.dart';
+import '../service/camera_service.dart';
 import '../service/quote_service.dart';
 import '../service/user_service.dart';
+import '../helpers/estimate_builder.dart';
 
 // Logger Layer
 import '../utils/logger/app_logger.dart';
@@ -44,6 +48,7 @@ import '../use_case/auth/handle_webview_navigation_use_case.dart';
 import '../use_case/contacts/contact_operations_use_case.dart';
 import '../use_case/contacts/contact_sync_use_case.dart';
 import '../use_case/quotes/quote_upload_use_case.dart';
+import '../use_case/estimates/estimate_upload_use_case.dart';
 
 // ViewModel Layer
 import '../viewmodel/select_colors_viewmodel.dart';
@@ -141,6 +146,17 @@ void setupDependencyInjection() {
       httpService: getIt<HttpService>(),
     ),
   );
+  getIt.registerLazySingleton<PhotoService>(
+    () => PhotoService(),
+  );
+  getIt.registerLazySingleton<CameraService>(
+    () => CameraService(),
+  );
+  getIt.registerLazySingleton<EstimateBuilder>(
+    () => EstimateBuilder(
+      getIt<PhotoService>(),
+    ),
+  );
 
   // Repositories
   getIt.registerLazySingleton<IAuthRepository>(
@@ -219,6 +235,14 @@ void setupDependencyInjection() {
     ),
   );
 
+  // Use Cases - Estimates
+  getIt.registerLazySingleton<EstimateUploadUseCase>(
+    () => EstimateUploadUseCase(
+      getIt<IEstimateRepository>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
   getIt.registerLazySingleton<AppInitializationService>(
     () => AppInitializationService(
       getIt<AuthService>(),
@@ -251,6 +275,7 @@ void setupDependencyInjection() {
       getIt<ContactOperationsUseCase>(),
       getIt<LocationService>(),
       getIt<AppLogger>(),
+      getIt<ContactModel>(),
     ),
   );
 
@@ -267,7 +292,7 @@ void setupDependencyInjection() {
   );
   getIt.registerFactory<EstimateUploadViewModel>(
     () => EstimateUploadViewModel(
-      getIt<IEstimateRepository>(),
+      getIt<EstimateUploadUseCase>(),
     ),
   );
   getIt.registerFactory<EstimateCalculationViewModel>(
@@ -354,6 +379,8 @@ void setupDependencyInjection() {
 
   // ViewModel - Projects
   getIt.registerFactory<ProjectsViewModel>(
-    () => ProjectsViewModel(),
+    () => ProjectsViewModel(
+      getIt<IEstimateRepository>(),
+    ),
   );
 }
