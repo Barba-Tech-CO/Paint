@@ -5,19 +5,19 @@ class ContactModel {
   final String? id;
   final String? ghlId;
   final String? locationId;
-  final String? name;
-  final String? email;
-  final String? phone;
+  final String name;
+  final String email;
+  final String phone;
   final String? phoneLabel;
   final List<String>? additionalEmails;
   final List<String>? additionalPhones;
   final String? companyName;
   final String? businessName;
-  final String? address;
-  final String? city;
-  final String? state;
-  final String? postalCode;
-  final String? country;
+  final String address;
+  final String city;
+  final String state;
+  final String postalCode;
+  final String country;
   final List<Map<String, dynamic>>? customFields;
   final List<String>? tags;
   final String? type;
@@ -37,19 +37,19 @@ class ContactModel {
     this.id,
     this.ghlId,
     this.locationId,
-    this.name,
-    this.email,
-    this.phone,
+    required this.name,
+    required this.email,
+    required this.phone,
     this.phoneLabel,
     this.additionalEmails,
     this.additionalPhones,
     this.companyName,
     this.businessName,
-    this.address,
-    this.city,
-    this.state,
-    this.postalCode,
-    this.country,
+    required this.address,
+    required this.city,
+    required this.state,
+    required this.postalCode,
+    required this.country,
     this.customFields,
     this.tags,
     this.type,
@@ -70,9 +70,9 @@ class ContactModel {
       id: json['id'],
       ghlId: json['ghlId'] ?? json['id'],
       locationId: json['locationId'],
-      name: json['name'],
-      email: json['email'],
-      phone: json['phoneNo'] ?? json['phone'],
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      phone: json['phoneNo'] ?? json['phone'] ?? '',
       phoneLabel: json['phoneLabel'],
       additionalEmails: json['additionalEmails'] != null
           ? List<String>.from(json['additionalEmails'])
@@ -80,13 +80,13 @@ class ContactModel {
       additionalPhones: json['additionalPhones'] != null
           ? List<String>.from(json['additionalPhones'])
           : null,
-      companyName: json['companyName'],
+      companyName: json['companyName'] ?? '',
       businessName: json['businessName'],
-      address: json['address'],
-      city: json['city'],
-      state: json['state'],
-      postalCode: json['postalCode'],
-      country: json['country'],
+      address: json['address'] ?? '',
+      city: json['city'] ?? '',
+      state: json['state'] ?? '',
+      postalCode: json['postalCode'] ?? '',
+      country: json['country'] ?? '',
       customFields: json['customFields'] != null
           ? List<Map<String, dynamic>>.from(json['customFields'])
           : null,
@@ -148,9 +148,9 @@ class ContactModel {
       localId: map['id'],
       ghlId: map['ghl_id'],
       locationId: map['location_id'],
-      name: map['name'],
-      email: map['email'],
-      phone: map['phone'],
+      name: map['name'] ?? '',
+      email: map['email'] ?? '',
+      phone: map['phone'] ?? '',
       phoneLabel: map['phone_label'],
       additionalEmails: map['additional_emails'] != null
           ? List<String>.from(
@@ -166,13 +166,13 @@ class ContactModel {
                   .where((e) => e.isNotEmpty),
             )
           : null,
-      companyName: map['company_name'],
+      companyName: map['company_name'] ?? '',
       businessName: map['business_name'],
-      address: map['address'],
-      city: map['city'],
-      state: map['state'],
-      postalCode: map['postal_code'],
-      country: map['country'],
+      address: map['address'] ?? '',
+      city: map['city'] ?? '',
+      state: map['state'] ?? '',
+      postalCode: map['postal_code'] ?? '',
+      country: map['country'] ?? '',
       customFields: map['custom_fields'] != null
           ? List<Map<String, dynamic>>.from(
               (map['custom_fields'] as String)
@@ -253,7 +253,7 @@ class ContactModel {
   }
 
   String get fullName {
-    if (name?.isNotEmpty == true) return name!;
+    if (name.isNotEmpty) return name;
     return 'Sem nome';
   }
 
