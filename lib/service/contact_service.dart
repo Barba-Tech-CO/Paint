@@ -30,7 +30,7 @@ class ContactService {
         );
       }
 
-      final response = await _httpService.get(
+      final response = await _httpService.post(
         _baseUrl,
         queryParameters: {
           'location_id': locationId,
@@ -75,16 +75,17 @@ class ContactService {
         );
       }
 
-      final response = await _httpService.get(
+      final response = await _httpService.post(
         _baseUrl,
-        queryParameters: {
-          'location_id': locationId,
+        data: {
+          'locationId': locationId,
           'query': query,
         },
         options: Options(
           headers: {
             'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
+            'Content-Type': 'application/json',
           },
         ),
       );
