@@ -33,6 +33,13 @@ class EstimateRepository implements IEstimateRepository {
   }
 
   @override
+  Future<Result<EstimateModel>> createEstimateMultipart(
+    EstimateModel estimate,
+  ) {
+    return _estimateService.createEstimateMultipart(estimate);
+  }
+
+  @override
   Future<Result<EstimateModel>> getEstimate(String estimateId) {
     return _estimateService.getEstimate(estimateId);
   }
