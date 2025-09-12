@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 class PhotosGalleryWidget extends StatelessWidget {
@@ -70,7 +71,7 @@ class PhotosGalleryWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     image: DecorationImage(
-                      image: AssetImage(photoList[index]),
+                      image: _buildImageProvider(photoList[index]),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -103,4 +104,11 @@ class PhotosGalleryWidget extends StatelessWidget {
       ],
     );
   }
+}
+
+ImageProvider _buildImageProvider(String path) {
+  if (path.startsWith('assets/')) {
+    return AssetImage(path);
+  }
+  return FileImage(File(path));
 }
