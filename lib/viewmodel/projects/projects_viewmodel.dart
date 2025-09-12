@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import '../../domain/repository/estimate_repository.dart';
+import '../../model/estimates/estimate_model.dart';
 import '../../model/projects/project_model.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
@@ -18,8 +20,7 @@ class RenameProjectData {
 }
 
 class ProjectsViewModel extends ChangeNotifier {
-  // TODO: ProjectOperationsUseCase será injetado aqui quando estiver pronto
-  // final ProjectOperationsUseCase _projectUseCase;
+  final IEstimateRepository _estimateRepository;
 
   // State
   ProjectsState _state = ProjectsState.initial;
@@ -87,8 +88,7 @@ class ProjectsViewModel extends ChangeNotifier {
     });
   }
 
-  ProjectsViewModel();
-  // ProjectsViewModel(this._projectUseCase); // Uncomment quando o use case estiver pronto
+  ProjectsViewModel(this._estimateRepository);
 
   // Commands
   Command0<void>? _loadProjectsCommand;
@@ -266,45 +266,50 @@ class ProjectsViewModel extends ChangeNotifier {
     }
   }
 
-  // Private methods - Mock data até o Repository ser implementado
+  // Private methods - Carregar via Estimates API
   Future<Result<void>> _loadProjectsData() async {
     try {
       _state = ProjectsState.loading;
       _errorMessage = null;
       notifyListeners();
 
-      // Simular chamada de API - substituir pela implementação real do use case
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Mock data - substituir pela resposta real do repository
-      final mockProjects = _generateMockProjects();
-      _projects = mockProjects;
-      _filteredProjects = List.from(_projects);
-      _state = ProjectsState.loaded;
-      notifyListeners();
-      return Result.ok(null);
-
-      // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
-      // final result = await _projectUseCase.getProjects();
-      // if (result is Ok) {
-      //   final response = result.asOk.value;
-      //   _projects = response.projects;
-      //   _filteredProjects = List.from(_projects);
-      //   _state = ProjectsState.loaded;
-      //   notifyListeners();
-      //   return Result.ok(null);
-      // } else {
-      //   _state = ProjectsState.error;
-      //   _errorMessage = 'Erro ao carregar projetos: ${result.asError.error}';
-      //   notifyListeners();
-      //   return Result.error(Exception(_errorMessage));
-      // }
+      final result = await _estimateRepository.getEstimates(limit: 50, offset: 0);
+      if (result is Ok<List<EstimateModel>>) {
+        final estimates = result.asOk.value;
+        _projects = estimates.map(_mapEstimateToProject).toList();
+        _filteredProjects = List.from(_projects);
+        _state = ProjectsState.loaded;
+        notifyListeners();
+        return Result.ok(null);
+      } else {
+        _state = ProjectsState.error;
+        _errorMessage = 'Erro ao carregar projetos: \\${result.asError.error}';
+        notifyListeners();
+        return Result.error(Exception(_errorMessage));
+      }
     } catch (e) {
       _state = ProjectsState.error;
       _errorMessage = 'Erro ao carregar projetos: ${e.toString()}';
       notifyListeners();
       return Result.error(Exception(_errorMessage));
     }
+  }
+
+  ProjectModel _mapEstimateToProject(EstimateModel e) {
+    final created = e.createdAt != null
+        ? '${e.createdAt!.day.toString().padLeft(2, '0')}/${e.createdAt!.month.toString().padLeft(2, '0')}/${e.createdAt!.year % 100}'
+        : '';
+    final image = (e.photos != null && e.photos!.isNotEmpty)
+        ? e.photos!.first
+        : 'assets/images/kitchen.png';
+    return ProjectModel(
+      id: int.tryParse(e.id ?? '') ?? e.hashCode,
+      projectName: e.projectName ?? 'Estimate',
+      personName: e.clientName ?? '',
+      zonesCount: e.zones?.length ?? 0,
+      createdDate: created,
+      image: image,
+    );
   }
 
   Future<Result<void>> _addProjectData(ProjectModel project) async {
@@ -433,42 +438,5 @@ class ProjectsViewModel extends ChangeNotifier {
     }
   }
 
-  // TODO(gabriel): Implementar quando o repository estiver pronto
-  // Mock data generator - remover quando o repository estiver pronto
-  List<ProjectModel> _generateMockProjects() {
-    return [
-      ProjectModel(
-        id: 1,
-        projectName: "Project Casa Silva",
-        personName: "Beatriz Nogueira",
-        zonesCount: 3,
-        createdDate: "14/07/25",
-        image: "assets/images/kitchen.png",
-      ),
-      ProjectModel(
-        id: 2,
-        projectName: "Apartamento Santos",
-        personName: "João Santos",
-        zonesCount: 2,
-        createdDate: "15/07/25",
-        image: "assets/images/kitchen.png",
-      ),
-      ProjectModel(
-        id: 3,
-        projectName: "Escritório Tech",
-        personName: "Maria Tech",
-        zonesCount: 4,
-        createdDate: "16/07/25",
-        image: "assets/images/kitchen.png",
-      ),
-      ProjectModel(
-        id: 4,
-        projectName: "Loja Comercial",
-        personName: "Carlos Lopes",
-        zonesCount: 1,
-        createdDate: "17/07/25",
-        image: "assets/images/kitchen.png",
-      ),
-    ];
-  }
+  // Mock generator removido: projetos agora vêm da API de Estimates
 }
