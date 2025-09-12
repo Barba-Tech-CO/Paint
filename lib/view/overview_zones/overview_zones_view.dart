@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
+import '../../helpers/estimate_builder.dart';
 import '../../helpers/loading_helper.dart';
 import '../../model/material_models/material_model.dart';
 import '../../model/projects/project_card_model.dart';
+import '../../viewmodel/estimate/estimate_upload_viewmodel.dart';
 import '../../viewmodel/overview_zones_viewmodel.dart';
 import '../../viewmodel/zones/zones_list_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
@@ -33,15 +35,22 @@ class OverviewZonesView extends StatefulWidget {
 class _OverviewZonesViewState extends State<OverviewZonesView> {
   late OverviewZonesViewModel _viewModel;
   late ZonesListViewModel _zonesListViewModel;
+  late EstimateUploadViewModel _estimateUploadViewModel;
+  late EstimateBuilder _estimateBuilder;
 
   @override
   void initState() {
     super.initState();
     _viewModel = OverviewZonesViewModel();
     _zonesListViewModel = getIt<ZonesListViewModel>();
+    _estimateUploadViewModel = getIt<EstimateUploadViewModel>();
+    _estimateBuilder = getIt<EstimateBuilder>();
 
     // Inicializar o ZonesListViewModel
     _zonesListViewModel.initialize();
+
+    // Adicionar listener para o EstimateUploadViewModel
+    _estimateUploadViewModel.addListener(_onEstimateUploadStateChanged);
 
     // Se materiais foram passados, configurá-los no ViewModel
     if (widget.selectedMaterials != null &&
@@ -85,8 +94,43 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
   @override
   void dispose() {
     _zonesListViewModel.removeListener(_onZonesLoaded);
+    _estimateUploadViewModel.removeListener(_onEstimateUploadStateChanged);
     _viewModel.dispose();
     super.dispose();
+  }
+
+  void _onEstimateUploadStateChanged() {
+    if (mounted) {
+      setState(() {});
+
+      // Handle success state
+      if (_estimateUploadViewModel.state == EstimateUploadState.success) {
+        LoadingHelper.navigateToQuoteLoading(context);
+      }
+
+      // Handle error state
+      if (_estimateUploadViewModel.state == EstimateUploadState.error) {
+        _showErrorDialog(
+          _estimateUploadViewModel.errorMessage ?? 'Unknown error occurred',
+        );
+      }
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Upload Failed'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -272,15 +316,28 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                         const SizedBox(width: 32),
                         Flexible(
                           child: PaintProButton(
-                            text: 'Send Quote',
+                            text: _estimateUploadViewModel.isUploading
+                                ? 'Sending...'
+                                : 'Send Quote',
                             borderRadius: 16,
                             padding: EdgeInsets.zero,
-                            backgroundColor: Colors.blue,
+                            backgroundColor:
+                                _estimateUploadViewModel.isUploading
+                                ? Colors.grey
+                                : Colors.blue,
                             foregroundColor: Colors.white,
-                            onPressed: () {
-                              // Usar o helper para navegar para loading de quote
-                              LoadingHelper.navigateToQuoteLoading(context);
-                            },
+                            onPressed: _estimateUploadViewModel.isUploading
+                                ? null
+                                : () async {
+                                    // Build EstimateModel from collected data
+                                    final estimateModel = _estimateBuilder
+                                        .buildEstimateModel(_viewModel);
+
+                                    // Upload estimate using the ViewModel
+                                    await _estimateUploadViewModel.upload(
+                                      estimateModel,
+                                    );
+                                  },
                           ),
                         ),
                       ],
