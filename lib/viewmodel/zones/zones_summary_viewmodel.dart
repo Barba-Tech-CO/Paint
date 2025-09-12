@@ -77,12 +77,7 @@ class ZonesSummaryViewModel extends ChangeNotifier {
       _setState(ZonesSummaryState.loading);
       _clearError();
 
-      // Aqui seria a chamada para o service
-      // final result = await _zonesService.getSummary();
-
-      // Simulando dados de resumo - delay para mostrar loading
-      await Future.delayed(const Duration(seconds: 2));
-
+      // Calcula baseado nas zonas atuais
       _calculateSummaryFromZones();
       _setState(ZonesSummaryState.loaded);
 
@@ -102,24 +97,50 @@ class ZonesSummaryViewModel extends ChangeNotifier {
         totalPaintable: "0 sq ft",
       );
     } else {
-      // Calculate summary based on current zones
-      final zonesCount = _zones.length;
+      int count = _zones.length;
+      double sumArea = 0;
+      double sumPaintable = 0;
+      double sumWidth = 0;
+      double sumLength = 0;
 
-      // For mock data, using simple calculations
-      // In real app, this would parse actual dimension values
-      final avgWidth = 12; // Mock average
-      final avgHeight = 14; // Mock average
-      final totalAreaValue = zonesCount * 168; // Mock calculation
-      final totalPaintableValue = zonesCount * 420; // Mock calculation
+      for (final z in _zones) {
+        sumArea += _parseSqFt(z.floorAreaValue);
+        sumPaintable += _parseSqFt(z.areaPaintable);
+        final dims = _parseDimensions(z.floorDimensionValue);
+        sumWidth += dims.$1;
+        sumLength += dims.$2;
+      }
+
+      final avgWidth = count > 0 ? (sumWidth / count).round() : 0;
+      final avgLength = count > 0 ? (sumLength / count).round() : 0;
+      final totalAreaValue = sumArea.round();
+      final totalPaintableValue = sumPaintable.round();
 
       _summary = ProjectsSummaryModel(
-        avgDimensions: "$avgWidth' x $avgHeight'",
+        avgDimensions: "${avgWidth}' x ${avgLength}'",
         totalArea: "$totalAreaValue sq ft",
         totalPaintable: "$totalPaintableValue sq ft",
       );
     }
 
     notifyListeners();
+  }
+
+  // Helpers de parse
+  double _parseSqFt(String value) {
+    final numStr = value.replaceAll(RegExp(r'[^0-9\.]'), '');
+    return double.tryParse(numStr) ?? 0;
+  }
+
+  (double, double) _parseDimensions(String value) {
+    final cleaned = value.replaceAll("'", '');
+    final parts = cleaned.split('x');
+    if (parts.length >= 2) {
+      final w = double.tryParse(parts[0].trim()) ?? 0;
+      final l = double.tryParse(parts[1].trim()) ?? 0;
+      return (w, l);
+    }
+    return (0, 0);
   }
 
   // State management methods
