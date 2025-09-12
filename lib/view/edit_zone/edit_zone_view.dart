@@ -92,41 +92,36 @@ class _EditZoneViewState extends State<EditZoneView> {
   void _initializeData() {
     if (widget.zone != null) {
       final zone = widget.zone!;
-
-      // Parse title
       _zoneTitle = zone.title;
 
       // Parse floor dimensions from "14' x 16'" format
       final dimensions = zone.floorDimensionValue
           .replaceAll("'", "")
           .split(" x ");
-      _width = double.tryParse(dimensions.first) ?? 14.0;
+      _width = double.tryParse(dimensions.first) ?? 0.0;
       _length = dimensions.length > 1
-          ? (double.tryParse(dimensions.last) ?? 16.0)
-          : 16.0;
+          ? (double.tryParse(dimensions.last) ?? 0.0)
+          : 0.0;
 
       // Parse surface areas from zone fields
-      _walls =
-          double.tryParse(zone.areaPaintable.replaceAll(" sq ft", "")) ?? 485.0;
+      _walls = double.tryParse(zone.areaPaintable.replaceAll(" sq ft", "")) ?? 0.0;
       _ceiling = zone.ceilingArea != null
-          ? double.tryParse(zone.ceilingArea!.replaceAll(" sq ft", "")) ?? 224.0
-          : double.tryParse(zone.floorAreaValue.replaceAll(" sq ft", "")) ??
-                224.0;
+          ? double.tryParse(zone.ceilingArea!.replaceAll(" sq ft", "")) ?? 0.0
+          : double.tryParse(zone.floorAreaValue.replaceAll(" sq ft", "")) ?? 0.0;
       _trim = zone.trimLength != null
-          ? double.tryParse(zone.trimLength!.replaceAll(" linear ft", "")) ??
-                60.0
-          : 60.0;
+          ? double.tryParse(zone.trimLength!.replaceAll(" linear ft", "")) ?? 0.0
+          : 0.0;
 
-      // Initialize photos with zone image
-      _photos = [zone.image];
+      // Initialize photos with zone image (se disponível)
+      _photos = zone.image.isNotEmpty ? [zone.image] : [];
     } else {
-      // Default values
-      _zoneTitle = "New Zone";
-      _width = 14.0;
-      _length = 16.0;
-      _walls = 485.0;
-      _ceiling = 224.0;
-      _trim = 60.0;
+      // Sem mocks: valores vazios/iniciais
+      _zoneTitle = '';
+      _width = 0.0;
+      _length = 0.0;
+      _walls = 0.0;
+      _ceiling = 0.0;
+      _trim = 0.0;
       _photos = [];
     }
   }
