@@ -66,11 +66,24 @@ class ContactModel {
   });
 
   factory ContactModel.fromJson(Map<String, dynamic> json) {
+    // Handle name field - combine firstName and lastName from API response
+    String fullName = '';
+    if (json['firstName'] != null || json['lastName'] != null) {
+      final firstName = json['firstName'] ?? '';
+      final lastName = json['lastName'] ?? '';
+      fullName = [
+        firstName,
+        lastName,
+      ].where((part) => part.isNotEmpty).join(' ');
+    } else if (json['name'] != null) {
+      fullName = json['name']; // Fallback to legacy name field
+    }
+
     return ContactModel(
       id: json['id'],
       ghlId: json['ghlId'] ?? json['id'],
       locationId: json['locationId'],
-      name: json['name'] ?? '',
+      name: fullName,
       email: json['email'] ?? '',
       phone: json['phoneNo'] ?? json['phone'] ?? '',
       phoneLabel: json['phoneLabel'],
@@ -113,11 +126,18 @@ class ContactModel {
   }
 
   Map<String, dynamic> toJson() {
+    // Split name into firstName and lastName for API compatibility
+    final nameParts = name.trim().split(' ');
+    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+    final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
     return {
       'id': id,
       'ghlId': ghlId,
       'locationId': locationId,
       'name': name,
+      'firstName': firstName.isNotEmpty ? firstName : null,
+      'lastName': lastName.isNotEmpty ? lastName : null,
       'email': email,
       'phoneNo': phone,
       'phoneLabel': phoneLabel,
