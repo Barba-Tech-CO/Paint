@@ -265,7 +265,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
       final totalPaintableStr = '${sumPaintable.round()} sq ft';
 
       _summary = ProjectsSummaryModel(
-        avgDimensions: "${avgWidth}' x ${avgLength}'",
+        avgDimensions: "$avgWidth' x $avgLength'",
         totalArea: totalAreaStr,
         totalPaintable: totalPaintableStr,
       );
