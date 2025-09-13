@@ -1,8 +1,15 @@
+import 'package:flutter/widgets.dart';
+
 import '../../model/contacts/contact_model.dart';
 import '../../model/contacts/contact_list_response.dart';
 import '../../utils/result/result.dart';
 
-abstract class IContactRepository {
+abstract class IContactRepository extends ChangeNotifier {
+  /// Current contacts list (source of truth)
+  List<ContactModel> get contacts;
+  
+  /// Current contact count
+  int get contactsCount;
   /// Lista contatos com paginação (offline-first)
   Future<Result<ContactListResponse>> getContacts({
     int? limit,
