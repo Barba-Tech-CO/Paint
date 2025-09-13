@@ -17,7 +17,6 @@ import '../domain/repository/paint_catalog_repository.dart';
 import '../domain/repository/quote_repository.dart';
 
 // Service Layer
-import '../model/contacts/contact_model.dart';
 import '../service/app_initialization_service.dart';
 import '../service/auth_service.dart';
 import '../service/auth_persistence_service.dart';
@@ -267,15 +266,12 @@ void setupDependencyInjection() {
   // ViewModels - Contact
   getIt.registerFactory<ContactListViewModel>(
     () => ContactListViewModel(
-      getIt<ContactOperationsUseCase>(),
+      getIt<IContactRepository>(),
     ),
   );
   getIt.registerFactory<ContactDetailViewModel>(
     () => ContactDetailViewModel(
-      getIt<ContactOperationsUseCase>(),
-      getIt<LocationService>(),
-      getIt<AppLogger>(),
-      getIt<ContactModel>(),
+      getIt<IContactRepository>(),
     ),
   );
 
