@@ -142,6 +142,24 @@ class ContactsViewModel extends ChangeNotifier {
     }
   }
 
+  /// Refresh contacts from API in background
+  Future<void> refreshContacts() async {
+    try {
+      // First sync pending contacts with API
+      await _contactUseCase.syncPendingContacts();
+
+      // Then reload contacts from local database
+      if (_loadContactsCommand != null) {
+        await _loadContactsCommand!.execute();
+      }
+    } catch (e) {
+      // If sync fails, still try to reload local data
+      if (_loadContactsCommand != null) {
+        await _loadContactsCommand!.execute();
+      }
+    }
+  }
+
   Future<void> addContact(ContactModel contact) async {
     if (_addContactCommand != null) {
       await _addContactCommand!.execute(contact);
