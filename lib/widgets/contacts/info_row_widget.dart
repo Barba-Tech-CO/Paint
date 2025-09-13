@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../config/app_colors.dart';
+
 class InfoRowWidget extends StatelessWidget {
   final String label;
   final String? value;
@@ -17,23 +19,19 @@ class InfoRowWidget extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              '$label:',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-              ),
+          Text(
+            '$label:',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: AppColors.primaryDark,
+              fontSize: 16,
             ),
           ),
-          Expanded(
-            child: Text(
-              value ?? '-',
-              style: theme.textTheme.bodyMedium,
-            ),
+          Text(
+            value ?? '-',
+            style: theme.textTheme.bodyMedium,
           ),
         ],
       ),
