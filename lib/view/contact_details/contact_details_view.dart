@@ -1,26 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
+import '../../config/dependency_injection.dart';
+import '../../model/contacts/contact_model.dart';
+import '../../utils/result/result.dart';
 import '../../viewmodel/contact/contact_detail_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/contacts/info_card_widget.dart';
 import '../../widgets/contacts/info_row_widget.dart';
 import '../../widgets/contacts/section_header_widget.dart';
 
-class ContactDetailsView extends StatelessWidget {
-  const ContactDetailsView({super.key});
+class ContactDetailsView extends StatefulWidget {
+  final ContactModel contact;
+
+  const ContactDetailsView({
+    super.key,
+    required this.contact,
+  });
+
+  @override
+  State<ContactDetailsView> createState() => _ContactDetailsViewState();
+}
+
+class _ContactDetailsViewState extends State<ContactDetailsView> {
+  late final ContactDetailViewModel _viewModel;
+  ContactModel? _currentContact;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = getIt<ContactDetailViewModel>();
+    _currentContact = widget.contact;
+    _loadContactDetails();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Recarregar dados quando a tela for exibida novamente (ex: voltando da edição)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadContactDetails();
+    });
+  }
+
+  Future<void> _loadContactDetails() async {
+    final result = await _viewModel.getContactDetails(widget.contact.id!);
+    if (result is Ok && mounted) {
+      setState(() {
+        _currentContact = result.asOk.value;
+      });
+    }
+  }
+
+  String _getDisplayValue(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'N/A';
+    }
+    return value;
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    final vm = context.watch<ContactDetailViewModel>();
-    final contact = vm.selectedContact;
+    final contact = _currentContact ?? widget.contact;
 
     final hasCompanyName = contact.companyName?.isNotEmpty ?? false;
     final hasBusinessName = contact.businessName?.isNotEmpty ?? false;
-    final showAdditionalInfo = hasCompanyName || hasBusinessName;
+    final hasType = contact.type?.isNotEmpty ?? false;
+    final showAdditionalInfo = hasCompanyName || hasBusinessName || hasType;
 
     return Scaffold(
       appBar: PaintProAppBar(
@@ -42,21 +89,12 @@ class ContactDetailsView extends StatelessWidget {
                   children: [
                     Text(
                       contact.name,
-                      style: theme.textTheme.headlineSmall?.copyWith(
+                      style: theme.textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: theme.primaryColor,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    if (contact.type != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Text(
-                          contact.type!,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -69,21 +107,41 @@ class ContactDetailsView extends StatelessWidget {
               ),
               InfoCardWidget(
                 children: [
-                  InfoRowWidget(label: 'Email', value: contact.email),
-                  InfoRowWidget(label: 'Phone', value: contact.phone),
+                  InfoRowWidget(
+                    label: 'Email',
+                    value: _getDisplayValue(contact.email),
+                  ),
+                  InfoRowWidget(
+                    label: 'Phone',
+                    value: _getDisplayValue(contact.phone),
+                  ),
                 ],
               ),
 
               const SizedBox(height: 16),
-
               const SectionHeaderWidget(icon: Icons.home, title: 'Address'),
               InfoCardWidget(
                 children: [
-                  InfoRowWidget(label: 'Street', value: contact.address),
-                  InfoRowWidget(label: 'ZIP Code', value: contact.postalCode),
-                  InfoRowWidget(label: 'City', value: contact.city),
-                  InfoRowWidget(label: 'State', value: contact.state),
-                  InfoRowWidget(label: 'Country', value: contact.country),
+                  InfoRowWidget(
+                    label: 'Street',
+                    value: _getDisplayValue(contact.address),
+                  ),
+                  InfoRowWidget(
+                    label: 'ZIP Code',
+                    value: _getDisplayValue(contact.postalCode),
+                  ),
+                  InfoRowWidget(
+                    label: 'City',
+                    value: _getDisplayValue(contact.city),
+                  ),
+                  InfoRowWidget(
+                    label: 'State',
+                    value: _getDisplayValue(contact.state),
+                  ),
+                  InfoRowWidget(
+                    label: 'Country',
+                    value: _getDisplayValue(contact.country),
+                  ),
                 ],
               ),
 
@@ -96,15 +154,20 @@ class ContactDetailsView extends StatelessWidget {
                 ),
                 InfoCardWidget(
                   children: [
+                    if (hasType)
+                      InfoRowWidget(
+                        label: 'Type',
+                        value: _getDisplayValue(contact.type),
+                      ),
                     if (hasCompanyName)
                       InfoRowWidget(
                         label: 'Company',
-                        value: contact.companyName,
+                        value: _getDisplayValue(contact.companyName),
                       ),
                     if (hasBusinessName)
                       InfoRowWidget(
                         label: 'Business Name',
-                        value: contact.businessName,
+                        value: _getDisplayValue(contact.businessName),
                       ),
                   ],
                 ),
@@ -127,5 +190,11 @@ class ContactDetailsView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _viewModel.dispose();
+    super.dispose();
   }
 }
