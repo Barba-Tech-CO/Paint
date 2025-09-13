@@ -22,7 +22,8 @@ class ContactDatabaseService {
 
     return await openDatabase(
       path,
-      version: 3, // Updated version to force migration for API contract compliance
+      version:
+          3, // Updated version to force migration for API contract compliance
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -82,14 +83,30 @@ class ContactDatabaseService {
     ''');
 
     // Create indexes for better performance - Following API contract requirements
-    await db.execute('CREATE INDEX idx_ghl_contacts_user_id ON $_tableName(user_id)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_ghl_id ON $_tableName(ghl_id)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_location_id ON $_tableName(location_id)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_email ON $_tableName(email)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_phone ON $_tableName(phone)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_sync_status ON $_tableName(sync_status)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_location_sync ON $_tableName(location_id, sync_status)');
-    await db.execute('CREATE INDEX idx_ghl_contacts_user_sync ON $_tableName(user_id, sync_status, updated_at)');
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_user_id ON $_tableName(user_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_ghl_id ON $_tableName(ghl_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_location_id ON $_tableName(location_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_email ON $_tableName(email)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_phone ON $_tableName(phone)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_sync_status ON $_tableName(sync_status)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_location_sync ON $_tableName(location_id, sync_status)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_ghl_contacts_user_sync ON $_tableName(user_id, sync_status, updated_at)',
+    );
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -123,10 +140,14 @@ class ContactDatabaseService {
     // Debug logging
     if (kDebugMode) {
       log('Debug: Inserting contact with data: $data');
-      log('Debug: Table columns: ${await db.query(_tableName, limit: 0)}');
     }
 
-    return await db.insert(_tableName, data);
+    // Use INSERT OR REPLACE to handle duplicates gracefully
+    return await db.insert(
+      _tableName,
+      data,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   /// Updates an existing contact in the local database
@@ -178,6 +199,7 @@ class ContactDatabaseService {
     int? offset,
   }) async {
     final db = await database;
+
     final maps = await db.query(
       _tableName,
       limit: limit,
@@ -243,12 +265,14 @@ class ContactDatabaseService {
     final maps = await db.query(
       _tableName,
       where: '''
-        name LIKE ? OR 
+        first_name LIKE ? OR 
+        last_name LIKE ? OR 
         email LIKE ? OR 
         phone LIKE ? OR
         company_name LIKE ?
       ''',
       whereArgs: [
+        searchQuery,
         searchQuery,
         searchQuery,
         searchQuery,
