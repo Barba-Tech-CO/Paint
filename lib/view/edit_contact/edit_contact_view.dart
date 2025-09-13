@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:validatorless/validatorless.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
-import '../../helpers/snackbar_helper.dart';
+import '../../helpers/contacts/edit_contact_helper.dart';
 import '../../model/contacts/contact_model.dart';
-import '../../utils/logger/app_logger.dart';
-import '../../utils/result/result.dart';
 import '../../viewmodel/contact/contact_detail_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/buttons/paint_pro_button.dart';
@@ -44,15 +40,13 @@ class _EditContactViewState extends State<EditContactView> {
   // Form key for validation
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // ViewModel and Logger
+  // ViewModel
   late final ContactDetailViewModel _viewModel;
-  late final AppLogger _logger;
 
   @override
   void initState() {
     super.initState();
     _viewModel = getIt<ContactDetailViewModel>();
-    _logger = getIt<AppLogger>();
     _viewModel.addListener(_onViewModelChanged);
     _initializeControllers();
     _populateFormWithContactData();
@@ -81,28 +75,20 @@ class _EditContactViewState extends State<EditContactView> {
   }
 
   void _populateFormWithContactData() {
-    final contact = widget.contact;
-
-    _nameController.text = contact.name;
-    _phoneController.text = contact.phone;
-    _emailController.text = contact.email;
-    _companyNameController.text = contact.companyName ?? '';
-    _addressController.text = contact.address;
-    _cityController.text = contact.city;
-    _stateController.text = contact.state;
-    _zipCodeController.text = contact.postalCode;
-    _countryController.text = contact.country;
-
-    // Preencher campos adicionais
-    if (contact.additionalEmails != null &&
-        contact.additionalEmails!.isNotEmpty) {
-      _adtionalEmailsController.text = contact.additionalEmails!.join(', ');
-    }
-
-    if (contact.additionalPhones != null &&
-        contact.additionalPhones!.isNotEmpty) {
-      _adtionalPhonesController.text = contact.additionalPhones!.join(', ');
-    }
+    EditContactHelper.populateFormWithContactData(
+      contact: widget.contact,
+      nameController: _nameController,
+      phoneController: _phoneController,
+      additionalPhonesController: _adtionalPhonesController,
+      additionalEmailsController: _adtionalEmailsController,
+      emailController: _emailController,
+      companyNameController: _companyNameController,
+      addressController: _addressController,
+      cityController: _cityController,
+      stateController: _stateController,
+      zipCodeController: _zipCodeController,
+      countryController: _countryController,
+    );
   }
 
   @override
@@ -123,80 +109,22 @@ class _EditContactViewState extends State<EditContactView> {
   }
 
   Future<void> _updateContact() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    // Verificar se o contato tem um ID válido para a API
-    final contactId = widget.contact.id;
-
-    final viewModel = _viewModel;
-
-    // Create custom fields for additional data
-    final customFields = <Map<String, dynamic>>[];
-
-    // Determinar se deve tentar atualizar na API
-    final shouldUpdateAPI = contactId != null;
-
-    // Sempre tentar atualizar localmente primeiro
-    // Se tiver ID da API e estiver online, também tenta atualizar via API
-    final contactIdToUse = shouldUpdateAPI
-        ? contactId
-        : (widget.contact.ghlId ?? widget.contact.localId.toString());
-
-    final result = await viewModel.updateContact(
-      contactIdToUse,
-      name: _nameController.text.trim(),
-      email: _emailController.text.trim(),
-      additionalEmails: _adtionalEmailsController.text
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList(),
-      phone: _phoneController.text.trim(),
-      additionalPhones: _adtionalPhonesController.text
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList(),
-      address: _addressController.text.trim(),
-      city: _cityController.text.trim(),
-      state: _stateController.text.trim(),
-      postalCode: _zipCodeController.text.trim(),
-      country: _countryController.text.trim(),
-      companyName: _companyNameController.text.trim(),
-      customFields: customFields.isNotEmpty ? customFields : null,
+    await EditContactHelper.updateContact(
+      formKey: _formKey,
+      contact: widget.contact,
+      nameController: _nameController,
+      emailController: _emailController,
+      additionalEmailsController: _adtionalEmailsController,
+      phoneController: _phoneController,
+      additionalPhonesController: _adtionalPhonesController,
+      addressController: _addressController,
+      cityController: _cityController,
+      stateController: _stateController,
+      zipCodeController: _zipCodeController,
+      countryController: _countryController,
+      companyNameController: _companyNameController,
+      context: context,
     );
-
-    if (result is Ok) {
-      // Show success message
-      if (mounted) {
-        final message = shouldUpdateAPI
-            ? 'Contact updated successfully in API and locally!'
-            : 'Contact updated successfully locally! (Will sync when online)';
-
-        SnackBarHelper.showSuccess(
-          context,
-          message: message,
-        );
-
-        // Navigate back after a short delay
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            context.pop();
-          }
-        });
-      }
-    } else {
-      _logger.error('Error updating contact: ${viewModel.error}');
-      // Show user-friendly error message
-      if (mounted) {
-        SnackBarHelper.showError(
-          context,
-          message: 'Failed to update contact. Please try again.',
-        );
-      }
-    }
   }
 
   @override
@@ -230,15 +158,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'Name: *',
                     hintText: 'John Demnize',
                     controller: _nameController,
-                    validator: Validatorless.multiple(
-                      [
-                        Validatorless.required('Name is required'),
-                        Validatorless.min(
-                          2,
-                          'Name must be at least 2 characters',
-                        ),
-                      ],
-                    ),
+                    validator: EditContactHelper.nameValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -253,22 +173,7 @@ class _EditContactViewState extends State<EditContactView> {
                     hintText: '(555) 123-4567',
                     controller: _phoneController,
                     kind: NumberFieldKind.phone,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Phone is required';
-                      }
-                      // Remove all non-digit characters for validation
-                      final digitsOnly = value.replaceAll(
-                        RegExp(r'[^\d]'),
-                        '',
-                      );
-                      // Check if it's a valid phone number (at least 7 digits)
-                      if (digitsOnly.length >= 7) {
-                        return null;
-                      } else {
-                        return 'Please enter a valid phone number (at least 7 digits)';
-                      }
-                    },
+                    validator: EditContactHelper.validatePhone,
                   ),
                   const SizedBox(
                     height: 16,
@@ -278,40 +183,13 @@ class _EditContactViewState extends State<EditContactView> {
                     hintText: '(555) 123-4567, (555) 123-4589',
                     controller: _adtionalPhonesController,
                     kind: NumberFieldKind.phone,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return null;
-
-                      final phones = value
-                          .split(',')
-                          .map((e) => e.trim())
-                          .where((e) => e.isNotEmpty);
-
-                      for (final phone in phones) {
-                        // Remove all non-digit characters for validation
-                        final digitsOnly = phone.replaceAll(
-                          RegExp(r'[^\d]'),
-                          '',
-                        );
-                        // Check if it's a valid phone number (at least 7 digits)
-                        if (digitsOnly.length < 7) {
-                          return 'Please enter valid phone numbers separated by commas (at least 7 digits each)';
-                        }
-                      }
-                      return null;
-                    },
+                    validator: EditContactHelper.validateAdditionalPhones,
                   ),
                   PaintProTextField(
                     label: 'Email: *',
                     hintText: 'example@mail.com',
                     controller: _emailController,
-                    validator: Validatorless.multiple(
-                      [
-                        Validatorless.required('Email is required'),
-                        Validatorless.email(
-                          'Please enter a valid email',
-                        ),
-                      ],
-                    ),
+                    validator: EditContactHelper.emailValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -320,22 +198,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'Adtional Emails:',
                     hintText: 'example@mail.com, example2@mail.com',
                     controller: _adtionalEmailsController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return null;
-                      final emails = value
-                          .split(',')
-                          .map((e) => e.trim())
-                          .where((e) => e.isNotEmpty);
-                      for (final email in emails) {
-                        final emailValidator = Validatorless.email(
-                          'Invalid email address',
-                        );
-                        if (emailValidator(email) != null) {
-                          return 'Please enter valid email addresses separated by commas';
-                        }
-                      }
-                      return null;
-                    },
+                    validator: EditContactHelper.validateAdditionalEmails,
                   ),
                   const SizedBox(
                     height: 16,
@@ -350,10 +213,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'Company Name:',
                     hintText: 'Painter Estimator LTDA',
                     controller: _companyNameController,
-                    validator: Validatorless.min(
-                      3,
-                      'Company Name must be at least 3 characters',
-                    ),
+                    validator: EditContactHelper.companyNameValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -362,15 +222,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'Address: *',
                     hintText: '123 Main Street',
                     controller: _addressController,
-                    validator: Validatorless.multiple(
-                      [
-                        Validatorless.required('Address is required'),
-                        Validatorless.min(
-                          3,
-                          'Address must be at least 3 characters',
-                        ),
-                      ],
-                    ),
+                    validator: EditContactHelper.addressValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -379,15 +231,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'City: *',
                     hintText: 'Any City',
                     controller: _cityController,
-                    validator: Validatorless.multiple(
-                      [
-                        Validatorless.required('City is required'),
-                        Validatorless.min(
-                          3,
-                          'City must be at least 3 characters',
-                        ),
-                      ],
-                    ),
+                    validator: EditContactHelper.cityValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -396,15 +240,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'State: *',
                     hintText: 'Any State',
                     controller: _stateController,
-                    validator: Validatorless.multiple(
-                      [
-                        Validatorless.required('State is required'),
-                        Validatorless.min(
-                          3,
-                          'State must be at least 3 characters',
-                        ),
-                      ],
-                    ),
+                    validator: EditContactHelper.stateValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -415,15 +251,7 @@ class _EditContactViewState extends State<EditContactView> {
                     controller: _zipCodeController,
                     kind: NumberFieldKind.zip,
                     textInputAction: TextInputAction.done,
-                    validator: Validatorless.multiple(
-                      [
-                        Validatorless.required('Postal Code is required'),
-                        Validatorless.min(
-                          3,
-                          'Postal Code must be at least 3 characters',
-                        ),
-                      ],
-                    ),
+                    validator: EditContactHelper.postalCodeValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -432,15 +260,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'Country: *',
                     hintText: 'US',
                     controller: _countryController,
-                    validator: Validatorless.multiple(
-                      [
-                        Validatorless.required('Country is required'),
-                        Validatorless.min(
-                          2,
-                          'Country must be at least 2 characters',
-                        ),
-                      ],
-                    ),
+                    validator: EditContactHelper.countryValidator,
                   ),
                   // Add some bottom padding to ensure content is not hidden by bottomNavigationBar
                   const SizedBox(height: 100),
