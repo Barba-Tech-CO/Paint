@@ -5,14 +5,15 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
+import '../../config/dependency_injection.dart';
 import '../../helpers/contacts/split_full_name.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../viewmodel/contacts/contacts_viewmodel.dart';
-import '../layout/main_layout.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/buttons/paint_pro_fab.dart';
-import '../../widgets/states/empty_state_widget.dart';
 import '../../widgets/contacts/contact_item_widget.dart';
+import '../../widgets/states/empty_state_widget.dart';
+import '../layout/main_layout.dart';
 
 class ContactsView extends StatefulWidget {
   const ContactsView({super.key});
@@ -29,7 +30,7 @@ class _ContactsViewState extends State<ContactsView> {
   @override
   void initState() {
     super.initState();
-    _viewModel = context.read<ContactsViewModel>();
+    _viewModel = getIt<ContactsViewModel>();
     // Use Future.microtask to defer initialization after build
     Future.microtask(() {
       _viewModel.initialize();
@@ -56,10 +57,9 @@ class _ContactsViewState extends State<ContactsView> {
     return {
       'name': contact.name,
       'phone': contact.phone,
-      'address':
-          '${contact.address}, ${contact.city}, ${contact.country}'
-              .replaceAll(RegExp(r',\s*,'), ',')
-              .replaceAll(RegExp(r'^,\s*|,\s*$'), ''),
+      'address': '${contact.address}, ${contact.city}, ${contact.country}'
+          .replaceAll(RegExp(r',\s*,'), ',')
+          .replaceAll(RegExp(r'^,\s*|,\s*$'), ''),
     };
   }
 
@@ -115,11 +115,25 @@ class _ContactsViewState extends State<ContactsView> {
               return Stack(
                 children: [
                   !viewModel.hasContacts
-                      ? EmptyStateWidget(
-                          title: 'No Contacts yet',
-                          subtitle: 'Add your first contact to get started',
-                          buttonText: 'Add Contact',
-                          onButtonPressed: () => context.push('/new-contact'),
+                      ? RefreshIndicator(
+                          onRefresh: () async {
+                            await _viewModel.refreshContacts();
+                          },
+                          color: AppColors.primary,
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height - 200,
+                              child: EmptyStateWidget(
+                                title: 'No Contacts yet',
+                                subtitle:
+                                    'Add your first contact to get started',
+                                buttonText: 'Add Contact',
+                                onButtonPressed: () =>
+                                    context.push('/new-contact'),
+                              ),
+                            ),
+                          ),
                         )
                       : Column(
                           children: [
@@ -152,38 +166,49 @@ class _ContactsViewState extends State<ContactsView> {
                               ),
                             ),
                             Expanded(
-                              child: ListView.builder(
-                                itemCount: viewModel.filteredContacts.length,
-                                padding: const EdgeInsets.only(
-                                  bottom: 140,
-                                  left: 16,
-                                  right: 16,
-                                ),
-                                itemBuilder: (context, index) {
-                                  final contact =
-                                      viewModel.filteredContacts[index];
-                                  final contactMap = _convertContactModelToMap(
-                                    contact,
-                                  );
-
-                                  return ContactItemWidget(
-                                    contact: contactMap,
-                                    contactModel: contact,
-                                    onRename: (newName) {
-                                      // Update the contact name
-                                      final nameParts = splitFullName(newName);
-                                      final updatedContact = contact.copyWith(
-                                        name: nameParts['name'],
-                                        updatedAt: DateTime.now(),
-                                      );
-                                      _viewModel.updateContact(updatedContact);
-                                    },
-                                    onDelete: () {
-                                      // Deletar o contato
-                                      _viewModel.deleteContact(contact.id!);
-                                    },
-                                  );
+                              child: RefreshIndicator(
+                                onRefresh: () async {
+                                  await _viewModel.refreshContacts();
                                 },
+                                color: AppColors.primary,
+                                child: ListView.builder(
+                                  itemCount: viewModel.filteredContacts.length,
+                                  padding: const EdgeInsets.only(
+                                    bottom: 140,
+                                    left: 16,
+                                    right: 16,
+                                  ),
+                                  itemBuilder: (context, index) {
+                                    final contact =
+                                        viewModel.filteredContacts[index];
+                                    final contactMap =
+                                        _convertContactModelToMap(
+                                          contact,
+                                        );
+
+                                    return ContactItemWidget(
+                                      contact: contactMap,
+                                      contactModel: contact,
+                                      onRename: (newName) {
+                                        // Update the contact name
+                                        final nameParts = splitFullName(
+                                          newName,
+                                        );
+                                        final updatedContact = contact.copyWith(
+                                          name: nameParts['name'],
+                                          updatedAt: DateTime.now(),
+                                        );
+                                        _viewModel.updateContact(
+                                          updatedContact,
+                                        );
+                                      },
+                                      onDelete: () {
+                                        // Deletar o contato
+                                        _viewModel.deleteContact(contact.id!);
+                                      },
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           ],
