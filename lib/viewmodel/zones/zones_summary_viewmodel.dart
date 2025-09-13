@@ -117,7 +117,7 @@ class ZonesSummaryViewModel extends ChangeNotifier {
       final totalPaintableValue = sumPaintable.round();
 
       _summary = ProjectsSummaryModel(
-        avgDimensions: "${avgWidth}' x ${avgLength}'",
+        avgDimensions: "$avgWidth' x $avgLength'",
         totalArea: "$totalAreaValue sq ft",
         totalPaintable: "$totalPaintableValue sq ft",
       );
