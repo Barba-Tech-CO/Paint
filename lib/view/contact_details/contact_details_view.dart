@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
+import '../../helpers/contacts/contact_details_helper.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../utils/result/result.dart';
 import '../../viewmodel/contact/contact_detail_viewmodel.dart';
@@ -52,22 +53,14 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
     }
   }
 
-  String _getDisplayValue(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'N/A';
-    }
-    return value;
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final contact = _currentContact ?? widget.contact;
 
-    final hasCompanyName = contact.companyName?.isNotEmpty ?? false;
-    final hasBusinessName = contact.businessName?.isNotEmpty ?? false;
-    final hasType = contact.type?.isNotEmpty ?? false;
-    final showAdditionalInfo = hasCompanyName || hasBusinessName || hasType;
+    final showAdditionalInfo = ContactDetailsHelper.hasAdditionalBusinessInfo(
+      contact,
+    );
 
     return Scaffold(
       appBar: PaintProAppBar(
@@ -89,10 +82,7 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
                   children: [
                     Text(
                       contact.name,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.primaryColor,
-                      ),
+                      style: ContactDetailsHelper.getContactNameStyle(theme),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -101,75 +91,65 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
 
               const SizedBox(height: 32),
 
-              const SectionHeaderWidget(
-                icon: Icons.contact_phone,
-                title: 'Contact',
+              SectionHeaderWidget(
+                icon:
+                    ContactDetailsHelper.getContactSectionData()['icon']
+                        as IconData,
+                title:
+                    ContactDetailsHelper.getContactSectionData()['title']
+                        as String,
               ),
               InfoCardWidget(
-                children: [
-                  InfoRowWidget(
-                    label: 'Email',
-                    value: _getDisplayValue(contact.email),
-                  ),
-                  InfoRowWidget(
-                    label: 'Phone',
-                    value: _getDisplayValue(contact.phone),
-                  ),
-                ],
+                children: ContactDetailsHelper.getContactInfoRows(contact)
+                    .map(
+                      (row) => InfoRowWidget(
+                        label: row['label']!,
+                        value: row['value']!,
+                      ),
+                    )
+                    .toList(),
               ),
 
               const SizedBox(height: 16),
-              const SectionHeaderWidget(icon: Icons.home, title: 'Address'),
+              SectionHeaderWidget(
+                icon:
+                    ContactDetailsHelper.getAddressSectionData()['icon']
+                        as IconData,
+                title:
+                    ContactDetailsHelper.getAddressSectionData()['title']
+                        as String,
+              ),
               InfoCardWidget(
-                children: [
-                  InfoRowWidget(
-                    label: 'Street',
-                    value: _getDisplayValue(contact.address),
-                  ),
-                  InfoRowWidget(
-                    label: 'ZIP Code',
-                    value: _getDisplayValue(contact.postalCode),
-                  ),
-                  InfoRowWidget(
-                    label: 'City',
-                    value: _getDisplayValue(contact.city),
-                  ),
-                  InfoRowWidget(
-                    label: 'State',
-                    value: _getDisplayValue(contact.state),
-                  ),
-                  InfoRowWidget(
-                    label: 'Country',
-                    value: _getDisplayValue(contact.country),
-                  ),
-                ],
+                children: ContactDetailsHelper.getAddressInfoRows(contact)
+                    .map(
+                      (row) => InfoRowWidget(
+                        label: row['label']!,
+                        value: row['value']!,
+                      ),
+                    )
+                    .toList(),
               ),
 
               if (showAdditionalInfo) ...[
                 const SizedBox(height: 16),
 
-                const SectionHeaderWidget(
-                  icon: Icons.business,
-                  title: 'Additional Info',
+                SectionHeaderWidget(
+                  icon:
+                      ContactDetailsHelper.getAdditionalInfoSectionData()['icon']
+                          as IconData,
+                  title:
+                      ContactDetailsHelper.getAdditionalInfoSectionData()['title']
+                          as String,
                 ),
                 InfoCardWidget(
-                  children: [
-                    if (hasType)
-                      InfoRowWidget(
-                        label: 'Type',
-                        value: _getDisplayValue(contact.type),
-                      ),
-                    if (hasCompanyName)
-                      InfoRowWidget(
-                        label: 'Company',
-                        value: _getDisplayValue(contact.companyName),
-                      ),
-                    if (hasBusinessName)
-                      InfoRowWidget(
-                        label: 'Business Name',
-                        value: _getDisplayValue(contact.businessName),
-                      ),
-                  ],
+                  children: ContactDetailsHelper.getAdditionalInfoRows(contact)
+                      .map(
+                        (row) => InfoRowWidget(
+                          label: row['label']!,
+                          value: row['value']!,
+                        ),
+                      )
+                      .toList(),
                 ),
               ],
             ],
