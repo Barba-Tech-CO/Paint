@@ -148,7 +148,16 @@ class ContactModel {
       localId: map['id'],
       ghlId: map['ghl_id'],
       locationId: map['location_id'],
-      name: map['name'] ?? '',
+      name:
+          [
+            map['first_name'] ?? '',
+            map['last_name'] ?? '',
+          ].where((e) => e.isNotEmpty).join(' ').isNotEmpty
+          ? [
+              map['first_name'] ?? '',
+              map['last_name'] ?? '',
+            ].where((e) => e.isNotEmpty).join(' ')
+          : (map['name'] ?? ''), // Fallback to legacy name field
       email: map['email'] ?? '',
       phone: map['phone'] ?? '',
       phoneLabel: map['phone_label'],
@@ -219,10 +228,16 @@ class ContactModel {
   }
 
   Map<String, dynamic> toMap() {
+    // Split name into first_name and last_name for database compatibility
+    final nameParts = name.trim().split(' ');
+    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+    final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
     return {
       'ghl_id': ghlId,
       'location_id': locationId,
-      'name': name,
+      'first_name': firstName,
+      'last_name': lastName,
       'email': email,
       'phone': phone,
       'phone_label': phoneLabel,
