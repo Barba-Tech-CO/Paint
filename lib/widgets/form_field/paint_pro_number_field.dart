@@ -13,6 +13,7 @@ class PaintProNumberField extends StatelessWidget {
   final bool isEnabled;
   final FocusNode? focusNode;
   final NumberFieldKind kind;
+  final TextInputAction? textInputAction;
 
   const PaintProNumberField({
     super.key,
@@ -25,6 +26,7 @@ class PaintProNumberField extends StatelessWidget {
     this.isEnabled = true,
     this.focusNode,
     this.kind = NumberFieldKind.generic,
+    this.textInputAction,
   });
 
   @override
@@ -50,6 +52,7 @@ class PaintProNumberField extends StatelessWidget {
         TextFormField(
           controller: controller,
           keyboardType: _resolveKeyboardType(),
+          textInputAction: textInputAction,
           validator: validator ?? _defaultValidator,
           enabled: isEnabled,
           inputFormatters: [
