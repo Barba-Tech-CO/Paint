@@ -74,6 +74,36 @@ class EstimateModel {
       }
     }
 
+    Map<String, num> parseSurfaceAreas(Map<String, dynamic> sa) {
+      final Map<String, num> result = {};
+
+      // Handle the new API structure where surface_areas contains arrays
+      for (final entry in sa.entries) {
+        final key = entry.key;
+        final value = entry.value;
+
+        if (value is List) {
+          // For arrays like walls, ceiling, trim, calculate total area
+          double totalArea = 0.0;
+          for (final item in value) {
+            if (item is Map<String, dynamic>) {
+              // Look for area fields in the item
+              final area = item['net_area'] ?? item['area'] ?? 0.0;
+              if (area is num) {
+                totalArea += area.toDouble();
+              }
+            }
+          }
+          result[key] = totalArea;
+        } else if (value is num) {
+          // For direct numeric values
+          result[key] = value;
+        }
+      }
+
+      return result;
+    }
+
     List<ZoneModel>? parseZones(dynamic value) {
       if (value is List) {
         return value.map((z) {
@@ -82,7 +112,9 @@ class EstimateModel {
           final parsedData = dataList.map((d) {
             final md = d as Map<String, dynamic>;
             final fd = (md['floor_dimensions'] as Map?) ?? {};
-            final sa = (md['surface_areas'] as Map?) ?? {};
+            final sa =
+                (md['surface_areas'] as Map<String, dynamic>?) ??
+                <String, dynamic>{};
             final photos = (md['photos'] as List?)?.cast<String>() ?? const [];
             return ZoneDataModel(
               floorDimensions: FloorDimensionsModel(
@@ -92,9 +124,7 @@ class EstimateModel {
                 unit: (fd['unit'] as String?) ?? 'ft',
               ),
               surfaceAreas: SurfaceAreasModel(
-                values: sa.map<String, num>(
-                  (k, v) => MapEntry(k.toString(), (v as num)),
-                ),
+                values: parseSurfaceAreas(sa),
               ),
               photoPaths: photos,
             );
