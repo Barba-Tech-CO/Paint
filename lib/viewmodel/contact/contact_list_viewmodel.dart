@@ -1,30 +1,44 @@
 import 'package:flutter/foundation.dart';
 
+import '../../domain/repository/contact_repository.dart';
 import '../../model/contacts/contact_model.dart';
-import '../../use_case/contacts/contact_operations_use_case.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
 
 enum ContactListState { initial, loading, loaded, error }
 
 class ContactListViewModel extends ChangeNotifier {
-  final ContactOperationsUseCase _contactUseCase;
+  final IContactRepository _contactRepository;
 
-  ContactListViewModel(this._contactUseCase);
+  ContactListViewModel(this._contactRepository) {
+    // Listen to repository changes (source of truth)
+    _contactRepository.addListener(_onRepositoryChanged);
+    _initializeCommands();
+  }
+
+  @override
+  void dispose() {
+    _contactRepository.removeListener(_onRepositoryChanged);
+    super.dispose();
+  }
+
+  void _onRepositoryChanged() {
+    // Repository is the source of truth, update UI when it changes
+    notifyListeners();
+  }
 
   // State
   ContactListState _state = ContactListState.initial;
   ContactListState get state => _state;
 
-  // Data
-  List<ContactModel> _contacts = [];
-  List<ContactModel> get contacts => _contacts;
+  // Data - Repository is the source of truth
+  List<ContactModel> get contacts => _contactRepository.contacts;
+  int get contactsCount => _contactRepository.contactsCount;
 
   // Pagination
   int _currentPage = 0;
   int get currentPage => _currentPage;
-  int _totalContacts = 0;
-  int get totalContacts => _totalContacts;
+  int get totalContacts => _contactRepository.contactsCount;
   static const int _pageSize = 20;
 
   // Search
@@ -55,11 +69,11 @@ class ContactListViewModel extends ChangeNotifier {
       _state == ContactListState.loading || _loadContactsCommand.running;
   bool get hasError =>
       _state == ContactListState.error || _errorMessage != null;
-  bool get hasMoreContacts => _contacts.length < _totalContacts;
+  bool get hasMoreContacts => contacts.length < totalContacts;
   bool get hasPendingContacts =>
-      _contacts.any((c) => c.syncStatus == SyncStatus.pending);
+      contacts.any((c) => c.syncStatus == SyncStatus.pending);
   bool get hasErrorContacts =>
-      _contacts.any((c) => c.syncStatus == SyncStatus.error);
+      contacts.any((c) => c.syncStatus == SyncStatus.error);
 
   void _initializeCommands() {
     _loadContactsCommand = Command0(() async {
@@ -68,24 +82,20 @@ class ContactListViewModel extends ChangeNotifier {
       _currentPage = 0;
 
       try {
-        final result = await _contactUseCase.getContacts(
+        final result = await _contactRepository.getContacts(
           limit: _pageSize,
           offset: _currentPage * _pageSize,
         );
-        return result.when(
-          ok: (response) {
-            _contacts = response.contacts;
-            _totalContacts = response.total ?? 0;
-            _currentPage++;
-            _setState(ContactListState.loaded);
-            return Result.ok(null);
-          },
-          error: (error) {
-            _setError(error.toString());
-            _setState(ContactListState.error);
-            return Result.error(error);
-          },
-        );
+        
+        if (result is Ok) {
+          _currentPage++;
+          _setState(ContactListState.loaded);
+          return Result.ok(null);
+        } else {
+          _setError(result.asError.error.toString());
+          _setState(ContactListState.error);
+          return result;
+        }
       } catch (e) {
         _setError(e.toString());
         _setState(ContactListState.error);
@@ -99,23 +109,19 @@ class ContactListViewModel extends ChangeNotifier {
       }
 
       try {
-        final result = await _contactUseCase.getContacts(
+        final result = await _contactRepository.getContacts(
           limit: _pageSize,
           offset: _currentPage * _pageSize,
         );
-        return result.when(
-          ok: (response) {
-            _contacts.addAll(response.contacts);
-            _totalContacts = response.total ?? 0;
-            _currentPage++;
-            notifyListeners();
-            return Result.ok(null);
-          },
-          error: (error) {
-            _setError(error.toString());
-            return Result.error(error);
-          },
-        );
+        
+        if (result is Ok) {
+          _currentPage++;
+          notifyListeners();
+          return Result.ok(null);
+        } else {
+          _setError(result.asError.error.toString());
+          return result;
+        }
       } catch (e) {
         _setError(e.toString());
         return Result.error(Exception(e.toString()));
@@ -129,21 +135,17 @@ class ContactListViewModel extends ChangeNotifier {
       _currentPage = 0;
 
       try {
-        final result = await _contactUseCase.searchContacts(query);
-        return result.when(
-          ok: (response) {
-            _contacts = response.contacts;
-            _totalContacts = response.total ?? 0;
-            _currentPage = 1;
-            _setState(ContactListState.loaded);
-            return Result.ok(null);
-          },
-          error: (error) {
-            _setError(error.toString());
-            _setState(ContactListState.error);
-            return Result.error(error);
-          },
-        );
+        final result = await _contactRepository.searchContacts(query);
+        
+        if (result is Ok) {
+          _currentPage = 1;
+          _setState(ContactListState.loaded);
+          return Result.ok(null);
+        } else {
+          _setError(result.asError.error.toString());
+          _setState(ContactListState.error);
+          return result;
+        }
       } catch (e) {
         _setError(e.toString());
         _setState(ContactListState.error);
@@ -156,18 +158,16 @@ class ContactListViewModel extends ChangeNotifier {
       _clearError();
 
       try {
-        final result = await _contactUseCase.syncPendingContacts();
-        return result.when(
-          ok: (_) {
-            // Refresh the contact list after sync
-            _refreshAfterSync();
-            return Result.ok(null);
-          },
-          error: (error) {
-            _setError(error.toString());
-            return Result.error(error);
-          },
-        );
+        final result = await _contactRepository.syncPendingContacts();
+        
+        if (result is Ok) {
+          // Refresh the contact list after sync
+          _refreshAfterSync();
+          return Result.ok(null);
+        } else {
+          _setError(result.asError.error.toString());
+          return result;
+        }
       } catch (e) {
         _setError(e.toString());
         return Result.error(Exception(e.toString()));
@@ -222,6 +222,8 @@ class ContactListViewModel extends ChangeNotifier {
 
   void clearSearch() {
     _searchQuery = '';
+    _currentPage = 0;
+    _clearError();
     loadContacts();
   }
 
@@ -229,41 +231,9 @@ class ContactListViewModel extends ChangeNotifier {
     loadContacts();
   }
 
-  /// Adiciona um novo contato à lista
-  void addContact(ContactModel contact) {
-    _contacts.insert(0, contact);
-    _totalContacts++;
-    notifyListeners();
-  }
-
-  /// Atualiza um contato na lista
-  void updateContact(ContactModel contact) {
-    final index = _contacts.indexWhere((c) => c.id == contact.id);
-    if (index != -1) {
-      _contacts[index] = contact;
-      notifyListeners();
-    }
-  }
-
-  /// Remove um contato da lista
-  void removeContact(String contactId) {
-    _contacts.removeWhere((c) => c.id == contactId);
-    _totalContacts--;
-    notifyListeners();
-  }
-
-  /// Limpa a lista de contatos
-  void clearContacts() {
-    _contacts.clear();
-    _totalContacts = 0;
-    _currentPage = 0;
-    _clearError();
-    notifyListeners();
-  }
-
   /// Obtém contatos por status de sincronização
   List<ContactModel> getContactsBySyncStatus(SyncStatus status) {
-    return _contacts.where((contact) => contact.syncStatus == status).toList();
+    return contacts.where((contact) => contact.syncStatus == status).toList();
   }
 
   /// Obtém contatos pendentes
