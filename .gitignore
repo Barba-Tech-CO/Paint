@@ -55,7 +55,7 @@ app.*.map.json
 .augment/rules/byterover-rules.md
 
 # Claude
-.claude/
+# .claude/
 
 # MCP
 .cursor/
