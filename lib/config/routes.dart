@@ -57,7 +57,14 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/contact-details',
-      builder: (context, state) => const ContactDetailsView(),
+      builder: (context, state) {
+        final contact = state.extra as ContactModel?;
+        if (contact == null) {
+          // Se não houver contato, redirecionar para a lista de contatos
+          return const ContactsView();
+        }
+        return ContactDetailsView(contact: contact);
+      },
     ),
     GoRoute(
       path: '/create-project',
