@@ -257,17 +257,19 @@ class ContactService {
 
       final requestData = <String, dynamic>{};
 
-      // Add required name field (name required)
-      if (name != null && name.isNotEmpty) {
-        requestData['name'] = name; // API expects name
+      // Add name field as expected by API
+      if (name != null && name.trim().isNotEmpty) {
+        requestData['name'] = name.trim();
       }
 
       // Add optional fields
       if (email != null) requestData['email'] = email;
       if (phone != null) requestData['phone'] = phone;
-      if (companyName != null) requestData['companyName'] = companyName;
+      if (companyName != null && companyName.trim().isNotEmpty) {
+        requestData['companyName'] = companyName.trim();
+      }
       if (address != null) {
-        requestData['address1'] = address; // API expects address1
+        requestData['address1'] = address;
       }
       if (city != null) requestData['city'] = city;
       if (state != null) requestData['state'] = state;
@@ -366,44 +368,116 @@ class ContactService {
     try {
       final locationId = _locationService.currentLocationId;
       if (locationId == null || locationId.isEmpty) {
+        log('❌ UPDATE CONTACT: Location ID not available');
         return Result.error(
           Exception('Location ID not available. User not authenticated.'),
         );
       }
 
+      log('🔄 UPDATE CONTACT: Starting update process');
+      log('📋 Contact ID: $contactId');
+      log('📍 Location ID: $locationId');
+
       final updateData = <String, dynamic>{};
 
-      // Add name field (API expects name)
-      if (name != null && name.isNotEmpty) {
-        updateData['name'] = name;
+      // Add name field as expected by API
+      if (name != null && name.trim().isNotEmpty) {
+        updateData['name'] = name.trim();
+        log('✅ Added name: "$name"');
+      } else if (name != null) {
+        log('👤 Skipping empty name');
       }
 
-      // Add other fields
-      if (email != null) updateData['email'] = email;
-      if (phone != null) updateData['phone'] = phone;
-      if (companyName != null) updateData['companyName'] = companyName;
-      if (address != null) {
-        updateData['address1'] = address; // API expects address1
+      // Add other fields with detailed logging
+      if (email != null && email.trim().isNotEmpty) {
+        updateData['email'] = email.trim();
+        log('📧 Added email: "$email"');
+      } else if (email != null) {
+        log('📧 Skipping empty email');
       }
-      if (city != null) updateData['city'] = city;
-      if (state != null) updateData['state'] = state;
-      if (postalCode != null) updateData['postalCode'] = postalCode;
-      if (country != null) updateData['country'] = country;
+      if (phone != null && phone.trim().isNotEmpty) {
+        updateData['phone'] = phone.trim();
+        log('📱 Added phone: "$phone"');
+      } else if (phone != null) {
+        log('📱 Skipping empty phone');
+      }
+      if (companyName != null && companyName.trim().isNotEmpty) {
+        updateData['companyName'] = companyName.trim();
+        log('🏢 Added companyName: "$companyName"');
+      } else {
+        log('🏢 Skipping empty companyName (API rejects empty strings)');
+      }
+      if (address != null && address.trim().isNotEmpty) {
+        updateData['address1'] = address
+            .trim(); // API expects address1 for updates
+        log('🏠 Added address1: "$address"');
+      } else if (address != null) {
+        log('🏠 Skipping empty address');
+      }
+      if (city != null && city.trim().isNotEmpty) {
+        updateData['city'] = city.trim();
+        log('🏙️ Added city: "$city"');
+      } else if (city != null) {
+        log('🏙️ Skipping empty city');
+      } else {
+        log('🏙️ City is null, not including in update');
+      }
+      if (state != null && state.trim().isNotEmpty) {
+        updateData['state'] = state.trim();
+        log('🗺️ Added state: "$state"');
+      } else if (state != null) {
+        log('🗺️ Skipping empty state');
+      }
+      if (postalCode != null && postalCode.trim().isNotEmpty) {
+        updateData['postalCode'] = postalCode.trim();
+        log('📮 Added postalCode: "$postalCode"');
+      } else if (postalCode != null) {
+        log('📮 Skipping empty postalCode');
+      }
+      if (country != null && country.trim().isNotEmpty) {
+        updateData['country'] = country.trim();
+        log('🌍 Added country: "$country"');
+      } else if (country != null) {
+        log('🌍 Skipping empty country');
+      }
       if (additionalEmails != null) {
         updateData['additionalEmails'] = additionalEmails;
+        log('📧+ Added additionalEmails: $additionalEmails');
       }
       if (additionalPhones != null) {
         updateData['additionalPhones'] = additionalPhones;
+        log('📱+ Added additionalPhones: $additionalPhones');
       }
-      if (tags != null) updateData['tags'] = tags;
-      if (customFields != null) updateData['customFields'] = customFields;
+      if (tags != null) {
+        updateData['tags'] = tags;
+        log('🏷️ Added tags: $tags');
+      }
+      if (customFields != null) {
+        updateData['customFields'] = customFields;
+        log('⚙️ Added customFields: $customFields');
+      }
+
+      // Log the complete payload
+      log('📦 COMPLETE UPDATE PAYLOAD:');
+      log('   Method: PUT');
+      log('   URL: ${_httpService.dio.options.baseUrl}$_baseUrl/$contactId');
+      log(
+        '   Headers: {X-GHL-Location-ID: $locationId, Accept: application/json, Content-Type: application/json}',
+      );
+      log('   Body Data: $updateData');
+      log('   Body Data Keys: ${updateData.keys.toList()}');
+      log('   Body Data Size: ${updateData.length} fields');
+
+      // Check for required fields according to API docs
+      if (updateData['name'] == null || updateData['name'].toString().isEmpty) {
+        log('⚠️ WARNING: name is missing but may be required by API');
+      }
+
+      log('🚀 Making PUT request to update contact...');
 
       final response = await _httpService.put(
         '$_baseUrl/$contactId',
         data: updateData,
-        queryParameters: {
-          'location_id': locationId,
-        },
         options: Options(
           headers: {
             'X-GHL-Location-ID': locationId,
@@ -413,28 +487,45 @@ class ContactService {
         ),
       );
 
+      log('📨 RESPONSE RECEIVED:');
+      log('   Status Code: ${response.statusCode}');
+      log('   Headers: ${response.headers}');
+      log('   Data: ${response.data}');
+
       // Handle successful response (200 OK)
       if (response.statusCode == 200) {
+        log('✅ UPDATE SUCCESS: Status 200 received');
+
         if (response.data['success'] == true &&
             response.data['contactDetails'] != null) {
+          log('📄 Found contactDetails with success=true');
           final contact = ContactModel.fromJson(
             response.data['contactDetails'],
           );
+          log('🎉 Contact successfully parsed and updated');
           return Result.ok(contact);
         } else if (response.data['contactDetails'] != null) {
+          log('📄 Found contactDetails without success flag');
           final contact = ContactModel.fromJson(
             response.data['contactDetails'],
           );
+          log('🎉 Contact successfully parsed and updated');
           return Result.ok(contact);
         } else if (response.data['data'] != null) {
+          log('📄 Found data field');
           final contact = ContactModel.fromJson(response.data['data']);
+          log('🎉 Contact successfully parsed and updated');
           return Result.ok(contact);
         } else {
+          log('❌ No contact data found in response structure');
+          log('   Available keys: ${response.data?.keys?.toList()}');
           return Result.error(
             Exception('Contact data not found in response'),
           );
         }
       } else {
+        log('❌ NON-200 RESPONSE: Status ${response.statusCode}');
+        log('   Response data: ${response.data}');
         final errorMessage =
             response.data['message'] ?? 'Error updating contact';
         return Result.error(
@@ -442,8 +533,40 @@ class ContactService {
         );
       }
     } on DioException catch (e) {
+      log('❌ DIO EXCEPTION CAUGHT:');
+      log('   Type: ${e.type}');
+      log('   Message: ${e.message}');
+      log('   Status Code: ${e.response?.statusCode}');
+      log('   Response Headers: ${e.response?.headers}');
+      log('   Response Data: ${e.response?.data}');
+      log('   Request Data: ${e.requestOptions.data}');
+      log('   Request Headers: ${e.requestOptions.headers}');
+      log('   Request URL: ${e.requestOptions.uri}');
+
+      // Special handling for 422 validation errors
+      if (e.response?.statusCode == 422) {
+        log('🔍 DETAILED 422 VALIDATION ERROR ANALYSIS:');
+        final responseData = e.response?.data;
+        if (responseData != null) {
+          log('   Full Response: $responseData');
+
+          if (responseData is Map<String, dynamic>) {
+            if (responseData['errors'] != null) {
+              log('   Validation Errors: ${responseData['errors']}');
+            }
+            if (responseData['message'] != null) {
+              log('   Error Message: ${responseData['message']}');
+            }
+          }
+        }
+      }
+
       return _handleDioException(e, 'updating contact');
     } catch (e) {
+      log('❌ GENERAL EXCEPTION: $e');
+      log('   Type: ${e.runtimeType}');
+      log('   Stack trace: ${StackTrace.current}');
+
       return Result.error(
         Exception('Error updating contact: $e'),
       );
