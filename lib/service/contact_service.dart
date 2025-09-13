@@ -30,17 +30,22 @@ class ContactService {
         );
       }
 
+      // Usar a rota de busca para listar todos os contatos
+      // Esta rota não tem validação restritiva como a rota POST principal
       final response = await _httpService.post(
-        _baseUrl,
-        queryParameters: {
-          'location_id': locationId,
-          if (limit != null) 'limit': limit,
-          if (offset != null) 'offset': offset,
+        '$_baseUrl/search',
+        data: {
+          'locationId': locationId,
+          if (limit != null) 'pageLimit': limit,
+          // Converter offset para page
+          if (offset != null && limit != null && limit > 0)
+            'page': (offset / limit).floor() + 1,
         },
         options: Options(
           headers: {
             'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
+            'Content-Type': 'application/json',
           },
         ),
       );
