@@ -10,7 +10,6 @@ import 'firebase_options.dart';
 import 'service/location_service.dart';
 import 'service/navigation_service.dart';
 import 'viewmodel/auth/auth_viewmodel.dart';
-import 'viewmodel/contact/contact_detail_viewmodel.dart';
 import 'viewmodel/contact/contact_list_viewmodel.dart';
 import 'viewmodel/contacts/contacts_viewmodel.dart';
 import 'viewmodel/estimate/estimate_calculation_viewmodel.dart';
@@ -56,9 +55,6 @@ class PaintProApp extends StatelessWidget {
         // Contact ViewModels
         ChangeNotifierProvider<ContactListViewModel>(
           create: (_) => getIt<ContactListViewModel>(),
-        ),
-        ChangeNotifierProvider<ContactDetailViewModel>(
-          create: (_) => getIt<ContactDetailViewModel>(),
         ),
         // Estimate ViewModels
         ChangeNotifierProvider<EstimateListViewModel>(
