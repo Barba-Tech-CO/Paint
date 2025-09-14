@@ -9,6 +9,7 @@ class ContactDropdownWidget extends StatelessWidget {
   final String label;
   final bool isLoading;
   final String? errorText;
+  final VoidCallback? onRetry;
 
   const ContactDropdownWidget({
     super.key,
@@ -18,6 +19,7 @@ class ContactDropdownWidget extends StatelessWidget {
     required this.label,
     this.isLoading = false,
     this.errorText,
+    this.onRetry,
   });
 
   @override
@@ -102,6 +104,32 @@ class ContactDropdownWidget extends StatelessWidget {
           }).toList(),
           onChanged: isLoading ? null : onChanged,
         ),
+        if (errorText != null && onRetry != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    errorText!,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: const Text('Retry'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: const Size(0, 32),
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
