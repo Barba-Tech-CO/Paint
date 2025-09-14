@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
+import '../../config/dependency_injection.dart';
 import '../../helpers/contact_helper.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../service/contact_database_service.dart';
 import '../../service/contact_service.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/buttons/paint_pro_button.dart';
 import '../../widgets/cards/input_card_widget.dart';
@@ -51,6 +52,10 @@ class _CreateProjectViewState extends State<CreateProjectView> {
         _selectedProjectType.isNotEmpty;
   }
 
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
   Future<void> _loadContacts() async {
     if (_isLoadingContacts) return;
 
@@ -60,9 +65,8 @@ class _CreateProjectViewState extends State<CreateProjectView> {
     });
 
     try {
-      final contactService = context.read<ContactService>();
-      final contactDatabaseService = context.read<ContactDatabaseService>();
-
+      final contactService = getIt<ContactService>();
+      final contactDatabaseService = getIt<ContactDatabaseService>();
       final contacts = await ContactHelper.loadContacts(
         contactService: contactService,
         contactDatabaseService: contactDatabaseService,
@@ -70,11 +74,25 @@ class _CreateProjectViewState extends State<CreateProjectView> {
 
       setState(() {
         _contacts = contacts;
+        // If we got contacts, clear any previous error
+        if (contacts.isNotEmpty) {
+          _contactsError = null;
+        }
       });
     } catch (e) {
       setState(() {
-        _contactsError = 'Failed to load contacts';
+        _contactsError =
+            'Failed to load contacts. Please check your connection and try again.';
       });
+
+      // Log the error for debugging
+      try {
+        final logger = getIt<AppLogger>();
+        logger.error('CreateProjectView: Error loading contacts: $e');
+      } catch (loggerError) {
+        final logger = getIt<AppLogger>();
+        logger.error('CreateProjectView: Error loading contacts: $e');
+      }
     } finally {
       setState(() {
         _isLoadingContacts = false;
@@ -97,111 +115,122 @@ class _CreateProjectViewState extends State<CreateProjectView> {
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            spacing: 12,
-            children: [
-              const SizedBox.shrink(),
+      body: GestureDetector(
+        onTap: _dismissKeyboard,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              spacing: 12,
+              children: [
+                const SizedBox.shrink(),
 
-              // Client Information Card with Dropdown
-              InputCardWidget(
-                title: 'Client Information',
-                description: 'Client Name*',
-                widget: ContactDropdownWidget(
-                  label: 'Client Name',
-                  selectedContact: _selectedClient,
-                  contacts: _contacts,
-                  isLoading: _isLoadingContacts,
-                  errorText: _contactsError,
-                  onChanged: (contact) {
-                    setState(() {
-                      _selectedClient = contact;
-                    });
-                  },
+                // Client Information Card with Dropdown
+                InputCardWidget(
+                  title: 'Client Information',
+                  // description: 'Client Name: *',
+                  widget: Column(
+                    children: [
+                      ContactDropdownWidget(
+                        label: 'Client Name: *',
+                        selectedContact: _selectedClient,
+                        contacts: _contacts,
+                        isLoading: _isLoadingContacts,
+                        errorText: _contactsError,
+                        onChanged: (contact) {
+                          setState(() {
+                            _selectedClient = contact;
+                          });
+                        },
+                        onRetry: _loadContacts,
+                      ),
+                      // Debug button - remove in production
+                    ],
+                  ),
                 ),
-              ),
 
-              InputCardWidget(
-                title: 'Project Details',
-                description: 'Project Name *',
-                controller: _projectDetailsController,
-                hintText: 'Enter project name',
-                widget: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        'Project Type *',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textPrimary,
+                InputCardWidget(
+                  title: 'Project Details',
+                  description: 'Project Name *',
+                  controller: _projectDetailsController,
+                  hintText: 'Enter project name',
+                  widget: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          'Project Type *',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
-                    ),
-                    Row(
-                      children: [
-                        Radio(
-                          value: 'Interior',
-                          groupValue: _selectedProjectType,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedProjectType = value.toString();
-                            });
-                          },
-                          activeColor: AppColors.primary,
-                        ),
-                        Text('Interior'),
+                      Row(
+                        children: [
+                          Radio(
+                            value: 'Interior',
+                            groupValue: _selectedProjectType,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedProjectType = value.toString();
+                              });
+                            },
+                            activeColor: AppColors.primary,
+                          ),
+                          Text('Interior'),
 
-                        const SizedBox(width: 16),
+                          const SizedBox(width: 16),
 
-                        Radio(
-                          value: 'Exterior',
-                          groupValue: _selectedProjectType,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedProjectType = value.toString();
-                            });
-                          },
-                          activeColor: AppColors.primary,
-                        ),
-                        Text('Exterior'),
+                          Radio(
+                            value: 'Exterior',
+                            groupValue: _selectedProjectType,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedProjectType = value.toString();
+                              });
+                            },
+                            activeColor: AppColors.primary,
+                          ),
+                          Text('Exterior'),
 
-                        const SizedBox(width: 16),
+                          const SizedBox(width: 16),
 
-                        Radio(
-                          value: 'Both',
-                          groupValue: _selectedProjectType,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedProjectType = value.toString();
-                            });
-                          },
-                          activeColor: AppColors.primary,
-                        ),
-                        Text('Both'),
-                      ],
-                    ),
-                  ],
+                          Radio(
+                            value: 'Both',
+                            groupValue: _selectedProjectType,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedProjectType = value.toString();
+                              });
+                            },
+                            activeColor: AppColors.primary,
+                          ),
+                          Text('Both'),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              InputCardWidget(
-                title: 'Additional Notes',
-                controller: _additionalNotesController,
-                hintText: 'Enter additional notes',
-                maxLines: 6,
-                multiline: true,
-              ),
+                InputCardWidget(
+                  title: 'Additional Notes',
+                  controller: _additionalNotesController,
+                  hintText: 'Enter additional notes',
+                  maxLines: 6,
+                  multiline: true,
+                ),
 
-              PaintProButton(
-                text: 'Next',
-                onPressed: !_isFormValid ? null : () => context.push('/camera'),
-              ),
-            ],
+                PaintProButton(
+                  text: 'Next',
+                  onPressed: !_isFormValid
+                      ? null
+                      : () => context.push('/camera'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
