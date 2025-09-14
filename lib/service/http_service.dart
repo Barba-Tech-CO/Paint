@@ -46,16 +46,6 @@ class HttpService implements IHttpService {
 
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
-            // Only log presence of token, never the actual token
-            if (options.path.contains('/user')) {
-              _logger.info(
-                '[HttpService] Adding Authorization header to /user request',
-              );
-            } else if (options.path.contains('/materials')) {
-              _logger.info(
-                '[HttpService] Adding Authorization header to /materials request',
-              );
-            }
           } else {
             // Log missing token for critical endpoints
             if (options.path.contains('/user')) {
@@ -102,6 +92,20 @@ class HttpService implements IHttpService {
   /// Clears auth token from memory
   void clearAuthToken() {
     _authToken = null;
+  }
+
+  /// Initialize auth token from persistence during app startup
+  Future<void> initializeAuthToken() async {
+    try {
+      final token = await _authPersistenceService.getSanctumToken();
+      if (token != null && token.isNotEmpty) {
+        _authToken = token;
+      } else {
+        _logger.warning('[HttpService] No auth token found in persistence');
+      }
+    } catch (e) {
+      _logger.error('[HttpService] Error initializing auth token: $e');
+    }
   }
 
   @override
