@@ -4,6 +4,7 @@ import '../helpers/auth_helper.dart';
 import '../utils/result/result.dart';
 import 'auth_persistence_service.dart';
 import 'auth_service.dart';
+import 'auth_state_manager.dart';
 import 'deep_link_service.dart';
 import 'http_service.dart';
 import 'navigation_service.dart';
@@ -11,6 +12,7 @@ import 'navigation_service.dart';
 class AppInitializationService {
   final AuthService _authService;
   final AuthPersistenceService _authPersistenceService;
+  final AuthStateManager _authStateManager;
   final NavigationService _navigationService;
   final DeepLinkService _deepLinkService;
   final HttpService _httpService;
@@ -18,6 +20,7 @@ class AppInitializationService {
   AppInitializationService(
     this._authService,
     this._authPersistenceService,
+    this._authStateManager,
     this._navigationService,
     this._deepLinkService,
     this._httpService,
@@ -25,12 +28,21 @@ class AppInitializationService {
 
   /// Inicializa a aplicação e determina para onde navegar
   Future<void> initializeApp(BuildContext context) async {
-
     // Inicializa o serviço de Deep Links
     await _deepLinkService.initialize();
 
     // Initialize HTTP service with persisted token first
     await _httpService.initializeAuthToken();
+
+    // Set up auth failure callback for automatic navigation BEFORE initializing AuthStateManager
+    _authStateManager.onAuthFailure(() {
+      if (context.mounted) {
+        _navigationService.navigateToAuth(context);
+      }
+    });
+
+    // Initialize AuthStateManager after callback is set up
+    await _authStateManager.initialize();
 
     // Wait a moment for AuthViewModel to load persisted state
     await Future.delayed(const Duration(milliseconds: 100));
