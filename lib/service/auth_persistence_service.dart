@@ -1,6 +1,7 @@
-import 'dart:developer';
-
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../utils/logger/app_logger.dart';
+import '../utils/logger/logger_app_logger_impl.dart';
 
 class AuthPersistenceService {
   static const String _keyAuthenticated = 'auth_authenticated';
@@ -8,6 +9,8 @@ class AuthPersistenceService {
   static const String _keyLocationId = 'auth_location_id';
   static const String _keyExpiresAt = 'auth_expires_at';
   static const String _keySanctumToken = 'auth_sanctum_token';
+
+  final AppLogger _logger = LoggerAppLoggerImpl();
 
   // Save authentication state
   Future<void> saveAuthState({
@@ -17,10 +20,6 @@ class AuthPersistenceService {
     DateTime? expiresAt,
     String? sanctumToken,
   }) async {
-    log(
-      '[AuthPersistenceService] Saving auth state: authenticated=$authenticated, needsLogin=$needsLogin, locationId=$locationId, expiresAt=$expiresAt',
-    );
-
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyAuthenticated, authenticated);
     await prefs.setBool(_keyNeedsLogin, needsLogin);
@@ -35,12 +34,7 @@ class AuthPersistenceService {
 
     if (sanctumToken != null) {
       await prefs.setString(_keySanctumToken, sanctumToken);
-      log('[AuthPersistenceService] Sanctum token saved: $sanctumToken');
-    } else {
-      log('[AuthPersistenceService] No sanctum token provided to save');
     }
-
-    log('[AuthPersistenceService] Auth state saved successfully');
   }
 
   // Load authentication state
@@ -70,20 +64,17 @@ class AuthPersistenceService {
       'sanctumToken': sanctumToken,
     };
 
-    log('[AuthPersistenceService] Loaded auth state: $state');
     return state;
   }
 
   // Clear authentication state (logout)
   Future<void> clearAuthState() async {
-    log('[AuthPersistenceService] Clearing auth state');
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyAuthenticated);
     await prefs.remove(_keyNeedsLogin);
     await prefs.remove(_keyLocationId);
     await prefs.remove(_keyExpiresAt);
     await prefs.remove(_keySanctumToken);
-    log('[AuthPersistenceService] Auth state cleared');
   }
 
   // Check if user should be considered authenticated based on stored data
@@ -93,16 +84,12 @@ class AuthPersistenceService {
     final needsLogin = state['needsLogin'] as bool;
     final expiresAt = state['expiresAt'] as DateTime?;
 
-    log(
-      '[AuthPersistenceService] Checking if user authenticated: authenticated=$authenticated, needsLogin=$needsLogin, expiresAt=$expiresAt',
-    );
-
     // Check if token has expired
     if (expiresAt != null) {
       final now = DateTime.now();
       if (expiresAt.isBefore(now)) {
-        log(
-          '[AuthPersistenceService] Token has expired. ExpiresAt: $expiresAt, Current time: $now',
+        _logger.warning(
+          '[AuthPersistenceService] Token expired, clearing auth state',
         );
         // Clear expired authentication state
         await clearAuthState();
@@ -112,7 +99,6 @@ class AuthPersistenceService {
 
     // Check if user was authenticated and doesn't need login
     final result = authenticated && !needsLogin;
-    log('[AuthPersistenceService] User authenticated result: $result');
     return result;
   }
 
@@ -120,11 +106,6 @@ class AuthPersistenceService {
   Future<String?> getSanctumToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(_keySanctumToken);
-    if (token != null) {
-      log('[AuthPersistenceService] Retrieved token: $token');
-    } else {
-      log('[AuthPersistenceService] No token found in storage');
-    }
     return token;
   }
 
@@ -140,16 +121,11 @@ class AuthPersistenceService {
     final now = DateTime.now();
     final isExpired = expiresAt.isBefore(now);
 
-    log(
-      '[AuthPersistenceService] Token expiration check: expiresAt=$expiresAt, currentTime=$now, isExpired=$isExpired',
-    );
     return isExpired;
   }
 
   // Force logout by clearing all authentication data
   Future<void> forceLogout() async {
-    log('[AuthPersistenceService] Force logout initiated');
     await clearAuthState();
-    log('[AuthPersistenceService] Force logout completed');
   }
 }
