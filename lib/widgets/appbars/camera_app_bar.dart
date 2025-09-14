@@ -46,13 +46,15 @@ class CameraAppBar extends StatelessWidget implements PreferredSizeWidget {
                   color: AppColors.gray24,
                   borderRadius: BorderRadius.circular(20.0),
                 ),
-                child: Text(
-                  instructionText,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.albertSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
+                child: Center(
+                  child: Text(
+                    instructionText,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.albertSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
