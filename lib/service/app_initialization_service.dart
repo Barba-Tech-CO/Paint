@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../helpers/auth_helper.dart';
 import '../utils/result/result.dart';
 import 'auth_persistence_service.dart';
 import 'auth_service.dart';
 import 'deep_link_service.dart';
+import 'http_service.dart';
 import 'navigation_service.dart';
 
 class AppInitializationService {
@@ -11,22 +13,34 @@ class AppInitializationService {
   final AuthPersistenceService _authPersistenceService;
   final NavigationService _navigationService;
   final DeepLinkService _deepLinkService;
+  final HttpService _httpService;
 
   AppInitializationService(
     this._authService,
     this._authPersistenceService,
     this._navigationService,
     this._deepLinkService,
+    this._httpService,
   );
 
   /// Inicializa a aplicação e determina para onde navegar
   Future<void> initializeApp(BuildContext context) async {
+
     // Inicializa o serviço de Deep Links
     await _deepLinkService.initialize();
+
+    // Initialize HTTP service with persisted token first
+    await _httpService.initializeAuthToken();
+
+    // Wait a moment for AuthViewModel to load persisted state
+    await Future.delayed(const Duration(milliseconds: 100));
 
     // First check local persistence for token expiration
     final isLocallyAuthenticated = await _authPersistenceService
         .isUserAuthenticated();
+
+    // Check if we have a token in HTTP service
+    final hasHttpToken = _httpService.ghlToken != null;
 
     if (!isLocallyAuthenticated) {
       // Token expired or no local authentication, go to auth
@@ -36,12 +50,27 @@ class AppInitializationService {
       return;
     }
 
-    // If locally authenticated, verify with backend
+    // If locally authenticated and we have a token, go directly to dashboard
+    // Skip backend verification during hot restart to avoid unnecessary network calls
+    if (hasHttpToken) {
+      await AuthHelper.initializeUserData();
+
+      if (context.mounted) {
+        _navigationService.navigateToDashboard(context);
+      }
+      return;
+    }
+
+    // If locally authenticated but no token, verify with backend
     final authResult = await _authService.isAuthenticated();
 
     if (authResult is Ok) {
       final authenticated = authResult.asOk.value;
+
       if (authenticated) {
+        // Initialize user data when authenticated
+        await AuthHelper.initializeUserData();
+
         if (context.mounted) {
           _navigationService.navigateToDashboard(context);
         }
