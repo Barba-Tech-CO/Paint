@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import '../../config/dependency_injection.dart';
 import '../../domain/repository/contact_repository.dart';
 import '../../helpers/error_message_helper.dart';
 import '../../model/contacts/contact_list_response.dart';
 import '../../model/contacts/contact_model.dart';
+import '../../service/auth_persistence_service.dart';
 import '../../service/contact_database_service.dart';
 import '../../service/contact_service.dart';
+import '../../service/http_service.dart';
 import '../../service/location_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
@@ -19,6 +22,7 @@ class ContactRepository extends IContactRepository {
   // Source of truth - internal state
   List<ContactModel> _contacts = [];
   Completer<void>? _initializationCompleter;
+  bool _isSyncing = false;
 
   @override
   List<ContactModel> get contacts => List.unmodifiable(_contacts);
@@ -73,6 +77,7 @@ class ContactRepository extends IContactRepository {
 
     final currentLocationId = locationResult.asOk.value;
     if (contactLocationId != currentLocationId) {
+      _logger.error('Contact does not belong to current user location.');
       return Result.error(
         Exception('Contact does not belong to current user location.'),
       );
@@ -120,8 +125,9 @@ class ContactRepository extends IContactRepository {
       _syncWithApiInBackground();
       return Result.ok(response);
     } catch (e) {
+      _logger.error('Error getting contacts', e);
       return Result.error(
-        Exception('Error getting contacts: $e'),
+        Exception('Error getting contacts'),
       );
     }
   }
@@ -206,8 +212,9 @@ class ContactRepository extends IContactRepository {
         return Result.ok(tempContact);
       }
     } catch (e) {
+      _logger.error('Error creating contact', e);
       return Result.error(
-        Exception('Error creating contact: $e'),
+        Exception('Error creating contact'),
       );
     }
   }
@@ -507,14 +514,55 @@ class ContactRepository extends IContactRepository {
   }
 
   // Private helper methods
+  /// Check if user is authenticated before making API calls
+  Future<bool> _isUserAuthenticated() async {
+    try {
+      final authPersistenceService = getIt<AuthPersistenceService>();
+      return await authPersistenceService.isUserAuthenticated();
+    } catch (e) {
+      _logger.warning('Error checking authentication status: $e');
+      return false;
+    }
+  }
+
   Future<Result<void>> _syncWithApiInBackground() async {
     try {
-      return await _syncContactsFromApi();
+      // Prevent multiple simultaneous sync attempts
+      if (_isSyncing) {
+        return Result.ok(null);
+      }
+
+      // Check if user is authenticated before attempting API sync
+      final isAuthenticated = await _isUserAuthenticated();
+      if (!isAuthenticated) {
+        _logger.info('User not authenticated, skipping API sync');
+        return Result.ok(null);
+      }
+
+      // Ensure token is initialized before checking availability
+      final httpService = getIt<HttpService>();
+      await httpService.initializeAuthToken();
+
+      final token = httpService.ghlToken;
+
+      if (token == null || token.isEmpty) {
+        _logger.info(
+          'No auth token available after initialization, skipping API sync',
+        );
+        return Result.ok(null);
+      }
+
+      _isSyncing = true;
+      try {
+        return await _syncContactsFromApi();
+      } finally {
+        _isSyncing = false;
+      }
     } catch (e) {
+      _isSyncing = false;
       _logger.error('Background sync error: $e', e);
-      return Result.error(
-        Exception('Error syncing contacts'),
-      );
+      // Don't return error for background sync failures to prevent UI disruption
+      return Result.ok(null);
     }
   }
 
@@ -531,13 +579,23 @@ class ContactRepository extends IContactRepository {
         notifyListeners();
         return Result.ok(null);
       } else {
+        final error = apiResult.asError.error;
         _logger.error(
-          'API sync error: ${apiResult.asError.error}',
-          apiResult.asError.error,
+          'API sync error: $error',
+          error,
         );
+
+        // Check if this is an authentication error
+        if (error.toString().contains('Authentication required') ||
+            error.toString().contains('401')) {
+          _logger.info('Authentication error detected, clearing auth state');
+          // Don't return an error for auth failures - just skip sync
+          return Result.ok(null);
+        }
+
         return Result.error(
           Exception(
-            'Failed to sync contacts from database',
+            'Failed to sync contacts from API',
           ),
         );
       }
