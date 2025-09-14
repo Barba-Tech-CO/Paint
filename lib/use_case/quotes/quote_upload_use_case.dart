@@ -13,35 +13,43 @@ class QuoteUploadUseCase {
 
   QuoteUploadUseCase(this._quoteRepository, this._logger);
 
-  /// Upload a quote PDF file for material extraction
-  Future<Result<QuoteResponse>> uploadQuote(
-    File quoteFile, {
-    String? filename,
-  }) async {
+  // Helper methods for common operations
+  Future<Result<T>> _handleRepositoryCall<T>(
+    Future<Result<T>> Function() repositoryCall,
+    String operation,
+  ) async {
     try {
-      _logger.info('Starting quote upload for file: ${quoteFile.path}');
-
-      final result = await _quoteRepository.uploadQuote(
-        quoteFile,
-        filename: filename,
-      );
+      final result = await repositoryCall();
 
       result.when(
-        ok: (response) {
-          _logger.info(
-            'Quote upload successful: ${response.quote.originalName}',
-          );
+        ok: (data) {
+          _logger.info('$operation successful');
         },
         error: (error) {
-          _logger.error('Quote upload failed: $error', error);
+          _logger.error('$operation failed: $error', error);
         },
       );
 
       return result;
     } catch (e) {
-      _logger.error('Unexpected error in quote upload: $e', e);
-      return Result.error(Exception('Failed to upload quote: $e'));
+      _logger.error('Unexpected error in $operation: $e', e);
+      return Result.error(
+        Exception('Failed to $operation'),
+      );
     }
+  }
+
+  /// Upload a quote PDF file for material extraction
+  Future<Result<QuoteResponse>> uploadQuote(
+    File quoteFile, {
+    String? filename,
+  }) async {
+    _logger.info('Starting quote upload for file: ${quoteFile.path}');
+
+    return _handleRepositoryCall(
+      () => _quoteRepository.uploadQuote(quoteFile, filename: filename),
+      'quote upload',
+    );
   }
 
   /// Get list of uploaded quotes with pagination and filters
@@ -50,52 +58,26 @@ class QuoteUploadUseCase {
     int limit = 10,
     int page = 1,
   }) async {
-    try {
-      _logger.info('Fetching quotes with status: $status, page: $page');
+    _logger.info('Fetching quotes with status: $status, page: $page');
 
-      final result = await _quoteRepository.getQuotes(
+    return _handleRepositoryCall(
+      () => _quoteRepository.getQuotes(
         status: status,
         limit: limit,
         page: page,
-      );
-
-      result.when(
-        ok: (response) {
-          _logger.info('Retrieved ${response.quotes.length} quotes');
-        },
-        error: (error) {
-          _logger.error('Failed to retrieve quotes: $error', error);
-        },
-      );
-
-      return result;
-    } catch (e) {
-      _logger.error('Unexpected error getting quotes: $e', e);
-      return Result.error(Exception('Failed to get quotes: $e'));
-    }
+      ),
+      'get quotes',
+    );
   }
 
   /// Check the processing status of a specific quote upload
   Future<Result<QuoteModel>> getQuoteStatus(int quoteId) async {
-    try {
-      _logger.info('Checking status for quote upload: $quoteId');
+    _logger.info('Checking status for quote upload: $quoteId');
 
-      final result = await _quoteRepository.getQuoteStatus(quoteId);
-
-      result.when(
-        ok: (upload) {
-          _logger.info('Quote status: ${upload.status.value}');
-        },
-        error: (error) {
-          _logger.error('Failed to get quote status: $error', error);
-        },
-      );
-
-      return result;
-    } catch (e) {
-      _logger.error('Unexpected error getting quote status: $e', e);
-      return Result.error(Exception('Failed to get quote status: $e'));
-    }
+    return _handleRepositoryCall(
+      () => _quoteRepository.getQuoteStatus(quoteId),
+      'get quote status',
+    );
   }
 
   /// Update display name of an uploaded quote
@@ -103,48 +85,22 @@ class QuoteUploadUseCase {
     int quoteId,
     String displayName,
   ) async {
-    try {
-      _logger.info('Updating quote display name: $quoteId -> $displayName');
+    _logger.info('Updating quote display name: $quoteId -> $displayName');
 
-      final result = await _quoteRepository.updateQuote(quoteId, displayName);
-
-      result.when(
-        ok: (upload) {
-          _logger.info('Quote updated successfully');
-        },
-        error: (error) {
-          _logger.error('Failed to update quote: $error', error);
-        },
-      );
-
-      return result;
-    } catch (e) {
-      _logger.error('Unexpected error updating quote: $e', e);
-      return Result.error(Exception('Failed to update quote: $e'));
-    }
+    return _handleRepositoryCall(
+      () => _quoteRepository.updateQuote(quoteId, displayName),
+      'update quote',
+    );
   }
 
   /// Delete an uploaded quote and all extracted materials
   Future<Result<bool>> deleteQuote(int quoteId) async {
-    try {
-      _logger.info('Deleting quote upload: $quoteId');
+    _logger.info('Deleting quote upload: $quoteId');
 
-      final result = await _quoteRepository.deleteQuote(quoteId);
-
-      result.when(
-        ok: (_) {
-          _logger.info('Quote deleted successfully');
-        },
-        error: (error) {
-          _logger.error('Failed to delete quote: $error', error);
-        },
-      );
-
-      return result;
-    } catch (e) {
-      _logger.error('Unexpected error deleting quote: $e', e);
-      return Result.error(Exception('Failed to delete quote: $e'));
-    }
+    return _handleRepositoryCall(
+      () => _quoteRepository.deleteQuote(quoteId),
+      'delete quote',
+    );
   }
 
   /// Poll quote upload status until processing is complete
@@ -153,30 +109,15 @@ class QuoteUploadUseCase {
     Duration interval = const Duration(seconds: 2),
     Duration timeout = const Duration(minutes: 5),
   }) async {
-    try {
-      _logger.info('Starting status polling for quote: $quoteId');
+    _logger.info('Starting status polling for quote: $quoteId');
 
-      final result = await _quoteRepository.pollQuoteStatus(
+    return _handleRepositoryCall(
+      () => _quoteRepository.pollQuoteStatus(
         quoteId,
         interval: interval,
         timeout: timeout,
-      );
-
-      result.when(
-        ok: (upload) {
-          _logger.info(
-            'Quote processing completed with status: ${upload.status.value}',
-          );
-        },
-        error: (error) {
-          _logger.error('Quote processing failed or timed out: $error', error);
-        },
-      );
-
-      return result;
-    } catch (e) {
-      _logger.error('Unexpected error polling quote status: $e', e);
-      return Result.error(Exception('Failed to poll quote status: $e'));
-    }
+      ),
+      'poll quote status',
+    );
   }
 }
