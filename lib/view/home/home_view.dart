@@ -35,7 +35,11 @@ class _HomeViewState extends State<HomeView> {
     _navigationViewModel.updateCurrentRoute('/home');
 
     // Check for valid token before fetching user data
-    AuthHelper.checkAuthAndFetchUser();
+    _initializeUserData();
+  }
+
+  Future<void> _initializeUserData() async {
+    await AuthHelper.checkAuthAndFetchUser();
   }
 
   @override
