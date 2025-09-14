@@ -45,7 +45,11 @@ class ContactItemWidget extends StatelessWidget {
           ],
         ),
         child: InkWell(
-          onTap: () => context.push('/contact-details', extra: contactModel),
+          onTap: () {
+            if (contactModel != null) {
+              context.push('/contact-details', extra: contactModel);
+            }
+          },
           borderRadius: BorderRadius.circular(12),
           child: Stack(
             children: [
