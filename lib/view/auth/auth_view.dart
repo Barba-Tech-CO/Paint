@@ -43,7 +43,6 @@ class AuthView extends StatelessWidget {
       }
 
       if (viewModel.shouldShowPopup && viewModel.popupUrl != null) {
-        _logger.info('[AuthView] Showing marketplace popup');
         MarketplacePopupHelper.show(context, viewModel.popupUrl!, viewModel);
       }
     });
