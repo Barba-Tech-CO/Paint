@@ -7,6 +7,7 @@ import 'config/dependency_injection.dart';
 import 'config/routes.dart';
 import 'config/theme.dart';
 import 'firebase_options.dart';
+import 'service/http_service.dart';
 import 'service/location_service.dart';
 import 'service/navigation_service.dart';
 import 'viewmodel/auth/auth_viewmodel.dart';
@@ -38,7 +39,21 @@ void main() async {
   // Configura injeção de dependências
   setupDependencyInjection();
 
+  // Initialize authentication token early to prevent race conditions
+  await _initializeAuthenticationServices();
+
   runApp(const PaintProApp());
+}
+
+/// Initialize authentication services during app startup
+Future<void> _initializeAuthenticationServices() async {
+  try {
+    final httpService = getIt<HttpService>();
+    await httpService.initializeAuthToken();
+  } catch (e) {
+    // Log error but don't prevent app startup
+    print('Warning: Failed to initialize authentication services: $e');
+  }
 }
 
 class PaintProApp extends StatelessWidget {
