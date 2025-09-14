@@ -121,7 +121,7 @@ class _NewContactViewState extends State<NewContactView> {
 
                   PaintProNumberField(
                     label: 'Phone: *',
-                    hintText: '(555) 123-4567',
+                    hintText: '+1 (555) 123-4567',
                     controller: _phoneController,
                     kind: NumberFieldKind.phone,
                     validator: NewContactHelper.validatePhone,
@@ -129,7 +129,7 @@ class _NewContactViewState extends State<NewContactView> {
                   const SizedBox(height: 16),
                   PaintProNumberField(
                     label: 'Additional Phones:',
-                    hintText: '(555) 123-4567, (555) 123-4589',
+                    hintText: '+1 (555) 123-4567, +1 (555) 123-4589',
                     controller: _adtionalPhonesController,
                     kind: NumberFieldKind.phone,
                     validator: NewContactHelper.validateAdditionalPhones,
