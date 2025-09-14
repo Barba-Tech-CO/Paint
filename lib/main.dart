@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +9,7 @@ import 'config/dependency_injection.dart';
 import 'config/routes.dart';
 import 'config/theme.dart';
 import 'firebase_options.dart';
+import 'service/camera_initialization_service.dart';
 import 'service/http_service.dart';
 import 'service/location_service.dart';
 import 'service/navigation_service.dart';
@@ -42,6 +45,9 @@ void main() async {
   // Initialize authentication token early to prevent race conditions
   await _initializeAuthenticationServices();
 
+  // Initialize camera services
+  await _initializeCameraServices();
+
   runApp(const PaintProApp());
 }
 
@@ -52,7 +58,28 @@ Future<void> _initializeAuthenticationServices() async {
     await httpService.initializeAuthToken();
   } catch (e) {
     // Log error but don't prevent app startup
-    print('Warning: Failed to initialize authentication services: $e');
+    log('Warning: Failed to initialize authentication services: $e');
+  }
+}
+
+/// Initialize camera services during app startup
+Future<void> _initializeCameraServices() async {
+  try {
+    await CameraInitializationService.initialize();
+
+    if (CameraInitializationService.isCameraAvailable) {
+      log(
+        'Camera services initialized successfully with ${CameraInitializationService.cameras?.length ?? 0} cameras',
+      );
+    } else {
+      log(
+        'Camera services initialized but no cameras available - will use image picker fallback',
+      );
+    }
+  } catch (e) {
+    // Log error but don't prevent app startup
+    log('Warning: Failed to initialize camera services: $e');
+    log('Camera features will use image picker fallback');
   }
 }
 
