@@ -32,7 +32,17 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
     super.initState();
     _viewModel = getIt<ContactDetailViewModel>();
     _currentContact = widget.contact;
+    _viewModel.addListener(_onViewModelChanged);
     _loadContactDetails();
+  }
+
+  void _onViewModelChanged() {
+    if (mounted) {
+      setState(() {
+        // UI will be rebuilt with updated ViewModel state
+        _currentContact = _viewModel.selectedContact;
+      });
+    }
   }
 
   @override
@@ -174,6 +184,7 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
 
   @override
   void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
     _viewModel.dispose();
     super.dispose();
   }
