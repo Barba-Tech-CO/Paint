@@ -15,21 +15,8 @@ class UserService {
     try {
       final response = await _httpService.get('/user');
       final user = UserModel.fromJson(response.data);
-      
-      // Log user status for debugging
-      if (user.ghlDataIncomplete == true) {
-        _logger.warning('[UserService] User has incomplete GHL data');
-      }
-      if (user.ghlError == true) {
-        _logger.warning('[UserService] User has GHL error');
-      }
-      
-      _logger.info('[UserService] User data retrieved: ${user.name}, GHL User: ${user.isGhlUser}');
       return Result.ok(user);
     } on AuthServiceException catch (e) {
-      _logger.info(
-        '[UserService] Authentication service unavailable: ${e.message}',
-      );
       _logger.error('[UserService] Technical details: ${e.technicalDetails}');
       return Result.error(
         Exception(e.message),
