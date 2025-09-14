@@ -12,8 +12,6 @@ class ContactSyncUseCase {
   /// Sincroniza todos os contatos pendentes com a API
   Future<Result<void>> syncAllPendingContacts() async {
     try {
-      _logger.info('Starting sync of all pending contacts');
-
       final result = await _contactRepository.syncPendingContacts();
 
       if (result is Ok) {
@@ -27,7 +25,9 @@ class ContactSyncUseCase {
       return result;
     } catch (e) {
       _logger.error('Error in syncAllPendingContacts use case: $e', e);
-      return Result.error(Exception('Failed to sync pending contacts: $e'));
+      return Result.error(
+        Exception('Failed to sync pending contacts'),
+      );
     }
   }
 
@@ -50,7 +50,7 @@ class ContactSyncUseCase {
     } catch (e) {
       _logger.error('Error in getContactsBySyncStatus use case: $e', e);
       return Result.error(
-        Exception('Failed to get contacts by sync status: $e'),
+        Exception('Failed to get contacts by sync status'),
       );
     }
   }
@@ -62,7 +62,7 @@ class ContactSyncUseCase {
     } catch (e) {
       _logger.error('Error in getContactsWithSyncErrors use case: $e', e);
       return Result.error(
-        Exception('Failed to get contacts with sync errors: $e'),
+        Exception('Failed to get contacts with sync errors'),
       );
     }
   }
@@ -73,7 +73,9 @@ class ContactSyncUseCase {
       return await getContactsBySyncStatus(SyncStatus.pending);
     } catch (e) {
       _logger.error('Error in getPendingContacts use case: $e', e);
-      return Result.error(Exception('Failed to get pending contacts: $e'));
+      return Result.error(
+        Exception('Failed to get pending contacts'),
+      );
     }
   }
 
@@ -83,15 +85,15 @@ class ContactSyncUseCase {
       return await getContactsBySyncStatus(SyncStatus.synced);
     } catch (e) {
       _logger.error('Error in getSyncedContacts use case: $e', e);
-      return Result.error(Exception('Failed to get synced contacts: $e'));
+      return Result.error(
+        Exception('Failed to get synced contacts'),
+      );
     }
   }
 
   /// Força uma nova tentativa de sincronização para contatos com erro
   Future<Result<void>> retryFailedSyncs() async {
     try {
-      _logger.info('Retrying failed syncs for contacts with errors');
-
       // Get contacts with sync errors
       final errorContactsResult = await getContactsWithSyncErrors();
       if (errorContactsResult is Error) {
@@ -100,7 +102,6 @@ class ContactSyncUseCase {
 
       final errorContacts = errorContactsResult.asOk.value;
       if (errorContacts.isEmpty) {
-        _logger.info('No contacts with sync errors found');
         return Result.ok(null);
       }
 
@@ -122,7 +123,9 @@ class ContactSyncUseCase {
       return syncResult;
     } catch (e) {
       _logger.error('Error in retryFailedSyncs use case: $e', e);
-      return Result.error(Exception('Failed to retry failed syncs: $e'));
+      return Result.error(
+        Exception('Failed to retry failed syncs'),
+      );
     }
   }
 }
