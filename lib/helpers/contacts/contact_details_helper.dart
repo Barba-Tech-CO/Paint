@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../model/contacts/contact_model.dart';
+import 'contacts_helper.dart';
 
 class ContactDetailsHelper {
   /// Gets display value for contact fields, showing 'N/A' for empty values
@@ -61,7 +62,9 @@ class ContactDetailsHelper {
       },
       {
         'label': 'Phone',
-        'value': getDisplayValue(contact.phone),
+        'value': getDisplayValue(
+          ContactsHelper.formatPhoneForDisplay(contact.phone),
+        ),
       },
     ];
   }
