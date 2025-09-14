@@ -20,6 +20,7 @@ import '../domain/repository/quote_repository.dart';
 import '../service/app_initialization_service.dart';
 import '../service/auth_service.dart';
 import '../service/auth_persistence_service.dart';
+import '../service/auth_state_manager.dart';
 import '../service/camera_service.dart';
 import '../service/contact_service.dart';
 import '../service/contact_database_service.dart';
@@ -91,6 +92,10 @@ void setupDependencyInjection() {
     },
   );
 
+  getIt.registerLazySingleton<AuthStateManager>(
+    () => AuthStateManager(),
+  );
+
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(
       getIt<HttpService>(),
@@ -105,6 +110,7 @@ void setupDependencyInjection() {
     () => ContactService(
       getIt<HttpService>(),
       getIt<LocationService>(),
+      getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<ContactDatabaseService>(
@@ -245,6 +251,7 @@ void setupDependencyInjection() {
     () => AppInitializationService(
       getIt<AuthService>(),
       getIt<AuthPersistenceService>(),
+      getIt<AuthStateManager>(),
       getIt<NavigationService>(),
       getIt<DeepLinkService>(),
       getIt<HttpService>(),
