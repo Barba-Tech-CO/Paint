@@ -18,10 +18,6 @@ class HandleDeepLinkUseCase {
 
   /// Lida com sucesso na autenticação via Deep Link
   Future<Result<void>> handleSuccess() async {
-    _logger.info(
-      '[HandleDeepLinkUseCase] Autenticação bem-sucedida via Deep Link!',
-    );
-
     await _manageAuthStateUseCase.clearError(() {});
     await _authOperationsUseCase.checkAuthStatus();
 
