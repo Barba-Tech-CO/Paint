@@ -41,9 +41,6 @@ class AuthStateManager {
       _httpService = getIt<HttpService>();
 
       _isAuthenticated = await _authPersistenceService.isUserAuthenticated();
-      _logger.info(
-        '[AuthStateManager] Initialized with auth state: $_isAuthenticated',
-      );
 
       // Set up HTTP service auth failure callback
       _httpService.setAuthFailureCallback(_handleAuthFailure);
@@ -58,17 +55,12 @@ class AuthStateManager {
 
   /// Handle authentication failure (token expiration, etc.)
   void _handleAuthFailure() {
-    _logger.info('[AuthStateManager] Handling authentication failure');
     _isAuthenticated = false;
     _authStateController.add(false);
 
-    // Notify all registered callbacks
-    _logger.info(
-      '[AuthStateManager] Notifying ${_onAuthFailureCallbacks.length} auth failure callbacks',
-    );
+    // Notify all registered callbacks  
     for (final callback in _onAuthFailureCallbacks) {
       try {
-        _logger.info('[AuthStateManager] Executing auth failure callback');
         callback();
       } catch (e) {
         _logger.error('[AuthStateManager] Error in auth failure callback: $e');
@@ -78,7 +70,6 @@ class AuthStateManager {
 
   /// Handle successful authentication
   void handleAuthSuccess() {
-    _logger.info('[AuthStateManager] Handling authentication success');
     _isAuthenticated = true;
     _authStateController.add(true);
 
@@ -130,7 +121,6 @@ class AuthStateManager {
   /// Force logout and clear all auth state
   Future<void> logout() async {
     try {
-      _logger.info('[AuthStateManager] Logging out user');
       await _authPersistenceService.clearAuthState();
       _httpService.clearAuthToken();
       _handleAuthFailure();
