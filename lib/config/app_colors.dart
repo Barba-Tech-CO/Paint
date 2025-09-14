@@ -49,6 +49,10 @@ class AppColors {
   static const Color cardWarning = Color(0xFFFFEC5C);
   static const Color cardError = Color(0xFFFF7260);
 
+  // Gray Colors with alpha
+  static const Color gray50 = Color.fromRGBO(111, 111, 111, 0.5);
+  static const Color gray24 = Color.fromRGBO(111, 111, 111, 0.24);
+
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [Color(0xFF4193FF), Color(0xFF2D6BFF)],
