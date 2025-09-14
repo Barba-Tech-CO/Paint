@@ -248,6 +248,7 @@ void setupDependencyInjection() {
       getIt<AuthPersistenceService>(),
       getIt<NavigationService>(),
       getIt<DeepLinkService>(),
+      getIt<HttpService>(),
     ),
   );
 
@@ -259,6 +260,7 @@ void setupDependencyInjection() {
       getIt<HandleWebViewNavigationUseCase>(),
       getIt<DeepLinkService>(),
       getIt<AuthPersistenceService>(),
+      getIt<HttpService>(),
       getIt<AppLogger>(),
     ),
   );
@@ -351,7 +353,7 @@ void setupDependencyInjection() {
   );
 
   // ViewModels - User
-  getIt.registerFactory<UserViewModel>(
+  getIt.registerLazySingleton<UserViewModel>(
     () => UserViewModel(
       getIt<UserService>(),
       getIt<AppLogger>(),
