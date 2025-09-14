@@ -41,7 +41,6 @@ class UserViewModel extends ChangeNotifier {
 
       if (result is Ok<UserModel>) {
         _user = result.asOk.value;
-        _logger.info('User data fetched successfully: ${_user?.name}');
 
         // Log special GHL states for debugging and user awareness
         if (_user?.ghlDataIncomplete == true) {
