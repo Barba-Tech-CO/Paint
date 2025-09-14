@@ -130,8 +130,7 @@ class PaintProNumberField extends StatelessWidget {
     switch (kind) {
       case NumberFieldKind.phone:
         return <TextInputFormatter>[
-          FilteringTextInputFormatter.digitsOnly,
-          LengthLimitingTextInputFormatter(15), // Increased from 10 to 15
+          LengthLimitingTextInputFormatter(20),
           _PhoneNumberFormatter(),
         ];
       case NumberFieldKind.zip:
@@ -171,35 +170,98 @@ class PaintProNumberField extends StatelessWidget {
   }
 }
 
-/// Formatter for US phone numbers (XXX) XXX-XXXX
+/// Formatter for US phone numbers (XXX) XXX-XXXX or +1 (XXX) XXX-XXXX
 class _PhoneNumberFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    // Remove all non-digits
-    final digitsOnly = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    // If user is typing +, allow it
+    if (newValue.text.startsWith('+')) {
+      // Keep the + and format the rest
+      final withoutPlus = newValue.text.substring(1);
+      final digitsOnly = withoutPlus.replaceAll(RegExp(r'[^\d]'), '');
 
-    if (digitsOnly.isEmpty) {
-      return newValue.copyWith(text: '');
-    }
+      if (digitsOnly.isEmpty) {
+        return newValue.copyWith(text: '+');
+      }
 
-    // Format as (XXX) XXX-XXXX
-    String formatted = '';
-    if (digitsOnly.length <= 3) {
-      formatted = '($digitsOnly';
-    } else if (digitsOnly.length <= 6) {
-      formatted = '(${digitsOnly.substring(0, 3)}) ${digitsOnly.substring(3)}';
+      // If it starts with 1, format as +1 (XXX) XXX-XXXX
+      if (digitsOnly.startsWith('1')) {
+        final phoneDigits = digitsOnly.substring(1); // Remove the 1
+
+        if (phoneDigits.isEmpty) {
+          return newValue.copyWith(text: '+1 ');
+        }
+
+        String formatted = '+1 ';
+        if (phoneDigits.length <= 3) {
+          formatted += '($phoneDigits';
+        } else if (phoneDigits.length <= 6) {
+          formatted +=
+              '(${phoneDigits.substring(0, 3)}) ${phoneDigits.substring(3)}';
+        } else {
+          final limitedDigits = phoneDigits.length > 10
+              ? phoneDigits.substring(0, 10)
+              : phoneDigits;
+          formatted +=
+              '(${limitedDigits.substring(0, 3)}) ${limitedDigits.substring(3, 6)}-${limitedDigits.substring(6)}';
+        }
+
+        return TextEditingValue(
+          text: formatted,
+          selection: TextSelection.collapsed(offset: formatted.length),
+        );
+      } else {
+        // If it doesn't start with 1, just format as +XXX XXX-XXXX
+        String formatted = '+';
+        if (digitsOnly.length <= 3) {
+          formatted += digitsOnly;
+        } else if (digitsOnly.length <= 6) {
+          formatted +=
+              '${digitsOnly.substring(0, 3)} ${digitsOnly.substring(3)}';
+        } else {
+          final limitedDigits = digitsOnly.length > 10
+              ? digitsOnly.substring(0, 10)
+              : digitsOnly;
+          formatted +=
+              '${limitedDigits.substring(0, 3)} ${limitedDigits.substring(3, 6)}-${limitedDigits.substring(6)}';
+        }
+
+        return TextEditingValue(
+          text: formatted,
+          selection: TextSelection.collapsed(offset: formatted.length),
+        );
+      }
     } else {
-      formatted =
-          '(${digitsOnly.substring(0, 3)}) ${digitsOnly.substring(3, 6)}-${digitsOnly.substring(6, digitsOnly.length > 10 ? 10 : digitsOnly.length)}';
-    }
+      // Remove all non-digit characters
+      final digitsOnly = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
 
-    return TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
+      if (digitsOnly.isEmpty) {
+        return newValue.copyWith(text: '');
+      }
+
+      // Format as (XXX) XXX-XXXX
+      String formatted = '';
+      if (digitsOnly.length <= 3) {
+        formatted = '($digitsOnly';
+      } else if (digitsOnly.length <= 6) {
+        formatted =
+            '(${digitsOnly.substring(0, 3)}) ${digitsOnly.substring(3)}';
+      } else {
+        final limitedDigits = digitsOnly.length > 10
+            ? digitsOnly.substring(0, 10)
+            : digitsOnly;
+        formatted =
+            '(${limitedDigits.substring(0, 3)}) ${limitedDigits.substring(3, 6)}-${limitedDigits.substring(6)}';
+      }
+
+      return TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+    }
   }
 }
 
