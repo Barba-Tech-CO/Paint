@@ -37,6 +37,7 @@ dependencies:
   image: ^4.1.7
   image_picker: ^1.0.7
   path_provider: ^2.1.4
+  camera: ^0.11.2
 
 dev_dependencies:
   flutter_test:
@@ -50,6 +51,7 @@ flutter:
   assets:
     - assets/logo/
     - assets/images/
+    - assets/camera/
 
   # fonts:
   #   - family: Schyler
