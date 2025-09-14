@@ -12,6 +12,9 @@ class HttpService implements IHttpService {
   String? _authToken;
   late final AuthPersistenceService _authPersistenceService;
 
+  // Callback for handling authentication failures
+  void Function()? _onAuthFailure;
+
   factory HttpService() {
     return _instance;
   }
@@ -47,6 +50,9 @@ class HttpService implements IHttpService {
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           } else {
+            _logger.warning(
+              '[HttpService] No auth token available for ${options.path}',
+            );
             // Log missing token for critical endpoints
             if (options.path.contains('/user')) {
               _logger.warning(
@@ -56,9 +62,42 @@ class HttpService implements IHttpService {
               _logger.warning(
                 '[HttpService] No auth token available for /materials request',
               );
+            } else if (options.path.contains('/contacts')) {
+              _logger.warning(
+                '[HttpService] No auth token available for /contacts request',
+              );
             }
           }
           handler.next(options);
+        },
+        onError: (error, handler) async {
+          // Handle 401 errors - token expired
+          if (error.response?.statusCode == 401) {
+            _logger.warning(
+              '[HttpService] 401 Unauthorized - Token expired for ${error.requestOptions.path}',
+            );
+
+            // Clear expired token
+            _authToken = null;
+            await _authPersistenceService.clearAuthState();
+
+            // Trigger auth failure callback
+            try {
+              _logger.info(
+                '[HttpService] Token expired, triggering auth failure callback',
+              );
+              if (_onAuthFailure != null) {
+                _onAuthFailure!();
+              } else {
+                _logger.warning('[HttpService] Auth failure callback is null');
+              }
+            } catch (e) {
+              _logger.warning(
+                '[HttpService] Error in auth failure callback: $e',
+              );
+            }
+          }
+          handler.next(error);
         },
       ),
     );
@@ -106,6 +145,12 @@ class HttpService implements IHttpService {
     } catch (e) {
       _logger.error('[HttpService] Error initializing auth token: $e');
     }
+  }
+
+  /// Set callback to handle authentication failures
+  void setAuthFailureCallback(void Function() callback) {
+    _onAuthFailure = callback;
+    _logger.info('[HttpService] Auth failure callback set successfully');
   }
 
   @override
