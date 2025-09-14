@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:validatorless/validatorless.dart';
 
 import '../../config/dependency_injection.dart';
+import '../../helpers/contacts/contacts_helper.dart';
 import '../../helpers/snackbar_helper.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../utils/logger/app_logger.dart';
@@ -24,11 +25,13 @@ class EditContactHelper {
       RegExp(r'[^\d]'),
       '',
     );
-    // Check if it's a valid phone number (at least 7 digits)
-    if (digitsOnly.length >= 7) {
+    // Check if it's a valid US phone number (10 digits or 11 starting with 1)
+    if (digitsOnly.length == 10) {
+      return null;
+    } else if (digitsOnly.length == 11 && digitsOnly.startsWith('1')) {
       return null;
     } else {
-      return 'Please enter a valid phone number (at least 7 digits)';
+      return 'Please enter a valid US phone number ((XXX) XXX-XXXX or +1 XXX XXX-XXXX)';
     }
   }
 
@@ -47,9 +50,10 @@ class EditContactHelper {
         RegExp(r'[^\d]'),
         '',
       );
-      // Check if it's a valid phone number (at least 7 digits)
-      if (digitsOnly.length < 7) {
-        return 'Please enter valid phone numbers separated by commas (at least 7 digits each)';
+      // Check if it's a valid US phone number (10 digits or 11 starting with 1)
+      if (digitsOnly.length != 10 &&
+          !(digitsOnly.length == 11 && digitsOnly.startsWith('1'))) {
+        return 'Please enter valid US phone numbers separated by commas ((XXX) XXX-XXXX or +1 XXX XXX-XXXX)';
       }
     }
     return null;
@@ -209,10 +213,12 @@ class EditContactHelper {
           .map((e) => e.trim())
           .where((e) => e.isNotEmpty)
           .toList(),
-      phone: phoneController.text.trim(),
+      phone: ContactsHelper.normalizePhoneForStorage(
+        phoneController.text.trim(),
+      ),
       additionalPhones: additionalPhonesController.text
           .split(',')
-          .map((e) => e.trim())
+          .map((e) => ContactsHelper.normalizePhoneForStorage(e.trim()))
           .where((e) => e.isNotEmpty)
           .toList(),
       address: addressController.text.trim(),
