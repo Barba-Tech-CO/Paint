@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../config/app_colors.dart';
+
 class CameraAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onBackPressed;
   final VoidCallback? onDonePressed;
@@ -17,67 +19,56 @@ class CameraAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: preferredSize.height,
-      decoration: const BoxDecoration(
-        color: Colors.transparent,
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.only(
-            left: 20.0,
-            right: 20.0,
-            top: 12.0,
-            bottom: 4.0,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Back Button
-              _buildActionButton(
-                onPressed: onBackPressed,
-                icon: Icons.arrow_back_ios,
-                label: 'Back',
-                backgroundColor: Colors.black.withValues(alpha: 0.6),
-              ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 24, 8, 0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Back Button
+            _buildActionButton(
+              onPressed: onBackPressed,
+              icon: Icons.arrow_back_ios,
+              label: 'Back',
+              backgroundColor: AppColors.gray50,
+            ),
 
-              // Center Instruction Text
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 12.0),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 10.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(20.0),
-                  ),
-                  child: Text(
-                    instructionText,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.albertSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
+            // Center Instruction Text
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8.0,
+                  vertical: 12.0,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.gray24,
+                  borderRadius: BorderRadius.circular(20.0),
+                ),
+                child: Text(
+                  instructionText,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.albertSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
                   ),
                 ),
               ),
+            ),
 
-              // Done Button
-              _buildActionButton(
-                onPressed: isDoneEnabled ? onDonePressed : null,
-                icon: Icons.arrow_forward_ios,
-                label: 'Done',
-                backgroundColor: isDoneEnabled
-                    ? Colors.white.withValues(alpha: 0.9)
-                    : Colors.black.withValues(alpha: 0.4),
-                textColor: isDoneEnabled ? Colors.black : Colors.white,
-              ),
-            ],
-          ),
+            // Done Button
+            _buildActionButton(
+              onPressed: isDoneEnabled ? onDonePressed : null,
+              icon: Icons.arrow_forward_ios,
+              label: 'Done',
+              backgroundColor: isDoneEnabled
+                  ? AppColors.primary
+                  : Colors.white.withValues(alpha: 0.5),
+              textColor: Colors.white,
+            ),
+          ],
         ),
       ),
     );
@@ -93,7 +84,7 @@ class CameraAppBar extends StatelessWidget implements PreferredSizeWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(20.0),
@@ -104,24 +95,24 @@ class CameraAppBar extends StatelessWidget implements PreferredSizeWidget {
             if (icon == Icons.arrow_back_ios) ...[
               Icon(
                 icon,
-                size: 14,
+                size: 18,
                 color: textColor,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
             ],
             Text(
               label,
               style: GoogleFonts.albertSans(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
                 color: textColor,
               ),
             ),
             if (icon == Icons.arrow_forward_ios) ...[
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
               Icon(
                 icon,
-                size: 14,
+                size: 18,
                 color: textColor,
               ),
             ],
