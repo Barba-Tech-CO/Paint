@@ -150,7 +150,6 @@ class HttpService implements IHttpService {
   /// Set callback to handle authentication failures
   void setAuthFailureCallback(void Function() callback) {
     _onAuthFailure = callback;
-    _logger.info('[HttpService] Auth failure callback set successfully');
   }
 
   @override
