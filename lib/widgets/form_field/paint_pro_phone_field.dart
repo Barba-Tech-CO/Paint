@@ -53,7 +53,7 @@ class PaintProPhoneField extends StatelessWidget {
           focusNode: focusNode,
           onChanged: onChanged,
           decoration: InputDecoration(
-            hintText: hintText ?? '+1 (555) 123-4567',
+            hintText: hintText ?? '+1 +1 (555) 123-4567',
             hintStyle: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.grey,
             ),
