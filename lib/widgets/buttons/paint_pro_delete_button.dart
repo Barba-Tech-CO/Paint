@@ -29,8 +29,10 @@ class PaintProDeleteButton extends StatelessWidget {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(
-                  Icons.delete_outline_rounded,
+              : Image.asset(
+                  'assets/icons/delete.png',
+                  width: 24,
+                  height: 24,
                 ),
         );
       },
