@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../model/projects/project_card_model.dart';
+import '../../model/projects/projects_summary_model.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
 
