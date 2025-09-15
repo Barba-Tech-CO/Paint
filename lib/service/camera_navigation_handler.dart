@@ -9,10 +9,12 @@ import 'camera_photo_service.dart';
 class CameraNavigationHandler {
   final BuildContext context;
   final CameraPhotoService photoService;
+  final Map<String, dynamic>? projectData;
 
   CameraNavigationHandler({
     required this.context,
     required this.photoService,
+    this.projectData,
   });
 
   /// Handle back button press
@@ -42,10 +44,16 @@ class CameraNavigationHandler {
   void _navigateToNextScreen() {
     final photos = photoService.getPhotoPaths();
 
-    // Navigate to RoomPlan view with captured photos
+    // Prepare data to pass to RoomPlan view
+    final dataToPass = {
+      'photos': photos,
+      'projectData': projectData,
+    };
+
+    // Navigate to RoomPlan view with captured photos and project data
     context.push(
       '/roomplan',
-      extra: photos,
+      extra: dataToPass,
     );
   }
 
