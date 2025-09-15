@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../viewmodel/zones/zones_list_viewmodel.dart';
 import '../../viewmodel/zones/zones_summary_viewmodel.dart';
 import '../buttons/paint_pro_button.dart';
-import 'add_zone_dialog.dart';
+import '../dialogs/app_dialogs.dart';
 import 'zones_summary_card.dart';
 
 class ZonesActionsWidget extends StatelessWidget {
@@ -39,24 +39,20 @@ class ZonesActionsWidget extends StatelessWidget {
   }
 
   void _showAddZoneDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AddZoneDialog(
-        onAdd:
-            ({
-              required String title,
-              required String zoneType,
-            }) {
-              context.pop();
-
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (context.mounted) {
-                  // Navegar para a câmera/RoomPlan para capturar os dados
-                  context.go('/camera');
-                }
-              });
-            },
-      ),
+    AppDialogs.showAddZoneDialog(
+      context,
+      onAdd:
+          ({
+            required String title,
+            required String zoneType,
+          }) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                // Navegar para a câmera/RoomPlan para capturar os dados
+                context.go('/camera');
+              }
+            });
+          },
     );
   }
 }
