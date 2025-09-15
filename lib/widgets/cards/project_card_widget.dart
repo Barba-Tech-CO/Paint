@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../config/app_colors.dart';
-import '../dialogs/delete_dialog_widget.dart';
-import '../dialogs/rename_dialog_widget.dart';
+import '../dialogs/app_dialogs.dart';
 
 class ProjectCardWidget extends StatelessWidget {
   final String projectName;
@@ -172,21 +171,17 @@ class ProjectCardWidget extends StatelessWidget {
                 icon: Icon(Icons.more_vert, color: Colors.grey[700]),
                 onSelected: (value) async {
                   if (value == 'rename') {
-                    final newName = await showDialog<String>(
-                      context: context,
-                      builder: (context) => RenameDialog(
-                        initialName: projectName,
-                      ),
+                    final newName = await AppDialogs.showRenameQuoteDialog(
+                      context,
+                      initialName: projectName,
                     );
                     if (newName != null && newName.trim().isNotEmpty) {
                       onRename?.call(newName.trim());
                     }
                   } else if (value == 'delete') {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => DeleteDialog(
-                        quoteName: projectName,
-                      ),
+                    final confirm = await AppDialogs.showDeleteQuoteDialog(
+                      context,
+                      quoteName: projectName,
                     );
                     if (confirm == true) {
                       onDelete?.call();
