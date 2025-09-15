@@ -12,6 +12,7 @@ import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/buttons/paint_pro_button.dart';
 import '../../widgets/cards/input_card_widget.dart';
 import '../../widgets/form_field/contact_dropdown_widget.dart';
+import '../../widgets/form_field/project_type_row_widget.dart';
 
 class CreateProjectView extends StatefulWidget {
   const CreateProjectView({super.key});
@@ -22,6 +23,7 @@ class CreateProjectView extends StatefulWidget {
 
 class _CreateProjectViewState extends State<CreateProjectView> {
   final _projectDetailsController = TextEditingController();
+  final _zoneNameController = TextEditingController();
   final _additionalNotesController = TextEditingController();
 
   // Estado para controlar a seleção do tipo de projeto
@@ -43,12 +45,14 @@ class _CreateProjectViewState extends State<CreateProjectView> {
   void dispose() {
     _additionalNotesController.dispose();
     _projectDetailsController.dispose();
+    _zoneNameController.dispose();
     super.dispose();
   }
 
   bool get _isFormValid {
     return _selectedClient != null &&
         _projectDetailsController.text.trim().isNotEmpty &&
+        _zoneNameController.text.trim().isNotEmpty &&
         _selectedProjectType.isNotEmpty;
   }
 
@@ -128,11 +132,11 @@ class _CreateProjectViewState extends State<CreateProjectView> {
                 // Client Information Card with Dropdown
                 InputCardWidget(
                   title: 'Client Information',
-                  // description: 'Client Name: *',
+                  description: 'Client Name: *',
                   widget: Column(
                     children: [
                       ContactDropdownWidget(
-                        label: 'Client Name: *',
+                        // label: 'Client Name: *',
                         selectedContact: _selectedClient,
                         contacts: _contacts,
                         isLoading: _isLoadingContacts,
@@ -144,7 +148,6 @@ class _CreateProjectViewState extends State<CreateProjectView> {
                         },
                         onRetry: _loadContacts,
                       ),
-                      // Debug button - remove in production
                     ],
                   ),
                 ),
@@ -154,6 +157,13 @@ class _CreateProjectViewState extends State<CreateProjectView> {
                   description: 'Project Name *',
                   controller: _projectDetailsController,
                   hintText: 'Enter project name',
+                ),
+
+                InputCardWidget(
+                  title: 'Zone Details',
+                  description: 'Zone Name *',
+                  controller: _zoneNameController,
+                  hintText: 'Enter zone name',
                   widget: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -168,48 +178,13 @@ class _CreateProjectViewState extends State<CreateProjectView> {
                           ),
                         ),
                       ),
-                      Row(
-                        children: [
-                          Radio(
-                            value: 'Interior',
-                            groupValue: _selectedProjectType,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedProjectType = value.toString();
-                              });
-                            },
-                            activeColor: AppColors.primary,
-                          ),
-                          Text('Interior'),
-
-                          const SizedBox(width: 16),
-
-                          Radio(
-                            value: 'Exterior',
-                            groupValue: _selectedProjectType,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedProjectType = value.toString();
-                              });
-                            },
-                            activeColor: AppColors.primary,
-                          ),
-                          Text('Exterior'),
-
-                          const SizedBox(width: 16),
-
-                          Radio(
-                            value: 'Both',
-                            groupValue: _selectedProjectType,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedProjectType = value.toString();
-                              });
-                            },
-                            activeColor: AppColors.primary,
-                          ),
-                          Text('Both'),
-                        ],
+                      ProjectTypeRowWidget(
+                        selectedType: _selectedProjectType,
+                        onTypeChanged: (value) {
+                          setState(() {
+                            _selectedProjectType = value;
+                          });
+                        },
                       ),
                     ],
                   ),
@@ -227,7 +202,19 @@ class _CreateProjectViewState extends State<CreateProjectView> {
                   text: 'Next',
                   onPressed: !_isFormValid
                       ? null
-                      : () => context.push('/camera'),
+                      : () {
+                          // Pass project data including zone name to camera
+                          final projectData = {
+                            'projectName': _projectDetailsController.text
+                                .trim(),
+                            'zoneName': _zoneNameController.text.trim(),
+                            'projectType': _selectedProjectType,
+                            'clientId': _selectedClient?.id,
+                            'additionalNotes': _additionalNotesController.text
+                                .trim(),
+                          };
+                          context.push('/camera', extra: projectData);
+                        },
                 ),
               ],
             ),
