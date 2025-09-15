@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../config/app_colors.dart';
+import '../../helpers/snackbar_helper.dart';
+import '../form_field/project_type_row_widget.dart';
 
 class AddZoneDialog extends StatefulWidget {
   final Function({
     required String title,
     required String zoneType,
-    String? floorDimensionValue,
-    String? floorAreaValue,
-    String? areaPaintable,
   })
   onAdd;
 
@@ -24,7 +23,7 @@ class AddZoneDialog extends StatefulWidget {
 class _AddZoneDialogState extends State<AddZoneDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  String? _selectedZoneType; // Inicializado como null (vazio)
+  String? _selectedZoneType;
 
   @override
   void dispose() {
@@ -35,7 +34,11 @@ class _AddZoneDialogState extends State<AddZoneDialog> {
   void _handleAdd() {
     if (_formKey.currentState!.validate()) {
       // Verificar se um tipo de zona foi selecionado
-      if (_selectedZoneType == null) {
+      if (_selectedZoneType == null || _selectedZoneType!.isEmpty) {
+        SnackBarHelper.showError(
+          context,
+          message: 'Please select a zone type',
+        );
         return;
       }
 
@@ -136,124 +139,17 @@ class _AddZoneDialogState extends State<AddZoneDialog> {
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // Radio buttons
-                  Row(
-                    children: [
-                      Flexible(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedZoneType = 'Interior';
-                            });
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Radio<String>(
-                                value: 'Interior',
-                                groupValue: _selectedZoneType,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedZoneType = value;
-                                  });
-                                },
-                                activeColor: AppColors.primary,
-                                materialTapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              const SizedBox(width: 2),
-                              const Text(
-                                'Inside',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedZoneType = 'Exterior';
-                            });
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Radio<String>(
-                                value: 'Exterior',
-                                groupValue: _selectedZoneType,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedZoneType = value;
-                                  });
-                                },
-                                activeColor: AppColors.primary,
-                                materialTapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              const SizedBox(width: 2),
-                              const Text(
-                                'Outside',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Flexible(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedZoneType = 'Both';
-                            });
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Radio<String>(
-                                value: 'Both',
-                                groupValue: _selectedZoneType,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedZoneType = value;
-                                  });
-                                },
-                                activeColor: AppColors.primary,
-                                materialTapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              const SizedBox(width: 2),
-                              const Text(
-                                'Both',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  ProjectTypeRowWidget(
+                    selectedType: _selectedZoneType ?? '',
+                    onTypeChanged: (value) {
+                      setState(() {
+                        _selectedZoneType = value;
+                      });
+                    },
                   ),
                 ],
               ),
               const SizedBox(height: 32),
-
-              // Action buttons
               Row(
                 children: [
                   Expanded(
