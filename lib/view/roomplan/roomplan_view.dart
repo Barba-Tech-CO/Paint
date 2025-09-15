@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
+import '../../widgets/dialogs/app_dialogs.dart';
+
 class RoomPlanView extends StatefulWidget {
   final List<String> capturedPhotos;
   final Map<String, dynamic>? projectData;
@@ -110,95 +112,17 @@ class _RoomPlanViewState extends State<RoomPlanView> {
   }
 
   void _showIncompatibilityDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text(
-          'Device Not Compatible',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Room scanning is not available on this device.',
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Requirements:',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '• iOS 16.0 or later\n• Device with LiDAR sensor\n• iPhone 12 Pro or newer',
-              style: TextStyle(fontSize: 14),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'You can still proceed with photo-based estimates.',
-              style: TextStyle(
-                fontSize: 14,
-                fontStyle: FontStyle.italic,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              context.pop();
-              context.pop(); // Go back to camera
-            },
-            child: const Text(
-              'Back to Camera',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              context.pop();
-              // Navigate to processing with photos only
-              _navigateToProcessingWithPhotosOnly();
-            },
-            child: const Text(
-              'Continue with Photos',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    AppDialogs.showIncompatibilityDialog(context).then((_) {
+      // Navigate to processing with photos only
+      _navigateToProcessingWithPhotosOnly();
+    });
   }
 
   void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => context.pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
+    AppDialogs.showErrorDialog(
+      context,
+      title: 'Error',
+      message: message,
     );
   }
 
