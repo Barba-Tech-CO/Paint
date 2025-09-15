@@ -3,13 +3,18 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
-import '../../viewmodel/zones/zones_card_viewmodel.dart';
+import '../../viewmodel/zones/zones_list_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/loading/loading_widget.dart';
 import '../../widgets/zones/zones_results_widget.dart';
 
 class ZonesView extends StatelessWidget {
-  const ZonesView({super.key});
+  final Map<String, dynamic>? initialZoneData;
+
+  const ZonesView({
+    super.key,
+    this.initialZoneData,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,11 +49,11 @@ class ZonesView extends StatelessWidget {
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
-        body: Consumer<ZonesCardViewmodel>(
+        body: Consumer<ZonesListViewModel>(
           builder: (context, viewModel, child) {
             // Inicializa o ViewModel apenas uma vez
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (viewModel.state == ZonesState.initial) {
+              if (viewModel.state == ZonesListState.initial) {
                 viewModel.initialize();
               }
             });
@@ -58,6 +63,7 @@ class ZonesView extends StatelessWidget {
                     appBar: PaintProAppBar(title: 'Zones'),
                     body: ZonesResultsWidget(
                       results: const {},
+                      initialZoneData: initialZoneData,
                     ),
                   );
           },
