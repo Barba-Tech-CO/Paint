@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../config/app_colors.dart';
+
 enum ProjectStateType {
   empty,
   noData,
@@ -39,7 +41,7 @@ class ProjectStateCardWidget extends StatelessWidget {
     this.titleColor = Colors.black,
     this.descriptionColor,
     this.customIcon,
-    this.buttonBackgroundColor = const Color(0xFF4193FF),
+    this.buttonBackgroundColor = AppColors.primary,
     this.buttonTextColor = Colors.white,
     this.buttonBorderRadius = 24,
     this.buttonPadding = const EdgeInsets.symmetric(
