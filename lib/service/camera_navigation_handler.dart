@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../config/app_colors.dart';
 import 'camera_photo_service.dart';
 
 class CameraNavigationHandler {
@@ -39,11 +40,13 @@ class CameraNavigationHandler {
 
   /// Navigate to next screen with photos
   void _navigateToNextScreen() {
-    // TODO: Pass captured photos to next screen
     final photos = photoService.getPhotoPaths();
 
-    // For now, just pop back - you can modify this to navigate to specific route
-    context.pop(photos);
+    // Navigate to RoomPlan view with captured photos
+    context.push(
+      '/roomplan',
+      extra: photos,
+    );
   }
 
   /// Show dialog when user tries to go back with unsaved photos
@@ -51,32 +54,46 @@ class CameraNavigationHandler {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Unsaved Photos'),
-        content: Text(
-          'You have ${photoService.photoCount} unsaved photos. Do you want to discard them?',
+        title: const Text(
+          'Exit',
+          style: TextStyle(
+            fontSize: 20,
+            color: AppColors.primaryDark,
+          ),
+        ),
+        content: const Text(
+          'Are you sure you want to go back? Any Photo will be lost.',
+          style: TextStyle(
+            fontSize: 14,
+            color: AppColors.gray100,
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              context.pop();
               photoService.clearPhotos();
               _navigateBack();
             },
             child: const Text(
-              'Discard',
-              style: TextStyle(color: Colors.red),
+              'Yes, go back',
+              style: TextStyle(
+                color: AppColors.gray100,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _navigateToNextScreen();
-            },
-            child: const Text('Save & Continue'),
+            onPressed: () => context.pop(),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
