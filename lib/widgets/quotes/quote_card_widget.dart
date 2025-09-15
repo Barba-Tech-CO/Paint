@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../helpers/date_helper.dart';
 import '../../helpers/status_helper.dart';
-import '../dialogs/delete_dialog_widget.dart';
-import '../dialogs/rename_dialog_widget.dart';
+import '../dialogs/app_dialogs.dart';
 
 class QuoteCardWidget extends StatefulWidget {
   final String id;
@@ -76,9 +75,9 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
         // Don't allow delete if already deleting
         if (widget.isDeleting) return;
 
-        final confirm = await showDialog<bool>(
-          context: context,
-          builder: (context) => DeleteDialog(quoteName: widget.titulo),
+        final confirm = await AppDialogs.showDeleteQuoteDialog(
+          context,
+          quoteName: widget.titulo,
         );
         if (confirm == true) {
           widget.onDelete?.call();
@@ -217,11 +216,9 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                 ),
                 onSelected: (value) async {
                   if (value == 'rename') {
-                    final newName = await showDialog<String>(
-                      context: context,
-                      builder: (context) => RenameDialog(
-                        initialName: widget.titulo,
-                      ),
+                    final newName = await AppDialogs.showRenameQuoteDialog(
+                      context,
+                      initialName: widget.titulo,
                     );
                     if (newName != null && newName.trim().isNotEmpty) {
                       widget.onRename?.call(newName.trim());
@@ -230,10 +227,9 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                     // Don't allow delete if already deleting
                     if (widget.isDeleting) return;
 
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) =>
-                          DeleteDialog(quoteName: widget.titulo),
+                    final confirm = await AppDialogs.showDeleteQuoteDialog(
+                      context,
+                      quoteName: widget.titulo,
                     );
                     if (confirm == true) {
                       widget.onDelete?.call();
