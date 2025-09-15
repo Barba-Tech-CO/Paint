@@ -46,7 +46,10 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/camera',
-      builder: (context, state) => const CameraView(),
+      builder: (context, state) {
+        final projectData = state.extra as Map<String, dynamic>?;
+        return CameraView(projectData: projectData);
+      },
     ),
     GoRoute(
       path: '/contacts',
@@ -60,8 +63,13 @@ final router = GoRouter(
       name: 'roomplan',
       path: '/roomplan',
       builder: (context, state) {
-        final photos = state.extra as List<String>? ?? [];
-        return RoomPlanView(capturedPhotos: photos);
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        final photos = extra['photos'] as List<String>? ?? [];
+        final projectData = extra['projectData'] as Map<String, dynamic>?;
+        return RoomPlanView(
+          capturedPhotos: photos,
+          projectData: projectData,
+        );
       },
     ),
     GoRoute(
@@ -71,9 +79,11 @@ final router = GoRouter(
         final extra = state.extra as Map<String, dynamic>? ?? {};
         final photos = extra['photos'] as List<String>? ?? [];
         final roomData = extra['roomData'] as Map<String, dynamic>?;
+        final projectData = extra['projectData'] as Map<String, dynamic>?;
         return ProcessingView(
           capturedPhotos: photos,
           roomData: roomData,
+          projectData: projectData,
         );
       },
     ),
@@ -94,7 +104,10 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/zones',
-      builder: (context, state) => const ZonesView(),
+      builder: (context, state) {
+        final zoneData = state.extra as Map<String, dynamic>?;
+        return ZonesView(initialZoneData: zoneData);
+      },
     ),
     GoRoute(
       path: '/room-adjust',
