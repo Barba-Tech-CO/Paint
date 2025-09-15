@@ -46,7 +46,7 @@ class SurfaceAreaDisplayWidget extends StatelessWidget {
             border: Border.all(color: Colors.grey[300]!, width: 1),
           ),
           child: Text(
-            walls != null ? '${walls!.toStringAsFixed(0)} sq ft' : '485 sq ft',
+            walls != null ? '${walls!.toStringAsFixed(0)} sq ft' : '',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w400,
@@ -77,7 +77,7 @@ class SurfaceAreaDisplayWidget extends StatelessWidget {
           child: Text(
             ceiling != null
                 ? '${ceiling!.toStringAsFixed(0)} sq ft'
-                : '224 sq ft',
+                : '',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w400,
@@ -108,7 +108,7 @@ class SurfaceAreaDisplayWidget extends StatelessWidget {
           child: Text(
             trim != null
                 ? '${trim!.toStringAsFixed(0)} linear ft'
-                : '60 linear ft',
+                : '',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w400,
