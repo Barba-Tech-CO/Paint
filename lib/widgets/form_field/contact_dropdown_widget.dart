@@ -6,7 +6,7 @@ class ContactDropdownWidget extends StatelessWidget {
   final ContactModel? selectedContact;
   final List<ContactModel> contacts;
   final ValueChanged<ContactModel?> onChanged;
-  final String label;
+  final String? label;
   final bool isLoading;
   final String? errorText;
   final VoidCallback? onRetry;
@@ -16,7 +16,7 @@ class ContactDropdownWidget extends StatelessWidget {
     this.selectedContact,
     required this.contacts,
     required this.onChanged,
-    required this.label,
+    this.label,
     this.isLoading = false,
     this.errorText,
     this.onRetry,
@@ -28,7 +28,7 @@ class ContactDropdownWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label!,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
