@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 
+import '../../helpers/zones/zone_add_data.dart';
 import '../../helpers/zones/zone_data_classes.dart';
 import '../../model/projects/project_card_model.dart';
+import '../../model/projects/projects_summary_model.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
 
@@ -102,18 +104,24 @@ class ZonesCardViewmodel extends ChangeNotifier {
 
   Future<void> addZone({
     required String title,
-    String? image,
-    String? floorDimensionValue,
-    String? floorAreaValue,
-    String? areaPaintable,
+    required String image,
+    required String floorDimensionValue,
+    required String floorAreaValue,
+    required String areaPaintable,
+    String? ceilingArea,
+    String? trimLength,
+    Map<String, dynamic>? roomPlanData,
   }) async {
     await _addZoneCommand.execute(
       ZoneAddData(
         title: title,
-        image: image ?? "assets/images/kitchen.png", // Imagem padrão
-        floorDimensionValue: floorDimensionValue ?? "10' x 10'",
-        floorAreaValue: floorAreaValue ?? "100 sq ft",
-        areaPaintable: areaPaintable ?? "280 sq ft",
+        image: image,
+        floorDimensionValue: floorDimensionValue,
+        floorAreaValue: floorAreaValue,
+        areaPaintable: areaPaintable,
+        ceilingArea: ceilingArea,
+        trimLength: trimLength,
+        roomPlanData: roomPlanData,
       ),
     );
   }
@@ -225,9 +233,9 @@ class ZonesCardViewmodel extends ChangeNotifier {
         floorDimensionValue: data.floorDimensionValue,
         floorAreaValue: data.floorAreaValue,
         areaPaintable: data.areaPaintable,
-        ceilingArea:
-            data.floorAreaValue, // Use floor area as ceiling by default
-        trimLength: "44 linear ft", // Default trim length
+        ceilingArea: data.ceilingArea,
+        trimLength: data.trimLength,
+        roomPlanData: data.roomPlanData,
       );
 
       _zones.add(newZone);
