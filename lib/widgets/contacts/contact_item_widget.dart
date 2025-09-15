@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../model/contacts/contact_model.dart';
-import '../dialogs/delete_dialog_widget.dart';
+import '../dialogs/app_dialogs.dart';
 
 class ContactItemWidget extends StatelessWidget {
   final Map<String, String> contact;
@@ -128,11 +128,9 @@ class ContactItemWidget extends StatelessWidget {
                         context.push('/edit-contact', extra: contactModel);
                       }
                     } else if (value == 'delete') {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => DeleteDialog(
-                          quoteName: name,
-                        ),
+                      final confirm = await AppDialogs.showDeleteQuoteDialog(
+                        context,
+                        quoteName: name,
                       );
                       if (confirm == true) {
                         onDelete?.call();
