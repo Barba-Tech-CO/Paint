@@ -104,12 +104,15 @@ class _EditZoneViewState extends State<EditZoneView> {
           : 0.0;
 
       // Parse surface areas from zone fields
-      _walls = double.tryParse(zone.areaPaintable.replaceAll(" sq ft", "")) ?? 0.0;
+      _walls =
+          double.tryParse(zone.areaPaintable.replaceAll(" sq ft", "")) ?? 0.0;
       _ceiling = zone.ceilingArea != null
           ? double.tryParse(zone.ceilingArea!.replaceAll(" sq ft", "")) ?? 0.0
-          : double.tryParse(zone.floorAreaValue.replaceAll(" sq ft", "")) ?? 0.0;
+          : double.tryParse(zone.floorAreaValue.replaceAll(" sq ft", "")) ??
+                0.0;
       _trim = zone.trimLength != null
-          ? double.tryParse(zone.trimLength!.replaceAll(" linear ft", "")) ?? 0.0
+          ? double.tryParse(zone.trimLength!.replaceAll(" linear ft", "")) ??
+                0.0
           : 0.0;
 
       // Initialize photos with zone image (se disponível)
