@@ -24,6 +24,7 @@ import 'viewmodel/paint_catalog/paint_catalog_list_viewmodel.dart';
 import 'viewmodel/projects/projects_viewmodel.dart';
 import 'viewmodel/quotes/quotes_viewmodel.dart';
 import 'viewmodel/zones/zones_card_viewmodel.dart';
+import 'viewmodel/zones/zones_list_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -92,6 +93,9 @@ class PaintProApp extends StatelessWidget {
           create: (_) => getIt<MeasurementsViewModel>(),
         ),
         // Zones ViewModel
+        ChangeNotifierProvider<ZonesListViewModel>(
+          create: (_) => getIt<ZonesListViewModel>(),
+        ),
         ChangeNotifierProvider<ZonesCardViewmodel>(
           create: (_) => getIt<ZonesCardViewmodel>(),
         ),
