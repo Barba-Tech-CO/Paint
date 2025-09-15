@@ -11,7 +11,9 @@ import '../../widgets/camera/camera_preview_widget.dart';
 import '../../widgets/camera/photo_thumbnails_row.dart';
 
 class CameraView extends StatefulWidget {
-  const CameraView({super.key});
+  final Map<String, dynamic>? projectData;
+
+  const CameraView({super.key, this.projectData});
 
   @override
   State<CameraView> createState() => _CameraViewState();
@@ -35,6 +37,7 @@ class _CameraViewState extends State<CameraView> {
     _navigationHandler = CameraNavigationHandler(
       context: context,
       photoService: _photoService,
+      projectData: widget.projectData,
     );
   }
 
