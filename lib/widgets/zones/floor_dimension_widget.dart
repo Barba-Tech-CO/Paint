@@ -77,8 +77,8 @@ class _FloorDimensionWidgetState extends State<FloorDimensionWidget> {
               '${totalArea.toStringAsFixed(0)} sq ft',
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
               ),
             ),
           ],
@@ -135,7 +135,9 @@ class _FloorDimensionWidgetState extends State<FloorDimensionWidget> {
               ),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(
+                  color: AppColors.gray24,
+                ),
               ),
               child: Container(
                 padding: const EdgeInsets.symmetric(
