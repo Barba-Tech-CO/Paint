@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../config/app_colors.dart';
@@ -6,10 +7,7 @@ import '../dialogs/app_dialogs.dart';
 
 class ZonesCard extends StatelessWidget {
   final String title;
-
-  // TODO(gabriel): verificar sobre a imagem
-  final String image;
-
+  final List<String> photoPaths;
   final String valueDimension;
   final String valueArea;
   final String valuePaintable;
@@ -25,7 +23,7 @@ class ZonesCard extends StatelessWidget {
   const ZonesCard({
     super.key,
     required this.title,
-    required this.image,
+    required this.photoPaths,
     required this.valueDimension,
     required this.valueArea,
     required this.valuePaintable,
@@ -52,6 +50,9 @@ class ZonesCard extends StatelessWidget {
 
     // Use custom width if provided, otherwise use responsive width
     final cardWidth = width ?? dimensions.cardWidth;
+
+    // Get first photo path
+    final firstPhotoPath = photoPaths.first;
 
     return InkWell(
       onTap: onTap,
@@ -83,8 +84,8 @@ class ZonesCard extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      image,
+                    child: Image.file(
+                      File(firstPhotoPath),
                       fit: BoxFit.cover,
                       width: imageDimensions.width,
                       height: imageDimensions.height,
