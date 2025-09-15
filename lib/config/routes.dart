@@ -13,10 +13,11 @@ import '../view/edit_zone/edit_zone_view.dart';
 import '../view/home/home_view.dart';
 import '../view/new_contact/new_contact_view.dart';
 import '../view/overview_zones/overview_zones_view.dart';
+import '../view/processing/processing_view.dart';
 import '../view/projects/projects_view.dart';
 import '../view/quotes/quotes_view.dart';
 import '../view/room_adjust/room_adjust_view.dart';
-import '../view/select_colors/select_colors_view.dart';
+import '../view/roomplan/roomplan_view.dart';
 import '../view/select_material/select_material_view.dart';
 import '../view/splash/splash_view.dart';
 import '../view/success/success_view.dart';
@@ -56,6 +57,27 @@ final router = GoRouter(
       builder: (context, state) => const QuotesView(),
     ),
     GoRoute(
+      name: 'roomplan',
+      path: '/roomplan',
+      builder: (context, state) {
+        final photos = state.extra as List<String>? ?? [];
+        return RoomPlanView(capturedPhotos: photos);
+      },
+    ),
+    GoRoute(
+      name: 'processing',
+      path: '/processing',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        final photos = extra['photos'] as List<String>? ?? [];
+        final roomData = extra['roomData'] as Map<String, dynamic>?;
+        return ProcessingView(
+          capturedPhotos: photos,
+          roomData: roomData,
+        );
+      },
+    ),
+    GoRoute(
       path: '/contact-details',
       builder: (context, state) {
         final contact = state.extra as ContactModel?;
@@ -77,10 +99,6 @@ final router = GoRouter(
     GoRoute(
       path: '/room-adjust',
       builder: (context, state) => const RoomAdjustView(),
-    ),
-    GoRoute(
-      path: '/select-colors',
-      builder: (context, state) => const SelectColorsView(),
     ),
     GoRoute(
       path: '/overview-zones',
