@@ -32,9 +32,20 @@ class ZonesDetailsContentWidget extends StatelessWidget {
           backgroundColor: AppColors.background,
           appBar: PaintProAppBar(
             title: zone.title,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios),
-              onPressed: () => context.pop(),
+            leading: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios),
+                  onPressed: () => context.pop(),
+                ),
+                Text(
+                  'Back',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textOnPrimary,
+                  ),
+                ),
+              ],
             ),
             actions: [
               PaintProDeleteButton(
@@ -59,7 +70,7 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Room',
+                            'Room Metrics',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -72,7 +83,7 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                             leftSubtitle: 'Floor Dimensions',
                             rightTitle: zone.floorAreaValue,
                             rightSubtitle: 'Floor Area',
-                            titleColor: const Color(0xFF1A73E8),
+                            titleColor: AppColors.primary,
                             subtitleColor: Colors.black54,
                             titleFontSize: 20,
                             subtitleFontSize: 13,
