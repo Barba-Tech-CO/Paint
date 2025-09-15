@@ -16,14 +16,12 @@ import '../view/overview_zones/overview_zones_view.dart';
 import '../view/processing/processing_view.dart';
 import '../view/projects/projects_view.dart';
 import '../view/quotes/quotes_view.dart';
-import '../view/room_adjust/room_adjust_view.dart';
 import '../view/roomplan/roomplan_view.dart';
 import '../view/select_material/select_material_view.dart';
 import '../view/splash/splash_view.dart';
 import '../view/success/success_view.dart';
 import '../view/zones/zones_view.dart';
 import '../view/zones_details/zones_details_view.dart';
-import '../widgets/loading/loading_widget.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -110,10 +108,6 @@ final router = GoRouter(
       },
     ),
     GoRoute(
-      path: '/room-adjust',
-      builder: (context, state) => const RoomAdjustView(),
-    ),
-    GoRoute(
       path: '/overview-zones',
       builder: (context, state) {
         // Aceita tanto List<MaterialModel> quanto Map com materiais e zonas
@@ -173,20 +167,6 @@ final router = GoRouter(
     GoRoute(
       path: '/quotes',
       builder: (context, state) => const QuotesView(),
-    ),
-    GoRoute(
-      path: '/loading',
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-
-        return LoadingWidget(
-          title: extra?['title'] as String?,
-          subtitle: extra?['subtitle'] as String?,
-          description: extra?['description'] as String?,
-          duration: extra?['duration'] as Duration?,
-          navigateToOnComplete: extra?['navigateToOnComplete'] as String?,
-        );
-      },
     ),
     GoRoute(
       path: '/success',
