@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../config/app_colors.dart';
+import '../../utils/responsive/responsive_helper.dart';
 import '../dialogs/app_dialogs.dart';
 
 class ProjectCardWidget extends StatelessWidget {
@@ -37,54 +38,17 @@ class ProjectCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Obter dimensões da tela
-    final screenWidth = MediaQuery.sizeOf(context).width;
-
-    // Definir valores responsivos baseados no tamanho da tela
-    double cardWidth;
-    double imageSize;
-    double fontSize;
-    double padding;
-    double spacing;
-
-    // Breakpoints para diferentes tamanhos de tela
-    if (screenWidth < 360) {
-      // Tela pequena (celular pequeno)
-      cardWidth = width ?? screenWidth * 0.9;
-      imageSize = 80;
-      fontSize = 13;
-      padding = 8;
-      spacing = 2;
-    } else if (screenWidth < 600) {
-      // Tela média (celular normal)
-      cardWidth = width ?? 364;
-      imageSize = 100;
-      fontSize = 14;
-      padding = 12;
-      spacing = 4;
-    } else {
-      // Tela grande (tablet/desktop)
-      cardWidth = width ?? 380;
-      imageSize = 120;
-      fontSize = 16;
-      padding = 16;
-      spacing = 6;
-    }
-
-    // Ajustar altura da imagem proporcionalmente
-    final actualImageWidth = imageWidth ?? imageSize;
-    final actualImageHeight = imageHeight ?? (imageSize * 0.75);
-
-    // Criar estilos de texto responsivos
-    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-      fontWeight: FontWeight.bold,
-      fontSize: fontSize + 2,
+    // Get responsive dimensions
+    final dimensions = ResponsiveHelper.getProjectCardDimensions(context);
+    final textStyles = ResponsiveHelper.getProjectCardTextStyles(context);
+    final imageDimensions = ResponsiveHelper.getImageDimensions(
+      baseImageSize: dimensions.imageSize,
+      customWidth: imageWidth,
+      customHeight: imageHeight,
     );
 
-    final bodyStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-      color: Colors.grey[700],
-      fontSize: fontSize,
-    );
+    // Use custom width if provided, otherwise use responsive width
+    final cardWidth = width ?? dimensions.cardWidth;
 
     return InkWell(
       onTap: onTap,
@@ -110,7 +74,7 @@ class ProjectCardWidget extends StatelessWidget {
           children: [
             // Conteúdo principal
             Padding(
-              padding: EdgeInsets.all(padding),
+              padding: EdgeInsets.all(dimensions.padding),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -119,11 +83,11 @@ class ProjectCardWidget extends StatelessWidget {
                     child: Image.asset(
                       image,
                       fit: BoxFit.cover,
-                      width: actualImageWidth,
-                      height: actualImageHeight,
+                      width: imageDimensions.width,
+                      height: imageDimensions.height,
                     ),
                   ),
-                  SizedBox(width: spacing * 3),
+                  SizedBox(width: dimensions.spacing * 3),
                   Flexible(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,25 +95,27 @@ class ProjectCardWidget extends StatelessWidget {
                       children: [
                         Text(
                           personName,
-                          style: bodyStyle,
+                          style: textStyles.bodyStyle,
                         ),
                         Text(
                           projectName,
-                          style: titleStyle,
+                          style: textStyles.titleStyle,
                         ),
-                        SizedBox(height: spacing),
+                        SizedBox(height: dimensions.spacing),
                         Row(
                           children: [
                             Text(
                               '$zonesCount Zones',
-                              style: bodyStyle,
+                              style: textStyles.bodyStyle,
                             ),
-                            SizedBox(width: spacing * 2),
+                            SizedBox(width: dimensions.spacing * 2),
                             Text(
                               '• Created $createdDate',
-                              style: bodyStyle?.copyWith(
+                              style: textStyles.bodyStyle?.copyWith(
                                 color: Colors.grey[500],
-                                fontSize: fontSize - 1,
+                                fontSize: textStyles.bodyStyle?.fontSize != null
+                                    ? textStyles.bodyStyle!.fontSize! - 1
+                                    : null,
                               ),
                             ),
                           ],
