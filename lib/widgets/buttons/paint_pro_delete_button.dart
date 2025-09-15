@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../utils/logger/app_logger.dart';
 import '../../viewmodel/zones/zone_detail_viewmodel.dart';
+import '../dialogs/app_dialogs.dart';
 
 class PaintProDeleteButton extends StatelessWidget {
   final ZoneDetailViewModel viewModel;
@@ -40,30 +41,12 @@ class PaintProDeleteButton extends StatelessWidget {
     final zone = viewModel.currentZone;
     if (zone == null) return;
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Zone'),
-        content: Text(
-          'Are you sure you want to delete "${zone.title}"?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+    final confirm = await AppDialogs.showDeleteZoneDialog(
+      context,
+      zoneName: zone.title,
     );
 
-    if (confirm == true && context.mounted) {
+    if (confirm && context.mounted) {
       try {
         // Use the new ViewModel delete method
         // The callbacks will handle UI coordination automatically
