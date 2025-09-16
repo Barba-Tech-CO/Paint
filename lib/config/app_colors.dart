@@ -53,7 +53,8 @@ class AppColors {
   // Gray Colors with alpha
   static const Color gray100 = Color.fromRGBO(111, 111, 111, 1);
   static const Color gray50 = Color.fromRGBO(111, 111, 111, 0.5);
-  static const Color gray24 = Color.fromRGBO(111, 111, 111, 0.36);
+  static const Color gray24 = Color(0x5C6F6F6F);
+  static const Color gray16 = Color.fromRGBO(26, 26, 26, 0.16);
 
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
@@ -66,5 +67,11 @@ class AppColors {
     colors: [Color(0xFF39D86E), Color(0xFF2BC653)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient addPhotoGradient = LinearGradient(
+    colors: [Color(0xFFF9F9F9), Color(0x5C6F6F6F)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
   );
 }
