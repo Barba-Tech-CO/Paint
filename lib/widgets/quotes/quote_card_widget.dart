@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../helpers/date_helper.dart';
 import '../../helpers/status_helper.dart';
-import '../dialogs/app_dialogs.dart';
+import '../dialogs/delete_quote_dialog.dart';
+import '../dialogs/rename_quote_dialog.dart';
 
 class QuoteCardWidget extends StatefulWidget {
   final String id;
@@ -75,7 +76,7 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
         // Don't allow delete if already deleting
         if (widget.isDeleting) return;
 
-        final confirm = await AppDialogs.showDeleteQuoteDialog(
+        final confirm = await DeleteQuoteDialog.show(
           context,
           quoteName: widget.titulo,
         );
@@ -216,7 +217,7 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                 ),
                 onSelected: (value) async {
                   if (value == 'rename') {
-                    final newName = await AppDialogs.showRenameQuoteDialog(
+                    final newName = await RenameQuoteDialog.show(
                       context,
                       initialName: widget.titulo,
                     );
@@ -227,7 +228,7 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                     // Don't allow delete if already deleting
                     if (widget.isDeleting) return;
 
-                    final confirm = await AppDialogs.showDeleteQuoteDialog(
+                    final confirm = await DeleteQuoteDialog.show(
                       context,
                       quoteName: widget.titulo,
                     );
