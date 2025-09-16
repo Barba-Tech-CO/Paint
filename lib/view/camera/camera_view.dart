@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../service/camera_dialog_service.dart';
-import '../../service/camera_manager.dart';
-import '../../service/camera_navigation_handler.dart';
-import '../../service/camera_photo_service.dart';
+import '../../viewmodel/camera/camera_viewmodel.dart';
 import '../../widgets/camera/camera_app_bar_overlay.dart';
 import '../../widgets/camera/camera_controls_bar.dart';
 import '../../widgets/camera/camera_focus_overlay.dart';
@@ -20,70 +17,48 @@ class CameraView extends StatefulWidget {
 }
 
 class _CameraViewState extends State<CameraView> {
-  late CameraManager _cameraManager;
-  late CameraPhotoService _photoService;
-  late CameraNavigationHandler _navigationHandler;
+  late CameraViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    _initializeServices();
+    _viewModel = CameraViewModel(projectData: widget.projectData);
+    _viewModel.setNavigationContext(context);
     _initializeCamera();
   }
 
-  void _initializeServices() {
-    _cameraManager = CameraManager();
-    _photoService = CameraPhotoService();
-    _navigationHandler = CameraNavigationHandler(
-      context: context,
-      photoService: _photoService,
-      projectData: widget.projectData,
-    );
-  }
-
   Future<void> _initializeCamera() async {
-    final success = await _cameraManager.initialize();
+    await _viewModel.initialize();
 
     if (mounted) {
-      if (!success) {
-        await CameraDialogService.showCameraUnavailableDialog(
-          context,
-          onGoBack: () => _navigationHandler.onBackPressed(),
-        );
-      } else {
-        setState(() {});
+      if (_viewModel.needsCameraUnavailableDialog) {
+        await _viewModel.showCameraUnavailableDialog(context);
       }
+      setState(() {});
     }
   }
 
   Future<void> _toggleFlash() async {
-    await _cameraManager.toggleFlash();
+    await _viewModel.toggleFlash();
     if (mounted) {
       setState(() {});
     }
   }
 
   Future<void> _takePhoto() async {
-    final success = await _photoService.takePhoto(
-      _cameraManager.cameraController,
-    );
+    final success = await _viewModel.takePhoto();
 
     if (mounted) {
-      if (success) {
-        setState(() {});
-      } else if (!_photoService.canTakeMorePhotos) {
-        await CameraDialogService.showPhotoLimitDialog(
-          context,
-          maxPhotos: 9,
-          onContinue: () => _navigationHandler.onDonePressed(),
-        );
+      if (!success && _viewModel.needsPhotoLimitDialog) {
+        await _viewModel.showPhotoLimitDialog(context);
       }
+      setState(() {});
     }
   }
 
   @override
   void dispose() {
-    _cameraManager.dispose();
+    _viewModel.dispose();
     super.dispose();
   }
 
@@ -95,16 +70,16 @@ class _CameraViewState extends State<CameraView> {
         children: [
           // Camera Preview
           CameraPreviewWidget(
-            cameraController: _cameraManager.cameraController,
-            isInitialized: _cameraManager.isInitialized,
+            cameraController: _viewModel.cameraManager.cameraController,
+            isInitialized: _viewModel.isInitialized,
           ),
 
           // App Bar Overlay
           CameraAppBarOverlay(
-            onBackPressed: () => _navigationHandler.onBackPressed(),
-            onDonePressed: () => _navigationHandler.onDonePressed(),
-            instructionText: _photoService.getInstructionText(),
-            isDoneEnabled: _photoService.isDoneEnabled,
+            onBackPressed: () => _viewModel.onBackPressed(),
+            onDonePressed: () => _viewModel.onDonePressed(),
+            instructionText: _viewModel.photoService.getInstructionText(),
+            isDoneEnabled: _viewModel.photoService.isDoneEnabled,
           ),
 
           // Focus Field Overlay
@@ -116,7 +91,7 @@ class _CameraViewState extends State<CameraView> {
             left: 0,
             right: 0,
             child: PhotoThumbnailsRow(
-              photos: _photoService.capturedPhotos,
+              photos: _viewModel.photoService.allPhotos,
             ),
           ),
 
@@ -124,8 +99,8 @@ class _CameraViewState extends State<CameraView> {
           CameraControlsBar(
             onTakePhoto: _takePhoto,
             onToggleFlash: _toggleFlash,
-            flashMode: _cameraManager.flashMode,
-            isShutterDisabled: !_photoService.canTakeMorePhotos,
+            flashMode: _viewModel.cameraManager.flashMode,
+            isShutterDisabled: !_viewModel.photoService.canTakeMorePhotos,
           ),
         ],
       ),
