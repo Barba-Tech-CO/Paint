@@ -19,6 +19,11 @@ class PaintProDeleteButton extends StatelessWidget {
     return AnimatedBuilder(
       animation: viewModel,
       builder: (context, child) {
+        // Verificar se o widget ainda está montado e se a zona ainda existe
+        if (!context.mounted || viewModel.currentZone == null) {
+          return const SizedBox.shrink();
+        }
+
         return IconButton(
           onPressed: viewModel.isDeleting
               ? null //
