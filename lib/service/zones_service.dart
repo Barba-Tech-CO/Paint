@@ -1,4 +1,4 @@
-import '../helpers/zones/zone_add_data.dart';
+import '../model/zones/zone_add_data_model.dart';
 import '../model/projects/project_card_model.dart';
 import '../utils/command/command.dart';
 import '../utils/result/result.dart';
@@ -9,7 +9,7 @@ class ZonesService implements IZonesService {
 
   // Commands
   Command0<List<ProjectCardModel>>? _loadZonesCommand;
-  Command1<ProjectCardModel, ZoneAddData>? _addZoneCommand;
+  Command1<ProjectCardModel, ZoneAddDataModel>? _addZoneCommand;
   Command1<ProjectCardModel, Map<String, dynamic>>? _updateZoneCommand;
   Command1<bool, int>? _deleteZoneCommand;
   Command1<ProjectCardModel, Map<String, dynamic>>? _renameZoneCommand;
@@ -26,31 +26,30 @@ class ZonesService implements IZonesService {
 
   // Command getters
   @override
-  Command0<List<ProjectCardModel>> get loadZonesCommand =>
-      _loadZonesCommand!;
+  Command0<List<ProjectCardModel>> get loadZonesCommand => _loadZonesCommand!;
 
   @override
-  Command1<ProjectCardModel, ZoneAddData> get addZoneCommand =>
+  Command1<ProjectCardModel, ZoneAddDataModel> get addZoneCommand =>
       _addZoneCommand!;
 
   @override
-  Command1<ProjectCardModel, Map<String, dynamic>>
-  get updateZoneCommand => _updateZoneCommand!;
+  Command1<ProjectCardModel, Map<String, dynamic>> get updateZoneCommand =>
+      _updateZoneCommand!;
 
   @override
   Command1<bool, int> get deleteZoneCommand => _deleteZoneCommand!;
 
   @override
-  Command1<ProjectCardModel, Map<String, dynamic>>
-  get renameZoneCommand => _renameZoneCommand!;
+  Command1<ProjectCardModel, Map<String, dynamic>> get renameZoneCommand =>
+      _renameZoneCommand!;
 
   @override
-  Command1<ProjectCardModel, Map<String, dynamic>>
-  get addPhotosCommand => _addPhotosCommand!;
+  Command1<ProjectCardModel, Map<String, dynamic>> get addPhotosCommand =>
+      _addPhotosCommand!;
 
   @override
-  Command1<ProjectCardModel, Map<String, dynamic>>
-  get removePhotoCommand => _removePhotoCommand!;
+  Command1<ProjectCardModel, Map<String, dynamic>> get removePhotoCommand =>
+      _removePhotoCommand!;
 
   @override
   Command1<ProjectCardModel, Map<String, dynamic>>
@@ -65,7 +64,7 @@ class ZonesService implements IZonesService {
       return Result.ok(_zones);
     });
 
-    _addZoneCommand = Command1((ZoneAddData data) async {
+    _addZoneCommand = Command1((ZoneAddDataModel data) async {
       final result = await _addZoneData(data);
       if (result.isSuccess) {
         return Result.ok(result.data);
@@ -194,7 +193,7 @@ class ZonesService implements IZonesService {
   }
 
   // Private command implementations
-  Future<Result<ProjectCardModel>> _addZoneData(ZoneAddData data) async {
+  Future<Result<ProjectCardModel>> _addZoneData(ZoneAddDataModel data) async {
     try {
       final newId = getNextId();
       final newZone = ProjectCardModel(
