@@ -1,7 +1,11 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:validatorless/validatorless.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../domain/repository/contact_repository.dart';
 import '../../helpers/error_message_helper.dart';
+import '../../helpers/snackbar_helper.dart';
+import '../../helpers/contacts/contacts_helper.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
@@ -243,5 +247,375 @@ class ContactDetailViewModel extends ChangeNotifier {
     await _getContactDetailsCommand.execute(contactId);
     // Return the Result from the command
     return _getContactDetailsCommand.result!;
+  }
+
+  // Migrated from ContactDetailsHelper
+  /// Gets display value for contact fields, showing 'N/A' for empty values
+  static String getDisplayValue(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'N/A';
+    }
+    return value;
+  }
+
+  /// Checks if contact has additional business information
+  static bool hasAdditionalBusinessInfo(ContactModel contact) {
+    final hasCompanyName = contact.companyName?.isNotEmpty ?? false;
+    final hasBusinessName = contact.businessName?.isNotEmpty ?? false;
+    final hasType = contact.type?.isNotEmpty ?? false;
+    return hasCompanyName || hasBusinessName || hasType;
+  }
+
+  /// Gets contact name display style
+  static TextStyle getContactNameStyle(ThemeData theme) {
+    return theme.textTheme.headlineMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: theme.primaryColor,
+        ) ??
+        const TextStyle();
+  }
+
+  /// Gets section header data for contact information
+  static Map<String, dynamic> getContactSectionData() {
+    return {
+      'icon': Icons.contact_phone,
+      'title': 'Contact',
+    };
+  }
+
+  /// Gets section header data for address information
+  static Map<String, dynamic> getAddressSectionData() {
+    return {
+      'icon': Icons.home,
+      'title': 'Address',
+    };
+  }
+
+  /// Gets section header data for additional business information
+  static Map<String, dynamic> getAdditionalInfoSectionData() {
+    return {
+      'icon': Icons.business,
+      'title': 'Additional Info',
+    };
+  }
+
+  /// Gets contact information rows
+  static List<Map<String, String>> getContactInfoRows(ContactModel contact) {
+    return [
+      {
+        'label': 'Email',
+        'value': getDisplayValue(contact.email),
+      },
+      {
+        'label': 'Phone',
+        'value': getDisplayValue(_formatPhoneForDisplay(contact.phone)),
+      },
+    ];
+  }
+
+  /// Gets address information rows
+  static List<Map<String, String>> getAddressInfoRows(ContactModel contact) {
+    return [
+      {
+        'label': 'Street',
+        'value': getDisplayValue(contact.address),
+      },
+      {
+        'label': 'City',
+        'value': getDisplayValue(contact.city),
+      },
+      {
+        'label': 'State',
+        'value': getDisplayValue(contact.state),
+      },
+      {
+        'label': 'Postal Code',
+        'value': getDisplayValue(contact.postalCode),
+      },
+      {
+        'label': 'Country',
+        'value': getDisplayValue(contact.country),
+      },
+    ];
+  }
+
+  /// Gets additional business information rows
+  static List<Map<String, String>> getAdditionalInfoRows(ContactModel contact) {
+    return [
+      {
+        'label': 'Company',
+        'value': getDisplayValue(contact.companyName),
+      },
+      {
+        'label': 'Business Name',
+        'value': getDisplayValue(contact.businessName),
+      },
+      {
+        'label': 'Type',
+        'value': getDisplayValue(contact.type),
+      },
+    ];
+  }
+
+  /// Formats phone number for display - helper method
+  static String _formatPhoneForDisplay(String? phone) {
+    if (phone == null || phone.isEmpty) return '';
+
+    // Remove all non-digit characters
+    final digits = phone.replaceAll(RegExp(r'[^\d]'), '');
+
+    // Format as (XXX) XXX-XXXX for 10 digits
+    if (digits.length == 10) {
+      return '(${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6)}';
+    }
+
+    // Return original if not 10 digits
+    return phone;
+  }
+
+  // Migrated from EditContactHelper - Validation methods
+  /// Validates phone number format
+  static String? validatePhone(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Phone is required';
+    }
+    // Remove all non-digit characters for validation
+    final digitsOnly = value.replaceAll(
+      RegExp(r'[^\d]'),
+      '',
+    );
+    // Check if it's a valid US phone number (10 digits or 11 starting with 1)
+    if (digitsOnly.length == 10) {
+      return null;
+    } else if (digitsOnly.length == 11 && digitsOnly.startsWith('1')) {
+      return null;
+    } else {
+      return 'Please enter a valid US phone number ((XXX) XXX-XXXX or +1 XXX XXX-XXXX)';
+    }
+  }
+
+  /// Validates additional phones format
+  static String? validateAdditionalPhones(String? value) {
+    if (value == null || value.isEmpty) return null;
+
+    final phones = value
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty);
+
+    for (final phone in phones) {
+      // Remove all non-digit characters for validation
+      final digitsOnly = phone.replaceAll(
+        RegExp(r'[^\d]'),
+        '',
+      );
+      // Check if it's a valid US phone number (10 digits or 11 starting with 1)
+      if (digitsOnly.length != 10 &&
+          !(digitsOnly.length == 11 && digitsOnly.startsWith('1'))) {
+        return 'Please enter valid US phone numbers separated by commas ((XXX) XXX-XXXX or +1 XXX XXX-XXXX)';
+      }
+    }
+    return null;
+  }
+
+  /// Validates additional emails format
+  static String? validateAdditionalEmails(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final emails = value
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty);
+    for (final email in emails) {
+      final emailValidator = Validatorless.email(
+        'Invalid email address',
+      );
+      if (emailValidator(email) != null) {
+        return 'Please enter valid email addresses separated by commas';
+      }
+    }
+    return null;
+  }
+
+  /// Gets name validation rules
+  static String? Function(String?) get nameValidator => Validatorless.multiple([
+    Validatorless.required('Name is required'),
+    Validatorless.min(2, 'Name must be at least 2 characters'),
+  ]);
+
+  /// Gets email validation rules
+  static String? Function(String?) get emailValidator =>
+      Validatorless.multiple([
+        Validatorless.required('Email is required'),
+        Validatorless.email('Please enter a valid email'),
+      ]);
+
+  /// Gets company name validation rules (optional for edit)
+  static String? Function(String?) get companyNameValidator =>
+      Validatorless.min(
+        3,
+        'Company Name must be at least 3 characters',
+      );
+
+  /// Gets address validation rules
+  static String? Function(String?) get addressValidator =>
+      Validatorless.multiple([
+        Validatorless.required('Address is required'),
+        Validatorless.min(3, 'Address must be at least 3 characters'),
+      ]);
+
+  /// Gets city validation rules
+  static String? Function(String?) get cityValidator => Validatorless.multiple([
+    Validatorless.required('City is required'),
+    Validatorless.min(3, 'City must be at least 3 characters'),
+  ]);
+
+  /// Gets state validation rules
+  static String? Function(String?) get stateValidator =>
+      Validatorless.multiple([
+        Validatorless.required('State is required'),
+        Validatorless.min(3, 'State must be at least 3 characters'),
+      ]);
+
+  /// Gets postal code validation rules
+  static String? Function(String?) get postalCodeValidator =>
+      Validatorless.multiple([
+        Validatorless.required('Postal Code is required'),
+        Validatorless.min(3, 'Postal Code must be at least 3 characters'),
+      ]);
+
+  /// Gets country validation rules
+  static String? Function(String?) get countryValidator =>
+      Validatorless.multiple([
+        Validatorless.required('Country is required'),
+        Validatorless.min(2, 'Country must be at least 2 characters'),
+      ]);
+
+  /// Populates form controllers with contact data
+  void populateFormWithContactData({
+    required ContactModel contact,
+    required TextEditingController nameController,
+    required TextEditingController phoneController,
+    required TextEditingController additionalPhonesController,
+    required TextEditingController additionalEmailsController,
+    required TextEditingController emailController,
+    required TextEditingController companyNameController,
+    required TextEditingController addressController,
+    required TextEditingController cityController,
+    required TextEditingController stateController,
+    required TextEditingController zipCodeController,
+    required TextEditingController countryController,
+  }) {
+    nameController.text = contact.name;
+    phoneController.text = contact.phone;
+    emailController.text = contact.email;
+    companyNameController.text = contact.companyName ?? '';
+    addressController.text = contact.address;
+    cityController.text = contact.city;
+    stateController.text = contact.state;
+    zipCodeController.text = contact.postalCode;
+    countryController.text = contact.country;
+
+    // Preencher campos adicionais
+    if (contact.additionalEmails != null &&
+        contact.additionalEmails!.isNotEmpty) {
+      additionalEmailsController.text = contact.additionalEmails!.join(', ');
+    }
+
+    if (contact.additionalPhones != null &&
+        contact.additionalPhones!.isNotEmpty) {
+      additionalPhonesController.text = contact.additionalPhones!.join(', ');
+    }
+  }
+
+  /// Updates a contact with form data
+  Future<void> updateContactWithForm({
+    required GlobalKey<FormState> formKey,
+    required ContactModel contact,
+    required TextEditingController nameController,
+    required TextEditingController emailController,
+    required TextEditingController additionalEmailsController,
+    required TextEditingController phoneController,
+    required TextEditingController additionalPhonesController,
+    required TextEditingController addressController,
+    required TextEditingController cityController,
+    required TextEditingController stateController,
+    required TextEditingController zipCodeController,
+    required TextEditingController countryController,
+    required TextEditingController companyNameController,
+    required BuildContext context,
+  }) async {
+    if (!formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Verificar se o contato tem um ID válido para a API
+    final contactId = contact.id;
+
+    // Create custom fields for additional data
+    final customFields = <Map<String, dynamic>>[];
+
+    // Determinar se deve tentar atualizar na API
+    final shouldUpdateAPI = contactId != null;
+
+    // Sempre tentar atualizar localmente primeiro
+    // Se tiver ID da API e estiver online, também tenta atualizar via API
+    final contactIdToUse = shouldUpdateAPI
+        ? contactId
+        : (contact.ghlId ?? contact.localId.toString());
+
+    final result = await updateContact(
+      contactIdToUse,
+      name: nameController.text.trim(),
+      email: emailController.text.trim(),
+      additionalEmails: additionalEmailsController.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList(),
+      phone: ContactsHelper.normalizePhoneForStorage(
+        phoneController.text.trim(),
+      ),
+      additionalPhones: additionalPhonesController.text
+          .split(',')
+          .map((e) => ContactsHelper.normalizePhoneForStorage(e.trim()))
+          .where((e) => e.isNotEmpty)
+          .toList(),
+      address: addressController.text.trim(),
+      city: cityController.text.trim(),
+      state: stateController.text.trim(),
+      postalCode: zipCodeController.text.trim(),
+      country: countryController.text.trim(),
+      companyName: companyNameController.text.trim(),
+      customFields: customFields.isNotEmpty ? customFields : null,
+    );
+
+    if (result is Ok) {
+      // Show success message
+      if (context.mounted) {
+        final message = shouldUpdateAPI
+            ? 'Contact updated successfully in API and locally!'
+            : 'Contact updated successfully locally! (Will sync when online)';
+
+        SnackBarHelper.showSuccess(
+          context,
+          message: message,
+        );
+
+        // Navigate back after a short delay
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (context.mounted) {
+            context.pop();
+          }
+        });
+      }
+    } else {
+      // Show user-friendly error message
+      if (context.mounted) {
+        SnackBarHelper.showError(
+          context,
+          message: 'Failed to update contact. Please try again.',
+        );
+      }
+    }
   }
 }
