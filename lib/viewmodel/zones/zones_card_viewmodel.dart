@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../../helpers/zones/zone_add_data.dart';
-import '../../helpers/zones/zone_data_classes.dart';
+import '../../model/zones/zone_add_data_model.dart';
+import '../../model/zones/zone_rename_data_model.dart';
 import '../../model/projects/project_card_model.dart';
 import '../../model/projects/projects_summary_model.dart';
 import '../../utils/command/command.dart';
@@ -38,14 +38,15 @@ class ZonesCardViewmodel extends ChangeNotifier {
   // Commands
   late final Command0<void> _loadZonesCommand;
   late final Command1<void, int> _deleteZoneCommand;
-  late final Command1<void, ZoneRenameData> _renameZoneCommand;
-  late final Command1<void, ZoneAddData> _addZoneCommand;
+  late final Command1<void, ZoneRenameDataModel> _renameZoneCommand;
+  late final Command1<void, ZoneAddDataModel> _addZoneCommand;
   late final Command0<void> _loadSummaryCommand;
 
   Command0<void> get loadZonesCommand => _loadZonesCommand;
   Command1<void, int> get deleteZoneCommand => _deleteZoneCommand;
-  Command1<void, ZoneRenameData> get renameZoneCommand => _renameZoneCommand;
-  Command1<void, ZoneAddData> get addZoneCommand => _addZoneCommand;
+  Command1<void, ZoneRenameDataModel> get renameZoneCommand =>
+      _renameZoneCommand;
+  Command1<void, ZoneAddDataModel> get addZoneCommand => _addZoneCommand;
   Command0<void> get loadSummaryCommand => _loadSummaryCommand;
 
   // Computed properties
@@ -74,11 +75,11 @@ class ZonesCardViewmodel extends ChangeNotifier {
       return await _deleteZoneData(zoneId);
     });
 
-    _renameZoneCommand = Command1((ZoneRenameData data) async {
+    _renameZoneCommand = Command1((ZoneRenameDataModel data) async {
       return await _renameZoneData(data.zoneId, data.newName);
     });
 
-    _addZoneCommand = Command1((ZoneAddData data) async {
+    _addZoneCommand = Command1((ZoneAddDataModel data) async {
       return await _addZoneData(data);
     });
 
@@ -98,7 +99,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
 
   Future<void> renameZone(int zoneId, String newName) async {
     await _renameZoneCommand.execute(
-      ZoneRenameData(zoneId: zoneId, newName: newName),
+      ZoneRenameDataModel(zoneId: zoneId, newName: newName),
     );
   }
 
@@ -113,7 +114,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
     Map<String, dynamic>? roomPlanData,
   }) async {
     await _addZoneCommand.execute(
-      ZoneAddData(
+      ZoneAddDataModel(
         title: title,
         image: image,
         floorDimensionValue: floorDimensionValue,
@@ -213,7 +214,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
     }
   }
 
-  Future<Result<void>> _addZoneData(ZoneAddData data) async {
+  Future<Result<void>> _addZoneData(ZoneAddDataModel data) async {
     try {
       // Aqui seria a chamada para o service
       // final result = await _zonesService.addZone(data);
