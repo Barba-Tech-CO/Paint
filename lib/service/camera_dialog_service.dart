@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class CameraDialogService {
   /// Show camera unavailable dialog
@@ -17,7 +18,7 @@ class CameraDialogService {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              context.pop();
               onGoBack?.call();
             },
             child: const Text('Go Back'),
@@ -42,12 +43,12 @@ class CameraDialogService {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.pop(),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              context.pop();
               onContinue?.call();
             },
             child: const Text('Continue'),
@@ -68,11 +69,11 @@ class CameraDialogService {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => context.pop(false),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => context.pop(true),
             child: const Text(
               'Clear All',
               style: TextStyle(color: Colors.red),
@@ -99,13 +100,13 @@ class CameraDialogService {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.pop(),
             child: const Text('Cancel'),
           ),
           if (onOpenSettings != null)
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                context.pop();
                 onOpenSettings();
               },
               child: const Text('Open Settings'),
@@ -129,13 +130,13 @@ class CameraDialogService {
         content: Text(message),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.pop(),
             child: const Text('OK'),
           ),
           if (onRetry != null)
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                context.pop();
                 onRetry();
               },
               child: const Text('Retry'),
