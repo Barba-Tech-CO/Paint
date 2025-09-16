@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../helpers/zone_photos_helper.dart';
+import '../../viewmodel/zones/zone_detail_viewmodel.dart';
 
 class ZonePhotosWidget extends StatelessWidget {
   final List<String> photoUrls;
@@ -38,7 +38,7 @@ class ZonePhotosWidget extends StatelessWidget {
             mainAxisSpacing: 8,
             crossAxisSpacing: 8,
           ),
-          itemCount: ZonePhotosHelper.getTotalItemCount(
+          itemCount: ZoneDetailViewModel.getTotalItemCount(
             photoUrls,
             maxPhotos: maxPhotos,
           ),
@@ -49,7 +49,7 @@ class ZonePhotosWidget extends StatelessWidget {
               // Exibir foto existente com ícone de delete
               final url = photoUrls[index];
               final canDelete = photoUrls.length > minPhotos;
-              return ZonePhotosHelper.buildPhotoWithDeleteButton(
+              return ZoneDetailViewModel.buildPhotoWithDeleteButton(
                 photoUrl: url,
                 onDelete: canDelete
                     ? () async => await onDeletePhoto?.call(index)
@@ -58,7 +58,7 @@ class ZonePhotosWidget extends StatelessWidget {
               );
             } else {
               // Exibir slot de adicionar foto
-              return ZonePhotosHelper.buildAddPhotoSlot(
+              return ZoneDetailViewModel.buildAddPhotoSlot(
                 onAddPhoto: onAddPhoto,
                 currentPhotos: photoUrls.length,
                 maxPhotos: maxPhotos,
