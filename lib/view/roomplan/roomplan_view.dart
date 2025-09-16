@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
-import '../../widgets/dialogs/app_dialogs.dart';
+import '../../widgets/dialogs/error_dialog.dart';
+import '../../widgets/dialogs/incompatibility_dialog.dart';
 
 class RoomPlanView extends StatefulWidget {
   final List<String> capturedPhotos;
@@ -229,14 +230,14 @@ class _RoomPlanViewState extends State<RoomPlanView> {
   }
 
   void _showIncompatibilityDialog() {
-    AppDialogs.showIncompatibilityDialog(context).then((_) {
+    IncompatibilityDialog.show(context).then((_) {
       // Navigate to processing with photos only
       _navigateToProcessingWithPhotosOnly();
     });
   }
 
   void _showErrorDialog(String message) {
-    AppDialogs.showErrorDialog(
+    ErrorDialog.show(
       context,
       title: 'Error',
       message: message,
