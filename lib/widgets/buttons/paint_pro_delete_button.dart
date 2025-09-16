@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../utils/logger/app_logger.dart';
 import '../../viewmodel/zones/zone_detail_viewmodel.dart';
-import '../dialogs/app_dialogs.dart';
+import '../dialogs/delete_zone_dialog.dart';
 
 class PaintProDeleteButton extends StatelessWidget {
   final ZoneDetailViewModel viewModel;
@@ -48,7 +48,7 @@ class PaintProDeleteButton extends StatelessWidget {
     final zone = viewModel.currentZone;
     if (zone == null) return;
 
-    final confirm = await AppDialogs.showDeleteZoneDialog(
+    final confirm = await DeleteZoneDialog.show(
       context,
       zoneName: zone.title,
     );
