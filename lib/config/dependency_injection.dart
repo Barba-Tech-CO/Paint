@@ -65,8 +65,6 @@ import '../viewmodel/estimate/estimate_calculation_viewmodel.dart';
 import '../viewmodel/material/material_list_viewmodel.dart';
 import '../viewmodel/measurements/measurements_viewmodel.dart';
 import '../viewmodel/navigation_viewmodel.dart';
-import '../viewmodel/paint_catalog/paint_catalog_list_viewmodel.dart';
-import '../viewmodel/paint_catalog/paint_catalog_detail_viewmodel.dart';
 import '../viewmodel/projects/projects_viewmodel.dart';
 import '../viewmodel/quotes/quotes_viewmodel.dart';
 import '../viewmodel/user/user_viewmodel.dart';
@@ -308,18 +306,6 @@ void setupDependencyInjection() {
     () => EstimateCalculationViewModel(
       getIt<IEstimateRepository>(),
       getIt<PhotoService>(),
-    ),
-  );
-
-  // ViewModels - Paint Catalog
-  getIt.registerFactory<PaintCatalogListViewModel>(
-    () => PaintCatalogListViewModel(
-      getIt<IPaintCatalogRepository>(),
-    ),
-  );
-  getIt.registerFactory<PaintCatalogDetailViewModel>(
-    () => PaintCatalogDetailViewModel(
-      getIt<IPaintCatalogRepository>(),
     ),
   );
 
