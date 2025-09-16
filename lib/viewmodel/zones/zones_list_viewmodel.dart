@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -273,5 +274,97 @@ class ZonesListViewModel extends ChangeNotifier {
   void _clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  // Migrated from ProcessingHelper
+  /// Simulates processing time between 3s to 5s
+  static Future<void> simulateProcessing() async {
+    final processingTime = Duration(
+      milliseconds: 3000 + (DateTime.now().millisecondsSinceEpoch % 2000),
+    );
+
+    await Future.delayed(processingTime);
+  }
+
+  /// Creates zone data from room data or returns default data
+  static Map<String, dynamic> createZoneDataFromRoomData({
+    required List<String> capturedPhotos,
+    Map<String, dynamic>? roomData,
+    Map<String, dynamic>? projectData,
+  }) {
+    log('=== PROCESSING HELPER - ZONE DATA CREATION ===');
+    log('ProcessingHelper: Starting zone data creation');
+    log('ProcessingHelper: Captured photos count: \${capturedPhotos.length}');
+    log('ProcessingHelper: Room data available: \${roomData != null}');
+    log('ProcessingHelper: Project data available: \${projectData != null}');
+
+    if (projectData != null) {
+      log('ProcessingHelper: Project data: \$projectData');
+    }
+
+    // If we have room data from RoomPlan, use it
+    if (roomData != null) {
+      log('ProcessingHelper: Using room data from RoomPlan');
+
+      final floorData = roomData['floor'] as Map<String, dynamic>?;
+      final ceilingData = roomData['ceiling'] as Map<String, dynamic>?;
+      final wallsData = roomData['walls'] as List<dynamic>?;
+
+      // Extract floor dimensions
+      double? width = floorData?['width']?.toDouble();
+      double? length = floorData?['length']?.toDouble();
+
+      String floorDimensionValue = 'Unknown';
+      String floorAreaValue = 'Unknown';
+
+      if (width != null && length != null) {
+        floorDimensionValue = '\${width.toStringAsFixed(0)} x \${length.toStringAsFixed(0)}';
+        floorAreaValue = '\${(width * length).toStringAsFixed(0)} sq ft';
+      }
+
+      // Calculate surface areas
+      double wallsArea = 0.0;
+      if (wallsData != null) {
+        for (final wall in wallsData) {
+          final wallMap = wall as Map<String, dynamic>;
+          final area = wallMap['area']?.toDouble() ?? 0.0;
+          wallsArea += area;
+        }
+      }
+
+      double ceilingArea = ceilingData?['area']?.toDouble() ?? 0.0;
+
+      return {
+        'title': projectData?['roomName'] ?? 'New Zone',
+        'image': capturedPhotos.isNotEmpty ? capturedPhotos.first : '',
+        'floorDimensionValue': floorDimensionValue,
+        'floorAreaValue': floorAreaValue,
+        'areaPaintable': wallsArea.toStringAsFixed(0),
+        'ceilingArea': ceilingArea.toStringAsFixed(0),
+        'trimLength': '0',
+        'roomPlanData': {
+          'photos': capturedPhotos,
+          'roomData': roomData,
+          'projectData': projectData,
+        },
+      };
+    }
+
+    // Fallback: create default zone data
+    log('ProcessingHelper: Using default zone data (no room data available)');
+    return {
+      'title': projectData?['roomName'] ?? 'New Zone',
+      'image': capturedPhotos.isNotEmpty ? capturedPhotos.first : '',
+      'floorDimensionValue': '12 x 12',
+      'floorAreaValue': '144 sq ft',
+      'areaPaintable': '384',
+      'ceilingArea': '144',
+      'trimLength': '48',
+      'roomPlanData': {
+        'photos': capturedPhotos,
+        'roomData': null,
+        'projectData': projectData,
+      },
+    };
   }
 }
