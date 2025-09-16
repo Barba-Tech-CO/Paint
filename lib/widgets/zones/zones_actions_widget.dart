@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../viewmodel/zones/zones_list_viewmodel.dart';
 import '../../viewmodel/zones/zones_summary_viewmodel.dart';
 import '../buttons/paint_pro_button.dart';
-import '../dialogs/app_dialogs.dart';
+import '../dialogs/add_zone_dialog.dart';
 import 'zones_summary_card.dart';
 
 class ZonesActionsWidget extends StatelessWidget {
@@ -39,7 +39,7 @@ class ZonesActionsWidget extends StatelessWidget {
   }
 
   void _showAddZoneDialog(BuildContext context) {
-    AppDialogs.showAddZoneDialog(
+    AddZoneDialog.show(
       context,
       onAdd:
           ({
