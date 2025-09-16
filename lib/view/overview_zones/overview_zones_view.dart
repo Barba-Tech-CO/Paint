@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
-import '../../helpers/loading_helper.dart';
+import '../../widgets/loading/loading_navigation_widget.dart';
 import '../../model/estimates/estimate_status.dart';
 import '../../model/material_models/material_model.dart';
 import '../../model/projects/project_card_model.dart';
@@ -122,7 +122,7 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
 
       // Handle success state
       if (_estimateUploadViewModel.state == EstimateUploadState.success) {
-        LoadingHelper.navigateToQuoteLoading(context);
+        LoadingNavigationWidget.navigateToQuoteLoading(context);
       }
 
       // Handle error state
