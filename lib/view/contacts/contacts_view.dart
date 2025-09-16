@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
-import '../../helpers/contacts/contacts_helper.dart';
 import '../../helpers/contacts/split_full_name.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../viewmodel/contacts/contacts_viewmodel.dart';
@@ -47,14 +46,14 @@ class _ContactsViewState extends State<ContactsView> {
   }
 
   void _onSearchChanged() {
-    ContactsHelper.createDebouncedSearch(
-      searchController: _searchController,
-      onSearchChanged: (query) => _viewModel.searchQuery = query,
-    );
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      _viewModel.searchQuery = _searchController.text;
+    });
   }
 
   Map<String, String> _convertContactModelToMap(ContactModel contact) {
-    return ContactsHelper.convertContactModelToMap(contact);
+    return _viewModel.convertContactModelToMap(contact);
   }
 
   @override
@@ -64,7 +63,7 @@ class _ContactsViewState extends State<ContactsView> {
       child: MainLayout(
         currentRoute: '/contacts',
         child: GestureDetector(
-          onTap: () => ContactsHelper.dismissKeyboard(context),
+          onTap: () => ContactsViewModel.dismissKeyboard(context),
           child: Scaffold(
             backgroundColor: AppColors.background,
             appBar: const PaintProAppBar(
@@ -74,13 +73,13 @@ class _ContactsViewState extends State<ContactsView> {
             body: Consumer<ContactsViewModel>(
               builder: (context, viewModel, child) {
                 if (viewModel.isLoading) {
-                  return ContactsHelper.getLoadingWidget();
+                  return ContactsViewModel.getLoadingWidget();
                 }
 
                 if (viewModel.hasError) {
-                  return ContactsHelper.getErrorWidget(
-                    errorMessage: viewModel.errorMessage ?? 'Unknown error',
-                    onRetry: () => viewModel.loadContacts(),
+                  return ContactsViewModel.getErrorWidget(
+                    viewModel.errorMessage ?? 'Unknown error',
+                    () => viewModel.loadContacts(),
                   );
                 }
 
