@@ -19,8 +19,6 @@ import 'viewmodel/estimate/estimate_list_viewmodel.dart';
 import 'viewmodel/estimate/estimate_upload_viewmodel.dart';
 import 'viewmodel/measurements/measurements_viewmodel.dart';
 import 'viewmodel/navigation_viewmodel.dart';
-import 'viewmodel/paint_catalog/paint_catalog_detail_viewmodel.dart';
-import 'viewmodel/paint_catalog/paint_catalog_list_viewmodel.dart';
 import 'viewmodel/projects/projects_viewmodel.dart';
 import 'viewmodel/quotes/quotes_viewmodel.dart';
 import 'viewmodel/zones/zones_card_viewmodel.dart';
@@ -73,13 +71,6 @@ class PaintProApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<EstimateCalculationViewModel>(
           create: (_) => getIt<EstimateCalculationViewModel>(),
-        ),
-        // Paint Catalog ViewModels
-        ChangeNotifierProvider<PaintCatalogListViewModel>(
-          create: (_) => getIt<PaintCatalogListViewModel>(),
-        ),
-        ChangeNotifierProvider<PaintCatalogDetailViewModel>(
-          create: (_) => getIt<PaintCatalogDetailViewModel>(),
         ),
         // Navigation
         ChangeNotifierProvider<NavigationViewModel>(
