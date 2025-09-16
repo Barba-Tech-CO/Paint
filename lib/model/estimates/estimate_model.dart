@@ -120,7 +120,6 @@ class EstimateModel {
               floorDimensions: FloorDimensionsModel(
                 length: (fd['length'] as num?) ?? 0,
                 width: (fd['width'] as num?) ?? 0,
-                height: (fd['height'] as num?) ?? 0,
                 unit: (fd['unit'] as String?) ?? 'ft',
               ),
               surfaceAreas: SurfaceAreasModel(
@@ -247,7 +246,6 @@ class EstimateModel {
                       'floor_dimensions': {
                         'length': d.floorDimensions.length,
                         'width': d.floorDimensions.width,
-                        'height': d.floorDimensions.height,
                         'unit': d.floorDimensions.unit,
                       },
                       'surface_areas': d.surfaceAreas.values,
@@ -364,12 +362,6 @@ class EstimateModel {
               MapEntry(
                 'zones[$i][data][$k][floor_dimensions][width]',
                 d.floorDimensions.width.toString(),
-              ),
-            )
-            ..add(
-              MapEntry(
-                'zones[$i][data][$k][floor_dimensions][height]',
-                d.floorDimensions.height.toString(),
               ),
             )
             ..add(
