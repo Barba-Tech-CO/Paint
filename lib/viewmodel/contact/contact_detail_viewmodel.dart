@@ -3,8 +3,8 @@ import 'package:validatorless/validatorless.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../domain/repository/contact_repository.dart';
-import '../../helpers/error_message_helper.dart';
-import '../../helpers/snackbar_helper.dart';
+import '../../utils/error_utils.dart';
+import '../../utils/snackbar_utils.dart';
 import '../../helpers/contacts/contacts_helper.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../utils/command/command.dart';
@@ -59,19 +59,19 @@ class ContactDetailViewModel extends ChangeNotifier {
       _updateContactCommand.running ||
       _deleteContactCommand.running;
   String? get error => _createContactCommand.result is Error
-      ? ErrorMessageHelper.getUserFriendlyMessage(
+      ? ErrorUtils.getUserFriendlyMessage(
           (_createContactCommand.result as Error).error,
         )
       : _getContactDetailsCommand.result is Error
-      ? ErrorMessageHelper.getUserFriendlyMessage(
+      ? ErrorUtils.getUserFriendlyMessage(
           (_getContactDetailsCommand.result as Error).error,
         )
       : _updateContactCommand.result is Error
-      ? ErrorMessageHelper.getUserFriendlyMessage(
+      ? ErrorUtils.getUserFriendlyMessage(
           (_updateContactCommand.result as Error).error,
         )
       : _deleteContactCommand.result is Error
-      ? ErrorMessageHelper.getUserFriendlyMessage(
+      ? ErrorUtils.getUserFriendlyMessage(
           (_deleteContactCommand.result as Error).error,
         )
       : null;
@@ -120,7 +120,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     final contactId = params['contactId'] as String;
 
     // Log user action for error tracking
-    ErrorMessageHelper.logUserAction(
+    ErrorUtils.logUserAction(
       'Update Contact',
       {'contactId': contactId, 'hasName': params['name'] != null},
     );
@@ -596,7 +596,7 @@ class ContactDetailViewModel extends ChangeNotifier {
             ? 'Contact updated successfully in API and locally!'
             : 'Contact updated successfully locally! (Will sync when online)';
 
-        SnackBarHelper.showSuccess(
+        SnackBarUtils.showSuccess(
           context,
           message: message,
         );
@@ -611,7 +611,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     } else {
       // Show user-friendly error message
       if (context.mounted) {
-        SnackBarHelper.showError(
+        SnackBarUtils.showError(
           context,
           message: 'Failed to update contact. Please try again.',
         );
