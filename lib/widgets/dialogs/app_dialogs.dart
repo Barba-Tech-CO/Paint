@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../config/app_colors.dart';
+
 /// Consolidated dialogs service for the entire application
 class AppDialogs {
   // Private constructor to prevent instantiation
@@ -17,12 +19,25 @@ class AppDialogs {
         ),
         actions: [
           TextButton(
-            onPressed: () => context.pop(false),
-            child: const Text('Cancel'),
+            onPressed: () => context.pop(true),
+            child: Text(
+              'Yes, go back',
+              style: TextStyle(
+                color: AppColors.gray100,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           TextButton(
-            onPressed: () => context.pop(true),
-            child: const Text('Yes, go back'),
+            onPressed: () => context.pop(false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 16,
+              ),
+            ),
           ),
         ],
       ),
@@ -46,7 +61,7 @@ class AppDialogs {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              context.pop();
               onGoBack?.call();
             },
             child: const Text('Go Back'),
@@ -71,15 +86,28 @@ class AppDialogs {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              context.pop();
               onContinue?.call();
             },
-            child: const Text('Continue'),
+            child: Text(
+              'Continue',
+              style: TextStyle(
+                color: AppColors.gray100,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => context.pop(),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 16,
+              ),
+            ),
           ),
         ],
       ),
@@ -97,14 +125,24 @@ class AppDialogs {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            onPressed: () => context.pop(true),
+            child: Text(
+              'Clear All',
+              style: TextStyle(
+                color: AppColors.gray100,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(
-              'Clear All',
-              style: TextStyle(color: Colors.red),
+            onPressed: () => context.pop(false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 16,
+              ),
             ),
           ),
         ],
@@ -126,18 +164,31 @@ class AppDialogs {
           'This app needs camera permission to take photos. Please enable camera access in your device settings.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
           if (onOpenSettings != null)
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                context.pop();
                 onOpenSettings();
               },
-              child: const Text('Open Settings'),
+              child: Text(
+                'Open Settings',
+                style: TextStyle(
+                  color: AppColors.gray100,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
+          TextButton(
+            onPressed: () => context.pop(),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 16,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -156,18 +207,31 @@ class AppDialogs {
         title: Text(title),
         content: Text(message),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
           if (onRetry != null)
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                context.pop();
                 onRetry();
               },
-              child: const Text('Retry'),
+              child: Text(
+                'Retry',
+                style: TextStyle(
+                  color: AppColors.gray100,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
+          TextButton(
+            onPressed: () => context.pop(),
+            child: Text(
+              'OK',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 16,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -219,8 +283,15 @@ class AppDialogs {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Continue with Photos'),
+            onPressed: () => context.pop(),
+            child: Text(
+              'Continue with Photos',
+              style: TextStyle(
+                color: AppColors.gray100,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -257,20 +328,24 @@ class AppDialogs {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            onPressed: () => context.pop(true),
+            child: Text(
+              'Delete',
+              style: TextStyle(
+                color: AppColors.gray100,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
-            child: const Text(
-              'Delete',
-              style: TextStyle(fontWeight: FontWeight.w900),
+            onPressed: () => context.pop(false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 16,
+              ),
             ),
           ),
         ],
@@ -296,13 +371,26 @@ class AppDialogs {
           autofocus: true,
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Save'),
+            onPressed: () => context.pop(controller.text.trim()),
+            child: Text(
+              'Save',
+              style: TextStyle(
+                color: AppColors.gray100,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => context.pop(),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 16,
+              ),
+            ),
           ),
         ],
       ),
@@ -323,7 +411,7 @@ class AppDialogs {
     void handleSubmit() {
       if (formKey.currentState?.validate() == true) {
         final newName = controller.text.trim();
-        Navigator.of(context).pop(newName);
+        context.pop(newName);
       }
     }
 
@@ -351,12 +439,25 @@ class AppDialogs {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            onPressed: handleSubmit,
+            child: Text(
+              'Rename',
+              style: TextStyle(
+                color: AppColors.gray100,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           TextButton(
-            onPressed: handleSubmit,
-            child: const Text('Rename'),
+            onPressed: () => context.pop(),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 16,
+              ),
+            ),
           ),
         ],
       ),
@@ -380,15 +481,25 @@ class AppDialogs {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            onPressed: () => context.pop(true),
+            child: Text(
+              'Delete',
+              style: TextStyle(
+                color: AppColors.gray100,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
+            onPressed: () => context.pop(false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 16,
+              ),
             ),
-            child: const Text('Delete'),
           ),
         ],
       ),
@@ -429,7 +540,7 @@ class AppDialogs {
           title: titleController.text.trim(),
           zoneType: selectedZoneType,
         );
-        Navigator.of(context).pop();
+        context.pop();
       }
     }
 
@@ -460,7 +571,7 @@ class AppDialogs {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: selectedZoneType,
+                  initialValue: selectedZoneType,
                   decoration: const InputDecoration(
                     labelText: 'Zone Type',
                   ),
@@ -483,12 +594,25 @@ class AppDialogs {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              onPressed: handleSubmit,
+              child: Text(
+                'Add Zone',
+                style: TextStyle(
+                  color: AppColors.gray100,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             TextButton(
-              onPressed: handleSubmit,
-              child: const Text('Add Zone'),
+              onPressed: () => context.pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ],
         ),
@@ -515,5 +639,54 @@ class AppDialogs {
         context.mounted) {
       await viewModel.renameZone(zone.id, newName);
     }
+  }
+
+  /// Show delete photo confirmation dialog
+  static Future<bool?> showDeletePhotoDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Delete Photo',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          content: const Text(
+            'Are you sure you want to delete this photo?',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => context.pop(true),
+              child: Text(
+                'Yes, delete',
+                style: TextStyle(
+                  color: AppColors.gray100,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => context.pop(false),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
