@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../../helpers/zones/zone_data_classes.dart';
 import '../../model/projects/project_card_model.dart';
@@ -264,5 +264,81 @@ class ZoneDetailViewModel extends ChangeNotifier {
     if (!_disposed) {
       notifyListeners();
     }
+  }
+
+  // Migrated from ZonePhotosHelper
+  /// Gets total item count for photo grid including add slot
+  static int getTotalItemCount(List<String> photoUrls, {int maxPhotos = 9}) {
+    if (photoUrls.length < maxPhotos) {
+      return photoUrls.length + 1; // +1 para o slot de adicionar
+    }
+    return photoUrls.length; // Sem slot de adicionar quando atingir o máximo
+  }
+
+  /// Builds add photo slot widget
+  static Widget buildAddPhotoSlot({
+    VoidCallback? onAddPhoto,
+    int currentPhotos = 0,
+    int maxPhotos = 9,
+  }) {
+    return GestureDetector(
+      onTap: onAddPhoto,
+      child: Container(
+        width: 104,
+        height: 128,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF007AFF), Color(0xFF0051D0)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 32,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Builds photo with delete button widget
+  static Widget buildPhotoWithDeleteButton({
+    required String photoUrl,
+    required Future<void> Function()? onDelete,
+    bool canDelete = true,
+  }) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.asset(
+            photoUrl,
+            fit: BoxFit.cover,
+            width: 104,
+            height: 128,
+          ),
+        ),
+        if (canDelete)
+          Positioned(
+            top: 4,
+            right: 8,
+            child: GestureDetector(
+              onTap: onDelete,
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Image.asset(
+                  'assets/icons/delete.png',
+                  width: 14,
+                  height: 16,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
