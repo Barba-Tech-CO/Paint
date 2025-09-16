@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
-import '../../helpers/contacts/contact_details_helper.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../utils/result/result.dart';
 import '../../viewmodel/contact/contact_detail_viewmodel.dart';
@@ -68,7 +67,7 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
     final theme = Theme.of(context);
     final contact = _currentContact ?? widget.contact;
 
-    final showAdditionalInfo = ContactDetailsHelper.hasAdditionalBusinessInfo(
+    final showAdditionalInfo = ContactDetailViewModel.hasAdditionalBusinessInfo(
       contact,
     );
 
@@ -92,7 +91,7 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
                   children: [
                     Text(
                       contact.name,
-                      style: ContactDetailsHelper.getContactNameStyle(theme),
+                      style: ContactDetailViewModel.getContactNameStyle(theme),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -103,14 +102,14 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
 
               SectionHeaderWidget(
                 icon:
-                    ContactDetailsHelper.getContactSectionData()['icon']
+                    ContactDetailViewModel.getContactSectionData()['icon']
                         as IconData,
                 title:
-                    ContactDetailsHelper.getContactSectionData()['title']
+                    ContactDetailViewModel.getContactSectionData()['title']
                         as String,
               ),
               InfoCardWidget(
-                children: ContactDetailsHelper.getContactInfoRows(contact)
+                children: ContactDetailViewModel.getContactInfoRows(contact)
                     .map(
                       (row) => InfoRowWidget(
                         label: row['label']!,
@@ -123,14 +122,14 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
               const SizedBox(height: 16),
               SectionHeaderWidget(
                 icon:
-                    ContactDetailsHelper.getAddressSectionData()['icon']
+                    ContactDetailViewModel.getAddressSectionData()['icon']
                         as IconData,
                 title:
-                    ContactDetailsHelper.getAddressSectionData()['title']
+                    ContactDetailViewModel.getAddressSectionData()['title']
                         as String,
               ),
               InfoCardWidget(
-                children: ContactDetailsHelper.getAddressInfoRows(contact)
+                children: ContactDetailViewModel.getAddressInfoRows(contact)
                     .map(
                       (row) => InfoRowWidget(
                         label: row['label']!,
@@ -145,14 +144,14 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
 
                 SectionHeaderWidget(
                   icon:
-                      ContactDetailsHelper.getAdditionalInfoSectionData()['icon']
+                      ContactDetailViewModel.getAdditionalInfoSectionData()['icon']
                           as IconData,
                   title:
-                      ContactDetailsHelper.getAdditionalInfoSectionData()['title']
+                      ContactDetailViewModel.getAdditionalInfoSectionData()['title']
                           as String,
                 ),
                 InfoCardWidget(
-                  children: ContactDetailsHelper.getAdditionalInfoRows(contact)
+                  children: ContactDetailViewModel.getAdditionalInfoRows(contact)
                       .map(
                         (row) => InfoRowWidget(
                           label: row['label']!,
