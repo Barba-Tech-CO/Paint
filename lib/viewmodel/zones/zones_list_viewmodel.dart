@@ -2,7 +2,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../helpers/zones/zone_add_data.dart';
+import '../../model/zones/zone_add_data_model.dart';
 import '../../model/projects/project_card_model.dart';
 import '../../service/i_zones_service.dart';
 import '../../utils/command/command.dart';
@@ -32,10 +32,10 @@ class ZonesListViewModel extends ChangeNotifier {
 
   // Commands
   Command0<void>? _loadZonesCommand;
-  Command1<void, ZoneAddData>? _addZoneCommand;
+  Command1<void, ZoneAddDataModel>? _addZoneCommand;
 
   Command0<void> get loadZonesCommand => _loadZonesCommand!;
-  Command1<void, ZoneAddData> get addZoneCommand => _addZoneCommand!;
+  Command1<void, ZoneAddDataModel> get addZoneCommand => _addZoneCommand!;
 
   // Computed properties
   bool get isLoading =>
@@ -61,7 +61,7 @@ class ZonesListViewModel extends ChangeNotifier {
       return await _loadZonesData();
     });
 
-    _addZoneCommand = Command1((ZoneAddData data) async {
+    _addZoneCommand = Command1((ZoneAddDataModel data) async {
       return await _addZoneData(data);
     });
   }
@@ -85,7 +85,7 @@ class ZonesListViewModel extends ChangeNotifier {
   }) async {
     if (_addZoneCommand != null) {
       await _addZoneCommand!.execute(
-        ZoneAddData(
+        ZoneAddDataModel(
           title: title,
           image: image,
           floorDimensionValue: floorDimensionValue,
@@ -233,7 +233,7 @@ class ZonesListViewModel extends ChangeNotifier {
     }
   }
 
-  Future<Result<void>> _addZoneData(ZoneAddData data) async {
+  Future<Result<void>> _addZoneData(ZoneAddDataModel data) async {
     try {
       // Adiciona zona usando o command do service
       await _zonesService.addZoneCommand.execute(data);
@@ -318,7 +318,8 @@ class ZonesListViewModel extends ChangeNotifier {
       String floorAreaValue = 'Unknown';
 
       if (width != null && length != null) {
-        floorDimensionValue = '\${width.toStringAsFixed(0)} x \${length.toStringAsFixed(0)}';
+        floorDimensionValue =
+            '\${width.toStringAsFixed(0)} x \${length.toStringAsFixed(0)}';
         floorAreaValue = '\${(width * length).toStringAsFixed(0)} sq ft';
       }
 
