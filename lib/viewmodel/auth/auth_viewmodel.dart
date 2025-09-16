@@ -41,7 +41,7 @@ class AuthViewModel extends ChangeNotifier {
   String? get popupUrl => _state.popupUrl;
 
   // Comandos do Command Builder
-  late final Command0<AuthModel> checkAuthStatusCommand = Command0(
+  late final Command0<void> checkAuthStatusCommand = Command0(
     _checkAuthStatus,
   );
   late final Command1<void, String> processCallbackCommand = Command1(
@@ -156,7 +156,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   // Métodos privados para os comandos
-  Future<Result<AuthModel>> _checkAuthStatus() async {
+  Future<Result<void>> _checkAuthStatus() async {
     _updateState(
       _state.copyWith(
         isLoading: true,
@@ -181,7 +181,7 @@ class AuthViewModel extends ChangeNotifier {
                 errorMessage: 'Please log in again to access your account',
               ),
             );
-            return Result.ok(unauthenticatedModel);
+            return Result.ok(null);
           }
         }
 
@@ -221,7 +221,7 @@ class AuthViewModel extends ChangeNotifier {
           _updateState(_state.copyWith(isLoading: false));
         }
 
-        return Result.ok(authModel);
+        return Result.ok(null);
       },
       error: (error) {
         _logger.error(
@@ -265,7 +265,7 @@ class AuthViewModel extends ChangeNotifier {
           );
 
           // Return success to CommandBuilder so it doesn't show error overlay
-          return Result.ok(unauthenticatedModel);
+          return Result.ok(null);
         }
       },
     );
