@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../model/material_models/material_model.dart' as model;
 import '../../config/app_colors.dart';
 import 'drop_down_filter_widget.dart';
@@ -84,7 +86,7 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
                       child: const Text('Reset All'),
                     ),
                   IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => context.pop(),
                     icon: const Icon(Icons.close),
                   ),
                 ],
@@ -171,7 +173,7 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
             child: ElevatedButton(
               onPressed: () {
                 widget.onFilterChanged(_currentFilter);
-                Navigator.of(context).pop();
+                context.pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
