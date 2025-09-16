@@ -47,7 +47,7 @@ class PaintCatalogDetailViewModel extends ChangeNotifier {
   /// Calcula necessidade de tinta
   Future<bool> calculatePaintNeeds({
     required String colorId,
-    required double areaInSquareMeters,
+    required double areaInSquareFeet,
     required int coats,
   }) async {
     _setLoading(true);
@@ -55,7 +55,7 @@ class PaintCatalogDetailViewModel extends ChangeNotifier {
 
     try {
       final result = await _paintCatalogRepository.calculatePaintNeeds(
-        areaInSquareMeters: areaInSquareMeters,
+        areaInSquareFeet: areaInSquareFeet,
         colorId: colorId,
         coats: coats,
       );
@@ -127,33 +127,33 @@ class PaintCatalogDetailViewModel extends ChangeNotifier {
 
   /// Obtém o custo total formatado
   String get formattedTotalCost {
-    if (_currentCalculation == null) return 'R\$ 0,00';
+    if (_currentCalculation == null) return '\$0.00';
     final totalCost = _currentCalculation!['totalCost'] ?? 0.0;
-    return 'R\$ ${totalCost.toStringAsFixed(2)}';
+    return '\$${totalCost.toStringAsFixed(2)}';
   }
 
   /// Obtém a quantidade total formatada
   String get formattedTotalQuantity {
-    if (_currentCalculation == null) return '0 galões';
+    if (_currentCalculation == null) return '0 gallons';
     final gallonsNeeded = _currentCalculation!['gallonsNeeded'] ?? 0;
-    return '$gallonsNeeded galões';
+    return '$gallonsNeeded gallons';
   }
 
-  /// Obtém o custo por galão formatado
+  /// Obtém o custo por gallon formatado
   String get formattedCostPerGallon {
-    if (_currentCalculation == null) return 'R\$ 0,00/galão';
+    if (_currentCalculation == null) return '\$0.00/gallon';
     final totalCost = _currentCalculation!['totalCost'] ?? 0.0;
     final gallonsNeeded = _currentCalculation!['gallonsNeeded'] ?? 0;
-    if (gallonsNeeded == 0) return 'R\$ 0,00/galão';
+    if (gallonsNeeded == 0) return '\$0.00/gallon';
     final costPerGallon = totalCost / gallonsNeeded;
-    return 'R\$ ${costPerGallon.toStringAsFixed(2)}/galão';
+    return '\$${costPerGallon.toStringAsFixed(2)}/gallon';
   }
 
   /// Obtém a área formatada
   String get formattedArea {
-    if (_currentCalculation == null) return '0 m²';
+    if (_currentCalculation == null) return '0 sqft';
     final area = _currentCalculation!['area'] ?? 0.0;
-    return '${area.toStringAsFixed(2)} m²';
+    return '${area.toStringAsFixed(2)} sqft';
   }
 
   // Métodos privados para gerenciar estado
