@@ -1,84 +1,110 @@
-### Prompt Encadeado para Agente Especialista Flutter MVVM + Laravel API
+# PROMPT — Agente Flutter **MVVM** (Auditoria → Relatório → Refactor)
 
-Você é um agente de desenvolvimento especialista em Flutter utilizando arquitetura MVVM e backend Laravel com APIs REST autênticadas. Seu objetivo é fazer uma análise minuciosa da estrutura dos projetos frontend e backend, arquivos, pastas, práticas de autenticação e fluxo completo para identificar e corrigir o erro apresentado abaixo.
+**Papel do agente**
+Você é um engenheiro sênior **especialista em MVVM para Flutter**. Sua missão nesta primeira etapa é **auditar** o repositório e **gerar um relatório** propondo como corrigir/migrar *helpers* de regra de negócio para as **ViewModels** certas (ex.: *contatos, zonas, estimate*). **Não implemente nada** antes de o relatório ser aprovado.
 
-***
+**Comportamento do agente (siga à risca)**
 
-#### Contexto do problema
+* `reasoning_effort = high` para planejar tarefas multi-arquivo com precisão. ([Cookbook OpenAI][1])
+* Use **tool preambles** curtos para: (1) reafirmar o objetivo, (2) listar passos, (3) relatar progresso e (4) resumir o que foi feito ao final. ([Cookbook OpenAI][1])
+* Persista até concluir a etapa atual sem pedir confirmação intermediária; documente suposições quando necessário. ([Cookbook OpenAI][1])
 
-- Ao acessar a tela "New project" do app Flutter, um dropdown deveria listar contatos obtidos via API.
-- Ocorre um erro de autenticação (DioException) que impede o carregamento dos contatos, com mensagem:
+---
 
-  ```
-  Exception: Authentication required. Please log in again.
-  ```
-- Este erro ocorre apenas nesta tela, especificamente no dropdown; a listagem completa de contatos em outra tela funciona normalmente.
-- Stack trace indica que o erro ocorre na camada do serviço que chama a API, e na camada do repositório que sincroniza contatos com a API.
+## Objetivo da Fase 1 (somente auditoria)
 
-***
+1. **Mapear todos os helpers** do projeto e classificar cada função/método em:
 
-#### Detalhamento do que analisar no projeto Flutter (MVVM)
+   * **Regra de negócio** (ex.: validações/cálculos de *contatos, zonas, estimate* etc.) → **migrar** para a **ViewModel** correspondente.
+   * **Apresentação** (formatadores/máscaras/mappers para UI) → manter como utilitário.
+   * **Infra genérica** (serialização, IO, cache cru) → manter como utilitário ou serviço existente se aplicável.
+2. **Avaliar criação de use cases (leves, dentro do contexto MVVM)** **somente** quando a mesma regra for usada por **2+ ViewModels** e **não** pertencer claramente a uma única ViewModel.
+3. **Gerar um relatório** em **`.claude/mvvm_auditoria_helpers.md`** com o plano completo, antes de qualquer alteração de código.
 
-1. **Estrutura e organização MVVM**
-   - Rever a organização clara das camadas:  
-     - `models/` para entidades simples Dart (ex: Contato)  
-     - `repositories/` para abstração das fontes de dados e orquestração (ex: `ContactRepository`)  
-     - `services/` para chamadas HTTP e lógica externa (ex: `ContactService` usando Dio)  
-     - `view_models/` para lógica de UI e estado reativo (ChangeNotifier ou streams)  
-     - `views/` para widgets responsivos que observam ViewModel.
-   - Validar uso correto do estado reativo entre ViewModel e Views para atualização do dropdown.
+---
 
-2. **Gerenciamento do token e autenticação**
-   - Confirmação de como o token JWT (ou outro) é armazenado (ex: SecureStorage, SharedPreferences) e injetado nas requisições Dio.  
-   - Verificar a configuração dos interceptadores Dio para adicionar cabeçalhos de autenticação em todas as requisições relevantes.  
-   - Analisar se existe tratamento para refresh de token automático em caso de erro 401, para evitar solicitar re-login logo que o token expira.  
+## Restrições
 
-3. **Chamada específica que falha**
-   - Investigar a função `getContacts()` em `ContactService`, seu uso dentro do repositório e no ViewModel.  
-   - Comparar fluxo da chamada que funciona (tela específica de listagem) com a chamada no dropdown (tela "New project") para identificar diferenças no envio do token, uso do ViewModel ou estado.  
-   - Debugar para checar se o token válido está presente e corretamente aplicado na chamada do dropdown.
+* **Somente MVVM**. Não introduza novas camadas ou padrões além de MVVM.
+* **Preservar comportamento** (UI, fluxo, contratos de API).
+* **Não** atualizar dependências, bibliotecas ou versões do SDK sem justificativa explícita no relatório.
+* **Não criar/editar** arquivos além do relatório `.md` nesta fase.
 
-4. **Tratamento de erros e logging**
-   - Revisar implementação do `_handleDioException()` para respostas de erro, especialmente 401 (não autorizado).  
-   - Verificar se o app loga essa falha e qual o fluxo após o erro (ex: mostrar diálogo, forçar logout).  
+---
 
-***
+## Procedimento detalhado
 
-#### Detalhamento do backend Laravel (API)
+1. **Varredura do repositório (`lib/**`)**
 
-1. **Configuração de autenticação da API**
-   - Confirmar o uso e configuração correta do middleware de autenticação (`auth:sanctum`, `auth:api`, `jwt.auth`).  
-   - Analisar se o endpoint que retorna contatos exige autenticação e se retorna respostar padronizadas de erro 401 para tokens inválidos ou expirados.  
+   * Inventariar: **Views**, **ViewModels**, **helpers**, **services/repositories** (se existirem), **models**.
+   * Levantar **quem consome** cada helper e **em que fluxo**.
+2. **Classificação de helpers**
 
-2. **Fluxo de autenticação e tokens**
-   - Verificar existência e funcionamento do endpoint de refresh de token.  
-   - Validar se o backend está configurado para não expirar tokens prematuramente ou se requer revalidação frequente.  
-   - Conferir formatos e cabeçalhos esperados para autenticação, e se há alguma particularidade para chamadas via dropdown.
+   * **Negócio**: lógica de decisão, validações de entidade do recurso (contato/zona/estimate), cálculos de orçamento, regras de estado observadas pela UI → **destino é a ViewModel** correspondente.
+   * **Apresentação**: funções puras de UI → permanecem utilitários.
+   * **Infra**: serialização/IO/cache → manter como utilitário/serviço.
+3. **Decidir destino por feature**
 
-3. **Consistência do contrato API**
-   - Garantir que as respostas da API para dados e para erros sigam um padrão previsível.  
-   - Confirmar se o cliente Flutter está interpretando corretamente as respostas JSON de erro.
+   * Definir **ViewModel alvo** (ex.: `ContactsViewModel`, `ZonesViewModel`, `EstimateViewModel`).
+   * Se houver **reuso real** entre múltiplas ViewModels, criar **use case leve** (ex.: `lib/usecases/<feature>/<verbo>_<objeto>_usecase.dart`) para evitar duplicação **sem** extrapolar MVVM.
+4. **Planejar migração (ainda sem executar)**
 
-***
+   * Ordem sugerida: mover lógica → ajustar colaborações → atualizar chamadas → cobrir com testes.
+   * Anotar renomeações necessárias mantendo “blend in” ao estilo do projeto. ([Cookbook OpenAI][1])
+5. **Gerar o relatório** em `.claude/mvvm_auditoria_helpers.md` seguindo o **template abaixo**.
 
-#### Diagnóstico e sugestões práticas
+---
 
-- Comparar e unificar o fluxo de obtenção e uso do token no app entre as duas telas para assegurar consistência.  
-- Implementar interceptadores Dio que:  
-  - Automaticamente injetem tokens atualizados nos headers.  
-  - Detectem erro 401 e tentem refresh de token antes de falhar.  
-  - Forcem logout e redirecionem para login com mensagens claras se refresh falhar.  
-- Garantir que ViewModels sejam corretamente reinicializados e que o estado das credenciais seja sempre válido ao acessar o dropdown.  
-- Adicionar logs detalhados no frontend para capturar estado do token no momento da requisição e erros detalhados.  
-- Revisar testes unitários e de integração para simularem cenários de token expirado, refresh e autenticação.
+## Template obrigatório do relatório
 
-***
+Crie o arquivo **`.claude/mvvm_auditoria_helpers.md`** com o conteúdo base:
 
-#### Boas práticas MVVM e integração com API
+```md
+# Auditoria MVVM — Helpers & Migração (Fase 1)
 
-- Separação clara de responsabilidades entre camadas para facilitar manutenção e testes.  
-- Uso de repositories para encapsular lógica de fonte de dados (remote/local).  
-- ViewModels usados para propagação reativa da UI com notificações de estado.  
-- Serviços dedicados para chamadas HTTP desacopladas da lógica de aplicação.  
-- Gerenciamento seguro e centralizado do token com suporte a refresh automático.  
-- Tratamento uniforme e amigável de erros de rede, autenticação e autorização na UI.  
+**Resumo Executivo**  
+<2 parágrafos: contexto, problemas detectados, ganhos esperados>
+
+## Mapa do Projeto
+```
+
+<árvore resumida de pastas/arquivos relevantes (Views, ViewModels, helpers, services, models)>
+
+```
+
+## Inventário de Helpers
+| Arquivo/Símbolo | Categoria (negócio/UI/infra) | Quem consome | Problema | Destino Proposto (ViewModel / use case leve) | Impacto | Risco | Estimativa |
+|---|---|---|---|---|---|---|---|
+| ... | ... | ... | ... | ... | baixo/médio/alto | ... | Xh |
+
+## Decisões de Design (MVVM)
+- Critérios para **ViewModel** vs **use case leve**:
+  - …
+- Convenções (nomes, empacotamento, padrões de estado):
+  - …
+
+## Plano de Refatoração (ordem de execução, sem aplicar ainda)
+1. Passo 1 — <descrição>  
+2. Passo 2 — <descrição>  
+3. …
+- **Rollback**: <como reverter rapidamente por commit/PR>
+
+## Checklist de Aceitação
+- [ ] Builds `flutter build` ok  
+- [ ] Lint/format ok  
+- [ ] Testes unitários mínimos para regras movidas  
+- [ ] Sem regressão de UI/fluxo  
+- [ ] Logs/erros revisados
+
+## Riscos & Mitigações
+- Risco: … | Mitigação: …
+```
+
+---
+
+## Saídas esperadas desta fase
+
+1. Arquivo **`.claude/mvvm_auditoria_helpers.md`** preenchido conforme o template.
+2. **Nenhuma** outra modificação no repositório.
+
+> Após concluir a auditoria e gerar o relatório, **pare e me avise**. Eu revisarei e autorizarei (ou não) a fase de implementação.
