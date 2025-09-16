@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../config/app_colors.dart';
 import '../../viewmodel/zones/zones_list_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
-import '../../widgets/dialogs/app_dialogs.dart';
+import '../../widgets/dialogs/exit_zones_dialog.dart';
 import '../../widgets/loading/loading_widget.dart';
 import '../../widgets/zones/zones_results_widget.dart';
 
@@ -23,7 +23,7 @@ class ZonesView extends StatelessWidget {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final shouldLeave = await AppDialogs.showExitZonesDialog(context);
+        final shouldLeave = await ExitZonesDialog.show(context);
         if (shouldLeave && context.mounted) {
           context.go('/new-project');
         }
