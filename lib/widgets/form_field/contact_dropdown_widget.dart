@@ -27,15 +27,17 @@ class ContactDropdownWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label!,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+        if (label != null) ...[
+          Text(
+            label!,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
+          const SizedBox(height: 8),
+        ],
         DropdownButtonFormField<ContactModel?>(
           initialValue: selectedContact,
           decoration: InputDecoration(
@@ -77,7 +79,7 @@ class ContactDropdownWidget extends StatelessWidget {
                     Text('Loading contacts...'),
                   ],
                 )
-              : Text('Select $label'),
+              : Text(label != null ? 'Select $label' : 'Select contact'),
           items: contacts.map((contact) {
             return DropdownMenuItem<ContactModel?>(
               value: contact,
