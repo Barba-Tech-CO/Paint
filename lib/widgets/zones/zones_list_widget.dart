@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../helpers/zones/zones_list_helper.dart';
 import '../../viewmodel/zones/zones_list_viewmodel.dart';
 import '../cards/zones_card.dart';
 
@@ -26,26 +25,22 @@ class ZonesListWidget extends StatelessWidget {
                   children: [
                     ZonesCard(
                       title: zone.title,
-                      photoPaths: ZonesListHelper.extractPhotoPaths(zone),
+                      photoPaths: listViewModel.extractPhotoPaths(zone),
                       valueDimension: zone.floorDimensionValue,
                       valueArea: zone.floorAreaValue,
                       valuePaintable: zone.areaPaintable,
-                      onTap: () => ZonesListHelper.onZoneTap(
-                        context,
-                        zone,
-                        listViewModel,
-                      ),
-                      onEdit: () => ZonesListHelper.onZoneEdit(context, zone),
-                      onRename: (newName) => ZonesListHelper.onZoneRename(
+                      onTap: () =>
+                          listViewModel.navigateToZoneDetails(context, zone),
+                      onEdit: () =>
+                          listViewModel.navigateToEditZone(context, zone),
+                      onRename: (newName) => listViewModel.renameZone(
                         context,
                         zone,
                         newName,
-                        listViewModel,
                       ),
-                      onDelete: () => ZonesListHelper.onZoneDelete(
+                      onDelete: () => listViewModel.deleteZone(
                         context,
                         zone,
-                        listViewModel,
                       ),
                     ),
                     const SizedBox(height: 16),
