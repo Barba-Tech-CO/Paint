@@ -9,7 +9,8 @@ import '../../viewmodel/zones/zone_detail_viewmodel.dart';
 import '../appbars/paint_pro_app_bar.dart';
 import '../buttons/paint_pro_button.dart';
 import '../buttons/paint_pro_delete_button.dart';
-import '../dialogs/app_dialogs.dart';
+import '../dialogs/delete_photo_dialog.dart';
+import '../dialogs/rename_zone_dialog.dart';
 import 'floor_dimension_widget.dart';
 import 'surface_area_display_widget.dart';
 import 'zone_photos_widget.dart';
@@ -35,7 +36,7 @@ class ZonesDetailsContentWidget extends StatelessWidget {
             ),
           );
         }
-        
+
         final zone = viewModel.currentZone!;
         final photoUrls = _getPhotoUrls(zone);
 
@@ -163,11 +164,7 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                         foregroundColor: Colors.black,
                         onPressed: viewModel.isRenaming
                             ? null
-                            : () =>
-                                  AppDialogs.showRenameZoneDialogWithViewModel(
-                                    context,
-                                    viewModel: viewModel,
-                                  ),
+                            : () => _showRenameZoneDialog(context),
                       ),
                     ),
                     SizedBox(
@@ -232,9 +229,26 @@ class ZonesDetailsContentWidget extends StatelessWidget {
   }
 
   Future<void> _deletePhoto(BuildContext context, int index) async {
-    final bool? shouldDelete = await AppDialogs.showDeletePhotoDialog(context);
+    final bool? shouldDelete = await DeletePhotoDialog.show(context);
     if (shouldDelete == true) {
       viewModel.deletePhoto(index);
+    }
+  }
+
+  Future<void> _showRenameZoneDialog(BuildContext context) async {
+    final zone = viewModel.currentZone;
+    if (zone == null) return;
+
+    final newName = await RenameZoneDialog.show(
+      context,
+      initialName: zone.title,
+    );
+
+    if (newName != null &&
+        newName.isNotEmpty &&
+        newName != zone.title &&
+        context.mounted) {
+      await viewModel.renameZone(zone.id, newName);
     }
   }
 
