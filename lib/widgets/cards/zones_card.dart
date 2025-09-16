@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../../config/app_colors.dart';
 import '../../utils/responsive/responsive_helper.dart';
-import '../dialogs/app_dialogs.dart';
+import '../dialogs/delete_zone_dialog.dart';
+import '../dialogs/rename_zone_dialog.dart';
 
 class ZonesCard extends StatelessWidget {
   final String title;
@@ -133,7 +134,7 @@ class ZonesCard extends StatelessWidget {
                 icon: Icon(Icons.more_vert, color: Colors.grey[700]),
                 onSelected: (value) async {
                   if (value == 'rename') {
-                    final newName = await AppDialogs.showRenameZoneDialog(
+                    final newName = await RenameZoneDialog.show(
                       context,
                       initialName: title,
                     );
@@ -143,7 +144,7 @@ class ZonesCard extends StatelessWidget {
                   } else if (value == 'edit') {
                     onEdit?.call();
                   } else if (value == 'delete') {
-                    final confirm = await AppDialogs.showDeleteZoneDialog(
+                    final confirm = await DeleteZoneDialog.show(
                       context,
                       zoneName: title,
                     );
