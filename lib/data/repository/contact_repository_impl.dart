@@ -2,7 +2,7 @@ import 'dart:async';
 
 import '../../config/dependency_injection.dart';
 import '../../domain/repository/contact_repository.dart';
-import '../../helpers/error_message_helper.dart';
+import '../../utils/error_utils.dart';
 import '../../model/contacts/contact_list_response.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../service/auth_persistence_service.dart';
@@ -268,7 +268,7 @@ class ContactRepository extends IContactRepository {
     List<Map<String, dynamic>>? customFields,
   }) async {
     try {
-      ErrorMessageHelper.logUserAction('Update Contact - Repository', {
+      ErrorUtils.logUserAction('Update Contact - Repository', {
         'contactId': contactId,
         'hasName': name != null,
         'hasEmail': email != null,
