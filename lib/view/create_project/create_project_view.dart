@@ -3,10 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
-import '../../helpers/contact_helper.dart';
 import '../../model/contacts/contact_model.dart';
-import '../../service/contact_database_service.dart';
-import '../../service/contact_service.dart';
+import '../../service/contact_loading_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/buttons/paint_pro_button.dart';
@@ -69,12 +67,7 @@ class _CreateProjectViewState extends State<CreateProjectView> {
     });
 
     try {
-      final contactService = getIt<ContactService>();
-      final contactDatabaseService = getIt<ContactDatabaseService>();
-      final contacts = await ContactHelper.loadContacts(
-        contactService: contactService,
-        contactDatabaseService: contactDatabaseService,
-      );
+      final contacts = await getIt<ContactLoadingService>().loadContacts();
 
       setState(() {
         _contacts = contacts;
