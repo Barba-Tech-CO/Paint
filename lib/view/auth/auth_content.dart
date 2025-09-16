@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../model/auth_model/auth_model.dart';
 import '../../utils/command/command_builder.dart';
 import '../../viewmodel/auth/auth_viewmodel.dart';
 import '../../widgets/overlays/error_overlay.dart';
@@ -14,7 +13,7 @@ class AuthContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<AuthViewModel>();
-    return CommandBuilder<AuthModel>(
+    return CommandBuilder<void>(
       command: viewModel.checkAuthStatusCommand,
       onRunning: () => const LoadingOverlay(
         isLoading: true,
