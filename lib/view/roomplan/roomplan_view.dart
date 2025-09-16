@@ -55,9 +55,93 @@ class _RoomPlanViewState extends State<RoomPlanView> {
             setState(() {
               _scanResult = result;
             });
+
+            // Detailed logging for real-time scan updates
+            log('=== ROOMPLAN REAL-TIME SCAN UPDATE ===');
+            log('RoomPlanView: Scan result received');
+            log('RoomPlanView: Walls count: ${result.room.walls.length}');
+            log('RoomPlanView: Doors count: ${result.room.doors.length}');
+            log('RoomPlanView: Windows count: ${result.room.windows.length}');
+            log('RoomPlanView: Objects count: ${result.room.objects.length}');
+            log('RoomPlanView: Openings count: ${result.room.openings.length}');
+            log('RoomPlanView: Has floor: ${result.room.floor != null}');
+            log('RoomPlanView: Has ceiling: ${result.room.ceiling != null}');
+
+            // Log room dimensions if available
+            if (result.room.dimensions != null) {
+              final dims = result.room.dimensions!;
+              log(
+                'RoomPlanView: Room dimensions - Width: ${dims.width}m, Length: ${dims.length}m, Height: ${dims.height}m',
+              );
+              log(
+                'RoomPlanView: Floor area: ${dims.floorArea} sq m, Volume: ${dims.volume} cubic m',
+              );
+            } else {
+              log('RoomPlanView: No room dimensions available');
+            }
+
+            // Log detailed wall information
+            for (int i = 0; i < result.room.walls.length; i++) {
+              final wall = result.room.walls[i];
+              log(
+                'RoomPlanView: Wall $i - UUID: ${wall.uuid}, Width: ${wall.width}m, Height: ${wall.height}m, Confidence: ${wall.confidence}',
+              );
+              log(
+                'RoomPlanView: Wall $i - Position: x=${wall.position.x}, y=${wall.position.y}, z=${wall.position.z}',
+              );
+              log(
+                'RoomPlanView: Wall $i - Openings count: ${wall.openings.length}',
+              );
+            }
+
+            // Log detailed door information
+            for (int i = 0; i < result.room.doors.length; i++) {
+              final door = result.room.doors[i];
+              log(
+                'RoomPlanView: Door $i - UUID: ${door.uuid}, Type: ${door.type}, Width: ${door.width}m, Height: ${door.height}m',
+              );
+              log(
+                'RoomPlanView: Door $i - Position: x=${door.position.x}, y=${door.position.y}, z=${door.position.z}',
+              );
+              log('RoomPlanView: Door $i - Confidence: ${door.confidence}');
+            }
+
+            // Log detailed window information
+            for (int i = 0; i < result.room.windows.length; i++) {
+              final window = result.room.windows[i];
+              log(
+                'RoomPlanView: Window $i - UUID: ${window.uuid}, Type: ${window.type}, Width: ${window.width}m, Height: ${window.height}m',
+              );
+              log(
+                'RoomPlanView: Window $i - Position: x=${window.position.x}, y=${window.position.y}, z=${window.position.z}',
+              );
+              log('RoomPlanView: Window $i - Confidence: ${window.confidence}');
+            }
+
+            // Log detailed object information
+            for (int i = 0; i < result.room.objects.length; i++) {
+              final object = result.room.objects[i];
+              log(
+                'RoomPlanView: Object $i - UUID: ${object.uuid}, Category: ${object.category}, Width: ${object.width}m, Height: ${object.height}m, Length: ${object.length}m',
+              );
+              log(
+                'RoomPlanView: Object $i - Position: x=${object.position.x}, y=${object.position.y}, z=${object.position.z}',
+              );
+              log('RoomPlanView: Object $i - Confidence: ${object.confidence}');
+            }
+
+            // Log metadata
             log(
-              'RoomPlanView: Real-time scan update - ${result.room.walls.length} walls',
+              'RoomPlanView: Scan duration: ${result.metadata.scanDuration.inSeconds} seconds',
             );
+            log('RoomPlanView: Device model: ${result.metadata.deviceModel}');
+            log('RoomPlanView: Has LiDAR: ${result.metadata.hasLidar}');
+
+            // Log confidence levels
+            log(
+              'RoomPlanView: Overall confidence: ${result.confidence.overall}',
+            );
+            log('=== END ROOMPLAN REAL-TIME SCAN UPDATE ===');
           }
         });
 
@@ -92,7 +176,40 @@ class _RoomPlanViewState extends State<RoomPlanView> {
         setState(() {
           _scanResult = result;
         });
+
+        // Comprehensive logging for final scan result
+        log('=== ROOMPLAN FINAL SCAN RESULT ===');
         log('RoomPlanView: RoomPlan completed successfully');
+        log('RoomPlanView: Final result summary:');
+        log('RoomPlanView: - Walls: ${result.room.walls.length}');
+        log('RoomPlanView: - Doors: ${result.room.doors.length}');
+        log('RoomPlanView: - Windows: ${result.room.windows.length}');
+        log('RoomPlanView: - Objects: ${result.room.objects.length}');
+        log('RoomPlanView: - Openings: ${result.room.openings.length}');
+        log('RoomPlanView: - Has floor: ${result.room.floor != null}');
+        log('RoomPlanView: - Has ceiling: ${result.room.ceiling != null}');
+
+        if (result.room.dimensions != null) {
+          final dims = result.room.dimensions!;
+          log('RoomPlanView: Final room dimensions:');
+          log('RoomPlanView: - Width: ${dims.width}m');
+          log('RoomPlanView: - Length: ${dims.length}m');
+          log('RoomPlanView: - Height: ${dims.height}m');
+          log('RoomPlanView: - Floor area: ${dims.floorArea} sq m');
+          log('RoomPlanView: - Volume: ${dims.volume} cubic m');
+        }
+
+        log('RoomPlanView: Scan metadata:');
+        log(
+          'RoomPlanView: - Duration: ${result.metadata.scanDuration.inSeconds} seconds',
+        );
+        log('RoomPlanView: - Device: ${result.metadata.deviceModel}');
+        log('RoomPlanView: - LiDAR: ${result.metadata.hasLidar}');
+
+        log('RoomPlanView: Confidence levels:');
+        log('RoomPlanView: - Overall: ${result.confidence.overall}');
+        log('=== END ROOMPLAN FINAL SCAN RESULT ===');
+
         _navigateToProcessing(result);
       } else {
         log('RoomPlanView: RoomPlan was cancelled');
@@ -127,6 +244,11 @@ class _RoomPlanViewState extends State<RoomPlanView> {
   }
 
   void _navigateToProcessing(ScanResult result) {
+    log('=== ROOMPLAN DATA PROCESSING ===');
+    log(
+      'RoomPlanView: Starting data processing for navigation to processing screen',
+    );
+
     // Prepara os dados da sala para enviar para a tela de processamento
     final roomData = {
       'title': widget.projectData?['zoneName'],
@@ -187,6 +309,78 @@ class _RoomPlanViewState extends State<RoomPlanView> {
         'hasLidar': result.metadata.hasLidar,
       },
     };
+
+    // Log processed room data
+    log('RoomPlanView: Processed room data:');
+    log('RoomPlanView: - Title: ${roomData['title']}');
+    log('RoomPlanView: - Zone type: ${roomData['zoneType']}');
+    log('RoomPlanView: - Walls count: ${(roomData['walls'] as List).length}');
+    log('RoomPlanView: - Doors count: ${(roomData['doors'] as List).length}');
+    log(
+      'RoomPlanView: - Windows count: ${(roomData['windows'] as List).length}',
+    );
+    log(
+      'RoomPlanView: - Objects count: ${(roomData['objects'] as List).length}',
+    );
+    log('RoomPlanView: - Has dimensions: ${roomData['hasDimensions']}');
+
+    // Log wall details
+    final walls = roomData['walls'] as List;
+    for (int i = 0; i < walls.length; i++) {
+      final wall = walls[i] as Map<String, dynamic>;
+      log(
+        'RoomPlanView: Wall $i processed - Width: ${wall['width']}m, Height: ${wall['height']}m, Area: ${wall['area']} sq m',
+      );
+    }
+
+    // Log door details
+    final doors = roomData['doors'] as List;
+    for (int i = 0; i < doors.length; i++) {
+      final door = doors[i] as Map<String, dynamic>;
+      log(
+        'RoomPlanView: Door $i processed - Width: ${door['width']}m, Height: ${door['height']}m, Area: ${door['area']} sq m',
+      );
+    }
+
+    // Log window details
+    final windows = roomData['windows'] as List;
+    for (int i = 0; i < windows.length; i++) {
+      final window = windows[i] as Map<String, dynamic>;
+      log(
+        'RoomPlanView: Window $i processed - Width: ${window['width']}m, Height: ${window['height']}m, Area: ${window['area']} sq m',
+      );
+    }
+
+    // Log object details
+    final objects = roomData['objects'] as List;
+    for (int i = 0; i < objects.length; i++) {
+      final object = objects[i] as Map<String, dynamic>;
+      log(
+        'RoomPlanView: Object $i processed - Category: ${object['category']}, Width: ${object['width']}m, Height: ${object['height']}m, Area: ${object['area']} sq m',
+      );
+    }
+
+    // Log dimensions if available
+    if (roomData['hasDimensions'] == true) {
+      final dimensions = roomData['dimensions'] as Map<String, dynamic>;
+      log('RoomPlanView: Processed dimensions:');
+      log('RoomPlanView: - Width: ${dimensions['width']}m');
+      log('RoomPlanView: - Length: ${dimensions['length']}m');
+      log('RoomPlanView: - Height: ${dimensions['height']}m');
+      log('RoomPlanView: - Floor area: ${dimensions['floorArea']} sq m');
+      log('RoomPlanView: - Volume: ${dimensions['volume']} cubic m');
+    }
+
+    // Log metadata
+    final metadata = roomData['metadata'] as Map<String, dynamic>;
+    log('RoomPlanView: Processed metadata:');
+    log('RoomPlanView: - Scan duration: ${metadata['scanDuration']} seconds');
+    log('RoomPlanView: - Device model: ${metadata['deviceModel']}');
+    log('RoomPlanView: - Has LiDAR: ${metadata['hasLidar']}');
+
+    log('RoomPlanView: Captured photos count: ${widget.capturedPhotos.length}');
+    log('RoomPlanView: Project data: ${widget.projectData}');
+    log('=== END ROOMPLAN DATA PROCESSING ===');
 
     // Navega para a tela de processamento
     context.pushNamed(
