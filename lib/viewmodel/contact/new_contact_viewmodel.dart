@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:validatorless/validatorless.dart';
 
-import '../../helpers/snackbar_helper.dart';
+import '../../utils/snackbar_utils.dart';
 import '../../utils/result/result.dart';
 import './contact_detail_viewmodel.dart';
 
@@ -168,56 +168,57 @@ class NewContactViewModel extends ChangeNotifier {
       // Create custom fields for additional data
       final customFields = <Map<String, dynamic>>[];
 
-    final result = await _contactDetailViewModel.createContact(
-      name: nameController.text.trim(),
-      email: emailController.text.trim(),
-      additionalEmails: additionalEmailsController.text
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList(),
-      phone: _normalizePhoneForStorage(
-        phoneController.text.trim(),
-      ),
-      additionalPhones: additionalPhonesController.text
-          .split(',')
-          .map((e) => _normalizePhoneForStorage(e.trim()))
-          .where((e) => e.isNotEmpty)
-          .toList(),
-      address: addressController.text.trim(),
-      city: cityController.text.trim(),
-      state: stateController.text.trim(),
-      postalCode: zipCodeController.text.trim(),
-      country: countryController.text.trim(),
-      companyName: companyNameController.text.trim(),
-      customFields: customFields.isNotEmpty ? customFields : null,
-    );
+      final result = await _contactDetailViewModel.createContact(
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        additionalEmails: additionalEmailsController.text
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList(),
+        phone: _normalizePhoneForStorage(
+          phoneController.text.trim(),
+        ),
+        additionalPhones: additionalPhonesController.text
+            .split(',')
+            .map((e) => _normalizePhoneForStorage(e.trim()))
+            .where((e) => e.isNotEmpty)
+            .toList(),
+        address: addressController.text.trim(),
+        city: cityController.text.trim(),
+        state: stateController.text.trim(),
+        postalCode: zipCodeController.text.trim(),
+        country: countryController.text.trim(),
+        companyName: companyNameController.text.trim(),
+        customFields: customFields.isNotEmpty ? customFields : null,
+      );
 
-    if (result is Ok) {
-      // Show success message
-      if (context.mounted) {
-        SnackBarHelper.showSuccess(
-          context,
-          message: 'Contact saved successfully!',
-        );
+      if (result is Ok) {
+        // Show success message
+        if (context.mounted) {
+          SnackBarUtils.showSuccess(
+            context,
+            message: 'Contact saved successfully!',
+          );
 
-        // Navigate back after a short delay
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (context.mounted) {
-            context.pop();
-          }
-        });
+          // Navigate back after a short delay
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (context.mounted) {
+              context.pop();
+            }
+          });
+        }
+      } else {
+        // Show user-friendly error message
+        if (context.mounted) {
+          SnackBarUtils.showError(
+            context,
+            message:
+                _contactDetailViewModel.error ??
+                'Failed to save contact. Please try again.',
+          );
+        }
       }
-    } else {
-      // Show user-friendly error message
-      if (context.mounted) {
-        SnackBarHelper.showError(
-          context,
-          message:
-              _contactDetailViewModel.error ?? 'Failed to save contact. Please try again.',
-        );
-      }
-    }
     } finally {
       _isLoading = false;
       notifyListeners();
