@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../helpers/zones/zone_data_classes.dart';
+import '../../model/zones/zone_rename_data_model.dart';
 import '../../model/projects/project_card_model.dart';
 import '../../service/i_zones_service.dart';
 import '../../utils/command/command.dart';
@@ -24,10 +24,11 @@ class ZoneDetailViewModel extends ChangeNotifier {
 
   // Commands
   Command1<void, int>? _deleteZoneCommand;
-  Command1<void, ZoneRenameData>? _renameZoneCommand;
+  Command1<void, ZoneRenameDataModel>? _renameZoneCommand;
 
   Command1<void, int> get deleteZoneCommand => _deleteZoneCommand!;
-  Command1<void, ZoneRenameData> get renameZoneCommand => _renameZoneCommand!;
+  Command1<void, ZoneRenameDataModel> get renameZoneCommand =>
+      _renameZoneCommand!;
 
   // Callbacks for notifying parent ViewModels about changes
   Function(int zoneId)? onZoneDeleted;
@@ -54,7 +55,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
       return await _deleteZoneData(zoneId);
     });
 
-    _renameZoneCommand = Command1((ZoneRenameData data) async {
+    _renameZoneCommand = Command1((ZoneRenameDataModel data) async {
       return await _renameZoneData(data.zoneId, data.newName);
     });
   }
@@ -75,7 +76,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
   Future<void> renameZone(int zoneId, String newName) async {
     if (_renameZoneCommand != null) {
       await _renameZoneCommand!.execute(
-        ZoneRenameData(zoneId: zoneId, newName: newName),
+        ZoneRenameDataModel(zoneId: zoneId, newName: newName),
       );
     }
   }
