@@ -34,6 +34,8 @@ import '../service/paint_catalog_service.dart';
 import '../service/photo_service.dart';
 import '../service/quote_service.dart';
 import '../service/user_service.dart';
+import '../service/zones_service.dart';
+import '../service/i_zones_service.dart';
 import '../helpers/estimate_builder.dart';
 
 // Logger Layer
@@ -161,6 +163,9 @@ void setupDependencyInjection() {
     () => EstimateBuilder(
       getIt<PhotoService>(),
     ),
+  );
+  getIt.registerLazySingleton<IZonesService>(
+    () => ZonesService(),
   );
 
   // Repositories
@@ -329,11 +334,15 @@ void setupDependencyInjection() {
 
   // ViewModels - Zones (Refactored)
   getIt.registerLazySingleton<ZonesListViewModel>(
-    () => ZonesListViewModel(),
+    () => ZonesListViewModel(
+      getIt<IZonesService>(),
+    ),
   );
 
   getIt.registerLazySingleton<ZoneDetailViewModel>(
-    () => ZoneDetailViewModel(),
+    () => ZoneDetailViewModel(
+      getIt<IZonesService>(),
+    ),
   );
 
   getIt.registerLazySingleton<ZonesSummaryViewModel>(
