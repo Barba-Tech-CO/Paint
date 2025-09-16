@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../config/app_colors.dart';
 import '../../utils/responsive/responsive_helper.dart';
-import '../dialogs/app_dialogs.dart';
+import '../dialogs/delete_quote_dialog.dart';
+import '../dialogs/rename_quote_dialog.dart';
 
 class ProjectCardWidget extends StatelessWidget {
   final String projectName;
@@ -137,7 +138,7 @@ class ProjectCardWidget extends StatelessWidget {
                 icon: Icon(Icons.more_vert, color: Colors.grey[700]),
                 onSelected: (value) async {
                   if (value == 'rename') {
-                    final newName = await AppDialogs.showRenameQuoteDialog(
+                    final newName = await RenameQuoteDialog.show(
                       context,
                       initialName: projectName,
                     );
@@ -145,7 +146,7 @@ class ProjectCardWidget extends StatelessWidget {
                       onRename?.call(newName.trim());
                     }
                   } else if (value == 'delete') {
-                    final confirm = await AppDialogs.showDeleteQuoteDialog(
+                    final confirm = await DeleteQuoteDialog.show(
                       context,
                       quoteName: projectName,
                     );
