@@ -7,14 +7,29 @@ class CameraPhotoService {
   int _photoCount = 0;
   final int minPhotos;
   final int maxPhotos;
+  final List<String> _existingPhotos;
 
   CameraPhotoService({
     this.minPhotos = 3,
     this.maxPhotos = 9,
-  });
+    List<String> existingPhotos = const [],
+  }) : _existingPhotos = List.from(existingPhotos) {
+    _photoCount = _existingPhotos.length;
+  }
 
   // Getters
   List<XFile> get capturedPhotos => List.unmodifiable(_capturedPhotos);
+  List<XFile> get allPhotos {
+    final allPhotos = <XFile>[];
+    // Adicionar fotos existentes como XFile
+    for (final photoPath in _existingPhotos) {
+      allPhotos.add(XFile(photoPath));
+    }
+    // Adicionar fotos capturadas
+    allPhotos.addAll(_capturedPhotos);
+    return allPhotos;
+  }
+
   int get photoCount => _photoCount;
   bool get isDoneEnabled => _photoCount >= minPhotos;
   bool get canTakeMorePhotos => _photoCount < maxPhotos;
@@ -86,5 +101,13 @@ class CameraPhotoService {
     } else {
       return '$_photoCount/$maxPhotos Photos taken';
     }
+  }
+
+  /// Get all photos (existing + captured)
+  List<String> getAllPhotoPaths() {
+    final allPhotos = <String>[];
+    allPhotos.addAll(_existingPhotos);
+    allPhotos.addAll(_capturedPhotos.map((photo) => photo.path));
+    return allPhotos;
   }
 }
