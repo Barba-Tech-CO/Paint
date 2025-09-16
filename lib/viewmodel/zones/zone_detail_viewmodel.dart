@@ -2,12 +2,12 @@ import 'package:flutter/foundation.dart';
 
 import '../../helpers/zones/zone_data_classes.dart';
 import '../../model/projects/project_card_model.dart';
+import '../../service/i_zones_service.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
 
 class ZoneDetailViewModel extends ChangeNotifier {
-  // Service seria injetado aqui quando estiver pronto
-  // final ZonesService _zonesService;
+  final IZonesService _zonesService;
 
   // Data
   ProjectCardModel? _currentZone;
@@ -20,7 +20,7 @@ class ZoneDetailViewModel extends ChangeNotifier {
   // Internal state
   bool _disposed = false;
 
-  ZoneDetailViewModel();
+  ZoneDetailViewModel(this._zonesService);
 
   // Commands
   Command1<void, int>? _deleteZoneCommand;
@@ -80,6 +80,89 @@ class ZoneDetailViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> updateZoneDimensions(double width, double length) async {
+    if (_currentZone != null) {
+      await _zonesService.updateZoneDimensionsCommand.execute({
+        'zoneId': _currentZone!.id,
+        'width': width,
+        'length': length,
+      });
+
+      final result = _zonesService.updateZoneDimensionsCommand.result;
+      if (result != null && result.isSuccess) {
+        _currentZone = result.data;
+        onZoneUpdated?.call(result.data);
+        _safeNotifyListeners();
+      } else if (result != null && result.isError) {
+        _errorMessage = 'Erro ao atualizar dimensões: ${result.error}';
+        _safeNotifyListeners();
+      }
+    }
+  }
+
+  Future<void> updateZoneSurfaceAreas({
+    double? walls,
+    double? ceiling,
+    double? trim,
+  }) async {
+    if (_currentZone != null) {
+      await _zonesService.updateZoneSurfaceAreasCommand.execute({
+        'zoneId': _currentZone!.id,
+        'walls': walls,
+        'ceiling': ceiling,
+        'trim': trim,
+      });
+
+      final result = _zonesService.updateZoneSurfaceAreasCommand.result;
+      if (result != null && result.isSuccess) {
+        _currentZone = result.data;
+        onZoneUpdated?.call(result.data);
+        _safeNotifyListeners();
+      } else if (result != null && result.isError) {
+        _errorMessage = 'Erro ao atualizar áreas: ${result.error}';
+        _safeNotifyListeners();
+      }
+    }
+  }
+
+  Future<void> addPhoto(String photoPath) async {
+    if (_currentZone != null) {
+      await _zonesService.addPhotosCommand.execute({
+        'zoneId': _currentZone!.id,
+        'photoPaths': [photoPath],
+      });
+
+      final result = _zonesService.addPhotosCommand.result;
+      if (result != null && result.isSuccess) {
+        _currentZone = result.data;
+        onZoneUpdated?.call(result.data);
+        _safeNotifyListeners();
+      } else if (result != null && result.isError) {
+        _errorMessage = 'Erro ao adicionar foto: ${result.error}';
+        _safeNotifyListeners();
+      }
+    }
+  }
+
+  Future<void> deletePhoto(int index) async {
+    if (_currentZone != null) {
+      await _zonesService.removePhotoCommand.execute({
+        'zoneId': _currentZone!.id,
+        'photoIndex': index,
+      });
+
+      final result = _zonesService.removePhotoCommand.result;
+      if (result != null && result.isSuccess) {
+        _currentZone = result.data;
+        onZoneUpdated?.call(result.data);
+        _safeNotifyListeners();
+      } else if (result != null && result.isError) {
+        _errorMessage = 'Erro ao remover foto: ${result.error}';
+        _safeNotifyListeners();
+      }
+    }
+  }
+
   void clearCurrentZone() {
     _currentZone = null;
     _clearError();
@@ -89,22 +172,30 @@ class ZoneDetailViewModel extends ChangeNotifier {
   // Private methods
   Future<Result<void>> _deleteZoneData(int zoneId) async {
     try {
-      // Aqui seria a chamada para o service
-      // final result = await _zonesService.deleteZone(zoneId);
+      // Remove zona usando o command do service
+      await _zonesService.deleteZoneCommand.execute(zoneId);
+      final result = _zonesService.deleteZoneCommand.result;
 
-      // Simulando exclusão
-      await Future.delayed(const Duration(milliseconds: 300));
+      if (result != null && result.isSuccess) {
+        // Notify parent that zone was deleted
+        onZoneDeleted?.call(zoneId);
 
-      // Notify parent that zone was deleted
-      onZoneDeleted?.call(zoneId);
+        // Clear current zone if it was deleted
+        if (_currentZone?.id == zoneId) {
+          _currentZone = null;
+        }
 
-      // Clear current zone if it was deleted
-      if (_currentZone?.id == zoneId) {
-        _currentZone = null;
+        _safeNotifyListeners();
+        return Result.ok(null);
+      } else if (result != null && result.isError) {
+        _errorMessage = 'Erro ao excluir zona: ${result.error}';
+        _safeNotifyListeners();
+        return Result.error(result.error);
+      } else {
+        _errorMessage = 'Erro desconhecido ao excluir zona';
+        _safeNotifyListeners();
+        return Result.error(Exception('Unknown error'));
       }
-
-      _safeNotifyListeners();
-      return Result.ok(null);
     } catch (e) {
       _setError('Erro ao excluir zona: $e');
       return Result.error(Exception(e.toString()));
@@ -113,22 +204,32 @@ class ZoneDetailViewModel extends ChangeNotifier {
 
   Future<Result<void>> _renameZoneData(int zoneId, String newName) async {
     try {
-      // Aqui seria a chamada para o service
-      // final result = await _zonesService.renameZone(zoneId, newName);
+      // Renomeia zona usando o command do service
+      await _zonesService.renameZoneCommand.execute({
+        'zoneId': zoneId,
+        'newName': newName,
+      });
+      final result = _zonesService.renameZoneCommand.result;
 
-      // Simulando renomeação
-      await Future.delayed(const Duration(milliseconds: 300));
+      if (result != null && result.isSuccess) {
+        // Update current zone if it's the one being renamed
+        if (_currentZone?.id == zoneId) {
+          _currentZone = result.data;
+          // Notify parent about the update
+          onZoneUpdated?.call(result.data);
+        }
 
-      // Update current zone if it's the one being renamed
-      if (_currentZone?.id == zoneId) {
-        _currentZone = _currentZone!.copyWith(title: newName);
-
-        // Notify parent about the update
-        onZoneUpdated?.call(_currentZone!);
+        _safeNotifyListeners();
+        return Result.ok(null);
+      } else if (result != null && result.isError) {
+        _errorMessage = 'Erro ao renomear zona: ${result.error}';
+        _safeNotifyListeners();
+        return Result.error(result.error);
+      } else {
+        _errorMessage = 'Erro desconhecido ao renomear zona';
+        _safeNotifyListeners();
+        return Result.error(Exception('Unknown error'));
       }
-
-      _safeNotifyListeners();
-      return Result.ok(null);
     } catch (e) {
       _setError('Erro ao renomear zona: $e');
       return Result.error(Exception(e.toString()));
