@@ -74,7 +74,7 @@ class PaintCatalogService {
 
   /// Calcula necessidade de tinta para uma área
   Future<Result<Map<String, dynamic>>> calculatePaintNeeds({
-    required double areaInSquareMeters,
+    required double areaInSquareFeet,
     required String colorId,
     required int coats,
   }) async {
@@ -82,7 +82,7 @@ class PaintCatalogService {
       final response = await _httpService.post(
         '$_baseUrl/calculate',
         data: {
-          'area': areaInSquareMeters,
+          'area': areaInSquareFeet,
           'colorId': colorId,
           'coats': coats,
         },
