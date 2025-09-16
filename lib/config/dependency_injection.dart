@@ -19,11 +19,13 @@ import '../domain/repository/quote_repository.dart';
 // Service Layer
 import '../service/app_initialization_service.dart';
 import '../service/auth_service.dart';
+import '../service/auth_initialization_service.dart';
 import '../service/auth_persistence_service.dart';
 import '../service/auth_state_manager.dart';
 import '../service/camera_service.dart';
 import '../service/contact_service.dart';
 import '../service/contact_database_service.dart';
+import '../service/contact_loading_service.dart';
 import '../service/deep_link_service.dart';
 import '../service/estimate_service.dart';
 import '../service/http_service.dart';
@@ -139,6 +141,22 @@ void setupDependencyInjection() {
   );
   getIt.registerLazySingleton<AuthPersistenceService>(
     () => AuthPersistenceService(),
+  );
+  getIt.registerLazySingleton<AuthInitializationService>(
+    () => AuthInitializationService(
+      authPersistenceService: getIt<AuthPersistenceService>(),
+      locationService: getIt<LocationService>(),
+      userViewModel: getIt<UserViewModel>(),
+      httpService: getIt<HttpService>(),
+    ),
+  );
+  getIt.registerLazySingleton<ContactLoadingService>(
+    () => ContactLoadingService(
+      contactRepository: getIt<IContactRepository>(),
+      httpService: getIt<HttpService>(),
+      authPersistenceService: getIt<AuthPersistenceService>(),
+      logger: getIt<AppLogger>(),
+    ),
   );
   getIt.registerLazySingleton<UserService>(
     () => UserService(
