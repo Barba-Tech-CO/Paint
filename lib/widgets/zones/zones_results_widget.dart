@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/dependency_injection.dart';
-import '../../helpers/zones/zone_initializer.dart';
+import '../../viewmodel/zones/zone_initializer_viewmodel.dart';
 import '../../viewmodel/zones/zones_list_viewmodel.dart';
 import '../../viewmodel/zones/zones_summary_viewmodel.dart';
 import 'zones_actions_widget.dart';
@@ -26,14 +26,14 @@ class ZonesResultsWidget extends StatefulWidget {
 class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
   late final ZonesListViewModel _listViewModel;
   late final ZonesSummaryViewModel _summaryViewModel;
-  late final ZoneInitializer _zoneInitializer;
+  late final ZoneInitializerViewModel _zoneInitializer;
 
   @override
   void initState() {
     super.initState();
     _listViewModel = getIt<ZonesListViewModel>();
     _summaryViewModel = getIt<ZonesSummaryViewModel>();
-    _zoneInitializer = ZoneInitializer(listViewModel: _listViewModel);
+    _zoneInitializer = ZoneInitializerViewModel(listViewModel: _listViewModel);
 
     // Initialize ViewModels
     _listViewModel.initialize();
