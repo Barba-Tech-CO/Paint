@@ -36,7 +36,6 @@ import '../service/quote_service.dart';
 import '../service/user_service.dart';
 import '../service/zones_service.dart';
 import '../service/i_zones_service.dart';
-import '../helpers/estimate_builder.dart';
 
 // Logger Layer
 import '../utils/logger/app_logger.dart';
@@ -57,6 +56,7 @@ import '../viewmodel/select_colors_viewmodel.dart';
 import '../viewmodel/auth/auth_viewmodel.dart';
 import '../viewmodel/contact/contact_list_viewmodel.dart';
 import '../viewmodel/contact/contact_detail_viewmodel.dart';
+import '../viewmodel/contact/new_contact_viewmodel.dart';
 import '../viewmodel/contacts/contacts_viewmodel.dart';
 import '../viewmodel/estimate/estimate_list_viewmodel.dart';
 import '../viewmodel/estimate/estimate_detail_viewmodel.dart';
@@ -158,11 +158,6 @@ void setupDependencyInjection() {
   );
   getIt.registerLazySingleton<CameraService>(
     () => CameraService(),
-  );
-  getIt.registerLazySingleton<EstimateBuilder>(
-    () => EstimateBuilder(
-      getIt<PhotoService>(),
-    ),
   );
   getIt.registerLazySingleton<IZonesService>(
     () => ZonesService(),
@@ -287,6 +282,11 @@ void setupDependencyInjection() {
       getIt<IContactRepository>(),
     ),
   );
+  getIt.registerFactory<NewContactViewModel>(
+    () => NewContactViewModel(
+      getIt<ContactDetailViewModel>(),
+    ),
+  );
 
   // ViewModels - Estimate
   getIt.registerFactory<EstimateListViewModel>(
@@ -307,6 +307,7 @@ void setupDependencyInjection() {
   getIt.registerFactory<EstimateCalculationViewModel>(
     () => EstimateCalculationViewModel(
       getIt<IEstimateRepository>(),
+      getIt<PhotoService>(),
     ),
   );
 
