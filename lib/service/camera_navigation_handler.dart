@@ -42,19 +42,25 @@ class CameraNavigationHandler {
 
   /// Navigate to next screen with photos
   void _navigateToNextScreen() {
-    final photos = photoService.getPhotoPaths();
+    final photos = photoService.getAllPhotoPaths();
 
-    // Prepare data to pass to RoomPlan view
-    final dataToPass = {
-      'photos': photos,
-      'projectData': projectData,
-    };
+    // Se estamos vindo de uma zona, retornar as fotos para ela
+    if (projectData != null && projectData!['zoneId'] != null) {
+      // Retornar para a zona com as fotos atualizadas
+      context.pop(photos);
+    } else {
+      // Prepare data to pass to RoomPlan view
+      final dataToPass = {
+        'photos': photos,
+        'projectData': projectData,
+      };
 
-    // Navigate to RoomPlan view with captured photos and project data
-    context.push(
-      '/roomplan',
-      extra: dataToPass,
-    );
+      // Navigate to RoomPlan view with captured photos and project data
+      context.push(
+        '/roomplan',
+        extra: dataToPass,
+      );
+    }
   }
 
   /// Show dialog when user tries to go back with unsaved photos
