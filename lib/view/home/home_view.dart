@@ -5,14 +5,14 @@ import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
-import '../../helpers/auth_helper.dart';
+import '../../service/auth_initialization_service.dart';
 import '../../viewmodel/navigation_viewmodel.dart';
 import '../../viewmodel/user/user_viewmodel.dart';
-import '../layout/main_layout.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/cards/greeting_card_widget.dart';
 import '../../widgets/cards/project_state_card_widget.dart';
 import '../../widgets/cards/stats_card_widget.dart';
+import '../layout/main_layout.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -39,7 +39,7 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _initializeUserData() async {
-    await AuthHelper.checkAuthAndFetchUser();
+    await getIt<AuthInitializationService>().checkAuthAndFetchUser();
   }
 
   @override
