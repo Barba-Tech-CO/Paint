@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../helpers/date_helper.dart';
-import '../../helpers/status_helper.dart';
+import '../../utils/date_utils.dart' as app_date_utils;
+import '../../utils/status_utils.dart';
 import '../dialogs/delete_quote_dialog.dart';
 import '../dialogs/rename_quote_dialog.dart';
 
@@ -51,7 +51,7 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
     super.didUpdateWidget(oldWidget);
 
     // Check if status changed to completed using helper
-    if (StatusHelper.hasStatusChangedToCompleted(
+    if (StatusUtils.hasStatusChangedToCompleted(
       currentStatus: widget.status,
       previousStatus: _previousStatus,
     )) {
@@ -130,7 +130,7 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           SizedBox(width: 8),
-                          if (StatusHelper.shouldShowStatus(
+                          if (StatusUtils.shouldShowStatus(
                             currentStatus: widget.status,
                             previousStatus: _previousStatus,
                             showTemporaryStatus: _showTemporaryStatus,
@@ -141,23 +141,23 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: StatusHelper.getStatusColor(
+                                color: StatusUtils.getStatusColor(
                                   widget.status,
                                 ).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: StatusHelper.getStatusColor(
+                                  color: StatusUtils.getStatusColor(
                                     widget.status,
                                   ),
                                   width: 1,
                                 ),
                               ),
                               child: Text(
-                                StatusHelper.getStatusDisplay(widget.status),
+                                StatusUtils.getStatusDisplay(widget.status),
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  color: StatusHelper.getStatusColor(
+                                  color: StatusUtils.getStatusColor(
                                     widget.status,
                                   ),
                                 ),
@@ -176,7 +176,9 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        DateHelper.formatUploadDateTime(widget.dateUpload),
+                        app_date_utils.DateUtils.formatUploadDateTime(
+                          widget.dateUpload,
+                        ),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
