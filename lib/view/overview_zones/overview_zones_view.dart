@@ -125,7 +125,7 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
         content: Text(message),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.pop(),
             child: const Text('OK'),
           ),
         ],
