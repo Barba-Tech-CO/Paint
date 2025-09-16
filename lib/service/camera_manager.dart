@@ -8,7 +8,7 @@ class CameraManager {
   CameraController? _cameraController;
   List<CameraDescription>? _cameras;
   bool _isInitialized = false;
-  int _selectedCameraIndex = 0;
+  final int _selectedCameraIndex = 0;
   FlashMode _flashMode = FlashMode.off;
 
   // Getters
