@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../helpers/auth_helper.dart';
+import '../config/dependency_injection.dart';
 import '../utils/result/result.dart';
+import 'auth_initialization_service.dart';
 import 'auth_persistence_service.dart';
 import 'auth_service.dart';
 import 'auth_state_manager.dart';
@@ -65,7 +66,7 @@ class AppInitializationService {
     // If locally authenticated and we have a token, go directly to dashboard
     // Skip backend verification during hot restart to avoid unnecessary network calls
     if (hasHttpToken) {
-      await AuthHelper.initializeUserData();
+      await getIt<AuthInitializationService>().initializeUserData();
 
       if (context.mounted) {
         _navigationService.navigateToDashboard(context);
@@ -81,7 +82,7 @@ class AppInitializationService {
 
       if (authenticated) {
         // Initialize user data when authenticated
-        await AuthHelper.initializeUserData();
+        await getIt<AuthInitializationService>().initializeUserData();
 
         if (context.mounted) {
           _navigationService.navigateToDashboard(context);
