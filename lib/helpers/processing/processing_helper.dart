@@ -41,7 +41,7 @@ class ProcessingHelper {
         log('ProcessingHelper: Room dimensions:');
         log('ProcessingHelper: - Width: ${width}m');
         log('ProcessingHelper: - Length: ${length}m');
-        log('ProcessingHelper: - Floor area: ${floorArea} sq m');
+        log('ProcessingHelper: - Floor area: $floorArea sq m');
 
         // Calculate paintable area based on real dimensions of each wall
         // Formula: (individual wall areas) - real openings + ceiling
@@ -58,12 +58,12 @@ class ProcessingHelper {
           final wallArea = wallWidth * wallHeight;
           totalWallArea += wallArea;
           log(
-            'ProcessingHelper: Wall $i - Width: ${wallWidth}m, Height: ${wallHeight}m, Area: ${wallArea} sq m',
+            'ProcessingHelper: Wall $i - Width: ${wallWidth}m, Height: ${wallHeight}m, Area: $wallArea sq m',
           );
         }
 
         log(
-          'ProcessingHelper: Total wall area calculated: ${totalWallArea} sq m',
+          'ProcessingHelper: Total wall area calculated: $totalWallArea sq m',
         );
 
         // If no walls detected, use estimate based on room dimensions
@@ -72,7 +72,7 @@ class ProcessingHelper {
           // 2 width walls + 2 length walls
           totalWallArea = (2 * width * height) + (2 * length * height);
           log(
-            'ProcessingHelper: No walls detected, using estimated wall area: ${totalWallArea} sq m',
+            'ProcessingHelper: No walls detected, using estimated wall area: $totalWallArea sq m',
           );
         }
 
@@ -80,7 +80,7 @@ class ProcessingHelper {
         final ceilingArea = width != null && length != null
             ? width * length
             : 0.0;
-        log('ProcessingHelper: Ceiling area: ${ceilingArea} sq m');
+        log('ProcessingHelper: Ceiling area: $ceilingArea sq m');
 
         // Calculate real area of openings (doors and windows) detected by RoomPlan
         double realOpeningsArea = 0.0;
@@ -95,7 +95,7 @@ class ProcessingHelper {
           final doorArea = doorWidth * doorHeight;
           realOpeningsArea += doorArea;
           log(
-            'ProcessingHelper: Door $i - Width: ${doorWidth}m, Height: ${doorHeight}m, Area: ${doorArea} sq m',
+            'ProcessingHelper: Door $i - Width: ${doorWidth}m, Height: ${doorHeight}m, Area: $doorArea sq m',
           );
         }
 
@@ -109,18 +109,18 @@ class ProcessingHelper {
           final windowArea = windowWidth * windowHeight;
           realOpeningsArea += windowArea;
           log(
-            'ProcessingHelper: Window $i - Width: ${windowWidth}m, Height: ${windowHeight}m, Area: ${windowArea} sq m',
+            'ProcessingHelper: Window $i - Width: ${windowWidth}m, Height: ${windowHeight}m, Area: $windowArea sq m',
           );
         }
 
-        log('ProcessingHelper: Total openings area: ${realOpeningsArea} sq m');
+        log('ProcessingHelper: Total openings area: $realOpeningsArea sq m');
 
         // Paintable area = walls - real openings + ceiling
         final paintableArea = width != null && length != null
             ? (totalWallArea - realOpeningsArea) + ceilingArea
             : null;
         log(
-          'ProcessingHelper: Calculated paintable area: ${paintableArea} sq m',
+          'ProcessingHelper: Calculated paintable area: $paintableArea sq m',
         );
 
         final zoneData = {
