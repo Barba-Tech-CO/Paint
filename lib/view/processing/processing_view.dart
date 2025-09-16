@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
-import '../../helpers/processing/processing_helper.dart';
+import '../../viewmodel/zones/zones_list_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 
 class ProcessingView extends StatefulWidget {
@@ -29,7 +29,7 @@ class _ProcessingViewState extends State<ProcessingView> {
   }
 
   Future<void> _startProcessing() async {
-    await ProcessingHelper.simulateProcessing();
+    await ZonesListViewModel.simulateProcessing();
 
     if (mounted) {
       _navigateToZones();
@@ -38,7 +38,7 @@ class _ProcessingViewState extends State<ProcessingView> {
 
   void _navigateToZones() {
     // Cria dados da zona baseado no roomData ou dados padrão
-    final zoneData = ProcessingHelper.createZoneDataFromRoomData(
+    final zoneData = ZonesListViewModel.createZoneDataFromRoomData(
       capturedPhotos: widget.capturedPhotos,
       roomData: widget.roomData,
       projectData: widget.projectData,
