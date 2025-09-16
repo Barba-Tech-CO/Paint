@@ -14,7 +14,7 @@ class EstimateUploadViewModel extends ChangeNotifier {
   String? _errorMessage;
   EstimateModel? _uploaded;
 
-  late final Command1<EstimateModel, EstimateModel> _uploadCommand;
+  late final Command1<void, EstimateModel> _uploadCommand;
 
   EstimateUploadViewModel(this._useCase) {
     _initCommands();
@@ -24,7 +24,7 @@ class EstimateUploadViewModel extends ChangeNotifier {
   EstimateUploadState get state => _state;
   String? get errorMessage => _errorMessage;
   EstimateModel? get uploadedEstimate => _uploaded;
-  Command1<EstimateModel, EstimateModel> get uploadCommand => _uploadCommand;
+  Command1<void, EstimateModel> get uploadCommand => _uploadCommand;
 
   // Computed
   bool get isUploading => _state == EstimateUploadState.uploading || _uploadCommand.running;
@@ -41,7 +41,7 @@ class EstimateUploadViewModel extends ChangeNotifier {
           ok: (model) {
             _uploaded = model;
             _setState(EstimateUploadState.success);
-            return Result.ok(model);
+            return Result.ok(null);
           },
           error: (e) {
             _setError(e.toString());
