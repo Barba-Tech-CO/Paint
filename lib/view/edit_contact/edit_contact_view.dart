@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
-import '../../helpers/contacts/edit_contact_helper.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../viewmodel/contact/contact_detail_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
@@ -75,7 +74,7 @@ class _EditContactViewState extends State<EditContactView> {
   }
 
   void _populateFormWithContactData() {
-    EditContactHelper.populateFormWithContactData(
+    _viewModel.populateFormWithContactData(
       contact: widget.contact,
       nameController: _nameController,
       phoneController: _phoneController,
@@ -109,7 +108,7 @@ class _EditContactViewState extends State<EditContactView> {
   }
 
   Future<void> _updateContact() async {
-    await EditContactHelper.updateContact(
+    await _viewModel.updateContactWithForm(
       formKey: _formKey,
       contact: widget.contact,
       nameController: _nameController,
@@ -158,7 +157,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'Name: *',
                     hintText: 'John Demnize',
                     controller: _nameController,
-                    validator: EditContactHelper.nameValidator,
+                    validator: ContactDetailViewModel.nameValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -173,7 +172,7 @@ class _EditContactViewState extends State<EditContactView> {
                     hintText: '+1 (555) 123-4567',
                     controller: _phoneController,
                     kind: NumberFieldKind.phone,
-                    validator: EditContactHelper.validatePhone,
+                    validator: ContactDetailViewModel.validatePhone,
                   ),
                   const SizedBox(
                     height: 16,
@@ -183,13 +182,13 @@ class _EditContactViewState extends State<EditContactView> {
                     hintText: '+1 (555) 123-4567, +1 (555) 123-4589',
                     controller: _adtionalPhonesController,
                     kind: NumberFieldKind.phone,
-                    validator: EditContactHelper.validateAdditionalPhones,
+                    validator: ContactDetailViewModel.validateAdditionalPhones,
                   ),
                   PaintProTextField(
                     label: 'Email: *',
                     hintText: 'example@mail.com',
                     controller: _emailController,
-                    validator: EditContactHelper.emailValidator,
+                    validator: ContactDetailViewModel.emailValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -198,7 +197,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'Adtional Emails:',
                     hintText: 'example@mail.com, example2@mail.com',
                     controller: _adtionalEmailsController,
-                    validator: EditContactHelper.validateAdditionalEmails,
+                    validator: ContactDetailViewModel.validateAdditionalEmails,
                   ),
                   const SizedBox(
                     height: 16,
@@ -213,7 +212,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'Company Name:',
                     hintText: 'Painter Estimator LTDA',
                     controller: _companyNameController,
-                    validator: EditContactHelper.companyNameValidator,
+                    validator: ContactDetailViewModel.companyNameValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -222,7 +221,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'Address: *',
                     hintText: '123 Main Street',
                     controller: _addressController,
-                    validator: EditContactHelper.addressValidator,
+                    validator: ContactDetailViewModel.addressValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -231,7 +230,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'City: *',
                     hintText: 'Any City',
                     controller: _cityController,
-                    validator: EditContactHelper.cityValidator,
+                    validator: ContactDetailViewModel.cityValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -240,7 +239,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'State: *',
                     hintText: 'Any State',
                     controller: _stateController,
-                    validator: EditContactHelper.stateValidator,
+                    validator: ContactDetailViewModel.stateValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -251,7 +250,7 @@ class _EditContactViewState extends State<EditContactView> {
                     controller: _zipCodeController,
                     kind: NumberFieldKind.zip,
                     textInputAction: TextInputAction.done,
-                    validator: EditContactHelper.postalCodeValidator,
+                    validator: ContactDetailViewModel.postalCodeValidator,
                   ),
                   const SizedBox(
                     height: 16,
@@ -260,7 +259,7 @@ class _EditContactViewState extends State<EditContactView> {
                     label: 'Country: *',
                     hintText: 'US',
                     controller: _countryController,
-                    validator: EditContactHelper.countryValidator,
+                    validator: ContactDetailViewModel.countryValidator,
                   ),
                   // Add some bottom padding to ensure content is not hidden by bottomNavigationBar
                   const SizedBox(height: 100),
