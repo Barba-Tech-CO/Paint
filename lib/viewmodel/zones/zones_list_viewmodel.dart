@@ -1,15 +1,16 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../helpers/zones/zone_add_data.dart';
 import '../../model/projects/project_card_model.dart';
+import '../../service/i_zones_service.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
 
 enum ZonesListState { initial, loading, loaded, error }
 
 class ZonesListViewModel extends ChangeNotifier {
-  // Service seria injetado aqui quando estiver pronto
-  // final ZonesService _zonesService;
+  final IZonesService _zonesService;
 
   // State
   ZonesListState _state = ZonesListState.initial;
@@ -26,7 +27,7 @@ class ZonesListViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  ZonesListViewModel();
+  ZonesListViewModel(this._zonesService);
 
   // Commands
   Command0<void>? _loadZonesCommand;
@@ -154,17 +155,76 @@ class ZonesListViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Navigation methods
+  void navigateToZoneDetails(BuildContext context, ProjectCardModel zone) {
+    selectZone(zone);
+    context.push('/zones-details', extra: zone);
+  }
+
+  void navigateToEditZone(BuildContext context, ProjectCardModel zone) {
+    context.push('/edit-zone', extra: zone);
+  }
+
+  // Zone operations
+  Future<void> renameZone(
+    BuildContext context,
+    ProjectCardModel zone,
+    String newName,
+  ) async {
+    await _zonesService.renameZoneCommand.execute({
+      'zoneId': zone.id,
+      'newName': newName,
+    });
+    final result = _zonesService.renameZoneCommand.result;
+
+    if (result != null && result.isSuccess) {
+      updateZone(result.data);
+    } else if (result != null && result.isError) {
+      _errorMessage = 'Erro ao renomear zona: ${result.error}';
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteZone(BuildContext context, ProjectCardModel zone) async {
+    await _zonesService.deleteZoneCommand.execute(zone.id);
+    final result = _zonesService.deleteZoneCommand.result;
+
+    if (result != null && result.isSuccess) {
+      removeZone(zone.id);
+    } else if (result != null && result.isError) {
+      _errorMessage = 'Erro ao deletar zona: ${result.error}';
+      notifyListeners();
+    }
+  }
+
+  // Photo extraction utility
+  List<String> extractPhotoPaths(ProjectCardModel zone) {
+    return _zonesService.extractPhotoPaths(zone);
+  }
+
   // Private methods
   Future<Result<void>> _loadZonesData() async {
     try {
       _setState(ZonesListState.loading);
       _clearError();
 
-      // Sem API de zonas: iniciar vazio e aguardar adições do usuário
-      _zones = [];
-      _setState(ZonesListState.loaded);
+      // Carrega zonas usando o command do service
+      await _zonesService.loadZonesCommand.execute();
+      final result = _zonesService.loadZonesCommand.result;
 
-      return Result.ok(null);
+      if (result != null && result.isSuccess) {
+        _zones = result.data;
+        _setState(ZonesListState.loaded);
+        return Result.ok(null);
+      } else if (result != null && result.isError) {
+        _errorMessage = 'Erro ao carregar zonas: ${result.error}';
+        _setState(ZonesListState.error);
+        return Result.error(result.error);
+      } else {
+        _errorMessage = 'Erro desconhecido ao carregar zonas';
+        _setState(ZonesListState.error);
+        return Result.error(Exception('Unknown error'));
+      }
     } catch (e) {
       _setError('Erro ao carregar zonas: $e');
       _setState(ZonesListState.error);
@@ -174,33 +234,23 @@ class ZonesListViewModel extends ChangeNotifier {
 
   Future<Result<void>> _addZoneData(ZoneAddData data) async {
     try {
-      // Aqui seria a chamada para o service
-      // final result = await _zonesService.addZone(data);
+      // Adiciona zona usando o command do service
+      await _zonesService.addZoneCommand.execute(data);
+      final result = _zonesService.addZoneCommand.result;
 
-      // Simulando adição
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Gerar novo ID (seria retornado pelo service)
-      final newId = _zones.isNotEmpty
-          ? _zones.map((z) => z.id).reduce((a, b) => a > b ? a : b) + 1
-          : 1;
-
-      final newZone = ProjectCardModel(
-        id: newId,
-        title: data.title,
-        image: data.image,
-        floorDimensionValue: data.floorDimensionValue,
-        floorAreaValue: data.floorAreaValue,
-        areaPaintable: data.areaPaintable,
-        ceilingArea: data.ceilingArea,
-        trimLength: data.trimLength,
-        roomPlanData: data.roomPlanData,
-      );
-
-      _zones.add(newZone);
-      notifyListeners();
-
-      return Result.ok(null);
+      if (result != null && result.isSuccess) {
+        _zones.add(result.data);
+        notifyListeners();
+        return Result.ok(null);
+      } else if (result != null && result.isError) {
+        _errorMessage = 'Erro ao adicionar zona: ${result.error}';
+        notifyListeners();
+        return Result.error(result.error);
+      } else {
+        _errorMessage = 'Erro desconhecido ao adicionar zona';
+        notifyListeners();
+        return Result.error(Exception('Unknown error'));
+      }
     } catch (e) {
       _setError('Erro ao adicionar zona: $e');
       return Result.error(Exception(e.toString()));
