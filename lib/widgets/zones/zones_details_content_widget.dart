@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
-import '../../model/projects/project_card_model.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../viewmodel/zones/zone_detail_viewmodel.dart';
 import '../appbars/paint_pro_app_bar.dart';
@@ -38,7 +37,7 @@ class ZonesDetailsContentWidget extends StatelessWidget {
         }
 
         final zone = viewModel.currentZone!;
-        final photoUrls = _getPhotoUrls(zone);
+        final photoUrls = viewModel.getPhotoUrls(zone);
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -101,11 +100,13 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           FloorDimensionWidget(
-                            width: double.tryParse(
-                              zone.floorDimensionValue.split(' x ')[0],
+                            width: viewModel.parseDimension(
+                              zone.floorDimensionValue,
+                              0,
                             ),
-                            length: double.tryParse(
-                              zone.floorDimensionValue.split(' x ')[1],
+                            length: viewModel.parseDimension(
+                              zone.floorDimensionValue,
+                              1,
                             ),
                             onDimensionChanged: (width, length) {
                               viewModel.updateZoneDimensions(width, length);
@@ -184,19 +185,11 @@ class ZonesDetailsContentWidget extends StatelessWidget {
     );
   }
 
-  List<String> _getPhotoUrls(ProjectCardModel zone) {
-    // Se roomPlanData tem fotos, usa elas; senão usa a imagem principal
-    if (zone.roomPlanData != null && zone.roomPlanData!['photos'] is List) {
-      final photos = zone.roomPlanData!['photos'] as List;
-      return photos.cast<String>();
-    }
-    // Fallback para a imagem principal se não houver fotos na lista
-    return zone.image.isNotEmpty ? [zone.image] : [];
-  }
-
   Future<void> _addPhoto(BuildContext context) async {
     try {
-      final currentPhotos = _getPhotoUrls(viewModel.currentZone!).length;
+      final currentPhotos = viewModel
+          .getPhotoUrls(viewModel.currentZone!)
+          .length;
       final maxPhotos = 9;
 
       // Verificar se ainda pode adicionar fotos
@@ -207,7 +200,7 @@ class ZonesDetailsContentWidget extends StatelessWidget {
       // Navegar diretamente para a câmera com as fotos existentes
       final projectData = {
         'zoneId': viewModel.currentZone!.id,
-        'existingPhotos': _getPhotoUrls(viewModel.currentZone!),
+        'existingPhotos': viewModel.getPhotoUrls(viewModel.currentZone!),
         'currentPhotoCount': currentPhotos,
         'maxPhotos': maxPhotos,
       };
@@ -216,7 +209,7 @@ class ZonesDetailsContentWidget extends StatelessWidget {
 
       // Se a câmera retornou fotos, atualizar a zona
       if (result is List<String> && result.isNotEmpty) {
-        _updateZonePhotos(result);
+        viewModel.updateZonePhotos(result);
       }
     } catch (e) {
       // Mostrar erro se necessário
@@ -249,21 +242,6 @@ class ZonesDetailsContentWidget extends StatelessWidget {
         newName != zone.title &&
         context.mounted) {
       await viewModel.renameZone(zone.id, newName);
-    }
-  }
-
-  void _updateZonePhotos(List<String> photos) {
-    if (viewModel.currentZone != null) {
-      // Criar uma nova zona com as fotos atualizadas
-      final updatedZone = viewModel.currentZone!.copyWith(
-        roomPlanData: {
-          ...viewModel.currentZone!.roomPlanData ?? {},
-          'photos': photos,
-        },
-      );
-
-      // Atualizar a zona no viewmodel
-      viewModel.setCurrentZone(updatedZone);
     }
   }
 }
