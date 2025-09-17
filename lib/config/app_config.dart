@@ -8,7 +8,8 @@ class AppConfig {
   static const bool isProduction = false;
 
   /// URL de desenvolvimento principal (usada para iOS, Web, Desktop).
-  static const String _devBaseUrl = 'http://192.168.0.211:8080/api';
+  // static const String _devBaseUrl = 'http://192.168.0.211:8080/api';
+  static const String _devBaseUrl = 'http://192.168.15.10:8080/api';
 
   /// URL de produção. Substitua pela URL real do seu backend.
   static const String _prodBaseUrl = 'https://paintpro.barbatech.company/api';
