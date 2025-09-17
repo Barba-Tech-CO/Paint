@@ -659,10 +659,9 @@ packages:
   roomplan_flutter:
     dependency: "direct main"
     description:
-      name: roomplan_flutter
-      sha256: "7a1a1b812455e5aed32880c0220c565bc3460dc9387500ae6d51347fdb6ffe78"
-      url: "https://pub.dev"
-    source: hosted
+      path: "../flutter_roomplan"
+      relative: true
+    source: path
     version: "0.1.2"
   shared_preferences:
     dependency: "direct main"
