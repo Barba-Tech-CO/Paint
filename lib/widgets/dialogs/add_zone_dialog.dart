@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
+import '../form_field/project_type_row_widget_compact.dart';
 
 /// Dialog for adding new zones with proper TextEditingController lifecycle management
 class AddZoneDialog extends StatefulWidget {
@@ -38,21 +39,7 @@ class AddZoneDialog extends StatefulWidget {
 class _AddZoneDialogState extends State<AddZoneDialog> {
   late TextEditingController _titleController;
   final _formKey = GlobalKey<FormState>();
-  String _selectedZoneType = 'room';
-
-  final List<String> _zoneTypes = [
-    'room',
-    'bathroom',
-    'kitchen',
-    'bedroom',
-    'living room',
-    'dining room',
-    'office',
-    'basement',
-    'attic',
-    'garage',
-    'other',
-  ];
+  String _selectedZoneType = 'Interior';
 
   @override
   void initState() {
@@ -101,23 +88,12 @@ class _AddZoneDialogState extends State<AddZoneDialog> {
               onFieldSubmitted: (_) => _handleSubmit(),
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _selectedZoneType,
-              decoration: const InputDecoration(
-                labelText: 'Zone Type',
-              ),
-              items: _zoneTypes.map((type) {
-                return DropdownMenuItem(
-                  value: type,
-                  child: Text(type.toUpperCase()),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _selectedZoneType = value;
-                  });
-                }
+            ProjectTypeRowWidgetCompact(
+              selectedType: _selectedZoneType,
+              onTypeChanged: (value) {
+                setState(() {
+                  _selectedZoneType = value;
+                });
               },
             ),
           ],
