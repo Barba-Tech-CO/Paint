@@ -23,12 +23,12 @@ class _CameraViewState extends State<CameraView> {
   void initState() {
     super.initState();
     _viewModel = CameraViewModel(projectData: widget.projectData);
-    _viewModel.setNavigationContext(context);
     _initializeCamera();
   }
 
   Future<void> _initializeCamera() async {
     await _viewModel.initialize();
+    _viewModel.setNavigationContext(context);
 
     if (mounted) {
       if (_viewModel.needsCameraUnavailableDialog) {
