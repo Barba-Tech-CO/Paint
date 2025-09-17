@@ -306,34 +306,38 @@ class ZonesListViewModel extends ChangeNotifier {
     if (roomData != null) {
       log('ProcessingHelper: Using room data from RoomPlan');
 
-      final floorData = roomData['floor'] as Map<String, dynamic>?;
-      final ceilingData = roomData['ceiling'] as Map<String, dynamic>?;
+      // Extract dimensions from RoomPlan data
+      final dimensions = roomData['dimensions'] as Map<String, dynamic>?;
       final wallsData = roomData['walls'] as List<dynamic>?;
 
-      // Extract floor dimensions
-      double? width = floorData?['width']?.toDouble();
-      double? length = floorData?['length']?.toDouble();
+      // Extract floor dimensions from RoomPlan dimensions
+      double? width = dimensions?['width']?.toDouble();
+      double? length = dimensions?['length']?.toDouble();
+      double? floorArea = dimensions?['floorArea']?.toDouble();
 
       String floorDimensionValue = 'Unknown';
       String floorAreaValue = 'Unknown';
 
       if (width != null && length != null) {
         floorDimensionValue =
-            '\${width.toStringAsFixed(0)} x \${length.toStringAsFixed(0)}';
-        floorAreaValue = '\${(width * length).toStringAsFixed(0)} sq ft';
+            '${width.toStringAsFixed(0)} x ${length.toStringAsFixed(0)}';
+        floorAreaValue = '${(width * length).toStringAsFixed(0)} sq ft';
       }
 
-      // Calculate surface areas
+      // Calculate surface areas from walls
       double wallsArea = 0.0;
       if (wallsData != null) {
         for (final wall in wallsData) {
           final wallMap = wall as Map<String, dynamic>;
-          final area = wallMap['area']?.toDouble() ?? 0.0;
+          final wallWidth = wallMap['width']?.toDouble() ?? 0.0;
+          final wallHeight = wallMap['height']?.toDouble() ?? 0.0;
+          final area = wallWidth * wallHeight;
           wallsArea += area;
         }
       }
 
-      double ceilingArea = ceilingData?['area']?.toDouble() ?? 0.0;
+      // Calculate ceiling area from dimensions
+      double ceilingArea = floorArea ?? 0.0;
 
       return {
         'title': projectData?['roomName'] ?? 'New Zone',
