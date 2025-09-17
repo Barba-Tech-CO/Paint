@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../model/zones/zone_rename_data_model.dart';
 import '../../model/projects/project_card_model.dart';
+import '../../model/zones/zone_rename_data_model.dart';
 import '../../service/i_zones_service.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
@@ -341,5 +341,48 @@ class ZoneDetailViewModel extends ChangeNotifier {
           ),
       ],
     );
+  }
+
+  // Helper methods for data transformation and presentation
+
+  /// Safely parse dimension from floorDimensionValue string
+  double? parseDimension(String dimensionValue, int index) {
+    if (dimensionValue.isEmpty || dimensionValue == 'Unknown') {
+      return null;
+    }
+
+    final parts = dimensionValue.split(' x ');
+    if (parts.length <= index) {
+      return null;
+    }
+
+    return double.tryParse(parts[index]);
+  }
+
+  /// Extract photo URLs from zone for presentation
+  List<String> getPhotoUrls(ProjectCardModel zone) {
+    // Se roomPlanData tem fotos, usa elas; senão usa a imagem principal
+    if (zone.roomPlanData != null && zone.roomPlanData!['photos'] is List) {
+      final photos = zone.roomPlanData!['photos'] as List;
+      return photos.cast<String>();
+    }
+    // Fallback para a imagem principal se não houver fotos na lista
+    return zone.image.isNotEmpty ? [zone.image] : [];
+  }
+
+  /// Update zone photos in the current zone
+  void updateZonePhotos(List<String> photos) {
+    if (_currentZone != null) {
+      // Criar uma nova zona com as fotos atualizadas
+      final updatedZone = _currentZone!.copyWith(
+        roomPlanData: {
+          ..._currentZone!.roomPlanData ?? {},
+          'photos': photos,
+        },
+      );
+
+      // Atualizar a zona no viewmodel
+      setCurrentZone(updatedZone);
+    }
   }
 }
