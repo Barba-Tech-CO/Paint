@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,17 +19,17 @@ class SelectMaterialView extends StatefulWidget {
 class _SelectMaterialViewState extends State<SelectMaterialView> {
   late MaterialListViewModel _viewModel;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    log('SelectMaterialView: Initializing...');
     _viewModel = getIt<MaterialListViewModel>();
     _searchController.addListener(_onSearchChanged);
+    _scrollController.addListener(_onScroll);
 
     // Inicializa os dados
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      log('SelectMaterialView: Calling viewModel.initialize()');
       _viewModel.initialize();
     });
   }
@@ -39,7 +37,9 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
   @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
+    _scrollController.removeListener(_onScroll);
     _searchController.dispose();
+    _scrollController.dispose();
     _viewModel.dispose();
     super.dispose();
   }
@@ -50,6 +50,16 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
       _viewModel.clearFilters();
     } else {
       _viewModel.searchMaterials(searchTerm);
+    }
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      // Quando o usuário está próximo do final (200px), carrega mais materiais
+      if (_viewModel.hasMoreData && !_viewModel.isLoadingMore) {
+        _viewModel.loadMoreMaterials();
+      }
     }
   }
 
@@ -93,21 +103,13 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
             child: AnimatedBuilder(
               animation: _viewModel,
               builder: (context, _) {
-                log(
-                  'SelectMaterialView: Building UI - Loading: ${_viewModel.isLoading}, Error: ${_viewModel.error}, Materials count: ${_viewModel.materials.length}',
-                );
-
                 if (_viewModel.isLoading) {
-                  log('SelectMaterialView: Showing loading indicator');
                   return const Center(
                     child: CircularProgressIndicator(),
                   );
                 }
 
                 if (_viewModel.error != null) {
-                  log(
-                    'SelectMaterialView: Showing error - ${_viewModel.error}',
-                  );
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -145,6 +147,7 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
                 }
 
                 return CustomScrollView(
+                  controller: _scrollController,
                   slivers: [
                     // Search Header que rola junto
                     SliverToBoxAdapter(
@@ -199,9 +202,6 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
                     if (_viewModel.materials.isEmpty)
                       Builder(
                         builder: (context) {
-                          log(
-                            'SelectMaterialView: Materials list is empty, showing empty state',
-                          );
                           return SliverFillRemaining(
                             child: Center(
                               child: Column(
@@ -244,9 +244,6 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
                     else
                       Builder(
                         builder: (context) {
-                          log(
-                            'SelectMaterialView: Materials list has ${_viewModel.materials.length} items, showing list',
-                          );
                           return SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
@@ -261,6 +258,7 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
                                     isSelected: _viewModel.isMaterialSelected(
                                       material,
                                     ),
+                                    quantity: _viewModel.getQuantity(material),
                                     onTap: () {
                                       if (_viewModel.isMaterialSelected(
                                         material,
@@ -270,6 +268,12 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
                                         _viewModel.selectMaterial(material);
                                       }
                                     },
+                                    onQuantityDecrease: () {
+                                      _viewModel.decreaseQuantity(material);
+                                    },
+                                    onQuantityIncrease: () {
+                                      _viewModel.increaseQuantity(material);
+                                    },
                                   ),
                                 );
                               },
@@ -277,6 +281,35 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
                             ),
                           );
                         },
+                      ),
+
+                    // Loading indicator for pagination
+                    if (_viewModel.isLoadingMore)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      ),
+
+                    // End of list indicator
+                    if (!_viewModel.hasMoreData &&
+                        _viewModel.materials.isNotEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Center(
+                            child: Text(
+                              'No more materials to load',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                   ],
                 );
