@@ -55,7 +55,9 @@ class _AuthWebViewState extends State<AuthWebView> {
   }
 
   WebViewController _buildWebViewController(String url) {
-    if (_webViewController != null) return _webViewController!;
+    if (_webViewController != null) {
+      return _webViewController!;
+    }
 
     if (_viewModel == null) {
       throw Exception('AuthViewModel not initialized');
