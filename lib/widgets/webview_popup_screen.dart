@@ -31,10 +31,8 @@ class _WebViewPopupScreenState extends State<WebViewPopupScreen> {
       _popupController.setNavigationDelegate(
         NavigationDelegate(
           onNavigationRequest: (request) {
-            log('[WebViewPopup] Navigation: ${request.url}');
             // Check if 2FA is completed and user should be redirected back
             if (_shouldCloseModal(request.url)) {
-              log('[WebViewPopup] Closing modal due to URL: ${request.url}');
               // Close the modal after a short delay to allow the page to load
               Future.delayed(const Duration(milliseconds: 500), () {
                 if (mounted) {
