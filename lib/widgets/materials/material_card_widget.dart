@@ -17,19 +17,6 @@ class MaterialCardWidget extends StatelessWidget {
     this.onLongPress,
   });
 
-  Color _getQualityColor(MaterialQuality quality) {
-    switch (quality) {
-      case MaterialQuality.economic:
-        return Colors.green;
-      case MaterialQuality.standard:
-        return Colors.orange;
-      case MaterialQuality.high:
-        return Colors.purple;
-      case MaterialQuality.premium:
-        return Colors.amber;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -61,10 +48,9 @@ class MaterialCardWidget extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey[700],
+                      color: AppColors.gray100,
                     ),
                   ),
-
                   Text(
                     '\$${material.price.toStringAsFixed(2)}/${material.priceUnit}',
                     style: const TextStyle(
@@ -73,32 +59,13 @@ class MaterialCardWidget extends StatelessWidget {
                       color: AppColors.primary,
                     ),
                   ),
-                  if (!material.isAvailable)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50],
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        'Indisponível',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.red[700],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
                 ],
               ),
               const SizedBox(height: 12),
 
               // Nome do material
               Text(
-                material.name,
+                material.name.toUpperCase(),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -115,17 +82,18 @@ class MaterialCardWidget extends StatelessWidget {
                   // Tipo
                   BuildChipWidget(
                     text: material.type.displayName,
-                    backgroundColor: Colors.blue[50]!,
-                    textColor: Colors.blue[700]!,
+                    textColor: AppColors.gray100,
                   ),
-                  const SizedBox(width: 8),
+                  Text(
+                    '.',
+                    style: TextStyle(
+                      color: AppColors.gray100,
+                    ),
+                  ),
                   // Qualidade
                   BuildChipWidget(
                     text: material.quality.displayName,
-                    backgroundColor: _getQualityColor(
-                      material.quality,
-                    ).withAlpha(1),
-                    textColor: _getQualityColor(material.quality),
+                    textColor: AppColors.gray100,
                   ),
                 ],
               ),
