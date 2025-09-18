@@ -7,6 +7,7 @@ import '../data/repository/estimate_repository_impl.dart';
 import '../data/repository/material_repository_impl.dart';
 import '../data/repository/paint_catalog_repository_impl.dart';
 import '../data/repository/quote_repository_impl.dart';
+import '../data/repository/user_repository_impl.dart';
 
 // Domain Layer
 import '../domain/repository/auth_repository.dart';
@@ -15,6 +16,7 @@ import '../domain/repository/estimate_repository.dart';
 import '../domain/repository/material_repository.dart';
 import '../domain/repository/paint_catalog_repository.dart';
 import '../domain/repository/quote_repository.dart';
+import '../domain/repository/user_repository.dart';
 
 // Service Layer
 import '../service/app_initialization_service.dart';
@@ -61,6 +63,7 @@ import '../viewmodel/contact/contact_list_viewmodel.dart';
 import '../viewmodel/contact/contact_detail_viewmodel.dart';
 import '../viewmodel/contact/new_contact_viewmodel.dart';
 import '../viewmodel/contacts/contacts_viewmodel.dart';
+import '../viewmodel/edit_zone/edit_zone_viewmodel.dart';
 import '../viewmodel/estimate/estimate_list_viewmodel.dart';
 import '../viewmodel/estimate/estimate_detail_viewmodel.dart';
 import '../viewmodel/estimate/estimate_upload_viewmodel.dart';
@@ -68,8 +71,10 @@ import '../viewmodel/estimate/estimate_calculation_viewmodel.dart';
 import '../viewmodel/material/material_list_viewmodel.dart';
 import '../viewmodel/measurements/measurements_viewmodel.dart';
 import '../viewmodel/navigation_viewmodel.dart';
+import '../viewmodel/processing/processing_viewmodel.dart';
 import '../viewmodel/projects/projects_viewmodel.dart';
 import '../viewmodel/quotes/quotes_viewmodel.dart';
+import '../viewmodel/roomplan/roomplan_viewmodel.dart';
 import '../viewmodel/user/user_viewmodel.dart';
 import '../viewmodel/zones/zones_list_viewmodel.dart';
 import '../viewmodel/zones/zone_detail_viewmodel.dart';
@@ -215,6 +220,12 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IQuoteRepository>(
     () => QuoteRepository(
       quoteService: getIt<QuoteService>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<IUserRepository>(
+    () => UserRepositoryImpl(
+      getIt<UserService>(),
     ),
   );
 
@@ -381,7 +392,7 @@ void setupDependencyInjection() {
   // ViewModels - User
   getIt.registerLazySingleton<UserViewModel>(
     () => UserViewModel(
-      getIt<UserService>(),
+      getIt<IUserRepository>(),
       getIt<AppLogger>(),
     ),
   );
@@ -406,5 +417,32 @@ void setupDependencyInjection() {
     () => ProjectsViewModel(
       getIt<IEstimateRepository>(),
     ),
+  );
+
+  // ViewModel - User (with repository pattern)
+  getIt.registerFactory<UserViewModel>(
+    () => UserViewModel(
+      getIt<IUserRepository>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  // ViewModel - RoomPlan
+  getIt.registerFactory<RoomPlanViewModel>(
+    () => RoomPlanViewModel(),
+  );
+
+  // ViewModel - Processing
+  getIt.registerFactory<ProcessingViewModel>(
+    () => ProcessingViewModel(),
+  );
+
+  // ViewModel - Camera (created by view due to BuildContext dependency)
+  // Note: CameraViewModel requires BuildContext for CameraNavigationHandler,
+  // so it's created directly in the view with proper dependencies
+
+  // ViewModel - EditZone
+  getIt.registerFactory<EditZoneViewModel>(
+    () => EditZoneViewModel(),
   );
 }
