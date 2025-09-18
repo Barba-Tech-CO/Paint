@@ -6,13 +6,20 @@ import '../../service/camera_navigation_handler.dart';
 import '../../service/camera_photo_service.dart';
 
 class CameraViewModel extends ChangeNotifier {
-  late CameraManager _cameraManager;
-  late CameraPhotoService _photoService;
-  late CameraNavigationHandler _navigationHandler;
+  final CameraManager _cameraManager;
+  final CameraPhotoService _photoService;
+  final CameraNavigationHandler _navigationHandler;
 
   final Map<String, dynamic>? projectData;
 
-  CameraViewModel({this.projectData});
+  CameraViewModel({
+    required CameraManager cameraManager,
+    required CameraPhotoService photoService,
+    required CameraNavigationHandler navigationHandler,
+    this.projectData,
+  }) : _cameraManager = cameraManager,
+       _photoService = photoService,
+       _navigationHandler = navigationHandler;
 
   // Getters
   CameraManager get cameraManager => _cameraManager;
@@ -24,30 +31,15 @@ class CameraViewModel extends ChangeNotifier {
   // Internal state
   bool _disposed = false;
 
-  /// Initialize camera system and services
+  /// Initialize camera system
   Future<void> initialize() async {
-    _initializeServices();
     await _initializeCamera();
   }
 
-  void _initializeServices() {
-    _cameraManager = CameraManager();
-
-    // Extrair fotos existentes dos dados do projeto
-    final existingPhotos = <String>[];
-    if (projectData != null) {
-      final photos = projectData!['existingPhotos'] as List<dynamic>?;
-      if (photos != null) {
-        existingPhotos.addAll(photos.cast<String>());
-      }
-    }
-
-    _photoService = CameraPhotoService(
-      existingPhotos: existingPhotos,
-      maxPhotos: projectData?['maxPhotos'] ?? 9,
-    );
-
-    // O navigationHandler será inicializado na view com o contexto correto
+  /// Set navigation context (called from view)
+  void setNavigationContext(dynamic context) {
+    // The navigation handler context is set during construction
+    // This method is kept for compatibility but the context should be set during DI
   }
 
   Future<void> _initializeCamera() async {
@@ -61,15 +53,6 @@ class CameraViewModel extends ChangeNotifier {
         notifyListeners();
       }
     }
-  }
-
-  /// Set navigation context (called from view)
-  void setNavigationContext(dynamic context) {
-    _navigationHandler = CameraNavigationHandler(
-      context: context,
-      photoService: _photoService,
-      projectData: projectData,
-    );
   }
 
   /// Toggle flash mode
