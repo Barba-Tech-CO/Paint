@@ -123,7 +123,22 @@ class AuthViewModel extends ChangeNotifier {
         }
 
         // Check backend status if no persisted authentication
-        checkAuthStatusCommand.execute();
+        // Only check backend status if we have a token, otherwise show login directly
+        final hasToken = await _authPersistenceService.getSanctumToken();
+        if (hasToken != null) {
+          checkAuthStatusCommand.execute();
+        } else {
+          _updateState(
+            _state.copyWith(
+              state: AuthState.unauthenticated,
+              isLoading: false,
+              errorMessage: null,
+              authorizeUrl: AppConfig.isProduction
+                  ? AppUrls.goHighLevelAuthorizeUrl
+                  : AppUrls.goHighLevelAuthorizeUrlDev,
+            ),
+          );
+        }
       }
     } catch (e) {
       _logger.error('[AuthViewModel] Error loading persisted auth state: $e');
@@ -234,6 +249,12 @@ class AuthViewModel extends ChangeNotifier {
           'Authentication service is temporarily unavailable',
         );
 
+        // Check if it's a "no auth token" error (expected on first launch)
+        final isNoAuthTokenError =
+            errorMessage.contains('No auth token') ||
+            errorMessage.contains('401') ||
+            errorMessage.contains('Unauthorized');
+
         if (isServiceUnavailable) {
           // Service unavailable - show error state and propagate error to CommandBuilder
           _updateState(
@@ -244,6 +265,31 @@ class AuthViewModel extends ChangeNotifier {
             ),
           );
           return Result.error(error);
+        } else if (isNoAuthTokenError) {
+          // No auth token error - treat as unauthenticated and show login (expected on first launch)
+          _logger.info(
+            '[AuthViewModel] No auth token found - treating as unauthenticated (expected on first launch)',
+          );
+
+          // Create a dummy unauthenticated model
+          final unauthenticatedModel = AuthModel(
+            authenticated: false,
+            needsLogin: true,
+            expiresAt: null,
+            locationId: null,
+          );
+
+          _updateState(
+            _state.copyWith(
+              authStatus: unauthenticatedModel,
+              state: AuthState.unauthenticated,
+              isLoading: false,
+              errorMessage: null, // Clear error to show webview
+            ),
+          );
+
+          // Return success to CommandBuilder so it doesn't show error overlay
+          return Result.ok(null);
         } else {
           // Other errors (network, etc.) - treat as unauthenticated and show login
 
