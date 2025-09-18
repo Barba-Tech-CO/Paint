@@ -32,24 +32,41 @@ class MaterialListViewModel extends ChangeNotifier {
 
   /// Carrega todos os materiais
   Future<void> loadMaterials() async {
+    log('MaterialListViewModel: Starting to load materials...');
     _setLoading(true);
     _clearError();
 
     try {
+      log('MaterialListViewModel: Calling repository.getAllMaterials()');
       final result = await _materialRepository.getAllMaterials();
+
       result.when(
         ok: (materials) {
+          log(
+            'MaterialListViewModel: Successfully loaded ${materials.length} materials',
+          );
+          for (int i = 0; i < materials.length && i < 3; i++) {
+            final material = materials[i];
+            log(
+              'MaterialListViewModel: Material $i - Name: ${material.name}, Price: ${material.price}, Type: ${material.type}',
+            );
+          }
           _materials = materials;
           notifyListeners();
         },
         error: (error) {
+          log('MaterialListViewModel: Error loading materials: $error');
           _setError('Erro ao carregar materiais: ${error.toString()}');
         },
       );
     } catch (e) {
+      log('MaterialListViewModel: Exception loading materials: $e');
       _setError('Erro inesperado ao carregar materiais: $e');
     } finally {
       _setLoading(false);
+      log(
+        'MaterialListViewModel: Finished loading materials. Loading: $_isLoading, Materials count: ${_materials.length}',
+      );
     }
   }
 
@@ -206,11 +223,15 @@ class MaterialListViewModel extends ChangeNotifier {
 
   /// Inicializa o ViewModel
   Future<void> initialize() async {
+    log('MaterialListViewModel: Initializing view model...');
     await Future.wait([
       loadMaterials(),
       loadStats(),
       loadAvailableBrands(),
     ]);
+    log(
+      'MaterialListViewModel: Initialization completed. Materials: ${_materials.length}, Loading: $_isLoading, Error: $_error',
+    );
   }
 
   // Métodos privados para gerenciar estado
