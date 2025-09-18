@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 enum SyncStatus { synced, pending, error }
 
 class ContactModel {
@@ -77,6 +79,13 @@ class ContactModel {
       ].where((part) => part.isNotEmpty).join(' ');
     } else if (json['name'] != null) {
       fullName = json['name']; // Fallback to legacy name field
+    }
+
+    // Debug log for contact creation
+    if (fullName.isNotEmpty) {
+      log(
+        'ContactModel.fromJson: Creating contact - Name: $fullName, ID: ${json['id']}, GHL ID: ${json['ghlId'] ?? json['id']}',
+      );
     }
 
     return ContactModel(
