@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../service/camera_manager.dart';
+import '../../service/camera_navigation_handler.dart';
+import '../../service/camera_photo_service.dart';
 import '../../viewmodel/camera/camera_viewmodel.dart';
 import '../../widgets/camera/camera_app_bar_overlay.dart';
 import '../../widgets/camera/camera_controls_bar.dart';
@@ -22,7 +25,22 @@ class _CameraViewState extends State<CameraView> {
   @override
   void initState() {
     super.initState();
-    _viewModel = CameraViewModel(projectData: widget.projectData);
+    _viewModel = CameraViewModel(
+      cameraManager: CameraManager(),
+      photoService: CameraPhotoService(
+        existingPhotos: [],
+        maxPhotos: 9,
+      ),
+      navigationHandler: CameraNavigationHandler(
+        context: context,
+        photoService: CameraPhotoService(
+          existingPhotos: [],
+          maxPhotos: 9,
+        ),
+        projectData: widget.projectData,
+      ),
+      projectData: widget.projectData,
+    );
     _initializeCamera();
   }
 
