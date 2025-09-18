@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -23,11 +25,13 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
   @override
   void initState() {
     super.initState();
+    log('SelectMaterialView: Initializing...');
     _viewModel = getIt<MaterialListViewModel>();
     _searchController.addListener(_onSearchChanged);
 
     // Inicializa os dados
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      log('SelectMaterialView: Calling viewModel.initialize()');
       _viewModel.initialize();
     });
   }
@@ -89,13 +93,21 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
             child: AnimatedBuilder(
               animation: _viewModel,
               builder: (context, _) {
+                log(
+                  'SelectMaterialView: Building UI - Loading: ${_viewModel.isLoading}, Error: ${_viewModel.error}, Materials count: ${_viewModel.materials.length}',
+                );
+
                 if (_viewModel.isLoading) {
+                  log('SelectMaterialView: Showing loading indicator');
                   return const Center(
                     child: CircularProgressIndicator(),
                   );
                 }
 
                 if (_viewModel.error != null) {
+                  log(
+                    'SelectMaterialView: Showing error - ${_viewModel.error}',
+                  );
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -185,70 +197,86 @@ class _SelectMaterialViewState extends State<SelectMaterialView> {
 
                     // Lista de materiais
                     if (_viewModel.materials.isEmpty)
-                      SliverFillRemaining(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.inventory_2_outlined,
-                                size: 64,
-                                color: Colors.grey[400],
+                      Builder(
+                        builder: (context) {
+                          log(
+                            'SelectMaterialView: Materials list is empty, showing empty state',
+                          );
+                          return SliverFillRemaining(
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.inventory_2_outlined,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No materials found',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Try adjusting your search or filters',
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                                  if (_viewModel.hasFilters) ...[
+                                    const SizedBox(height: 16),
+                                    TextButton(
+                                      onPressed: _viewModel.clearFilters,
+                                      child: const Text('Clear Filters'),
+                                    ),
+                                  ],
+                                ],
                               ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No materials found',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Try adjusting your search or filters',
-                                style: TextStyle(
-                                  color: Colors.grey[500],
-                                ),
-                              ),
-                              if (_viewModel.hasFilters) ...[
-                                const SizedBox(height: 16),
-                                TextButton(
-                                  onPressed: _viewModel.clearFilters,
-                                  child: const Text('Clear Filters'),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
+                            ),
+                          );
+                        },
                       )
                     else
-                      SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final material = _viewModel.materials[index];
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 4,
-                              ),
-                              child: MaterialCardWidget(
-                                material: material,
-                                isSelected: _viewModel.isMaterialSelected(
-                                  material,
-                                ),
-                                onTap: () {
-                                  if (_viewModel.isMaterialSelected(material)) {
-                                    _viewModel.unselectMaterial(material);
-                                  } else {
-                                    _viewModel.selectMaterial(material);
-                                  }
-                                },
-                              ),
-                            );
-                          },
-                          childCount: _viewModel.materials.length,
-                        ),
+                      Builder(
+                        builder: (context) {
+                          log(
+                            'SelectMaterialView: Materials list has ${_viewModel.materials.length} items, showing list',
+                          );
+                          return SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final material = _viewModel.materials[index];
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 4,
+                                  ),
+                                  child: MaterialCardWidget(
+                                    material: material,
+                                    isSelected: _viewModel.isMaterialSelected(
+                                      material,
+                                    ),
+                                    onTap: () {
+                                      if (_viewModel.isMaterialSelected(
+                                        material,
+                                      )) {
+                                        _viewModel.unselectMaterial(material);
+                                      } else {
+                                        _viewModel.selectMaterial(material);
+                                      }
+                                    },
+                                  ),
+                                );
+                              },
+                              childCount: _viewModel.materials.length,
+                            ),
+                          );
+                        },
                       ),
                   ],
                 );
