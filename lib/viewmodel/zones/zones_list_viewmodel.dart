@@ -50,9 +50,15 @@ class ZonesListViewModel extends ChangeNotifier {
 
   // Initialize
   void initialize() {
+    log(
+      'ZonesListViewModel: initialize() called - isInitialized: $isInitialized',
+    );
     if (!isInitialized) {
+      log('ZonesListViewModel: Initializing commands and loading zones');
       _initializeCommands();
       loadZones();
+    } else {
+      log('ZonesListViewModel: Already initialized, skipping');
     }
   }
 
@@ -83,6 +89,9 @@ class ZonesListViewModel extends ChangeNotifier {
     String? trimLength,
     Map<String, dynamic>? roomPlanData,
   }) async {
+    log('ZonesListViewModel: addZone() called for "$title"');
+    log('ZonesListViewModel: Current zones count: ${_zones.length}');
+
     if (_addZoneCommand != null) {
       await _addZoneCommand!.execute(
         ZoneAddDataModel(
@@ -235,12 +244,34 @@ class ZonesListViewModel extends ChangeNotifier {
 
   Future<Result<void>> _addZoneData(ZoneAddDataModel data) async {
     try {
+      log('ZonesListViewModel: _addZoneData() called for "${data.title}"');
+      log('ZonesListViewModel: Current zones before add: ${_zones.length}');
+
       // Adiciona zona usando o command do service
       await _zonesService.addZoneCommand.execute(data);
       final result = _zonesService.addZoneCommand.result;
 
       if (result != null && result.isSuccess) {
-        _zones.add(result.data);
+        log('ZonesListViewModel: Successfully added zone "${data.title}"');
+
+        // Check if zone already exists in local list to avoid duplicates
+        final existingZone = _zones
+            .where(
+              (zone) =>
+                  zone.title == result.data.title &&
+                  zone.image == result.data.image,
+            )
+            .firstOrNull;
+
+        if (existingZone == null) {
+          _zones.add(result.data);
+          log('ZonesListViewModel: Zones count after add: ${_zones.length}');
+        } else {
+          log(
+            'ZonesListViewModel: Zone already exists in local list, skipping duplicate',
+          );
+        }
+
         notifyListeners();
         return Result.ok(null);
       } else if (result != null && result.isError) {
@@ -283,91 +314,74 @@ class ZonesListViewModel extends ChangeNotifier {
       milliseconds: 3000 + (DateTime.now().millisecondsSinceEpoch % 2000),
     );
 
-    await Future.delayed(processingTime);
+    log(
+      'ZonesListViewModel: Starting processing simulation for ${processingTime.inMilliseconds}ms',
+    );
+
+    try {
+      await Future.delayed(processingTime);
+      log('ZonesListViewModel: Processing simulation completed');
+    } catch (e) {
+      log('ZonesListViewModel: Error in processing simulation: $e');
+      // Continue even if there's an error
+    }
   }
 
-  /// Creates zone data from room data or returns default data
+  /// Creates zone data from room data - data is always available
   static Map<String, dynamic> createZoneDataFromRoomData({
     required List<String> capturedPhotos,
-    Map<String, dynamic>? roomData,
-    Map<String, dynamic>? projectData,
+    required Map<String, dynamic> roomData,
+    required Map<String, dynamic> projectData,
   }) {
     log('=== PROCESSING HELPER - ZONE DATA CREATION ===');
     log('ProcessingHelper: Starting zone data creation');
-    log('ProcessingHelper: Captured photos count: \${capturedPhotos.length}');
-    log('ProcessingHelper: Room data available: \${roomData != null}');
-    log('ProcessingHelper: Project data available: \${projectData != null}');
+    log('ProcessingHelper: Captured photos count: ${capturedPhotos.length}');
+    log('ProcessingHelper: Project data: $projectData');
 
-    if (projectData != null) {
-      log('ProcessingHelper: Project data: \$projectData');
+    // Extract dimensions from RoomPlan data
+    final dimensions = roomData['dimensions'] as Map<String, dynamic>?;
+    final wallsData = roomData['walls'] as List<dynamic>?;
+
+    // Extract floor dimensions from RoomPlan dimensions
+    double? width = dimensions?['width']?.toDouble();
+    double? length = dimensions?['length']?.toDouble();
+    double? floorArea = dimensions?['floorArea']?.toDouble();
+
+    String floorDimensionValue = '';
+    String floorAreaValue = '';
+
+    if (width != null && length != null && width > 0 && length > 0) {
+      floorDimensionValue =
+          '${width.toStringAsFixed(0)} x ${length.toStringAsFixed(0)}';
+      floorAreaValue = '${(width * length).toStringAsFixed(0)} sq ft';
     }
 
-    // If we have room data from RoomPlan, use it
-    if (roomData != null) {
-      log('ProcessingHelper: Using room data from RoomPlan');
-
-      // Extract dimensions from RoomPlan data
-      final dimensions = roomData['dimensions'] as Map<String, dynamic>?;
-      final wallsData = roomData['walls'] as List<dynamic>?;
-
-      // Extract floor dimensions from RoomPlan dimensions
-      double? width = dimensions?['width']?.toDouble();
-      double? length = dimensions?['length']?.toDouble();
-      double? floorArea = dimensions?['floorArea']?.toDouble();
-
-      String floorDimensionValue = 'Unknown';
-      String floorAreaValue = 'Unknown';
-
-      if (width != null && length != null) {
-        floorDimensionValue =
-            '${width.toStringAsFixed(0)} x ${length.toStringAsFixed(0)}';
-        floorAreaValue = '${(width * length).toStringAsFixed(0)} sq ft';
+    // Calculate surface areas from walls
+    double wallsArea = 0.0;
+    if (wallsData != null) {
+      for (final wall in wallsData) {
+        final wallMap = wall as Map<String, dynamic>;
+        final wallWidth = wallMap['width']?.toDouble() ?? 0.0;
+        final wallHeight = wallMap['height']?.toDouble() ?? 0.0;
+        final area = wallWidth * wallHeight;
+        wallsArea += area;
       }
-
-      // Calculate surface areas from walls
-      double wallsArea = 0.0;
-      if (wallsData != null) {
-        for (final wall in wallsData) {
-          final wallMap = wall as Map<String, dynamic>;
-          final wallWidth = wallMap['width']?.toDouble() ?? 0.0;
-          final wallHeight = wallMap['height']?.toDouble() ?? 0.0;
-          final area = wallWidth * wallHeight;
-          wallsArea += area;
-        }
-      }
-
-      // Calculate ceiling area from dimensions
-      double ceilingArea = floorArea ?? 0.0;
-
-      return {
-        'title': projectData?['roomName'] ?? 'New Zone',
-        'image': capturedPhotos.isNotEmpty ? capturedPhotos.first : '',
-        'floorDimensionValue': floorDimensionValue,
-        'floorAreaValue': floorAreaValue,
-        'areaPaintable': wallsArea.toStringAsFixed(0),
-        'ceilingArea': ceilingArea.toStringAsFixed(0),
-        'trimLength': '0',
-        'roomPlanData': {
-          'photos': capturedPhotos,
-          'roomData': roomData,
-          'projectData': projectData,
-        },
-      };
     }
 
-    // Fallback: create default zone data
-    log('ProcessingHelper: Using default zone data (no room data available)');
+    // Calculate ceiling area from dimensions
+    double ceilingArea = floorArea ?? 0.0;
+
     return {
-      'title': projectData?['roomName'] ?? 'New Zone',
+      'title': projectData['zoneName'],
       'image': capturedPhotos.isNotEmpty ? capturedPhotos.first : '',
-      'floorDimensionValue': '12 x 12',
-      'floorAreaValue': '144 sq ft',
-      'areaPaintable': '384',
-      'ceilingArea': '144',
-      'trimLength': '48',
+      'floorDimensionValue': floorDimensionValue,
+      'floorAreaValue': floorAreaValue,
+      'areaPaintable': wallsArea.toStringAsFixed(0),
+      'ceilingArea': ceilingArea.toStringAsFixed(0),
+      'trimLength': '0',
       'roomPlanData': {
         'photos': capturedPhotos,
-        'roomData': null,
+        'roomData': roomData,
         'projectData': projectData,
       },
     };
