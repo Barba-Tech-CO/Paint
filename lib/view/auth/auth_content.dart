@@ -13,6 +13,15 @@ class AuthContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<AuthViewModel>();
+
+    // If we have an authorize URL and no error, show the WebView directly
+    // Note: We don't check isLoading here because the WebView sets loading state during page load
+    if (viewModel.state.authorizeUrl != null &&
+        viewModel.state.errorMessage == null) {
+      return AuthWebView(url: viewModel.state.authorizeUrl!);
+    }
+
+    // Otherwise use CommandBuilder for other states
     return CommandBuilder<void>(
       command: viewModel.checkAuthStatusCommand,
       onRunning: () => const LoadingOverlay(
