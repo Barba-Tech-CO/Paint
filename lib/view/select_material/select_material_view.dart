@@ -3,11 +3,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
+import '../../utils/scroll/infinite_scroll_mixin.dart';
 import '../../viewmodel/material/material_list_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/buttons/paint_pro_button.dart';
 import '../../widgets/materials/material_card_widget.dart';
-import '../../widgets/materials/material_filter_widget.dart';
 
 class SelectMaterialView extends StatefulWidget {
   const SelectMaterialView({super.key});
@@ -16,10 +16,10 @@ class SelectMaterialView extends StatefulWidget {
   State<SelectMaterialView> createState() => _SelectMaterialViewState();
 }
 
-class _SelectMaterialViewState extends State<SelectMaterialView> {
+class _SelectMaterialViewState extends State<SelectMaterialView>
+    with InfiniteScrollMixin {
   late MaterialListViewModel _viewModel;
   final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
