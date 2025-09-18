@@ -223,7 +223,14 @@ class _RoomPlanViewState extends State<RoomPlanView> {
       log('RoomPlanView: RoomPlan was cancelled by user');
     } catch (e) {
       log('RoomPlanView: Error during RoomPlan: $e');
-      _showErrorDialog('RoomPlan failed: $e');
+
+      // Handle specific world tracking failure
+      if (e.toString().contains('World tracking failure') ||
+          e.toString().contains('native_error')) {
+        _showWorldTrackingErrorDialog();
+      } else {
+        _showErrorDialog('RoomPlan failed: $e');
+      }
     } finally {
       setState(() => _isScanning = false);
     }
@@ -241,6 +248,54 @@ class _RoomPlanViewState extends State<RoomPlanView> {
       context,
       title: 'Error',
       message: message,
+    );
+  }
+
+  void _showWorldTrackingErrorDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('World Tracking Failed'),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'ARKit couldn\'t track the room properly. Please try:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 12),
+              Text('• Ensure good lighting in the room'),
+              Text('• Move the device slowly and steadily'),
+              Text('• Point the camera at textured surfaces'),
+              Text('• Avoid reflective surfaces (mirrors, glass)'),
+              Text('• Make sure the room has enough detail'),
+              SizedBox(height: 12),
+              Text(
+                'If the problem persists, you can continue with photos only.',
+                style: TextStyle(fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _navigateToProcessingWithPhotosOnly();
+              },
+              child: const Text('Continue with Photos'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _startRoomPlan(); // Retry
+              },
+              child: const Text('Try Again'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -381,11 +436,15 @@ class _RoomPlanViewState extends State<RoomPlanView> {
 
     log('RoomPlanView: Captured photos count: ${widget.capturedPhotos.length}');
     log('RoomPlanView: Project data: ${widget.projectData}');
+    log(
+      'RoomPlanView: ClientId from projectData: ${widget.projectData?['clientId']}',
+    );
+    log('RoomPlanView: ProjectData keys: ${widget.projectData?.keys.toList()}');
     log('=== END ROOMPLAN DATA PROCESSING ===');
 
     // Navega para a tela de processamento
-    context.pushNamed(
-      'processing',
+    context.go(
+      '/processing',
       extra: {
         'photos': widget.capturedPhotos,
         'roomData': roomData,
@@ -396,8 +455,8 @@ class _RoomPlanViewState extends State<RoomPlanView> {
 
   void _navigateToProcessingWithPhotosOnly() {
     // Navega para a tela de processamento apenas com fotos
-    context.pushNamed(
-      'processing',
+    context.go(
+      '/processing',
       extra: {
         'photos': widget.capturedPhotos,
         'roomData': null, // No room data available
