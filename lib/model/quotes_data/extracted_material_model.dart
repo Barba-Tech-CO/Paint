@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 class ExtractedMaterialModel {
   final int id;
   final int pdfUploadId;
@@ -36,6 +38,9 @@ class ExtractedMaterialModel {
   });
 
   factory ExtractedMaterialModel.fromJson(Map<String, dynamic> json) {
+    // Debug log to see the actual JSON data
+    log('ExtractedMaterialModel.fromJson: Processing JSON: $json');
+
     // Validate required fields
     final requiredFields = [
       'id',
@@ -53,24 +58,61 @@ class ExtractedMaterialModel {
 
     for (final field in requiredFields) {
       if (json[field] == null) {
+        log(
+          'ExtractedMaterialModel.fromJson: Missing required field: $field',
+        );
         throw Exception('Missing required field: $field');
       }
     }
 
+    // Debug specific fields that might cause type issues
+    log(
+      'ExtractedMaterialModel.fromJson: id type: ${json['id'].runtimeType}, value: ${json['id']}',
+    );
+    log(
+      'ExtractedMaterialModel.fromJson: pdf_upload_id type: ${json['pdf_upload_id'].runtimeType}, value: ${json['pdf_upload_id']}',
+    );
+    log(
+      'ExtractedMaterialModel.fromJson: user_id type: ${json['user_id'].runtimeType}, value: ${json['user_id']}',
+    );
+    log(
+      'ExtractedMaterialModel.fromJson: unit_price type: ${json['unit_price'].runtimeType}, value: ${json['unit_price']}',
+    );
+    log(
+      'ExtractedMaterialModel.fromJson: line_number type: ${json['line_number'].runtimeType}, value: ${json['line_number']}',
+    );
+    log(
+      'ExtractedMaterialModel.fromJson: specifications type: ${json['specifications'].runtimeType}, value: ${json['specifications']}',
+    );
+
     return ExtractedMaterialModel(
-      id: json['id'] as int,
-      pdfUploadId: json['pdf_upload_id'] as int,
-      userId: json['user_id'] as int,
+      id: json['id'] is int
+          ? json['id'] as int
+          : int.parse(json['id'].toString()),
+      pdfUploadId: json['pdf_upload_id'] is int
+          ? json['pdf_upload_id'] as int
+          : int.parse(json['pdf_upload_id'].toString()),
+      userId: json['user_id'] is int
+          ? json['user_id'] as int
+          : int.parse(json['user_id'].toString()),
       brand: json['brand'] as String,
       description: json['description'] as String,
       type: json['type'] as String,
       unit: json['unit'] as String,
-      unitPrice: (json['unit_price'] as num).toDouble(),
+      unitPrice: json['unit_price'] is num
+          ? (json['unit_price'] as num).toDouble()
+          : double.parse(json['unit_price'].toString()),
       finish: json['finish'] as String?,
       qualityGrade: json['quality_grade'] as String?,
       category: json['category'] as String?,
-      specifications: json['specifications'] as Map<String, dynamic>?,
-      lineNumber: json['line_number'] as int,
+      specifications: json['specifications'] is Map<String, dynamic>
+          ? json['specifications'] as Map<String, dynamic>
+          : json['specifications'] is List
+          ? null
+          : json['specifications'] as Map<String, dynamic>?,
+      lineNumber: json['line_number'] is int
+          ? json['line_number'] as int
+          : int.parse(json['line_number'].toString()),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       pdfUpload: json['pdf_upload'] != null
@@ -205,6 +247,8 @@ class ExtractedMaterialListResponse {
   });
 
   factory ExtractedMaterialListResponse.fromJson(Map<String, dynamic> json) {
+    log('ExtractedMaterialListResponse.fromJson: Processing response JSON');
+
     // Validate required fields
     if (json['success'] == null) {
       throw Exception('Missing required field: success');
@@ -223,6 +267,11 @@ class ExtractedMaterialListResponse {
       throw Exception('Missing required field: data.pagination');
     }
 
+    // Debug filters_applied field
+    log(
+      'ExtractedMaterialListResponse.fromJson: filters_applied type: ${data['filters_applied'].runtimeType}, value: ${data['filters_applied']}',
+    );
+
     return ExtractedMaterialListResponse(
       success: json['success'] as bool,
       materials: (data['materials'] as List)
@@ -234,7 +283,11 @@ class ExtractedMaterialListResponse {
       pagination: PaginationInfo.fromJson(
         data['pagination'] as Map<String, dynamic>,
       ),
-      filtersApplied: data['filters_applied'] as Map<String, dynamic>?,
+      filtersApplied: data['filters_applied'] is Map<String, dynamic>
+          ? data['filters_applied'] as Map<String, dynamic>
+          : data['filters_applied'] is List
+          ? null
+          : data['filters_applied'] as Map<String, dynamic>?,
     );
   }
 }
