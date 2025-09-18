@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -36,7 +38,7 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
     _zoneInitializer = ZoneInitializerViewModel(listViewModel: _listViewModel);
 
     // Initialize ViewModels
-    _listViewModel.initialize();
+    log('ZonesResultsWidget: Initializing ViewModels');
     _summaryViewModel.initialize();
 
     // Setup listener to update summary when zones list changes
@@ -44,10 +46,15 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
 
     // Add initial zone data if available
     if (widget.initialZoneData != null) {
+      log(
+        'ZonesResultsWidget: Adding initial zone data: ${widget.initialZoneData!['title']}',
+      );
       _zoneInitializer.initializeZoneAfterBuild(
         context,
         widget.initialZoneData!,
       );
+    } else {
+      log('ZonesResultsWidget: No initial zone data provided');
     }
   }
 
