@@ -24,7 +24,7 @@ import '../view/zones/zones_view.dart';
 import '../view/zones_details/zones_details_view.dart';
 
 final router = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/select-material',
   routes: [
     GoRoute(
       path: '/splash',
