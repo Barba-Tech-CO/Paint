@@ -32,7 +32,20 @@ class ContactLoadingService {
 
       if (result is Ok) {
         final response = result.asOk.value;
-        return response.contacts;
+        final contacts = response.contacts;
+
+        // Debug log to check contact IDs
+        _logger.info(
+          'ContactLoadingService: Loaded ${contacts.length} contacts',
+        );
+        for (int i = 0; i < contacts.length && i < 3; i++) {
+          final contact = contacts[i];
+          _logger.info(
+            'ContactLoadingService: Contact $i - Name: ${contact.name}, ID: ${contact.id}, GHL ID: ${contact.ghlId}',
+          );
+        }
+
+        return contacts;
       } else {
         // Log the error for debugging
         _logger.warning(
