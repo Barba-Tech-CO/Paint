@@ -8,6 +8,7 @@ import '../../viewmodel/material/material_list_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/buttons/paint_pro_button.dart';
 import '../../widgets/materials/material_card_widget.dart';
+import '../../widgets/materials/material_filter_widget.dart';
 
 class SelectMaterialView extends StatefulWidget {
   const SelectMaterialView({super.key});
@@ -26,7 +27,6 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
     super.initState();
     _viewModel = getIt<MaterialListViewModel>();
     _searchController.addListener(_onSearchChanged);
-    _scrollController.addListener(_onScroll);
 
     // Inicializa os dados
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -37,9 +37,7 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
   @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
-    _scrollController.removeListener(_onScroll);
     _searchController.dispose();
-    _scrollController.dispose();
     _viewModel.dispose();
     super.dispose();
   }
@@ -53,17 +51,7 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
     }
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      // Quando o usuário está próximo do final (200px), carrega mais materiais
-      if (_viewModel.hasMoreData && !_viewModel.isLoadingMore) {
-        _viewModel.loadMoreMaterials();
-      }
-    }
-  }
-
-  void _showFilterBottomSheet() {
+  void _showFilterBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -73,8 +61,8 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
         maxChildSize: 0.9,
         minChildSize: 0.5,
         builder: (context, scrollController) => MaterialFilterWidget(
-          currentFilter: _viewModel.currentFilter,
-          availableBrands: _viewModel.availableBrands,
+          currentFilter: _viewModel.getCurrentFilter(),
+          availableBrands: _viewModel.getAvailableBrands(),
           onFilterChanged: (filter) {
             _viewModel.applyFilter(filter);
           },
@@ -84,6 +72,15 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
         ),
       ),
     );
+  }
+
+  /// Implementação do mixin InfiniteScrollMixin
+  @override
+  void onNearEnd() {
+    // Quando o usuário está próximo do final, carrega mais materiais
+    if (_viewModel.hasMoreData && !_viewModel.isLoadingMore) {
+      _viewModel.loadMoreMaterials();
+    }
   }
 
   @override
@@ -147,7 +144,7 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
                 }
 
                 return CustomScrollView(
-                  controller: _scrollController,
+                  controller: scrollController,
                   slivers: [
                     // Search Header que rola junto
                     SliverToBoxAdapter(
@@ -173,7 +170,7 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
                                     ? AppColors.primary
                                     : Colors.grey,
                               ),
-                              onPressed: _showFilterBottomSheet,
+                              onPressed: () => _showFilterBottomSheet(context),
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
