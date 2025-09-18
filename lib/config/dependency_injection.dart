@@ -71,7 +71,6 @@ import '../viewmodel/estimate/estimate_calculation_viewmodel.dart';
 import '../viewmodel/material/material_list_viewmodel.dart';
 import '../viewmodel/measurements/measurements_viewmodel.dart';
 import '../viewmodel/navigation_viewmodel.dart';
-import '../viewmodel/processing/processing_viewmodel.dart';
 import '../viewmodel/projects/projects_viewmodel.dart';
 import '../viewmodel/quotes/quotes_viewmodel.dart';
 import '../viewmodel/roomplan/roomplan_viewmodel.dart';
@@ -153,14 +152,6 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AuthPersistenceService>(
     () => AuthPersistenceService(),
   );
-  getIt.registerLazySingleton<AuthInitializationService>(
-    () => AuthInitializationService(
-      authPersistenceService: getIt<AuthPersistenceService>(),
-      locationService: getIt<LocationService>(),
-      userViewModel: getIt<UserViewModel>(),
-      httpService: getIt<HttpService>(),
-    ),
-  );
   getIt.registerLazySingleton<ContactLoadingService>(
     () => ContactLoadingService(
       contactRepository: getIt<IContactRepository>(),
@@ -188,6 +179,30 @@ void setupDependencyInjection() {
   );
   getIt.registerLazySingleton<IZonesService>(
     () => ZonesService(),
+  );
+
+  // User Service and Repository (needed early for AuthInitializationService)
+  getIt.registerLazySingleton<IUserRepository>(
+    () => UserRepositoryImpl(
+      getIt<UserService>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<UserViewModel>(
+    () => UserViewModel(
+      getIt<IUserRepository>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  // Auth Initialization Service (after UserViewModel)
+  getIt.registerLazySingleton<AuthInitializationService>(
+    () => AuthInitializationService(
+      authPersistenceService: getIt<AuthPersistenceService>(),
+      locationService: getIt<LocationService>(),
+      userViewModel: getIt<UserViewModel>(),
+      httpService: getIt<HttpService>(),
+    ),
   );
 
   // Repositories
@@ -220,12 +235,6 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IQuoteRepository>(
     () => QuoteRepository(
       quoteService: getIt<QuoteService>(),
-    ),
-  );
-
-  getIt.registerLazySingleton<IUserRepository>(
-    () => UserRepositoryImpl(
-      getIt<UserService>(),
     ),
   );
 
@@ -389,13 +398,7 @@ void setupDependencyInjection() {
     ),
   );
 
-  // ViewModels - User
-  getIt.registerLazySingleton<UserViewModel>(
-    () => UserViewModel(
-      getIt<IUserRepository>(),
-      getIt<AppLogger>(),
-    ),
-  );
+  // ViewModels - User (registered earlier for AuthInitializationService)
 
   // ViewModel - Quotes
   getIt.registerFactory<QuotesViewModel>(
@@ -419,22 +422,11 @@ void setupDependencyInjection() {
     ),
   );
 
-  // ViewModel - User (with repository pattern)
-  getIt.registerFactory<UserViewModel>(
-    () => UserViewModel(
-      getIt<IUserRepository>(),
-      getIt<AppLogger>(),
-    ),
-  );
+  // ViewModel - User (with repository pattern) - registered earlier
 
   // ViewModel - RoomPlan
   getIt.registerFactory<RoomPlanViewModel>(
     () => RoomPlanViewModel(),
-  );
-
-  // ViewModel - Processing
-  getIt.registerFactory<ProcessingViewModel>(
-    () => ProcessingViewModel(),
   );
 
   // ViewModel - Camera (created by view due to BuildContext dependency)
