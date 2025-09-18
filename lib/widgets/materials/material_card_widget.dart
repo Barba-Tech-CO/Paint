@@ -2,19 +2,26 @@ import 'package:flutter/material.dart';
 import '../../model/material_models/material_model.dart';
 import '../../config/app_colors.dart';
 import 'build_chip_widget.dart';
+import 'quantity_selector_widget.dart';
 
 class MaterialCardWidget extends StatelessWidget {
   final MaterialModel material;
   final bool isSelected;
+  final int quantity;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final VoidCallback? onQuantityDecrease;
+  final VoidCallback? onQuantityIncrease;
 
   const MaterialCardWidget({
     super.key,
     required this.material,
     this.isSelected = false,
+    this.quantity = 1,
     this.onTap,
     this.onLongPress,
+    this.onQuantityDecrease,
+    this.onQuantityIncrease,
   });
 
   @override
@@ -78,23 +85,38 @@ class MaterialCardWidget extends StatelessWidget {
 
               // Informações do material
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Tipo
-                  BuildChipWidget(
-                    text: material.type.displayName,
-                    textColor: AppColors.gray100,
+                  // Tipo e Qualidade
+                  Row(
+                    children: [
+                      // Tipo
+                      BuildChipWidget(
+                        text: material.type.displayName,
+                        textColor: AppColors.gray100,
+                      ),
+                      Text(
+                        '.',
+                        style: TextStyle(
+                          color: AppColors.gray100,
+                        ),
+                      ),
+                      // Qualidade
+                      BuildChipWidget(
+                        text: material.quality.displayName,
+                        textColor: AppColors.gray100,
+                      ),
+                    ],
                   ),
-                  Text(
-                    '.',
-                    style: TextStyle(
-                      color: AppColors.gray100,
+
+                  // Quantity Selector (only show when selected)
+                  if (isSelected)
+                    QuantitySelectorWidget(
+                      quantity: quantity,
+                      onDecrease: onQuantityDecrease ?? () {},
+                      onIncrease: onQuantityIncrease ?? () {},
+                      enabled: isSelected,
                     ),
-                  ),
-                  // Qualidade
-                  BuildChipWidget(
-                    text: material.quality.displayName,
-                    textColor: AppColors.gray100,
-                  ),
                 ],
               ),
             ],
