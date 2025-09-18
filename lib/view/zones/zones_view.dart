@@ -9,13 +9,28 @@ import '../../widgets/dialogs/exit_zones_dialog.dart';
 import '../../widgets/loading/loading_widget.dart';
 import '../../widgets/zones/zones_results_widget.dart';
 
-class ZonesView extends StatelessWidget {
+class ZonesView extends StatefulWidget {
   final Map<String, dynamic>? initialZoneData;
 
   const ZonesView({
     super.key,
     this.initialZoneData,
   });
+
+  @override
+  State<ZonesView> createState() => _ZonesViewState();
+}
+
+class _ZonesViewState extends State<ZonesView> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the viewModel when the view is created
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final viewModel = context.read<ZonesListViewModel>();
+      viewModel.initialize();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,19 +47,16 @@ class ZonesView extends StatelessWidget {
         backgroundColor: AppColors.background,
         body: Consumer<ZonesListViewModel>(
           builder: (context, viewModel, child) {
-            // Inicializa o ViewModel apenas uma vez
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (viewModel.state == ZonesListState.initial) {
-                viewModel.initialize();
-              }
-            });
+            debugPrint(
+              'ZonesView: Building with isLoading: ${viewModel.isLoading}',
+            );
             return viewModel.isLoading
                 ? const LoadingWidget()
                 : Scaffold(
                     appBar: PaintProAppBar(title: 'Zones'),
                     body: ZonesResultsWidget(
                       results: const {},
-                      initialZoneData: initialZoneData,
+                      initialZoneData: widget.initialZoneData,
                     ),
                   );
           },
