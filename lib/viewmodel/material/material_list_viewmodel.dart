@@ -1,10 +1,8 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide MaterialType;
 
 import '../../domain/repository/material_repository.dart';
 import '../../model/material_models/material_model.dart';
 import '../../model/material_models/material_stats_model.dart';
-import '../../widgets/materials/material_filter_widget.dart';
 
 class MaterialListViewModel extends ChangeNotifier {
   final IMaterialRepository _materialRepository;
@@ -336,29 +334,11 @@ class MaterialListViewModel extends ChangeNotifier {
     ]);
   }
 
-  /// Mostra o bottom sheet de filtros
-  void showFilterBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        maxChildSize: 0.9,
-        minChildSize: 0.5,
-        builder: (context, scrollController) => MaterialFilterWidget(
-          currentFilter: _currentFilter,
-          availableBrands: _availableBrands,
-          onFilterChanged: (filter) {
-            applyFilter(filter);
-          },
-          onClearFilters: () {
-            clearFilters();
-          },
-        ),
-      ),
-    );
-  }
+  /// Get current filter for UI
+  MaterialFilter getCurrentFilter() => _currentFilter;
+
+  /// Get available brands for UI
+  List<String> getAvailableBrands() => _availableBrands;
 
   // Métodos privados para gerenciar estado
   void _setLoading(bool loading) {
