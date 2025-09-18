@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import '../model/material_models/material_model.dart';
 import '../model/material_models/material_stats_model.dart';
 import '../model/material_models/material_price_range_model.dart';
+import '../model/quotes_data/extracted_material_model.dart';
 import '../utils/material/material_mapper.dart';
 import '../utils/result/result.dart';
 import 'quote_service.dart';
@@ -107,20 +110,41 @@ class MaterialService {
   /// Busca todos os materiais disponíveis
   Future<Result<List<MaterialModel>>> getAllMaterials() async {
     try {
+      log('MaterialService: Starting to get all materials...');
       // Busca materiais extraídos da API
       final extractedResult = await _quoteService.getExtractedMaterials();
 
       return extractedResult.when(
         ok: (extractedResponse) {
+          log(
+            'MaterialService: Got extracted response with ${extractedResponse.materials.length} materials',
+          );
           if (extractedResponse.materials.isNotEmpty) {
             // Converte ExtractedMaterialModel para MaterialModel
             final materials = extractedResponse.materials.map((extracted) {
+              // Código da quote - sempre no formato Quote #001
+              String quoteCode =
+                  'Quote #${extracted.pdfUploadId.toString().padLeft(3, '0')}';
+
+              // Nome do material - prioriza description, senão tenta extrair do PDF
+              // Log para debug - vamos ver o que está vindo da API
+              log(
+                'MaterialService: Raw data - description: "${extracted.description}", brand: "${extracted.brand}"',
+              );
+
+              String materialName = extracted.description.isNotEmpty
+                  ? extracted.description
+                  : _extractMaterialNameFromPdf(
+                          extracted.pdfUpload?.originalName,
+                        ) ??
+                        _generateMaterialName(extracted);
+
               return MaterialModel(
                 id: extracted.id.toString(),
-                name: extracted.description,
-                code: 'PDF #${extracted.pdfUploadId}',
+                name: materialName,
+                code: quoteCode,
                 price: extracted.unitPrice,
-                priceUnit: extracted.unit,
+                priceUnit: _convertUnitToDisplay(extracted.unit),
                 type: MaterialMapper.mapCategoryToType(extracted.category),
                 quality: MaterialMapper.mapQualityGradeToQuality(
                   extracted.qualityGrade,
@@ -130,18 +154,33 @@ class MaterialService {
               );
             }).toList();
 
+            log(
+              'MaterialService: Converted to ${materials.length} MaterialModel objects',
+            );
+            for (int i = 0; i < materials.length && i < 3; i++) {
+              final material = materials[i];
+              final extracted = extractedResponse.materials[i];
+              log(
+                'MaterialService: Material $i - Name: "${material.name}", Code: "${material.code}", Price: ${material.price}, Description: "${extracted.description}", Brand: "${extracted.brand}"',
+              );
+            }
             return Result.ok(materials);
           } else {
+            log(
+              'MaterialService: No extracted materials found, returning empty list',
+            );
             // Se não há materiais extraídos, retorna lista vazia
             return Result.ok(<MaterialModel>[]);
           }
         },
         error: (error) {
+          log('MaterialService: Error getting extracted materials: $error');
           // Em caso de erro, retorna lista vazia
           return Result.ok(<MaterialModel>[]);
         },
       );
     } catch (e) {
+      log('MaterialService: Exception loading materials: $e');
       return Result.error(
         Exception('Error loading materials: $e'),
       );
@@ -331,5 +370,103 @@ class MaterialService {
         Exception('Error loading material statistics: $e'),
       );
     }
+  }
+
+  /// Converte unidades do backend para formato de exibição
+  String _convertUnitToDisplay(String unit) {
+    log('MaterialService: Converting unit "$unit" to display format');
+    final convertedUnit = switch (unit.toLowerCase()) {
+      'gallon' => 'Gal',
+      'liter' || 'litre' => 'L',
+      'quart' => 'Qt',
+      'pint' => 'Pt',
+      'ounce' || 'oz' => 'Oz',
+      'pound' || 'lb' => 'Lb',
+      'kilogram' || 'kg' => 'Kg',
+      'gram' || 'g' => 'G',
+      'square foot' || 'sqft' || 'sq ft' => 'Sq Ft',
+      'square meter' || 'sqm' || 'sq m' => 'Sq M',
+      'linear foot' || 'lnft' || 'ln ft' => 'Ln Ft',
+      'linear meter' || 'lnm' || 'ln m' => 'Ln M',
+      'piece' || 'each' || 'ea' => 'Ea',
+      'box' => 'Box',
+      'case' => 'Case',
+      'roll' => 'Roll',
+      'sheet' => 'Sheet',
+      'tube' => 'Tube',
+      'can' => 'Can',
+      'bottle' => 'Bottle',
+      'bag' => 'Bag',
+      'pack' => 'Pack',
+      _ =>
+        unit.toUpperCase(), // Se não encontrar correspondência, retorna a unidade original em maiúscula
+    };
+
+    log('MaterialService: Converted "$unit" to "$convertedUnit"');
+    return convertedUnit;
+  }
+
+  /// Tenta extrair o nome do material do nome do arquivo PDF
+  String? _extractMaterialNameFromPdf(String? originalName) {
+    if (originalName == null || originalName.isEmpty) return null;
+
+    // Remove extensão .pdf
+    String nameWithoutExt = originalName.replaceAll(RegExp(r'\.pdf$'), '');
+
+    // Tenta extrair nome do produto de padrões comuns
+    // Ex: "Price Quote - Quote # 7885104.pdf" -> pode conter nome do produto
+    // Ex: "PM 200 ZERO EG-SHEL Quote.pdf" -> "PM 200 ZERO EG-SHEL"
+
+    // Remove prefixos comuns
+    String cleaned = nameWithoutExt
+        .replaceAll(RegExp(r'^Price Quote\s*-\s*'), '')
+        .replaceAll(RegExp(r'Quote\s*#\s*\d+'), '')
+        .replaceAll(RegExp(r'Quote$'), '')
+        .trim();
+
+    // Se sobrou algo significativo (mais que 3 caracteres), usa
+    if (cleaned.length > 3) {
+      log('MaterialService: Extracted material name from PDF: "$cleaned"');
+      return cleaned;
+    }
+
+    return null;
+  }
+
+  /// Gera um nome de material baseado nos campos disponíveis
+  String _generateMaterialName(ExtractedMaterialModel extracted) {
+    // Tenta criar um nome mais descritivo baseado nos campos disponíveis
+    List<String> nameParts = [];
+
+    // Adiciona brand se disponível
+    if (extracted.brand.isNotEmpty) {
+      nameParts.add(extracted.brand);
+    }
+
+    // Adiciona finish se disponível
+    if (extracted.finish != null && extracted.finish!.isNotEmpty) {
+      nameParts.add(extracted.finish!);
+    }
+
+    // Adiciona quality grade se disponível
+    if (extracted.qualityGrade != null && extracted.qualityGrade!.isNotEmpty) {
+      nameParts.add(extracted.qualityGrade!);
+    }
+
+    // Adiciona category se disponível
+    if (extracted.category != null && extracted.category!.isNotEmpty) {
+      nameParts.add(extracted.category!);
+    }
+
+    // Se conseguiu montar algo, retorna
+    if (nameParts.isNotEmpty) {
+      final generatedName = nameParts.join(' ');
+      log('MaterialService: Generated material name: "$generatedName"');
+      return generatedName;
+    }
+
+    // Fallback para brand apenas
+    log('MaterialService: Using brand as fallback: "${extracted.brand}"');
+    return extracted.brand;
   }
 }
