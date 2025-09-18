@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -29,23 +31,56 @@ class _ProcessingViewState extends State<ProcessingView> {
   }
 
   Future<void> _startProcessing() async {
-    await ZonesListViewModel.simulateProcessing();
+    try {
+      // Log para debug
+      log('ProcessingView: Starting processing...');
 
-    if (mounted) {
-      _navigateToZones();
+      await ZonesListViewModel.simulateProcessing();
+
+      log(
+        'ProcessingView: Processing completed, navigating to zones...',
+      );
+
+      if (mounted) {
+        _navigateToZones();
+      } else {
+        log('ProcessingView: Widget not mounted, skipping navigation');
+      }
+    } catch (e) {
+      log('ProcessingView: Error during processing: $e');
+      if (mounted) {
+        _navigateToZones(); // Continue even if there's an error
+      }
     }
   }
 
   void _navigateToZones() {
-    // Cria dados da zona baseado no roomData ou dados padrão
-    final zoneData = ZonesListViewModel.createZoneDataFromRoomData(
-      capturedPhotos: widget.capturedPhotos,
-      roomData: widget.roomData,
-      projectData: widget.projectData,
-    );
+    try {
+      log('ProcessingView: Creating zone data...');
 
-    // Navega para a ZonesView com os dados da zona
-    context.go('/zones', extra: zoneData);
+      // Cria dados da zona baseado no roomData - dados sempre disponíveis
+      final zoneData = ZonesListViewModel.createZoneDataFromRoomData(
+        capturedPhotos: widget.capturedPhotos,
+        roomData: widget.roomData ?? {},
+        projectData: widget.projectData ?? {},
+      );
+
+      log('ProcessingView: Zone data created, navigating to zones...');
+      log('ProcessingView: Zone data keys: ${zoneData.keys.toList()}');
+
+      // Navega para a ZonesView com os dados da zona
+      context.go('/zones', extra: zoneData);
+
+      log('ProcessingView: Navigation to zones completed');
+    } catch (e) {
+      log('ProcessingView: Error navigating to zones: $e');
+      // Fallback: try to navigate without extra data
+      try {
+        context.go('/zones');
+      } catch (e2) {
+        log('ProcessingView: Fallback navigation also failed: $e2');
+      }
+    }
   }
 
   @override
@@ -67,12 +102,6 @@ class _ProcessingViewState extends State<ProcessingView> {
             // Loading Animation
             Column(
               children: [
-                const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.primary,
-                  ),
-                  strokeWidth: 3,
-                ),
                 Text(
                   'Processing Photos',
                   style: TextStyle(
@@ -95,6 +124,10 @@ class _ProcessingViewState extends State<ProcessingView> {
                     AppColors.primary,
                   ),
                   strokeWidth: 3,
+                  constraints: BoxConstraints(
+                    maxWidth: 100,
+                    maxHeight: 100,
+                  ),
                 ),
               ],
             ),
