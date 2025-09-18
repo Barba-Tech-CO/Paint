@@ -314,21 +314,65 @@ class QuoteService {
     try {
       final queryParams = filters?.toQueryParams() ?? <String, dynamic>{};
 
-      final response = await _httpService.get(
-        AppUrls.materialsExtractedUrl,
-        queryParameters: queryParams,
+      // Busca todos os materiais fazendo múltiplas chamadas
+      final allMaterials = <ExtractedMaterialModel>[];
+      int currentPage = 1;
+      bool hasMorePages = true;
+
+      log('DEBUG: Starting to fetch all materials with multiple API calls');
+
+      while (hasMorePages) {
+        queryParams['page'] = currentPage;
+
+        log('DEBUG: Calling API with queryParams: $queryParams');
+
+        final response = await _httpService.get(
+          AppUrls.materialsExtractedUrl,
+          queryParameters: queryParams,
+        );
+
+        if (response.statusCode == 200) {
+          final listResponse = ExtractedMaterialListResponse.fromJson(
+            response.data,
+          );
+
+          allMaterials.addAll(listResponse.materials);
+          log(
+            'DEBUG: Page $currentPage returned ${listResponse.materials.length} materials',
+          );
+
+          // Verifica se há mais páginas
+          final pagination = listResponse.pagination;
+          hasMorePages = currentPage < pagination.lastPage;
+          log(
+            'DEBUG: Page $currentPage - lastPage: ${pagination.lastPage}, hasMorePages: $hasMorePages',
+          );
+          currentPage++;
+        } else {
+          return Result.error(
+            Exception('Failed to get materials: ${response.statusCode}'),
+          );
+        }
+      }
+
+      log('DEBUG: Total materials fetched: ${allMaterials.length}');
+
+      // Cria uma resposta com todos os materiais
+      final allMaterialsResponse = ExtractedMaterialListResponse(
+        success: true,
+        materials: allMaterials,
+        pagination: PaginationInfo(
+          total: allMaterials.length,
+          perPage: 20,
+          currentPage: 1,
+          lastPage: 1,
+          from: 1,
+          to: allMaterials.length,
+        ),
+        filtersApplied: queryParams,
       );
 
-      if (response.statusCode == 200) {
-        final listResponse = ExtractedMaterialListResponse.fromJson(
-          response.data,
-        );
-        return Result.ok(listResponse);
-      } else {
-        return Result.error(
-          Exception('Failed to get materials: ${response.statusCode}'),
-        );
-      }
+      return Result.ok(allMaterialsResponse);
     } catch (e) {
       return Result.error(
         Exception('Error getting extracted materials: $e'),
