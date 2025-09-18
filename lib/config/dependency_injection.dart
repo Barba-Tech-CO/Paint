@@ -31,6 +31,7 @@ import '../service/estimate_service.dart';
 import '../service/http_service.dart';
 import '../service/location_service.dart';
 import '../service/material_service.dart';
+import '../service/material_database_service.dart';
 import '../service/navigation_service.dart';
 import '../service/paint_catalog_service.dart';
 import '../service/photo_service.dart';
@@ -123,9 +124,14 @@ void setupDependencyInjection() {
       getIt<HttpService>(),
     ),
   );
+  getIt.registerLazySingleton<MaterialDatabaseService>(
+    () => MaterialDatabaseService(),
+  );
+
   getIt.registerLazySingleton<MaterialService>(
     () => MaterialService(
       getIt<QuoteService>(),
+      getIt<MaterialDatabaseService>(),
     ),
   );
   getIt.registerLazySingleton<PaintCatalogService>(
