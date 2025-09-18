@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/repository/user_repository.dart';
 import '../../model/business_info.dart';
 import '../../model/user_model.dart';
-import '../../service/user_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
 class UserViewModel extends ChangeNotifier {
-  final UserService _userService;
+  final IUserRepository _userRepository;
   final AppLogger _logger;
 
-  UserViewModel(this._userService, this._logger);
+  UserViewModel(this._userRepository, this._logger);
 
   UserModel? _user;
   bool _isLoading = false;
@@ -37,7 +37,7 @@ class UserViewModel extends ChangeNotifier {
     _setError(null);
 
     try {
-      final result = await _userService.getUser();
+      final result = await _userRepository.getUser();
 
       if (result is Ok<UserModel>) {
         _user = result.asOk.value;
