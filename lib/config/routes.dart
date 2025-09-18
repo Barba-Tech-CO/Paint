@@ -13,7 +13,7 @@ import '../view/edit_zone/edit_zone_view.dart';
 import '../view/home/home_view.dart';
 import '../view/new_contact/new_contact_view.dart';
 import '../view/overview_zones/overview_zones_view.dart';
-import '../view/processing/processing_view.dart';
+import '../widgets/loading/loading_widget.dart';
 import '../view/projects/projects_view.dart';
 import '../view/quotes/quotes_view.dart';
 import '../view/roomplan/roomplan_view.dart';
@@ -24,7 +24,7 @@ import '../view/zones/zones_view.dart';
 import '../view/zones_details/zones_details_view.dart';
 
 final router = GoRouter(
-  initialLocation: '/select-material',
+  initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',
@@ -74,14 +74,12 @@ final router = GoRouter(
       name: 'processing',
       path: '/processing',
       builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>? ?? {};
-        final photos = extra['photos'] as List<String>? ?? [];
-        final roomData = extra['roomData'] as Map<String, dynamic>?;
-        final projectData = extra['projectData'] as Map<String, dynamic>?;
-        return ProcessingView(
-          capturedPhotos: photos,
-          roomData: roomData,
-          projectData: projectData,
+        return LoadingWidget(
+          title: 'Processing...',
+          subtitle: 'Processing Photos',
+          description: 'Calculating measurements...',
+          duration: const Duration(seconds: 5),
+          navigateToOnComplete: '/zones',
         );
       },
     ),
