@@ -44,6 +44,12 @@ class CameraNavigationHandler {
   void _navigateToNextScreen() {
     final photos = photoService.getAllPhotoPaths();
 
+    // Debug log
+    log('CameraNavigationHandler: Project data received: $projectData');
+    log(
+      'CameraNavigationHandler: ClientId from projectData: ${projectData?['clientId']}',
+    );
+
     // Se estamos vindo de uma zona, retornar as fotos para ela
     if (projectData != null && projectData!['zoneId'] != null) {
       // Retornar para a zona com as fotos atualizadas
@@ -54,6 +60,10 @@ class CameraNavigationHandler {
         'photos': photos,
         'projectData': projectData,
       };
+
+      log(
+        'CameraNavigationHandler: Data being passed to RoomPlan: $dataToPass',
+      );
 
       // Navigate to RoomPlan view with captured photos and project data
       context.push(
