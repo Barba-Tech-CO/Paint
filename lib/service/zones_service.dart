@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import '../model/zones/zone_add_data_model.dart';
 import '../model/projects/project_card_model.dart';
 import '../utils/command/command.dart';
@@ -195,7 +197,26 @@ class ZonesService implements IZonesService {
   // Private command implementations
   Future<Result<ProjectCardModel>> _addZoneData(ZoneAddDataModel data) async {
     try {
+      log('ZonesService: _addZoneData() called for "${data.title}"');
+      log('ZonesService: Current zones count: ${_zones.length}');
+
+      // Check for duplicates before adding
+      final existingZone = _zones
+          .where(
+            (zone) => zone.title == data.title && zone.image == data.image,
+          )
+          .firstOrNull;
+
+      if (existingZone != null) {
+        log(
+          'ZonesService: Zone "${data.title}" already exists, returning existing zone',
+        );
+        return Result.ok(existingZone);
+      }
+
       final newId = getNextId();
+      log('ZonesService: Generated new ID: $newId');
+
       final newZone = ProjectCardModel(
         id: newId,
         title: data.title,
@@ -209,8 +230,13 @@ class ZonesService implements IZonesService {
       );
 
       _zones.add(newZone);
+      log(
+        'ZonesService: Successfully added zone "${data.title}" with ID $newId',
+      );
+      log('ZonesService: Zones count after add: ${_zones.length}');
       return Result.ok(newZone);
     } catch (e) {
+      log('ZonesService: Error adding zone: $e');
       return Result.error(Exception('Error adding zone: $e'));
     }
   }
