@@ -36,41 +36,30 @@ class QuoteModel {
   /// Parse DateTime from string, always converting to device local timezone
   static DateTime _parseDateTime(String dateString) {
     try {
-      log('DEBUG: _parseDateTime - parsing dateString: $dateString');
       // Parse the date string
       final parsed = DateTime.parse(dateString);
-      log('DEBUG: _parseDateTime - parsed: $parsed, isUtc: ${parsed.isUtc}');
 
       // Always convert to local timezone of the device
       final localDateTime = parsed.toLocal();
-      log('DEBUG: _parseDateTime - localDateTime: $localDateTime');
 
       return localDateTime;
     } catch (e) {
-      log('ERROR: Failed to parse date: $dateString, error: $e');
       // Fallback to current local time if parsing fails
       return DateTime.now();
     }
   }
 
   factory QuoteModel.fromJson(Map<String, dynamic> json) {
-    log('DEBUG: QuoteModel.fromJson - json: $json');
-
     // Verificar campos obrigatórios
     if (json['id'] == null) {
-      log('DEBUG: QuoteModel.fromJson - Missing required field: id');
       throw Exception('Missing required field: id');
     }
 
     if (json['original_name'] == null) {
-      log(
-        'DEBUG: PdfUploadModel.fromJson - Missing required field: original_name',
-      );
       throw Exception('Missing required field: original_name');
     }
 
     if (json['status'] == null) {
-      log('DEBUG: QuoteModel.fromJson - Missing required field: status');
       throw Exception('Missing required field: status');
     }
 
