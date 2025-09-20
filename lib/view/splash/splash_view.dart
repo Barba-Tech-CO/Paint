@@ -129,11 +129,12 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
                       opacity: 0.8,
                       child: Text(
                         'Barba Tech',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                     ),
                     Opacity(
