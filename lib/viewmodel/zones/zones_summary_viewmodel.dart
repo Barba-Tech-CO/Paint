@@ -108,7 +108,7 @@ class ZonesSummaryViewModel extends ChangeNotifier {
         // Parse areas (should already be in sq ft from RoomPlan conversion)
         sumArea += _parseSqFt(z.floorAreaValue);
         sumPaintable += _parseSqFt(z.areaPaintable);
-        
+
         // Parse dimensions (should already be in feet from RoomPlan conversion)
         final dims = _parseDimensions(z.floorDimensionValue);
         sumWidth += dims.$1;
@@ -133,7 +133,7 @@ class ZonesSummaryViewModel extends ChangeNotifier {
   // Helpers de parse
   double _parseSqFt(String value) {
     if (value.isEmpty) return 0.0;
-    
+
     // Remove all non-numeric characters except decimal point
     final numStr = value.replaceAll(RegExp(r'[^0-9\.]'), '');
     return double.tryParse(numStr) ?? 0.0;
@@ -141,11 +141,11 @@ class ZonesSummaryViewModel extends ChangeNotifier {
 
   (double, double) _parseDimensions(String value) {
     if (value.isEmpty) return (0.0, 0.0);
-    
+
     // Remove apostrophes and split by 'x'
     final cleaned = value.replaceAll("'", '').replaceAll('ft', '').trim();
     final parts = cleaned.split('x');
-    
+
     if (parts.length >= 2) {
       final w = double.tryParse(parts[0].trim()) ?? 0.0;
       final l = double.tryParse(parts[1].trim()) ?? 0.0;
