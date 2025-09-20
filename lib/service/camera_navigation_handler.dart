@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
@@ -33,24 +31,8 @@ class CameraNavigationHandler {
 
   /// Handle done button press
   void onDonePressed() {
-    log('CameraNavigationHandler: onDonePressed called');
-    log('CameraNavigationHandler: photoCount: ${photoService.photoCount}');
-    log('CameraNavigationHandler: minPhotos: ${photoService.minPhotos}');
-    log(
-      'CameraNavigationHandler: isDoneEnabled: ${photoService.isDoneEnabled}',
-    );
-    log(
-      'CameraNavigationHandler: capturedPhotos length: ${photoService.capturedPhotos.length}',
-    );
-    log(
-      'CameraNavigationHandler: allPhotos length: ${photoService.allPhotos.length}',
-    );
-
     if (photoService.isDoneEnabled) {
-      log('CameraNavigationHandler: Proceeding to next screen');
       _navigateToNextScreen();
-    } else {
-      log('CameraNavigationHandler: Not enough photos taken to proceed');
     }
   }
 
@@ -69,12 +51,6 @@ class CameraNavigationHandler {
   void _navigateToNextScreen() {
     final photos = photoService.getAllPhotoPaths();
 
-    // Debug log
-    log('CameraNavigationHandler: Project data received: $projectData');
-    log(
-      'CameraNavigationHandler: ClientId from projectData: ${projectData?['clientId']}',
-    );
-
     // Se estamos vindo de uma zona, retornar as fotos para ela
     if (projectData != null && projectData!['zoneId'] != null) {
       // Retornar para a zona com as fotos atualizadas
@@ -88,12 +64,9 @@ class CameraNavigationHandler {
   /// Start RoomPlan directly without going through RoomPlanView
   Future<void> _startRoomPlanDirectly(List<String> photos) async {
     try {
-      log('CameraNavigationHandler: Starting RoomPlan directly...');
-
       // Check if RoomPlan is supported
       final isSupported = await RoomPlanScanner.isSupported();
       if (!isSupported) {
-        log('CameraNavigationHandler: RoomPlan not supported on this device');
         _showRoomPlanNotSupportedDialog();
         return;
       }
@@ -102,18 +75,14 @@ class CameraNavigationHandler {
       final roomScanner = RoomPlanScanner();
 
       // Start scanning directly
-      log('CameraNavigationHandler: Starting native RoomPlan scan...');
       final result = await roomScanner.startScanning();
 
       if (result != null) {
-        log('CameraNavigationHandler: RoomPlan scan completed successfully');
         _processRoomPlanResult(result, photos);
       } else {
-        log('CameraNavigationHandler: RoomPlan scan was cancelled');
         context.pop(); // Go back to camera
       }
     } catch (e) {
-      log('CameraNavigationHandler: Error during RoomPlan: $e');
       _showRoomPlanErrorDialog(e.toString());
     }
   }
@@ -138,7 +107,6 @@ class CameraNavigationHandler {
         projectData,
       );
     } catch (e) {
-      log('CameraNavigationHandler: Error processing RoomPlan result: $e');
       _showRoomPlanErrorDialog('Failed to process scan result: $e');
     }
   }
@@ -238,10 +206,7 @@ class CameraNavigationHandler {
 
   /// Handle camera permission result
   void handlePermissionResult(bool granted) {
-    if (granted) {
-      log('CameraNavigationHandler: Camera permission granted');
-    } else {
-      log('CameraNavigationHandler: Camera permission denied');
+    if (!granted) {
       _navigateBack();
     }
   }
