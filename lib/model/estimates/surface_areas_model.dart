@@ -4,4 +4,3 @@ class SurfaceAreasModel {
 
   const SurfaceAreasModel({required this.values});
 }
-
