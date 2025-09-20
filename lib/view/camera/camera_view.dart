@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 
 import '../../service/camera_manager.dart';
@@ -27,10 +25,6 @@ class _CameraViewState extends State<CameraView> {
   @override
   void initState() {
     super.initState();
-
-    // Debug log for project data
-    log('CameraView: Project data received: ${widget.projectData}');
-    log('CameraView: Project data keys: ${widget.projectData?.keys.toList()}');
 
     // Create a single shared instance of CameraPhotoService
     final photoService = CameraPhotoService(
@@ -93,10 +87,7 @@ class _CameraViewState extends State<CameraView> {
   }
 
   Future<void> _takePhoto() async {
-    log('CameraView: _takePhoto called - button pressed');
     final success = await _viewModel.takePhoto();
-
-    log('CameraView: _takePhoto result: $success');
 
     if (mounted) {
       if (!success && _viewModel.needsPhotoLimitDialog) {
