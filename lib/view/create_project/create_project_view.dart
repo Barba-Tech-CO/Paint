@@ -211,16 +211,17 @@ class _CreateProjectViewState extends State<CreateProjectView> {
                             'clientId': _selectedClient?.id,
                             'additionalNotes': _additionalNotesController.text
                                 .trim(),
+                            'isFromCreateProject': true,
                           };
 
                           // Debug log
-                          print(
+                          log(
                             'CreateProjectView: Project data being sent: $projectData',
                           );
-                          print(
+                          log(
                             'CreateProjectView: Selected client ID: ${_selectedClient?.id}',
                           );
-                          print(
+                          log(
                             'CreateProjectView: Selected client name: ${_selectedClient?.name}',
                           );
 
