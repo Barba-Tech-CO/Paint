@@ -29,6 +29,7 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
   late final ZonesListViewModel _listViewModel;
   late final ZonesSummaryViewModel _summaryViewModel;
   late final ZoneInitializerViewModel _zoneInitializer;
+  late final Map<String, dynamic> _projectData;
 
   @override
   void initState() {
@@ -36,6 +37,9 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
     _listViewModel = getIt<ZonesListViewModel>();
     _summaryViewModel = getIt<ZonesSummaryViewModel>();
     _zoneInitializer = ZoneInitializerViewModel(listViewModel: _listViewModel);
+
+    // Extract project data from initialZoneData
+    _projectData = _extractProjectData();
 
     // Initialize ViewModels
     log('ZonesResultsWidget: Initializing ViewModels');
@@ -68,6 +72,16 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
     _summaryViewModel.updateZonesList(_listViewModel.zones);
   }
 
+  Map<String, dynamic> _extractProjectData() {
+    // Extract project data from initialZoneData
+    return {
+      'projectName': widget.initialZoneData!['projectName'],
+      'projectType': widget.initialZoneData!['projectType'],
+      'clientId': widget.initialZoneData!['clientId'],
+      'additionalNotes': widget.initialZoneData!['additionalNotes'],
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -89,6 +103,7 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
                   ZonesActionsWidget(
                     listViewModel: listViewModel,
                     summaryViewModel: summaryViewModel,
+                    projectData: _projectData,
                   ),
                 ],
               ],
