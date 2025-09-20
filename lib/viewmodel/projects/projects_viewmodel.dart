@@ -273,7 +273,10 @@ class ProjectsViewModel extends ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
 
-      final result = await _estimateRepository.getEstimates(limit: 50, offset: 0);
+      final result = await _estimateRepository.getEstimates(
+        limit: 50,
+        offset: 0,
+      );
       if (result is Ok<List<EstimateModel>>) {
         final estimates = result.asOk.value;
         _projects = estimates.map(_mapEstimateToProject).toList();
