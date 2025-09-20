@@ -1,9 +1,8 @@
-import 'dart:developer';
-
 import '../model/zones/zone_add_data_model.dart';
 import '../model/projects/project_card_model.dart';
 import '../utils/command/command.dart';
 import '../utils/result/result.dart';
+import '../utils/unit_converter.dart';
 import 'i_zones_service.dart';
 
 class ZonesService implements IZonesService {
@@ -188,7 +187,7 @@ class ZonesService implements IZonesService {
   List<String> _getCurrentPhotos(ProjectCardModel zone) {
     if (zone.roomPlanData != null && zone.roomPlanData!['photos'] is List) {
       final photos = zone.roomPlanData!['photos'] as List;
-      return List<String>.from(photos);
+      return photos.cast<String>();
     }
     // Se não há fotos na lista, usa a imagem principal como primeira foto
     return zone.image.isNotEmpty ? [zone.image] : [];
@@ -197,26 +196,18 @@ class ZonesService implements IZonesService {
   // Private command implementations
   Future<Result<ProjectCardModel>> _addZoneData(ZoneAddDataModel data) async {
     try {
-      log('ZonesService: _addZoneData() called for "${data.title}"');
-      log('ZonesService: Current zones count: ${_zones.length}');
-
-      // Check for duplicates before adding
+      // Check for duplicates before adding - only by title since images might be the same
       final existingZone = _zones
           .where(
-            (zone) => zone.title == data.title && zone.image == data.image,
+            (zone) => zone.title == data.title,
           )
           .firstOrNull;
 
       if (existingZone != null) {
-        log(
-          'ZonesService: Zone "${data.title}" already exists, returning existing zone',
-        );
         return Result.ok(existingZone);
       }
 
       final newId = getNextId();
-      log('ZonesService: Generated new ID: $newId');
-
       final newZone = ProjectCardModel(
         id: newId,
         title: data.title,
@@ -230,13 +221,8 @@ class ZonesService implements IZonesService {
       );
 
       _zones.add(newZone);
-      log(
-        'ZonesService: Successfully added zone "${data.title}" with ID $newId',
-      );
-      log('ZonesService: Zones count after add: ${_zones.length}');
       return Result.ok(newZone);
     } catch (e) {
-      log('ZonesService: Error adding zone: $e');
       return Result.error(Exception('Error adding zone: $e'));
     }
   }
@@ -386,9 +372,13 @@ class ZonesService implements IZonesService {
       }
 
       final currentZone = _zones[index];
-      final newFloorDimensionValue =
-          '${width.toStringAsFixed(0)} x ${length.toStringAsFixed(0)}';
-      final newFloorAreaValue = '${(width * length).toStringAsFixed(0)} sq ft';
+      final newFloorDimensionValue = UnitConverter.formatDimensionsInFeet(
+        width,
+        length,
+      );
+      final newFloorAreaValue = UnitConverter.formatAreaInSqFeetOnly(
+        width * length,
+      );
 
       final updatedZone = currentZone.copyWith(
         floorDimensionValue: newFloorDimensionValue,
@@ -418,8 +408,12 @@ class ZonesService implements IZonesService {
 
       final currentZone = _zones[index];
       final updatedZone = currentZone.copyWith(
-        areaPaintable: walls?.toStringAsFixed(0) ?? currentZone.areaPaintable,
-        ceilingArea: ceiling?.toStringAsFixed(0) ?? currentZone.ceilingArea,
+        areaPaintable: walls != null
+            ? UnitConverter.formatAreaInSqFeetOnly(walls)
+            : currentZone.areaPaintable,
+        ceilingArea: ceiling != null
+            ? UnitConverter.formatAreaInSqFeetOnly(ceiling)
+            : currentZone.ceilingArea,
         trimLength: trim?.toStringAsFixed(0) ?? currentZone.trimLength,
       );
 
