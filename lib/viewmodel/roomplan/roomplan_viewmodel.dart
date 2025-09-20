@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
@@ -27,7 +26,6 @@ class RoomPlanViewModel extends ChangeNotifier {
       _isSupported = supported;
       notifyListeners();
     } catch (e) {
-      log('RoomPlanViewModel: Error checking support: $e');
       _isSupported = false;
       notifyListeners();
     }
@@ -36,7 +34,6 @@ class RoomPlanViewModel extends ChangeNotifier {
   /// Start RoomPlan scanning
   Future<void> startScanning() async {
     if (!_isSupported) {
-      log('RoomPlanViewModel: RoomPlan not supported on this device');
       return;
     }
 
@@ -51,30 +48,23 @@ class RoomPlanViewModel extends ChangeNotifier {
           notifyListeners();
         },
         onError: (error) {
-          log('RoomPlanViewModel: Scan error: $error');
           _isScanning = false;
           notifyListeners();
         },
       );
 
       // Start the actual native scanning
-      log('RoomPlanViewModel: Starting native RoomPlan scan...');
       final result = await _roomScanner!.startScanning();
 
       if (result != null) {
         _scanResult = result;
         _isScanning = false;
         notifyListeners();
-        log('RoomPlanViewModel: Native scan completed with result');
       } else {
         _isScanning = false;
         notifyListeners();
-        log('RoomPlanViewModel: Native scan was cancelled or failed');
       }
-
-      log('RoomPlanViewModel: RoomPlan scanning completed');
     } catch (e) {
-      log('RoomPlanViewModel: Error starting scan: $e');
       _isScanning = false;
       notifyListeners();
     }
@@ -86,9 +76,8 @@ class RoomPlanViewModel extends ChangeNotifier {
       await _roomScanner?.stopScanning();
       _isScanning = false;
       notifyListeners();
-      log('RoomPlanViewModel: RoomPlan scanning stopped');
     } catch (e) {
-      log('RoomPlanViewModel: Error stopping scan: $e');
+      // Handle error silently
     }
   }
 
@@ -98,11 +87,6 @@ class RoomPlanViewModel extends ChangeNotifier {
     List<String> capturedPhotos,
     Map<String, dynamic>? projectData,
   ) {
-    log('=== ROOMPLAN DATA PROCESSING ===');
-    log(
-      'RoomPlanViewModel: Starting data processing for navigation to processing screen',
-    );
-
     // Calculate room dimensions from the scan result
     final roomDimensions = result.room.dimensions;
     final roomWidth = roomDimensions?.width ?? 0.0;
@@ -115,13 +99,6 @@ class RoomPlanViewModel extends ChangeNotifier {
     final averageWallWidth = wallCount > 0
         ? (roomWidth + roomLength) * 2 / wallCount
         : 0.0;
-
-    log(
-      'RoomPlanViewModel: Room dimensions - Width: ${roomWidth}m, Length: ${roomLength}m, Height: ${roomHeight}m',
-    );
-    log(
-      'RoomPlanViewModel: Wall count: $wallCount, Average wall width: ${averageWallWidth}m',
-    );
 
     // Prepara os dados da sala para enviar para a tela de processamento
     final roomData = {
@@ -196,70 +173,6 @@ class RoomPlanViewModel extends ChangeNotifier {
         'hasLidar': result.metadata.hasLidar,
       },
     };
-
-    // Log wall details
-    final wallsList = roomData['walls'] as List;
-    for (int i = 0; i < wallsList.length; i++) {
-      final wall = wallsList[i] as Map<String, dynamic>;
-      log(
-        'RoomPlanViewModel: Wall $i processed - Width: ${wall['width']}m, Height: ${wall['height']}m, Area: ${wall['area']} sq m',
-      );
-    }
-
-    // Log door details
-    final doors = roomData['doors'] as List;
-    for (int i = 0; i < doors.length; i++) {
-      final door = doors[i] as Map<String, dynamic>;
-      log(
-        'RoomPlanViewModel: Door $i processed - Width: ${door['width']}m, Height: ${door['height']}m, Area: ${door['area']} sq m',
-      );
-    }
-
-    // Log window details
-    final windows = roomData['windows'] as List;
-    for (int i = 0; i < windows.length; i++) {
-      final window = windows[i] as Map<String, dynamic>;
-      log(
-        'RoomPlanViewModel: Window $i processed - Width: ${window['width']}m, Height: ${window['height']}m, Area: ${window['area']} sq m',
-      );
-    }
-
-    // Log object details
-    final objects = roomData['objects'] as List;
-    for (int i = 0; i < objects.length; i++) {
-      final object = objects[i] as Map<String, dynamic>;
-      log(
-        'RoomPlanViewModel: Object $i processed - Category: ${object['category']}, Width: ${object['width']}m, Height: ${object['height']}m, Area: ${object['area']} sq m',
-      );
-    }
-
-    // Log dimensions if available
-    if (roomData['hasDimensions'] == true) {
-      final dimensions = roomData['dimensions'] as Map<String, dynamic>;
-      log('RoomPlanViewModel: Processed dimensions:');
-      log('RoomPlanViewModel: - Width: ${dimensions['width']}m');
-      log('RoomPlanViewModel: - Length: ${dimensions['length']}m');
-      log('RoomPlanViewModel: - Height: ${dimensions['height']}m');
-      log('RoomPlanViewModel: - Floor area: ${dimensions['floorArea']} sq m');
-      log('RoomPlanViewModel: - Volume: ${dimensions['volume']} cubic m');
-    }
-
-    // Log metadata
-    final metadata = roomData['metadata'] as Map<String, dynamic>;
-    log('RoomPlanViewModel: Processed metadata:');
-    log(
-      'RoomPlanViewModel: - Scan duration: ${metadata['scanDuration']} seconds',
-    );
-    log('RoomPlanViewModel: - Device model: ${metadata['deviceModel']}');
-    log('RoomPlanViewModel: - Has LiDAR: ${metadata['hasLidar']}');
-
-    log('RoomPlanViewModel: Captured photos count: ${capturedPhotos.length}');
-    log('RoomPlanViewModel: Project data: $projectData');
-    log(
-      'RoomPlanViewModel: ClientId from projectData: ${projectData?['clientId']}',
-    );
-    log('RoomPlanViewModel: ProjectData keys: ${projectData?.keys.toList()}');
-    log('=== END ROOMPLAN DATA PROCESSING ===');
 
     return roomData;
   }
@@ -336,28 +249,27 @@ class RoomPlanViewModel extends ChangeNotifier {
     };
 
     // Navigate directly to zones with the processed data
-    context.go(
-      '/zones',
-      extra: {
-        'title': projectData?['zoneName'] ?? 'New Zone',
-        'zoneType': 'room',
-        'projectName': projectData?['projectName'],
-        'projectType': projectData?['projectType'],
-        'clientId': projectData?['clientId'],
-        'additionalNotes': projectData?['additionalNotes'],
-        // Zone data for addZone method (in imperial units)
-        'floorDimensionValue':
-            '${widthFeet.toStringAsFixed(0)} ft x ${lengthFeet.toStringAsFixed(0)} ft',
-        'floorAreaValue': '${floorAreaSqFt.toStringAsFixed(0)} sq ft',
-        'areaPaintable': '${paintableAreaSqFt.toStringAsFixed(0)} sq ft',
-        'image': zoneImage,
-        'ceilingArea': ceilingAreaSqFt > 0
-            ? '${ceilingAreaSqFt.toStringAsFixed(0)} sq ft'
-            : null,
-        'trimLength': '${trimLengthFeet.toStringAsFixed(0)} ft',
-        'roomPlanData': roomPlanData,
-      },
-    );
+    final zoneData = {
+      'title': projectData?['zoneName'] ?? 'New Zone',
+      'zoneType': 'room',
+      'projectName': projectData?['projectName'],
+      'projectType': projectData?['projectType'],
+      'clientId': projectData?['clientId'],
+      'additionalNotes': projectData?['additionalNotes'],
+      // Zone data for addZone method (in imperial units)
+      'floorDimensionValue':
+          '${widthFeet.toStringAsFixed(0)} ft x ${lengthFeet.toStringAsFixed(0)} ft',
+      'floorAreaValue': '${floorAreaSqFt.toStringAsFixed(0)} sq ft',
+      'areaPaintable': '${paintableAreaSqFt.toStringAsFixed(0)} sq ft',
+      'image': zoneImage,
+      'ceilingArea': ceilingAreaSqFt > 0
+          ? '${ceilingAreaSqFt.toStringAsFixed(0)} sq ft'
+          : null,
+      'trimLength': '${trimLengthFeet.toStringAsFixed(0)} ft',
+      'roomPlanData': roomPlanData,
+    };
+
+    context.go('/zones', extra: zoneData);
   }
 
   /// Navigate to processing screen with photos only
