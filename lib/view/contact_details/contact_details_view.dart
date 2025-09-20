@@ -151,14 +151,15 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
                           as String,
                 ),
                 InfoCardWidget(
-                  children: ContactDetailViewModel.getAdditionalInfoRows(contact)
-                      .map(
-                        (row) => InfoRowWidget(
-                          label: row['label']!,
-                          value: row['value']!,
-                        ),
-                      )
-                      .toList(),
+                  children:
+                      ContactDetailViewModel.getAdditionalInfoRows(contact)
+                          .map(
+                            (row) => InfoRowWidget(
+                              label: row['label']!,
+                              value: row['value']!,
+                            ),
+                          )
+                          .toList(),
                 ),
               ],
             ],
