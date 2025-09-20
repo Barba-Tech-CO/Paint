@@ -10,11 +10,13 @@ import 'zones_summary_card.dart';
 class ZonesActionsWidget extends StatelessWidget {
   final ZonesListViewModel listViewModel;
   final ZonesSummaryViewModel summaryViewModel;
+  final Map<String, dynamic> projectData;
 
   const ZonesActionsWidget({
     super.key,
     required this.listViewModel,
     required this.summaryViewModel,
+    required this.projectData,
   });
 
   @override
@@ -48,8 +50,18 @@ class ZonesActionsWidget extends StatelessWidget {
           }) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (context.mounted) {
-                // Navegar para a câmera/RoomPlan para capturar os dados
-                context.go('/camera');
+                // Prepare project data for new zone using original project data
+                final zoneProjectData = {
+                  'zoneName': title,
+                  'zoneType': zoneType,
+                  'projectType': projectData['projectType'],
+                  'clientId': projectData['clientId'],
+                  'additionalNotes': projectData['additionalNotes'],
+                  'projectName': projectData['projectName'],
+                };
+
+                // Navigate to camera with zone data
+                context.push('/camera', extra: zoneProjectData);
               }
             });
           },
