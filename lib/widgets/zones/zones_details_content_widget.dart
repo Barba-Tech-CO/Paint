@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:roomplan_flutter/roomplan_flutter.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
@@ -100,14 +101,26 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           FloorDimensionWidget(
-                            width: viewModel.parseDimension(
-                              zone.floorDimensionValue,
-                              0,
-                            ),
-                            length: viewModel.parseDimension(
-                              zone.floorDimensionValue,
-                              1,
-                            ),
+                            width: viewModel.hasRoomPlanData
+                                ? (viewModel.getRoomPlanDimensions()?['width']
+                                      as double?)
+                                : UnitConverter.metersToFeetConversion(
+                                    viewModel.parseDimension(
+                                          zone.floorDimensionValue,
+                                          0,
+                                        ) ??
+                                        0.0,
+                                  ),
+                            length: viewModel.hasRoomPlanData
+                                ? (viewModel.getRoomPlanDimensions()?['length']
+                                      as double?)
+                                : UnitConverter.metersToFeetConversion(
+                                    viewModel.parseDimension(
+                                          zone.floorDimensionValue,
+                                          1,
+                                        ) ??
+                                        0.0,
+                                  ),
                             onDimensionChanged: (width, length) {
                               viewModel.updateZoneDimensions(width, length);
                             },
@@ -116,12 +129,27 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
                       SurfaceAreaDisplayWidget(
-                        walls: double.tryParse(zone.areaPaintable),
-                        ceiling: zone.ceilingArea != null
-                            ? double.tryParse(zone.ceilingArea!)
+                        walls: viewModel.hasRoomPlanData
+                            ? _calculateTotalWallArea(
+                                viewModel.getRoomPlanWalls(),
+                              )
+                            : UnitConverter.sqMetersToSqFeetConversion(
+                                double.tryParse(zone.areaPaintable) ?? 0.0,
+                              ),
+                        ceiling: viewModel.hasRoomPlanData
+                            ? (viewModel.getRoomPlanDimensions()?['floorArea']
+                                  as double?)
+                            : zone.ceilingArea != null
+                            ? UnitConverter.sqMetersToSqFeetConversion(
+                                double.tryParse(zone.ceilingArea!) ?? 0.0,
+                              )
                             : null,
-                        trim: zone.trimLength != null
-                            ? double.tryParse(zone.trimLength!)
+                        trim: viewModel.hasRoomPlanData
+                            ? _calculateTrimLength(viewModel.getRoomPlanWalls())
+                            : zone.trimLength != null
+                            ? UnitConverter.metersToFeetConversion(
+                                double.tryParse(zone.trimLength!) ?? 0.0,
+                              )
                             : null,
                         onWallsChanged: (walls) {
                           viewModel.updateZoneSurfaceAreas(walls: walls);
@@ -243,5 +271,23 @@ class ZonesDetailsContentWidget extends StatelessWidget {
         context.mounted) {
       await viewModel.renameZone(zone.id, newName);
     }
+  }
+
+  /// Calculate total wall area from RoomPlan walls data
+  double _calculateTotalWallArea(List<Map<String, dynamic>> walls) {
+    double totalArea = 0.0;
+    for (final wall in walls) {
+      totalArea += (wall['area'] as double?) ?? 0.0;
+    }
+    return totalArea;
+  }
+
+  /// Calculate trim length from RoomPlan walls data
+  double _calculateTrimLength(List<Map<String, dynamic>> walls) {
+    double totalLength = 0.0;
+    for (final wall in walls) {
+      totalLength += (wall['width'] as double?) ?? 0.0;
+    }
+    return totalLength / 2; // Approximate trim length
   }
 }
