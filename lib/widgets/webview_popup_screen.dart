@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -45,18 +44,17 @@ class _WebViewPopupScreenState extends State<WebViewPopupScreen> {
           },
           onWebResourceError: (error) {
             // Handle WebView errors, especially on iOS
-            log('WebView error: ${error.description}');
           },
           onPageStarted: (url) {
-            log('[WebViewPopup] Page started: $url');
+            // Page started
           },
           onPageFinished: (url) {
-            log('[WebViewPopup] Page finished: $url');
+            // Page finished
           },
         ),
       );
     } catch (e) {
-      log('[WebViewPopup] Error setting navigation delegate: $e');
+      // Handle error silently
     }
 
     // iOS-specific configuration
@@ -66,7 +64,7 @@ class _WebViewPopupScreenState extends State<WebViewPopupScreen> {
           'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
         );
       } catch (e) {
-        log('[WebViewPopup] Error setting user agent: $e');
+        // Handle error silently
       }
     }
 
@@ -74,7 +72,7 @@ class _WebViewPopupScreenState extends State<WebViewPopupScreen> {
     try {
       _popupController.loadRequest(Uri.parse(widget.popupUrl));
     } catch (e) {
-      log('[WebViewPopup] Error loading URL: $e');
+      // Handle error silently
     }
   }
 
@@ -85,16 +83,14 @@ class _WebViewPopupScreenState extends State<WebViewPopupScreen> {
         url.contains('/enauth/chooselocation') ||
         url.contains('dashboard') ||
         url.contains('locations')) {
-      log('[WebViewPopup] Should close modal for: $url');
       return true;
     }
-    
+
     // Also close if returning to the main app domain (indicating completion)
     if (url.contains('paintpro.barbatech.company')) {
-      log('[WebViewPopup] Should close modal - returning to app domain: $url');
       return true;
     }
-    
+
     return false;
   }
 
