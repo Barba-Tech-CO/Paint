@@ -145,7 +145,15 @@ final router = GoRouter(
     GoRoute(
       path: '/zones-details',
       builder: (context, state) {
-        final zone = state.extra as ProjectCardModel?;
+        // Handle both ProjectCardModel and Map<String, dynamic> cases
+        ProjectCardModel? zone;
+        if (state.extra is ProjectCardModel) {
+          zone = state.extra as ProjectCardModel;
+        } else if (state.extra is Map<String, dynamic>) {
+          // Convert Map to ProjectCardModel if needed
+          final zoneData = state.extra as Map<String, dynamic>;
+          zone = ProjectCardModel.fromJson(zoneData);
+        }
         return ZonesDetailsView(zone: zone);
       },
     ),
