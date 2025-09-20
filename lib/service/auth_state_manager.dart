@@ -58,7 +58,7 @@ class AuthStateManager {
     _isAuthenticated = false;
     _authStateController.add(false);
 
-    // Notify all registered callbacks  
+    // Notify all registered callbacks
     for (final callback in _onAuthFailureCallbacks) {
       try {
         callback();
