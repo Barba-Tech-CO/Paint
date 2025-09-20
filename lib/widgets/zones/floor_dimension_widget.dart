@@ -116,7 +116,7 @@ class _FloorDimensionWidgetState extends State<FloorDimensionWidget> {
                       fontWeight: FontWeight.w500,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Width',
+                      hintText: 'Width (ft)',
                       hintStyle: TextStyle(
                         color: Colors.grey[500],
                         fontSize: 14,
@@ -177,7 +177,7 @@ class _FloorDimensionWidgetState extends State<FloorDimensionWidget> {
                       fontWeight: FontWeight.w500,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Length',
+                      hintText: 'Length (ft)',
                       hintStyle: TextStyle(
                         color: Colors.grey[500],
                         fontSize: 14,
