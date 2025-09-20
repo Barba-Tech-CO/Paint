@@ -9,25 +9,21 @@ class ZoneInitializerViewModel {
   ZoneInitializerViewModel({required this.listViewModel});
 
   void initializeZone(Map<String, dynamic> zoneData) {
-    // Check if zone already exists to avoid duplicates
+    // Check if zone already exists to avoid duplicates - only by title
     final existingZone = listViewModel.zones
         .where(
-          (zone) =>
-              zone.title == zoneData['title'] &&
-              zone.image == zoneData['image'],
+          (zone) => zone.title == zoneData['title'],
         )
         .firstOrNull;
 
     if (existingZone != null) {
-      // Zone already exists, don't add it again
       log(
-        'ZoneInitializerViewModel: Zone "${zoneData['title']}" already exists, skipping duplicate',
+        'ZoneInitializerViewModel: Zone "${zoneData['title']}" already exists, skipping',
       );
       return;
     }
 
-    // Zone doesn't exist, add it
-    log('ZoneInitializerViewModel: Adding new zone "${zoneData['title']}"');
+    // Zone doesn't exist, add it directly through the ZonesListViewModel
     listViewModel.addZone(
       title: zoneData['title'],
       floorDimensionValue: zoneData['floorDimensionValue'],
@@ -45,9 +41,19 @@ class ZoneInitializerViewModel {
     BuildContext context,
     Map<String, dynamic> zoneData,
   ) {
+    log(
+      'ZoneInitializerViewModel: initializeZoneAfterBuild called for "${zoneData['title']}"',
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (context.mounted) {
+        log(
+          'ZoneInitializerViewModel: PostFrameCallback executing for "${zoneData['title']}"',
+        );
         initializeZone(zoneData);
+      } else {
+        log(
+          'ZoneInitializerViewModel: Context not mounted, skipping initialization',
+        );
       }
     });
   }
