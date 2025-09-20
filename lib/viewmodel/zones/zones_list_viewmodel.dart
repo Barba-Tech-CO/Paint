@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,6 +6,7 @@ import '../../model/projects/project_card_model.dart';
 import '../../service/i_zones_service.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
+import '../../utils/unit_converter.dart';
 
 enum ZonesListState { initial, loading, loaded, error }
 
@@ -50,15 +50,9 @@ class ZonesListViewModel extends ChangeNotifier {
 
   // Initialize
   void initialize() {
-    log(
-      'ZonesListViewModel: initialize() called - isInitialized: $isInitialized',
-    );
     if (!isInitialized) {
-      log('ZonesListViewModel: Initializing commands and loading zones');
       _initializeCommands();
       loadZones();
-    } else {
-      log('ZonesListViewModel: Already initialized, skipping');
     }
   }
 
@@ -89,9 +83,6 @@ class ZonesListViewModel extends ChangeNotifier {
     String? trimLength,
     Map<String, dynamic>? roomPlanData,
   }) async {
-    log('ZonesListViewModel: addZone() called for "$title"');
-    log('ZonesListViewModel: Current zones count: ${_zones.length}');
-
     if (_addZoneCommand != null) {
       await _addZoneCommand!.execute(
         ZoneAddDataModel(
@@ -244,32 +235,20 @@ class ZonesListViewModel extends ChangeNotifier {
 
   Future<Result<void>> _addZoneData(ZoneAddDataModel data) async {
     try {
-      log('ZonesListViewModel: _addZoneData() called for "${data.title}"');
-      log('ZonesListViewModel: Current zones before add: ${_zones.length}');
-
       // Adiciona zona usando o command do service
       await _zonesService.addZoneCommand.execute(data);
       final result = _zonesService.addZoneCommand.result;
 
       if (result != null && result.isSuccess) {
-        log('ZonesListViewModel: Successfully added zone "${data.title}"');
-
-        // Check if zone already exists in local list to avoid duplicates
+        // Check if zone already exists in local list to avoid duplicates - only by title
         final existingZone = _zones
             .where(
-              (zone) =>
-                  zone.title == result.data.title &&
-                  zone.image == result.data.image,
+              (zone) => zone.title == result.data.title,
             )
             .firstOrNull;
 
         if (existingZone == null) {
           _zones.add(result.data);
-          log('ZonesListViewModel: Zones count after add: ${_zones.length}');
-        } else {
-          log(
-            'ZonesListViewModel: Zone already exists in local list, skipping duplicate',
-          );
         }
 
         notifyListeners();
@@ -314,15 +293,9 @@ class ZonesListViewModel extends ChangeNotifier {
       milliseconds: 3000 + (DateTime.now().millisecondsSinceEpoch % 2000),
     );
 
-    log(
-      'ZonesListViewModel: Starting processing simulation for ${processingTime.inMilliseconds}ms',
-    );
-
     try {
       await Future.delayed(processingTime);
-      log('ZonesListViewModel: Processing simulation completed');
     } catch (e) {
-      log('ZonesListViewModel: Error in processing simulation: $e');
       // Continue even if there's an error
     }
   }
@@ -333,11 +306,6 @@ class ZonesListViewModel extends ChangeNotifier {
     required Map<String, dynamic> roomData,
     required Map<String, dynamic> projectData,
   }) {
-    log('=== PROCESSING HELPER - ZONE DATA CREATION ===');
-    log('ProcessingHelper: Starting zone data creation');
-    log('ProcessingHelper: Captured photos count: ${capturedPhotos.length}');
-    log('ProcessingHelper: Project data: $projectData');
-
     // Extract dimensions from RoomPlan data
     final dimensions = roomData['dimensions'] as Map<String, dynamic>?;
     final wallsData = roomData['walls'] as List<dynamic>?;
@@ -351,9 +319,10 @@ class ZonesListViewModel extends ChangeNotifier {
     String floorAreaValue = '';
 
     if (width != null && length != null && width > 0 && length > 0) {
-      floorDimensionValue =
-          '${width.toStringAsFixed(0)} x ${length.toStringAsFixed(0)}';
-      floorAreaValue = '${(width * length).toStringAsFixed(0)} sq ft';
+      // Format dimensions showing only feet
+      floorDimensionValue = UnitConverter.formatDimensionsInFeet(width, length);
+      // Format area showing only square feet
+      floorAreaValue = UnitConverter.formatAreaInSqFeetOnly(width * length);
     }
 
     // Calculate surface areas from walls
@@ -376,8 +345,8 @@ class ZonesListViewModel extends ChangeNotifier {
       'image': capturedPhotos.isNotEmpty ? capturedPhotos.first : '',
       'floorDimensionValue': floorDimensionValue,
       'floorAreaValue': floorAreaValue,
-      'areaPaintable': wallsArea.toStringAsFixed(0),
-      'ceilingArea': ceilingArea.toStringAsFixed(0),
+      'areaPaintable': UnitConverter.formatAreaInSqFeetOnly(wallsArea),
+      'ceilingArea': UnitConverter.formatAreaInSqFeetOnly(ceilingArea),
       'trimLength': '0',
       'roomPlanData': {
         'photos': capturedPhotos,
