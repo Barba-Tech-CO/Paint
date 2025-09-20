@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:camera/camera.dart';
 
 import 'camera_initialization_service.dart';
@@ -66,7 +64,6 @@ class CameraManager {
 
       return true;
     } catch (e) {
-      log('CameraManager: Error initializing camera controller: $e');
       _isInitialized = false;
       return false;
     }
@@ -78,7 +75,6 @@ class CameraManager {
       _flashMode = _flashMode == FlashMode.off ? FlashMode.auto : FlashMode.off;
 
       await _cameraController!.setFlashMode(_flashMode);
-      log('CameraManager: Flash mode changed to $_flashMode');
     }
   }
 
