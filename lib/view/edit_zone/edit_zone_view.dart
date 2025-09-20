@@ -151,9 +151,18 @@ class _EditZoneViewState extends State<EditZoneView> {
     return Scaffold(
       appBar: PaintProAppBar(
         title: _zoneTitle,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => context.pop(),
+        leading: GestureDetector(
+          onTap: () {
+            if (context.mounted) {
+              context.pop();
+            }
+          },
+          child: Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            child: const Icon(Icons.arrow_back_ios),
+          ),
         ),
         actions: [
           PaintProDeleteButton(
