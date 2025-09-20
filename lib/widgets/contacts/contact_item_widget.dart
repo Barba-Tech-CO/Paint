@@ -116,6 +116,7 @@ class ContactItemWidget extends StatelessWidget {
                 child: PopupMenuButton(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
+                  tooltip: '',
                   icon: Icon(
                     Icons.more_vert,
                     size: 20,
