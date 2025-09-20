@@ -36,18 +36,34 @@ class CameraPhotoService {
 
   /// Take a photo using the camera controller
   Future<bool> takePhoto(CameraController? cameraController) async {
+    log('CameraPhotoService: takePhoto called');
+    log(
+      'CameraPhotoService: cameraController is null: ${cameraController == null}',
+    );
+
     if (cameraController == null || !cameraController.value.isInitialized) {
+      log(
+        'CameraPhotoService: Camera not available - controller: ${cameraController != null}, initialized: ${cameraController?.value.isInitialized ?? false}',
+      );
       return false;
     }
 
     if (!canTakeMorePhotos) {
+      log(
+        'CameraPhotoService: Cannot take more photos - current count: $_photoCount, max: $maxPhotos',
+      );
       return false;
     }
 
     try {
+      log('CameraPhotoService: Taking photo...');
       final XFile photo = await cameraController.takePicture();
       _capturedPhotos.add(photo);
       _photoCount++;
+
+      log('CameraPhotoService: Photo taken successfully! Path: ${photo.path}');
+      log('CameraPhotoService: Total photos now: $_photoCount');
+      log('CameraPhotoService: isDoneEnabled: $isDoneEnabled');
 
       return true;
     } catch (e) {
