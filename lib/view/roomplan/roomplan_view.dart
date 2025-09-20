@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
@@ -56,7 +55,6 @@ class _RoomPlanViewState extends State<RoomPlanView> {
 
   Future<void> _startRoomPlan() async {
     try {
-      log('RoomPlanView: Starting RoomPlan...');
       await _viewModel.startScanning();
 
       // Wait for scan completion
@@ -66,21 +64,6 @@ class _RoomPlanViewState extends State<RoomPlanView> {
 
       final result = _viewModel.scanResult;
       if (result != null) {
-        log('=== ROOMPLAN FINAL SCAN RESULT ===');
-        log('RoomPlanView: Final scan completed');
-        log('RoomPlanView: Walls: ${result.room.walls.length}');
-        log('RoomPlanView: Doors: ${result.room.doors.length}');
-        log('RoomPlanView: Windows: ${result.room.windows.length}');
-        log('RoomPlanView: Objects: ${result.room.objects.length}');
-        log('RoomPlanView: Openings: ${result.room.openings.length}');
-        log('RoomPlanView: Floor: ${result.room.floor != null}');
-        log('RoomPlanView: Ceiling: ${result.room.ceiling != null}');
-        log('RoomPlanView: - LiDAR: ${result.metadata.hasLidar}');
-
-        log('RoomPlanView: Confidence levels:');
-        log('RoomPlanView: - Overall: ${result.confidence.overall}');
-        log('=== END ROOMPLAN FINAL SCAN RESULT ===');
-
         final roomData = _viewModel.processScanResult(
           result,
           widget.capturedPhotos,
@@ -92,19 +75,14 @@ class _RoomPlanViewState extends State<RoomPlanView> {
           widget.capturedPhotos,
           widget.projectData,
         );
-      } else {
-        log('RoomPlanView: RoomPlan was cancelled');
-      }
+      } else {}
     } on RoomPlanPermissionsException {
       _viewModel.showErrorDialog(
         context,
         'Camera permission denied. Please grant camera access in Settings.',
       );
     } on ScanCancelledException {
-      log('RoomPlanView: RoomPlan was cancelled by user');
     } catch (e) {
-      log('RoomPlanView: Error during RoomPlan: $e');
-
       // Handle specific world tracking failure
       if (e.toString().contains('World tracking failure') ||
           e.toString().contains('native_error')) {
