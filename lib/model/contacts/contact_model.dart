@@ -173,8 +173,27 @@ class ContactModel {
   }
 
   factory ContactModel.fromMap(Map<String, dynamic> map) {
+    // Debug log for contact creation from database
+    final contactName =
+        [
+          map['first_name'] ?? '',
+          map['last_name'] ?? '',
+        ].where((e) => e.isNotEmpty).join(' ').isNotEmpty
+        ? [
+            map['first_name'] ?? '',
+            map['last_name'] ?? '',
+          ].where((e) => e.isNotEmpty).join(' ')
+        : (map['name'] ?? '');
+
+    if (contactName.isNotEmpty) {
+      log(
+        'ContactModel.fromMap: Creating contact from DB - Name: $contactName, ID: ${map['ghl_id']}, LocalID: ${map['id']}',
+      );
+    }
+
     return ContactModel(
       localId: map['id'],
+      id: map['ghl_id'], // Set id to ghl_id to maintain consistency with API response
       ghlId: map['ghl_id'],
       locationId: map['location_id'],
       name:
