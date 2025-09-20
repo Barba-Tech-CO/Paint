@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/foundation.dart';
 
 import '../../service/camera_dialog_service.dart';
@@ -67,33 +65,19 @@ class CameraViewModel extends ChangeNotifier {
 
   /// Take a photo
   Future<bool> takePhoto() async {
-    log('CameraViewModel: takePhoto called');
-    log(
-      'CameraViewModel: cameraController is null: ${_cameraManager.cameraController == null}',
-    );
-    log(
-      'CameraViewModel: camera is initialized: ${_cameraManager.isInitialized}',
-    );
-
     final success = await _photoService.takePhoto(
       _cameraManager.cameraController,
     );
 
-    log('CameraViewModel: takePhoto result: $success');
-
     if (!_disposed) {
       if (success) {
-        log('CameraViewModel: Photo taken successfully, notifying listeners');
         notifyListeners();
         return true;
       } else if (!_photoService.canTakeMorePhotos) {
-        log('CameraViewModel: Cannot take more photos, showing dialog');
-        // A view deve lidar com o diálogo de limite de fotos
         notifyListeners();
         return false;
       }
     }
-    log('CameraViewModel: takePhoto failed or disposed');
     return false;
   }
 
