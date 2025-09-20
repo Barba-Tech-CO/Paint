@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:roomplan_flutter/roomplan_flutter.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
 import '../../utils/logger/app_logger.dart';
+import '../../utils/unit_converter.dart' as app_unit_converter;
 import '../../viewmodel/zones/zone_detail_viewmodel.dart';
 import '../appbars/paint_pro_app_bar.dart';
 import '../buttons/paint_pro_button.dart';
@@ -45,8 +45,12 @@ class ZonesDetailsContentWidget extends StatelessWidget {
           appBar: PaintProAppBar(
             title: zone.title,
             leadingWidth: 120,
-            leading: InkWell(
-              onTap: () => context.pop(),
+            leading: GestureDetector(
+              onTap: () {
+                if (context.mounted) {
+                  context.pop();
+                }
+              },
               child: Padding(
                 padding: const EdgeInsets.only(left: 16.0),
                 child: Row(
@@ -57,7 +61,7 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                       color: AppColors.textOnPrimary,
                       size: 24,
                     ),
-                    Text(
+                    const Text(
                       'Back',
                       style: TextStyle(
                         fontSize: 18,
@@ -102,25 +106,27 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                           const SizedBox(height: 12),
                           FloorDimensionWidget(
                             width: viewModel.hasRoomPlanData
-                                ? (viewModel.getRoomPlanDimensions()?['width']
-                                      as double?)
-                                : UnitConverter.metersToFeetConversion(
-                                    viewModel.parseDimension(
-                                          zone.floorDimensionValue,
-                                          0,
-                                        ) ??
+                                ? app_unit_converter.UnitConverter.metersToFeetConversion(
+                                    (viewModel.getRoomPlanDimensions()?['width']
+                                            as double?) ??
                                         0.0,
-                                  ),
+                                  )
+                                : viewModel.parseDimension(
+                                        zone.floorDimensionValue,
+                                        0,
+                                      ) ??
+                                      0.0,
                             length: viewModel.hasRoomPlanData
-                                ? (viewModel.getRoomPlanDimensions()?['length']
-                                      as double?)
-                                : UnitConverter.metersToFeetConversion(
-                                    viewModel.parseDimension(
-                                          zone.floorDimensionValue,
-                                          1,
-                                        ) ??
+                                ? app_unit_converter.UnitConverter.metersToFeetConversion(
+                                    (viewModel.getRoomPlanDimensions()?['length']
+                                            as double?) ??
                                         0.0,
-                                  ),
+                                  )
+                                : viewModel.parseDimension(
+                                        zone.floorDimensionValue,
+                                        1,
+                                      ) ??
+                                      0.0,
                             onDimensionChanged: (width, length) {
                               viewModel.updateZoneDimensions(width, length);
                             },
@@ -130,26 +136,29 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                       const SizedBox(height: 24),
                       SurfaceAreaDisplayWidget(
                         walls: viewModel.hasRoomPlanData
-                            ? _calculateTotalWallArea(
-                                viewModel.getRoomPlanWalls(),
+                            ? app_unit_converter.UnitConverter.sqMetersToSqFeetConversion(
+                                _calculateTotalWallArea(
+                                  viewModel.getRoomPlanWalls(),
+                                ),
                               )
-                            : UnitConverter.sqMetersToSqFeetConversion(
-                                double.tryParse(zone.areaPaintable) ?? 0.0,
-                              ),
+                            : double.tryParse(zone.areaPaintable) ?? 0.0,
                         ceiling: viewModel.hasRoomPlanData
-                            ? (viewModel.getRoomPlanDimensions()?['floorArea']
-                                  as double?)
-                            : zone.ceilingArea != null
-                            ? UnitConverter.sqMetersToSqFeetConversion(
-                                double.tryParse(zone.ceilingArea!) ?? 0.0,
+                            ? app_unit_converter.UnitConverter.sqMetersToSqFeetConversion(
+                                (viewModel.getRoomPlanDimensions()?['floorArea']
+                                        as double?) ??
+                                    0.0,
                               )
+                            : zone.ceilingArea != null
+                            ? double.tryParse(zone.ceilingArea!) ?? 0.0
                             : null,
                         trim: viewModel.hasRoomPlanData
-                            ? _calculateTrimLength(viewModel.getRoomPlanWalls())
-                            : zone.trimLength != null
-                            ? UnitConverter.metersToFeetConversion(
-                                double.tryParse(zone.trimLength!) ?? 0.0,
+                            ? app_unit_converter.UnitConverter.metersToFeetConversion(
+                                _calculateTrimLength(
+                                  viewModel.getRoomPlanWalls(),
+                                ),
                               )
+                            : zone.trimLength != null
+                            ? double.tryParse(zone.trimLength!) ?? 0.0
                             : null,
                         onWallsChanged: (walls) {
                           viewModel.updateZoneSurfaceAreas(walls: walls);
