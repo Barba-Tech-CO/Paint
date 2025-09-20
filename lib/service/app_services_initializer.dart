@@ -1,4 +1,3 @@
-import 'dart:developer';
 
 import '../config/dependency_injection.dart';
 import 'camera_initialization_service.dart';
@@ -15,24 +14,13 @@ class AppServicesInitializer {
 
   /// Initialize authentication services during app startup
   static Future<void> _initializeAuthenticationServices() async {
-    try {
-      final httpService = getIt<HttpService>();
-      await httpService.initializeAuthToken();
-    } catch (e) {
-      // Log error but don't prevent app startup
-      log('Warning: Failed to initialize authentication services: $e');
-    }
+    final httpService = getIt<HttpService>();
+    await httpService.initializeAuthToken();
   }
 
   /// Initialize camera services during app startup
   static Future<void> _initializeCameraServices() async {
-    try {
-      await CameraInitializationService.initialize();
-    } catch (e) {
-      // Log error but don't prevent app startup
-      log('Warning: Failed to initialize camera services: $e');
-      log('Camera features may have limited functionality');
-    }
+    await CameraInitializationService.initialize();
   }
 
   /// Initialize specific service by type
@@ -55,7 +43,6 @@ class AppServicesInitializer {
 
       return cameraInitialized;
     } catch (e) {
-      log('Error checking services readiness: $e');
       return false;
     }
   }
