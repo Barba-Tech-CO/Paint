@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -29,11 +27,12 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
   late final ZonesListViewModel _listViewModel;
   late final ZonesSummaryViewModel _summaryViewModel;
   late final ZoneInitializerViewModel _zoneInitializer;
-  late final Map<String, dynamic> _projectData;
+  late Map<String, dynamic> _projectData;
 
   @override
   void initState() {
     super.initState();
+
     _listViewModel = getIt<ZonesListViewModel>();
     _summaryViewModel = getIt<ZonesSummaryViewModel>();
     _zoneInitializer = ZoneInitializerViewModel(listViewModel: _listViewModel);
@@ -42,23 +41,37 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
     _projectData = _extractProjectData();
 
     // Initialize ViewModels
-    log('ZonesResultsWidget: Initializing ViewModels');
     _summaryViewModel.initialize();
 
     // Setup listener to update summary when zones list changes
     _listViewModel.addListener(_updateSummary);
 
+    // Process initial zone data
+    _processInitialZoneData();
+  }
+
+  @override
+  void didUpdateWidget(ZonesResultsWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Check if initialZoneData changed
+    if (widget.initialZoneData != oldWidget.initialZoneData) {
+      _projectData = _extractProjectData();
+      _processInitialZoneData();
+    }
+  }
+
+  void _processInitialZoneData() {
     // Add initial zone data if available
     if (widget.initialZoneData != null) {
-      log(
-        'ZonesResultsWidget: Adding initial zone data: ${widget.initialZoneData!['title']}',
-      );
+      // Try to add the zone immediately first
+      _zoneInitializer.initializeZone(widget.initialZoneData!);
+
+      // Also schedule for after build as backup to ensure the zone is processed
       _zoneInitializer.initializeZoneAfterBuild(
         context,
         widget.initialZoneData!,
       );
-    } else {
-      log('ZonesResultsWidget: No initial zone data provided');
     }
   }
 
@@ -74,6 +87,14 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
 
   Map<String, dynamic> _extractProjectData() {
     // Extract project data from initialZoneData
+    if (widget.initialZoneData == null) {
+      return {
+        'projectName': '',
+        'projectType': '',
+        'clientId': '',
+        'additionalNotes': '',
+      };
+    }
     return {
       'projectName': widget.initialZoneData!['projectName'],
       'projectType': widget.initialZoneData!['projectType'],
