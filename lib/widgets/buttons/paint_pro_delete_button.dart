@@ -24,27 +24,34 @@ class PaintProDeleteButton extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        return IconButton(
-          onPressed: viewModel.isDeleting
-              ? null //
+        return GestureDetector(
+          onTap: viewModel.isDeleting
+              ? null
               : () => _handleDelete(context),
-          icon: viewModel.isDeleting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Image.asset(
-                  'assets/icons/delete.png',
-                  width: 24,
-                  height: 24,
-                ),
+          child: Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            child: viewModel.isDeleting
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Image.asset(
+                    'assets/icons/delete.png',
+                    width: 24,
+                    height: 24,
+                  ),
+          ),
         );
       },
     );
   }
 
   Future<void> _handleDelete(BuildContext context) async {
+    if (!context.mounted) return;
+
     final zone = viewModel.currentZone;
     if (zone == null) return;
 
@@ -55,12 +62,14 @@ class PaintProDeleteButton extends StatelessWidget {
 
     if (confirm && context.mounted) {
       try {
-        // Use the new ViewModel delete method
-        // The callbacks will handle UI coordination automatically
         await viewModel.deleteZone(zone.id);
       } catch (e) {
-        // Log error silently - UI coordination still handled by callbacks
         _logger.error('Error deleting zone: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error deleting zone: $e')),
+          );
+        }
       }
     }
   }
