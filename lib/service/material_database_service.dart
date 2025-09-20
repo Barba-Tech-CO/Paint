@@ -1,6 +1,3 @@
-import 'dart:developer';
-
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -97,10 +94,6 @@ class MaterialDatabaseService {
       'updated_at': DateTime.now().toIso8601String(),
     };
 
-    if (kDebugMode) {
-      log('MaterialDatabaseService: Upserting material with data: $data');
-    }
-
     return await db.insert(
       _tableName,
       data,
@@ -160,10 +153,8 @@ class MaterialDatabaseService {
       whereArgs.add(offset);
     }
 
-    log('DEBUG: Database query: $query, Args: $whereArgs');
     final maps = await db.rawQuery(query, whereArgs);
     final materials = maps.map((map) => _mapToMaterialModel(map)).toList();
-    log('DEBUG: Database returned ${materials.length} materials');
     return materials;
   }
 
@@ -324,10 +315,8 @@ class MaterialDatabaseService {
         'SELECT COUNT(*) as count FROM $_tableName',
       );
       final count = result.first['count'] as int;
-      log('DEBUG: Total materials in cache: $count');
       return count > 0;
     } catch (e) {
-      log('Error checking if materials exist: $e');
       return false;
     }
   }
