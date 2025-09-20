@@ -1,6 +1,6 @@
 class FloorDimensionsModel {
   final num length;
-  final num width; 
+  final num width;
   final String unit; // ex: ft, m
 
   const FloorDimensionsModel({
