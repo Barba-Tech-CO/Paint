@@ -355,7 +355,9 @@ class ZoneDetailViewModel extends ChangeNotifier {
       return null;
     }
 
-    final parts = dimensionValue.split(' x ');
+    // Remove single quotes and split by ' x '
+    final cleanValue = dimensionValue.replaceAll("'", "");
+    final parts = cleanValue.split(' x ');
     if (parts.length <= index) {
       return null;
     }
