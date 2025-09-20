@@ -5,7 +5,14 @@ import '../../use_case/estimates/estimate_upload_use_case.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
 
-enum EstimateUploadState { initial, editing, reviewing, uploading, success, error }
+enum EstimateUploadState {
+  initial,
+  editing,
+  reviewing,
+  uploading,
+  success,
+  error,
+}
 
 class EstimateUploadViewModel extends ChangeNotifier {
   final EstimateUploadUseCase _useCase;
@@ -27,8 +34,10 @@ class EstimateUploadViewModel extends ChangeNotifier {
   Command1<void, EstimateModel> get uploadCommand => _uploadCommand;
 
   // Computed
-  bool get isUploading => _state == EstimateUploadState.uploading || _uploadCommand.running;
-  bool get hasError => _state == EstimateUploadState.error && _errorMessage != null;
+  bool get isUploading =>
+      _state == EstimateUploadState.uploading || _uploadCommand.running;
+  bool get hasError =>
+      _state == EstimateUploadState.error && _errorMessage != null;
 
   void _initCommands() {
     _uploadCommand = Command1((EstimateModel estimate) async {
