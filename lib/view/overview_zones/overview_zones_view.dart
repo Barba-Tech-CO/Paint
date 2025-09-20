@@ -168,9 +168,18 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
     return Scaffold(
       appBar: PaintProAppBar(
         title: 'Measurements',
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => context.pop(),
+        leading: GestureDetector(
+          onTap: () {
+            if (context.mounted) {
+              context.pop();
+            }
+          },
+          child: Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            child: const Icon(Icons.arrow_back_ios),
+          ),
         ),
       ),
       body: AnimatedBuilder(
