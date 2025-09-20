@@ -7,9 +7,10 @@ import '../../utils/result/result.dart';
 abstract class IContactRepository extends ChangeNotifier {
   /// Current contacts list (source of truth)
   List<ContactModel> get contacts;
-  
+
   /// Current contact count
   int get contactsCount;
+
   /// Lista contatos com paginação (offline-first)
   Future<Result<ContactListResponse>> getContacts({
     int? limit,
