@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../config/app_colors.dart';
 import '../../model/projects/project_card_model.dart';
 import '../../model/zones/zone_rename_data_model.dart';
 import '../../service/i_zones_service.dart';
@@ -290,9 +291,12 @@ class ZoneDetailViewModel extends ChangeNotifier {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           gradient: const LinearGradient(
-            colors: [Color(0xFF007AFF), Color(0xFF0051D0)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              AppColors.gray24,
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
         child: const Center(
@@ -385,4 +389,47 @@ class ZoneDetailViewModel extends ChangeNotifier {
       setCurrentZone(updatedZone);
     }
   }
+
+  /// Get RoomPlan dimensions from roomPlanData
+  Map<String, dynamic>? getRoomPlanDimensions() {
+    if (_currentZone?.roomPlanData == null) return null;
+    return _currentZone!.roomPlanData!['dimensions'] as Map<String, dynamic>?;
+  }
+
+  /// Get RoomPlan walls data
+  List<Map<String, dynamic>> getRoomPlanWalls() {
+    if (_currentZone?.roomPlanData == null) return [];
+    final walls = _currentZone!.roomPlanData!['walls'] as List?;
+    return walls?.cast<Map<String, dynamic>>() ?? [];
+  }
+
+  /// Get RoomPlan doors data
+  List<Map<String, dynamic>> getRoomPlanDoors() {
+    if (_currentZone?.roomPlanData == null) return [];
+    final doors = _currentZone!.roomPlanData!['doors'] as List?;
+    return doors?.cast<Map<String, dynamic>>() ?? [];
+  }
+
+  /// Get RoomPlan windows data
+  List<Map<String, dynamic>> getRoomPlanWindows() {
+    if (_currentZone?.roomPlanData == null) return [];
+    final windows = _currentZone!.roomPlanData!['windows'] as List?;
+    return windows?.cast<Map<String, dynamic>>() ?? [];
+  }
+
+  /// Get RoomPlan objects data
+  List<Map<String, dynamic>> getRoomPlanObjects() {
+    if (_currentZone?.roomPlanData == null) return [];
+    final objects = _currentZone!.roomPlanData!['objects'] as List?;
+    return objects?.cast<Map<String, dynamic>>() ?? [];
+  }
+
+  /// Get RoomPlan metadata
+  Map<String, dynamic>? getRoomPlanMetadata() {
+    if (_currentZone?.roomPlanData == null) return null;
+    return _currentZone!.roomPlanData!['metadata'] as Map<String, dynamic>?;
+  }
+
+  /// Check if zone has RoomPlan data
+  bool get hasRoomPlanData => _currentZone?.roomPlanData != null;
 }
