@@ -131,6 +131,7 @@ class ZonesCard extends StatelessWidget {
               child: PopupMenuButton(
                 color: AppColors.primaryLight,
                 borderRadius: BorderRadius.circular(12),
+                tooltip: '',
                 icon: Icon(Icons.more_vert, color: Colors.grey[700]),
                 onSelected: (value) async {
                   if (value == 'rename') {
