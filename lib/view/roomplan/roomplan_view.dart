@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
 import '../../config/dependency_injection.dart';
@@ -30,7 +29,16 @@ class _RoomPlanViewState extends State<RoomPlanView> {
     super.initState();
     _viewModel = getIt<RoomPlanViewModel>();
     _viewModel.addListener(_onViewModelChanged);
-    _viewModel.checkSupport();
+    _initializeRoomPlan();
+  }
+
+  Future<void> _initializeRoomPlan() async {
+    await _viewModel.checkSupport();
+
+    // If supported, start scanning automatically
+    if (_viewModel.isSupported) {
+      _startRoomPlan();
+    }
   }
 
   @override
@@ -113,16 +121,6 @@ class _RoomPlanViewState extends State<RoomPlanView> {
     }
   }
 
-  void _showIncompatibilityDialog() {
-    _viewModel.showIncompatibilityDialog(context, () {
-      _viewModel.navigateToProcessingWithPhotosOnly(
-        context,
-        widget.capturedPhotos,
-        widget.projectData,
-      );
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     // Se não é suportado, mostra apenas o dialog de incompatibilidade
@@ -137,149 +135,30 @@ class _RoomPlanViewState extends State<RoomPlanView> {
       );
     }
 
-    // Se está escaneando, mostra interface mínima
+    // Se está escaneando, mostra loading
     if (_viewModel.isScanning) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: Colors.black,
-        body: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                strokeWidth: 3,
-              ),
-              SizedBox(height: 24),
-              Text(
-                'Starting Room Scan...',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Please wait while we prepare the scanning environment',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
           ),
         ),
       );
     }
 
-    // Interface principal do RoomPlan
-    return Scaffold(
+    // Se não está escaneando, mostra tela vazia
+    // O scanner nativo do iOS será exibido automaticamente quando startScanning() for chamado
+    return const Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // RoomPlan Scanner Widget
-          const Center(
-            child: Text(
-              'RoomPlan Scanner',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+      body: Center(
+        child: Text(
+          'RoomPlan Scanner',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
           ),
-
-          // Overlay com controles
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            left: 16,
-            right: 16,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Botão de voltar
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    onPressed: () => context.pop(),
-                  ),
-                ),
-
-                // Botão de incompatibilidade (para teste)
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.info_outline,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    onPressed: _showIncompatibilityDialog,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Botão de scan na parte inferior
-          Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + 32,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.camera_alt,
-                    color: Colors.black,
-                    size: 32,
-                  ),
-                  iconSize: 32,
-                  onPressed: _startRoomPlan,
-                ),
-              ),
-            ),
-          ),
-
-          // Instruções na parte inferior
-          Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + 100,
-            left: 16,
-            right: 16,
-            child: const Text(
-              'Tap the camera button to start room scanning',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
