@@ -47,7 +47,13 @@ class _ProjectsViewState extends State<ProjectsView> {
           body: Consumer<ProjectsViewModel>(
             builder: (context, viewModel, _) {
               if (viewModel.isLoading) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(
+                  child: CircularProgressIndicator.adaptive(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
+                  ),
+                );
               }
 
               if (viewModel.hasError && viewModel.errorMessage != null) {
@@ -62,7 +68,7 @@ class _ProjectsViewState extends State<ProjectsView> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Erro',
+                        'Error',
                         style: GoogleFonts.albertSans(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -81,7 +87,7 @@ class _ProjectsViewState extends State<ProjectsView> {
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () => viewModel.loadProjects(),
-                        child: const Text('Tentar novamente'),
+                        child: const Text('Try again'),
                       ),
                     ],
                   ),
@@ -100,7 +106,7 @@ class _ProjectsViewState extends State<ProjectsView> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Nenhum projeto',
+                        'No projects',
                         style: GoogleFonts.albertSans(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -109,7 +115,7 @@ class _ProjectsViewState extends State<ProjectsView> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Seus projetos aparecerão aqui',
+                        'Your projects will appear here',
                         style: GoogleFonts.albertSans(
                           fontSize: 16,
                           color: AppColors.textSecondary,
@@ -178,7 +184,7 @@ class _ProjectsViewState extends State<ProjectsView> {
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
-                                    'Nenhum projeto encontrado',
+                                    'No projects found',
                                     style: GoogleFonts.albertSans(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w600,
@@ -187,7 +193,7 @@ class _ProjectsViewState extends State<ProjectsView> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'Tente uma busca diferente',
+                                    'Try a different search',
                                     style: GoogleFonts.albertSans(
                                       fontSize: 14,
                                       color: AppColors.textSecondary,
