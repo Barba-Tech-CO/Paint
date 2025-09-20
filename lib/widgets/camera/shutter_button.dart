@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 
 import '../../config/app_colors.dart';
@@ -36,12 +34,7 @@ class ShutterButton extends StatelessWidget {
         : innerColor;
 
     return GestureDetector(
-      onTap: isDisabled
-          ? null
-          : () {
-              log('ShutterButton: onTap called');
-              onTap?.call();
-            },
+      onTap: isDisabled ? null : onTap,
       child: Container(
         width: outerSize,
         height: outerSize,
