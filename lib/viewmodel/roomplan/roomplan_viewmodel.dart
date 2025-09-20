@@ -57,7 +57,22 @@ class RoomPlanViewModel extends ChangeNotifier {
         },
       );
 
-      log('RoomPlanViewModel: RoomPlan scanning started');
+      // Start the actual native scanning
+      log('RoomPlanViewModel: Starting native RoomPlan scan...');
+      final result = await _roomScanner!.startScanning();
+
+      if (result != null) {
+        _scanResult = result;
+        _isScanning = false;
+        notifyListeners();
+        log('RoomPlanViewModel: Native scan completed with result');
+      } else {
+        _isScanning = false;
+        notifyListeners();
+        log('RoomPlanViewModel: Native scan was cancelled or failed');
+      }
+
+      log('RoomPlanViewModel: RoomPlan scanning completed');
     } catch (e) {
       log('RoomPlanViewModel: Error starting scan: $e');
       _isScanning = false;
@@ -88,37 +103,70 @@ class RoomPlanViewModel extends ChangeNotifier {
       'RoomPlanViewModel: Starting data processing for navigation to processing screen',
     );
 
+    // Calculate room dimensions from the scan result
+    final roomDimensions = result.room.dimensions;
+    final roomWidth = roomDimensions?.width ?? 0.0;
+    final roomLength = roomDimensions?.length ?? 0.0;
+    final roomHeight = roomDimensions?.height ?? 0.0;
+
+    // If walls have width 0, distribute room dimensions among walls
+    final walls = result.room.walls;
+    final wallCount = walls.length;
+    final averageWallWidth = wallCount > 0
+        ? (roomWidth + roomLength) * 2 / wallCount
+        : 0.0;
+
+    log(
+      'RoomPlanViewModel: Room dimensions - Width: ${roomWidth}m, Length: ${roomLength}m, Height: ${roomHeight}m',
+    );
+    log(
+      'RoomPlanViewModel: Wall count: $wallCount, Average wall width: ${averageWallWidth}m',
+    );
+
     // Prepara os dados da sala para enviar para a tela de processamento
     final roomData = {
       'title': projectData?['zoneName'],
       'zoneType': 'room',
-      'walls': result.room.walls
-          .map(
-            (wall) => {
-              'width': wall.width,
-              'height': wall.height,
-              'area': wall.width * wall.height,
-              'condition': 'good', // Default condition, can be updated later
-            },
-          )
-          .toList(),
+      'walls': walls.asMap().entries.map(
+        (entry) {
+          final wall = entry.value;
+
+          // Use actual wall width if available, otherwise use calculated average
+          final wallWidth = wall.width > 0 ? wall.width : averageWallWidth;
+          final wallHeight = wall.height > 0 ? wall.height : roomHeight;
+
+          return {
+            'width': wallWidth,
+            'height': wallHeight,
+            'area': wallWidth * wallHeight,
+          };
+        },
+      ).toList(),
       'doors': result.room.doors
           .map(
             (door) => {
-              'width': door.width,
-              'height': door.height,
-              'area': door.width * door.height,
-              'type': 'standard', // Default type
+              'width': door.width > 0 ? door.width : 0.9,
+              'height': door.height > 0
+                  ? door.height
+                  : 2.1, // Default door height
+              'area':
+                  (door.width > 0 ? door.width : 0.9) *
+                  (door.height > 0 ? door.height : 2.1),
             },
           )
           .toList(),
       'windows': result.room.windows
           .map(
             (window) => {
-              'width': window.width,
-              'height': window.height,
-              'area': window.width * window.height,
-              'type': 'standard', // Default type
+              'width': window.width > 0
+                  ? window.width
+                  : 1.2, // Default window width
+              'height': window.height > 0
+                  ? window.height
+                  : 1.0, // Default window height
+              'area':
+                  (window.width > 0 ? window.width : 1.2) *
+                  (window.height > 0 ? window.height : 1.0),
             },
           )
           .toList(),
@@ -150,9 +198,9 @@ class RoomPlanViewModel extends ChangeNotifier {
     };
 
     // Log wall details
-    final walls = roomData['walls'] as List;
-    for (int i = 0; i < walls.length; i++) {
-      final wall = walls[i] as Map<String, dynamic>;
+    final wallsList = roomData['walls'] as List;
+    for (int i = 0; i < wallsList.length; i++) {
+      final wall = wallsList[i] as Map<String, dynamic>;
       log(
         'RoomPlanViewModel: Wall $i processed - Width: ${wall['width']}m, Height: ${wall['height']}m, Area: ${wall['area']} sq m',
       );
@@ -223,12 +271,91 @@ class RoomPlanViewModel extends ChangeNotifier {
     List<String> capturedPhotos,
     Map<String, dynamic>? projectData,
   ) {
+    // Calculate zone data from RoomPlan data
+    final dimensions = roomData['dimensions'] as Map<String, dynamic>?;
+    final floorArea = dimensions?['floorArea'] ?? 0.0;
+    final ceilingArea = roomData['ceiling']?['area'] ?? 0.0;
+
+    // Calculate paintable area (floor + walls - doors - windows)
+    final walls = roomData['walls'] as List;
+    final doors = roomData['doors'] as List;
+    final windows = roomData['windows'] as List;
+
+    double totalWallArea = 0.0;
+    for (final wall in walls) {
+      totalWallArea += (wall as Map<String, dynamic>)['area'] ?? 0.0;
+    }
+
+    double totalDoorArea = 0.0;
+    for (final door in doors) {
+      totalDoorArea += (door as Map<String, dynamic>)['area'] ?? 0.0;
+    }
+
+    double totalWindowArea = 0.0;
+    for (final window in windows) {
+      totalWindowArea += (window as Map<String, dynamic>)['area'] ?? 0.0;
+    }
+
+    final paintableArea =
+        floorArea + totalWallArea - totalDoorArea - totalWindowArea;
+
+    // Convert to imperial units
+    final widthFeet = UnitConverter.metersToFeetConversion(
+      dimensions?['width'] ?? 0.0,
+    );
+    final lengthFeet = UnitConverter.metersToFeetConversion(
+      dimensions?['length'] ?? 0.0,
+    );
+    final floorAreaSqFt = UnitConverter.sqMetersToSqFeetConversion(floorArea);
+    final paintableAreaSqFt = UnitConverter.sqMetersToSqFeetConversion(
+      paintableArea,
+    );
+    final ceilingAreaSqFt = UnitConverter.sqMetersToSqFeetConversion(
+      ceilingArea,
+    );
+    final trimLengthFeet = UnitConverter.metersToFeetConversion(
+      totalWallArea / 2,
+    );
+
+    // Use first photo as zone image, or default
+    final zoneImage = capturedPhotos.isNotEmpty ? capturedPhotos.first : '';
+
+    // Store RoomPlan data (keep original metric data for reference)
+    final roomPlanData = {
+      'walls': roomData['walls'],
+      'doors': roomData['doors'],
+      'windows': roomData['windows'],
+      'objects': roomData['objects'],
+      'openings': roomData['openings'],
+      'floor': roomData['floor'],
+      'ceiling': roomData['ceiling'],
+      'hasDimensions': roomData['hasDimensions'],
+      'dimensions': roomData['dimensions'],
+      'metadata': roomData['metadata'],
+      'photos': capturedPhotos,
+    };
+
+    // Navigate directly to zones with the processed data
     context.go(
-      '/processing',
+      '/zones',
       extra: {
-        'photos': capturedPhotos,
-        'roomData': roomData,
-        'projectData': projectData,
+        'title': projectData?['zoneName'] ?? 'New Zone',
+        'zoneType': 'room',
+        'projectName': projectData?['projectName'],
+        'projectType': projectData?['projectType'],
+        'clientId': projectData?['clientId'],
+        'additionalNotes': projectData?['additionalNotes'],
+        // Zone data for addZone method (in imperial units)
+        'floorDimensionValue':
+            '${widthFeet.toStringAsFixed(0)} ft x ${lengthFeet.toStringAsFixed(0)} ft',
+        'floorAreaValue': '${floorAreaSqFt.toStringAsFixed(0)} sq ft',
+        'areaPaintable': '${paintableAreaSqFt.toStringAsFixed(0)} sq ft',
+        'image': zoneImage,
+        'ceilingArea': ceilingAreaSqFt > 0
+            ? '${ceilingAreaSqFt.toStringAsFixed(0)} sq ft'
+            : null,
+        'trimLength': '${trimLengthFeet.toStringAsFixed(0)} ft',
+        'roomPlanData': roomPlanData,
       },
     );
   }
