@@ -86,7 +86,7 @@ class ContactListViewModel extends ChangeNotifier {
           limit: _pageSize,
           offset: _currentPage * _pageSize,
         );
-        
+
         if (result is Ok) {
           _currentPage++;
           _setState(ContactListState.loaded);
@@ -113,7 +113,7 @@ class ContactListViewModel extends ChangeNotifier {
           limit: _pageSize,
           offset: _currentPage * _pageSize,
         );
-        
+
         if (result is Ok) {
           _currentPage++;
           notifyListeners();
@@ -136,7 +136,7 @@ class ContactListViewModel extends ChangeNotifier {
 
       try {
         final result = await _contactRepository.searchContacts(query);
-        
+
         if (result is Ok) {
           _currentPage = 1;
           _setState(ContactListState.loaded);
@@ -159,7 +159,7 @@ class ContactListViewModel extends ChangeNotifier {
 
       try {
         final result = await _contactRepository.syncPendingContacts();
-        
+
         if (result is Ok) {
           // Refresh the contact list after sync
           _refreshAfterSync();
