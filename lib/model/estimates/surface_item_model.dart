@@ -4,4 +4,3 @@ class SurfaceItemModel {
 
   const SurfaceItemModel({required this.key, required this.area});
 }
-
