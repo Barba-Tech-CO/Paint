@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 import '../../service/camera_manager.dart';
@@ -25,23 +27,50 @@ class _CameraViewState extends State<CameraView> {
   @override
   void initState() {
     super.initState();
+
+    // Debug log for project data
+    log('CameraView: Project data received: ${widget.projectData}');
+    log('CameraView: Project data keys: ${widget.projectData?.keys.toList()}');
+
+    // Create a single shared instance of CameraPhotoService
+    final photoService = CameraPhotoService(
+      existingPhotos: [],
+      maxPhotos: 9,
+    );
+
     _viewModel = CameraViewModel(
       cameraManager: CameraManager(),
-      photoService: CameraPhotoService(
-        existingPhotos: [],
-        maxPhotos: 9,
-      ),
+      photoService: photoService,
       navigationHandler: CameraNavigationHandler(
         context: context,
-        photoService: CameraPhotoService(
-          existingPhotos: [],
-          maxPhotos: 9,
-        ),
+        photoService: photoService, // Use the same instance
         projectData: widget.projectData,
+        previousRoute: _getPreviousRoute(),
       ),
       projectData: widget.projectData,
     );
     _initializeCamera();
+  }
+
+  /// Get the previous route based on projectData
+  String? _getPreviousRoute() {
+    if (widget.projectData != null) {
+      // If coming from zone details (editing existing zone), return to zones
+      if (widget.projectData!['zoneId'] != null) {
+        return '/zones';
+      }
+      // If coming from create project, return to create project view
+      if (widget.projectData!['isFromCreateProject'] == true) {
+        return '/create-project';
+      }
+      // If coming from zones view (adding new zone), return to zones
+      if (widget.projectData!['zoneName'] != null &&
+          widget.projectData!['zoneType'] != null) {
+        return '/zones';
+      }
+    }
+    // No fallback - return null if no specific route is identified
+    return null;
   }
 
   Future<void> _initializeCamera() async {
@@ -64,7 +93,10 @@ class _CameraViewState extends State<CameraView> {
   }
 
   Future<void> _takePhoto() async {
+    log('CameraView: _takePhoto called - button pressed');
     final success = await _viewModel.takePhoto();
+
+    log('CameraView: _takePhoto result: $success');
 
     if (mounted) {
       if (!success && _viewModel.needsPhotoLimitDialog) {
