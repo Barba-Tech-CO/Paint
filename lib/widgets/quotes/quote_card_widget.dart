@@ -212,6 +212,7 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
               child: PopupMenuButton(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
+                tooltip: '',
                 icon: Icon(
                   Icons.more_vert,
                   size: 20,
