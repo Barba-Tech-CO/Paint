@@ -1,6 +1,6 @@
 class UpdateContactRequest {
-  final String? firstName;  // API expects firstName
-  final String? lastName;   // API expects lastName
+  final String? firstName; // API expects firstName
+  final String? lastName; // API expects lastName
   final String? email;
   final String? phone;
   final String? companyName;
@@ -49,13 +49,13 @@ class UpdateContactRequest {
   }) {
     String? firstName;
     String? lastName;
-    
+
     if (name != null && name.isNotEmpty) {
       final nameParts = name.trim().split(' ');
       firstName = nameParts.isNotEmpty ? nameParts.first : null;
       lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : null;
     }
-    
+
     return UpdateContactRequest(
       firstName: firstName,
       lastName: lastName,
@@ -89,7 +89,8 @@ class UpdateContactRequest {
     if (email != null) json['email'] = email;
     if (phone != null) json['phone'] = phone;
     if (companyName != null) json['companyName'] = companyName;
-    if (address != null) json['address'] = address; // API expects address (not address1)
+    if (address != null)
+      json['address'] = address; // API expects address (not address1)
     if (city != null) json['city'] = city;
     if (state != null) json['state'] = state;
     if (postalCode != null) json['postalCode'] = postalCode;
