@@ -17,7 +17,14 @@ class CameraPreviewWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isInitialized && cameraController != null) {
       return Positioned.fill(
-        child: CameraPreview(cameraController!),
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: cameraController!.value.previewSize!.height,
+            height: cameraController!.value.previewSize!.width,
+            child: CameraPreview(cameraController!),
+          ),
+        ),
       );
     }
 
