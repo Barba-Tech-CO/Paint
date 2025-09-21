@@ -33,7 +33,7 @@ class ZonesActionsWidget extends StatelessWidget {
         const SizedBox(height: 32),
         PaintProButton(
           text: "Next",
-          onPressed: () => context.push('/select-material'),
+          onPressed: () => context.push('/select-material', extra: projectData),
         ),
         const SizedBox(height: 16),
       ],
