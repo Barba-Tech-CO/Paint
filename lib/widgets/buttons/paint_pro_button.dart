@@ -41,7 +41,7 @@ class PaintProButton extends StatelessWidget {
   }
 
   Color _getForegroundColor(BuildContext context) {
-    final base = foregroundColor ?? AppColors.textOnPrimary;
+    final base = foregroundColor ?? Colors.white;
     return _isEnabled ? base : base.withValues(alpha: 0.7);
   }
 
@@ -49,8 +49,14 @@ class PaintProButton extends StatelessWidget {
 
   TextStyle _getTextStyle(BuildContext context) {
     final base =
-        textStyle ?? const TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
-    return base.copyWith(color: _getForegroundColor(context));
+        textStyle ??
+        const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        );
+    return base.copyWith(
+      color: _getForegroundColor(context),
+    );
   }
 
   @override
@@ -82,7 +88,9 @@ class PaintProButton extends StatelessWidget {
                 children: [
                   if (icon != null) ...[
                     IconTheme(
-                      data: IconThemeData(color: _getForegroundColor(context)),
+                      data: IconThemeData(
+                        color: _getForegroundColor(context),
+                      ),
                       child: icon!,
                     ),
                     const SizedBox(width: 8),
