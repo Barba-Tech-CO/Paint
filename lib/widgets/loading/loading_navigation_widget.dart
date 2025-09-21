@@ -14,7 +14,7 @@ class LoadingNavigationWidget {
         'subtitle': 'Estimate sent successfully!',
         'description': 'Saving project data...',
         'duration': const Duration(seconds: 3),
-        'navigateToOnComplete': '/success',
+        'navigateToOnComplete': '/home',
       },
     );
   }
