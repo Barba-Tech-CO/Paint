@@ -204,7 +204,7 @@ class QuotesViewModel extends ChangeNotifier {
 
   Future<bool> _validateFileSize(File file) async {
     final fileSize = await file.length();
-    const maxSize = 25 * 1024 * 1024; // 25MB
+    const maxSize = 200 * 1024 * 1024; // 200MB
 
     if (fileSize == 0) {
       _setError('Selected file is empty');
@@ -212,7 +212,7 @@ class QuotesViewModel extends ChangeNotifier {
     }
 
     if (fileSize > maxSize) {
-      _setError('File size exceeds 25MB limit');
+      _setError('File size exceeds 200MB limit');
       return false;
     }
 
