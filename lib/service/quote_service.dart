@@ -49,10 +49,10 @@ class QuoteService {
         );
       }
 
-      if (fileSize > 25 * 1024 * 1024) {
-        // 25MB
+      if (fileSize > 200 * 1024 * 1024) {
+        // 200MB
         return Result.error(
-          Exception('File size exceeds 25MB limit'),
+          Exception('File size exceeds 200MB limit'),
         );
       }
 
@@ -99,7 +99,7 @@ class QuoteService {
           );
         case 413:
           return Result.error(
-            Exception('File too large: Maximum size is 25MB'),
+            Exception('File too large: Maximum size is 200MB'),
           );
         case 422:
           // Handle validation errors specifically
