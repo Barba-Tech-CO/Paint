@@ -156,11 +156,11 @@ class EstimateCalculationViewModel extends ChangeNotifier {
 
     // Convert MaterialModel to MaterialItemModel with user-provided quantities
     final materials = viewModel.selectedMaterials.map((material) {
+      final quantity = viewModel.getQuantity(material);
       return MaterialItemModel(
         id: material.id,
         unit: material.priceUnit,
-        quantity:
-            1.0, // TODO: Use material.quantity when field is added to MaterialModel
+        quantity: quantity.toDouble(),
         unitPrice: material.price,
       );
     }).toList();
