@@ -1,8 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
-import '../../widgets/loading/loading_navigation_widget.dart';
+import '../../domain/project_entity.dart';
 import '../../model/estimates/estimate_status.dart';
 import '../../model/material_models/material_model.dart';
 import '../../model/projects/project_card_model.dart';
@@ -13,6 +15,7 @@ import '../../viewmodel/zones/zones_list_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/buttons/paint_pro_button.dart';
 import '../../widgets/cards/project_summary_card_widget.dart';
+import '../../widgets/loading/loading_navigation_widget.dart';
 import '../../widgets/summary/material_item_row_widget.dart';
 import '../../widgets/summary/project_cost_summary_widget.dart';
 import '../../widgets/summary/room_overview_row_widget.dart';
@@ -21,12 +24,14 @@ import '../../widgets/summary/summary_total_row_widget.dart';
 
 class OverviewZonesView extends StatefulWidget {
   final List<MaterialModel>? selectedMaterials;
+  final Map<MaterialModel, int>? materialQuantities;
   final List<ProjectCardModel>? selectedZones;
   final Map<String, dynamic>? projectData;
 
   const OverviewZonesView({
     super.key,
     this.selectedMaterials,
+    this.materialQuantities,
     this.selectedZones,
     this.projectData,
   });
@@ -42,11 +47,7 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
   late EstimateCalculationViewModel _estimateCalculationViewModel;
 
   // Project data from create_project_view
-  String _projectName = '';
-  String _contactId = '';
-  String _additionalNotes = '';
-  String _projectType = '';
-  String _zoneType = '';
+  ProjectEntity? _projectEntity;
 
   @override
   void initState() {
@@ -55,6 +56,7 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
     _zonesListViewModel = getIt<ZonesListViewModel>();
     _estimateUploadViewModel = getIt<EstimateUploadViewModel>();
     _estimateCalculationViewModel = getIt<EstimateCalculationViewModel>();
+
     // Inicializar o ZonesListViewModel
     _zonesListViewModel.initialize();
 
@@ -62,17 +64,29 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
     _estimateUploadViewModel.addListener(_onEstimateUploadStateChanged);
 
     // Extrair dados do projeto se fornecidos
-
-    _projectName = widget.projectData!['projectName'];
-    _contactId = widget.projectData!['clientId'];
-    _additionalNotes = widget.projectData!['additionalNotes'];
-    _projectType = widget.projectData!['projectType'];
-    _zoneType = _getZoneTypeFromProjectType(_projectType);
+    if (widget.projectData != null) {
+      _projectEntity = ProjectEntity.fromMap(widget.projectData!);
+    }
 
     // Se materiais foram passados, configurá-los no ViewModel
     if (widget.selectedMaterials != null &&
         widget.selectedMaterials!.isNotEmpty) {
+      log(
+        'OverviewZonesView: Setting ${widget.selectedMaterials!.length} materials',
+      );
       _viewModel.setSelectedMaterials(widget.selectedMaterials!);
+
+      // Se quantidades foram passadas, configurá-las também
+      if (widget.materialQuantities != null) {
+        log(
+          'OverviewZonesView: Setting material quantities: ${widget.materialQuantities!.length} items',
+        );
+        _viewModel.setMaterialQuantities(widget.materialQuantities!);
+      } else {
+        log('OverviewZonesView: No material quantities provided');
+      }
+    } else {
+      log('OverviewZonesView: No materials provided or empty list');
     }
 
     // Se zonas foram passadas, configurá-las no ViewModel
@@ -148,19 +162,6 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
         ],
       ),
     );
-  }
-
-  String _getZoneTypeFromProjectType(String projectType) {
-    switch (projectType.toLowerCase()) {
-      case 'interior':
-        return 'interior';
-      case 'exterior':
-        return 'exterior';
-      case 'both':
-        return 'both';
-      default:
-        return 'interior';
-    }
   }
 
   @override
@@ -256,13 +257,31 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                     title: 'Materials',
                     children: [
                       // Listar os materiais selecionados
-                      ..._viewModel.selectedMaterials.map(
-                        (material) => MaterialItemRowWidget(
-                          title: material.name,
-                          subtitle: '${material.code} - ${material.priceUnit}',
-                          price: '\$${material.price.toStringAsFixed(2)}',
+                      if (_viewModel.selectedMaterials.isNotEmpty)
+                        ..._viewModel.selectedMaterials.map(
+                          (material) {
+                            final quantity = _viewModel.getQuantity(material);
+                            final totalPrice = material.price * quantity;
+                            return MaterialItemRowWidget(
+                              title: material.name,
+                              subtitle:
+                                  '${material.code} - ${material.priceUnit} (Qty: $quantity)',
+                              price: '\$${totalPrice.toStringAsFixed(2)}',
+                            );
+                          },
+                        )
+                      else
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Text(
+                            'No materials selected',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                         ),
-                      ),
                       SummaryTotalRowWidget(
                         label: 'Materials Total:',
                         value:
@@ -275,12 +294,48 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                   ProjectSummaryCardWidget(
                     title: 'Metrics Overview',
                     children: [
-                      RoomOverviewRowWidget(
-                        leftTitle: _viewModel.floorDimensions,
-                        leftSubtitle: 'Floor Dimensions',
-                        rightTitle: _viewModel.floorArea,
-                        rightSubtitle: 'Floor Area',
-                      ),
+                      if (_viewModel.selectedZones.isNotEmpty)
+                        ..._viewModel.selectedZones.map(
+                          (zone) => Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Título da zona
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Text(
+                                    zone.title,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                                // Medidas da zona
+                                RoomOverviewRowWidget(
+                                  leftTitle: zone.floorDimensionValue,
+                                  leftSubtitle: 'Floor Dimensions',
+                                  rightTitle: zone.floorAreaValue,
+                                  rightSubtitle: 'Floor Area',
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Text(
+                            'No zones selected',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
 
@@ -303,6 +358,7 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                       children: [
                         Flexible(
                           child: PaintProButton(
+                            backgroundColor: Colors.black,
                             text: 'Adjust',
                             borderRadius: 16,
                             padding: EdgeInsets.zero,
@@ -324,22 +380,95 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                             onPressed: _estimateUploadViewModel.isUploading
                                 ? null
                                 : () async {
-                                    // Build EstimateModel from collected data
-                                    final estimateModel =
-                                        await _estimateCalculationViewModel
-                                            .buildEstimateModel(
-                                              viewModel: _viewModel,
-                                              projectName: _projectName,
-                                              contactId: _contactId,
-                                              additionalNotes: _additionalNotes,
-                                              status: EstimateStatus.draft,
-                                              zoneType: _zoneType,
-                                            );
+                                    log('=== SEND ESTIMATE BUTTON PRESSED ===');
 
-                                    // Upload estimate using the ViewModel
-                                    await _estimateUploadViewModel.upload(
-                                      estimateModel,
+                                    // Log project data
+                                    log(
+                                      'Project Entity: ${_projectEntity?.toMap()}',
                                     );
+                                    log(
+                                      'Selected Materials Count: ${_viewModel.selectedMaterials.length}',
+                                    );
+                                    log(
+                                      'Selected Zones Count: ${_viewModel.selectedZones.length}',
+                                    );
+                                    log(
+                                      'Total Materials Cost: \$${_viewModel.totalMaterialsCost.toStringAsFixed(2)}',
+                                    );
+                                    log(
+                                      'Total Project Cost: \$${_viewModel.totalProjectCost.toStringAsFixed(2)}',
+                                    );
+
+                                    // Log materials details
+                                    for (
+                                      int i = 0;
+                                      i < _viewModel.selectedMaterials.length;
+                                      i++
+                                    ) {
+                                      final material =
+                                          _viewModel.selectedMaterials[i];
+                                      final quantity = _viewModel.getQuantity(
+                                        material,
+                                      );
+                                      log(
+                                        'Material $i: ${material.name} - Qty: $quantity - Price: \$${material.price} - Total: \$${(material.price * quantity).toStringAsFixed(2)}',
+                                      );
+                                    }
+
+                                    // Log zones details
+                                    for (
+                                      int i = 0;
+                                      i < _viewModel.selectedZones.length;
+                                      i++
+                                    ) {
+                                      final zone = _viewModel.selectedZones[i];
+                                      log(
+                                        'Zone $i: ${zone.title} - Area: ${zone.floorAreaValue} - Dimensions: ${zone.floorDimensionValue}',
+                                      );
+                                    }
+
+                                    try {
+                                      // Build EstimateModel from collected data
+                                      log('Building EstimateModel...');
+                                      final estimateModel =
+                                          await _estimateCalculationViewModel
+                                              .buildEstimateModel(
+                                                viewModel: _viewModel,
+                                                projectName:
+                                                    _projectEntity
+                                                        ?.projectName ??
+                                                    '',
+                                                contactId:
+                                                    _projectEntity?.contactId ??
+                                                    '',
+                                                additionalNotes:
+                                                    _projectEntity
+                                                        ?.additionalNotes ??
+                                                    '',
+                                                status: EstimateStatus.draft,
+                                                zoneType:
+                                                    _projectEntity?.zoneType ??
+                                                    'interior',
+                                              );
+
+                                      log(
+                                        'EstimateModel created successfully: ${estimateModel.toString()}',
+                                      );
+
+                                      // Upload estimate using the ViewModel
+                                      log('Starting estimate upload...');
+                                      await _estimateUploadViewModel.upload(
+                                        estimateModel,
+                                      );
+                                      log(
+                                        'Estimate upload completed successfully',
+                                      );
+                                    } catch (e, stackTrace) {
+                                      log(
+                                        'Error during estimate creation/upload: $e',
+                                      );
+                                      log('Stack trace: $stackTrace');
+                                    }
                                   },
                           ),
                         ),
