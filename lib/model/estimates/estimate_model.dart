@@ -10,8 +10,6 @@ import 'surface_areas_model.dart';
 import 'material_item_model.dart';
 import 'estimate_totals_model.dart';
 
-// Enums moved to separate files (estimate_status.dart, project_type.dart)
-
 class EstimateModel {
   final String? id;
   final String? projectName;
@@ -54,6 +52,16 @@ class EstimateModel {
   });
 
   factory EstimateModel.fromJson(Map<String, dynamic> json) {
+    // Helper method to safely parse numeric values from String or num
+    num? parseNum(dynamic value) {
+      if (value == null) return null;
+      if (value is num) return value;
+      if (value is String) {
+        return num.tryParse(value);
+      }
+      return null;
+    }
+
     EstimateStatus parseStatus(String? value) {
       switch (value) {
         case 'pending':
@@ -91,6 +99,10 @@ class EstimateModel {
               final area = item['net_area'] ?? item['area'] ?? 0.0;
               if (area is num) {
                 totalArea += area.toDouble();
+              } else if (area is String) {
+                // Handle string values by parsing them
+                final parsedArea = double.tryParse(area) ?? 0.0;
+                totalArea += parsedArea;
               }
             }
           }
@@ -98,6 +110,12 @@ class EstimateModel {
         } else if (value is num) {
           // For direct numeric values
           result[key] = value;
+        } else if (value is String) {
+          // Handle string values by parsing them
+          final parsedValue = num.tryParse(value);
+          if (parsedValue != null) {
+            result[key] = parsedValue;
+          }
         }
       }
 
@@ -118,8 +136,8 @@ class EstimateModel {
             final photos = (md['photos'] as List?)?.cast<String>() ?? const [];
             return ZoneDataModel(
               floorDimensions: FloorDimensionsModel(
-                length: (fd['length'] as num?) ?? 0,
-                width: (fd['width'] as num?) ?? 0,
+                length: parseNum(fd['length']) ?? 0,
+                width: parseNum(fd['width']) ?? 0,
                 unit: (fd['unit'] as String?) ?? 'ft',
               ),
               surfaceAreas: SurfaceAreasModel(
@@ -146,8 +164,8 @@ class EstimateModel {
           return MaterialItemModel(
             id: mm['id']?.toString(),
             unit: mm['unit'] as String?,
-            quantity: (mm['quantity'] as num?),
-            unitPrice: (mm['unit_price'] as num?),
+            quantity: parseNum(mm['quantity']),
+            unitPrice: parseNum(mm['unit_price']),
           );
         }).toList();
       }
@@ -157,8 +175,8 @@ class EstimateModel {
     EstimateTotalsModel? parseTotals(dynamic value) {
       if (value is Map<String, dynamic>) {
         return EstimateTotalsModel(
-          materialsCost: (value['materials_cost'] as num?),
-          grandTotal: (value['grand_total'] as num?),
+          materialsCost: parseNum(value['materials_cost']),
+          grandTotal: parseNum(value['grand_total']),
         );
       }
       return null;
@@ -177,9 +195,9 @@ class EstimateModel {
             )
           : null,
       status: parseStatus(json['status'] as String?),
-      totalArea: (json['total_area'] as num?)?.toDouble(),
-      paintableArea: (json['paintable_area'] as num?)?.toDouble(),
-      totalCost: (json['total_cost'] as num?)?.toDouble(),
+      totalArea: parseNum(json['total_area'])?.toDouble(),
+      paintableArea: parseNum(json['paintable_area'])?.toDouble(),
+      totalCost: parseNum(json['total_cost'])?.toDouble(),
       photos: json['photos'] != null ? List<String>.from(json['photos']) : null,
       elements: json['elements'] != null
           ? (json['elements'] as List<dynamic>)
