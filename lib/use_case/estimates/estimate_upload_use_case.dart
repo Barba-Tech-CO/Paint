@@ -148,7 +148,7 @@ class EstimateUploadUseCase {
       );
     }
 
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 200 * 1024 * 1024; // 200MB
     final fileSize = await file.length();
 
     if (fileSize > maxSize) {
