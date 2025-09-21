@@ -1,6 +1,3 @@
-import 'dart:developer';
-
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -135,12 +132,7 @@ class ContactDatabaseService {
     }
 
     final data = contact.toMap();
-    data.remove('id'); // Remove localId as it's auto-generated
-
-    // Debug logging
-    if (kDebugMode) {
-      log('Debug: Inserting contact with data: $data');
-    }
+    data.remove('id');
 
     // Use INSERT OR REPLACE to handle duplicates gracefully
     return await db.insert(
