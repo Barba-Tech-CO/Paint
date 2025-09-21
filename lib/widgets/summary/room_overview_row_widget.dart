@@ -19,16 +19,15 @@ class RoomOverviewRowWidget extends StatelessWidget {
     required this.rightSubtitle,
     this.titleColor = Colors.blue,
     this.subtitleColor = Colors.grey,
-    this.titleFontSize = 16,
-    this.subtitleFontSize = 14,
+    this.titleFontSize = 18,
+    this.subtitleFontSize = 16,
     this.padding = const EdgeInsets.all(0),
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
       child: Row(
         children: [
           Expanded(
