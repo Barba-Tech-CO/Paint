@@ -12,9 +12,9 @@ class CameraService {
     try {
       final XFile? image = await _imagePicker.pickImage(
         source: ImageSource.camera,
-        imageQuality: 85, // Good quality with reasonable file size
-        maxWidth: 1920,
-        maxHeight: 1920,
+        imageQuality: 100,
+        // maxWidth: 1920,
+        // maxHeight: 1920,
       );
 
       if (image != null) {
@@ -31,9 +31,9 @@ class CameraService {
   Future<List<String>> captureMultiplePhotos({int maxPhotos = 5}) async {
     try {
       final List<XFile> images = await _imagePicker.pickMultiImage(
-        imageQuality: 85,
-        maxWidth: 1920,
-        maxHeight: 1920,
+        imageQuality: 100,
+        // maxWidth: 1920,
+        // maxHeight: 1920,
       );
 
       if (images.isEmpty) return [];
