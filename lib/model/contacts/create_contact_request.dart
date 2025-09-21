@@ -81,8 +81,9 @@ class CreateContactRequest {
     if (email != null) json['email'] = email;
     if (phone != null) json['phone'] = phone;
     if (companyName != null) json['companyName'] = companyName;
-    if (address != null)
-      json['address'] = address; // API expects address (not address1)
+    if (address != null) {
+      json['address'] = address;
+    }
     if (city != null) json['city'] = city;
     if (state != null) json['state'] = state;
     if (postalCode != null) json['postalCode'] = postalCode;
