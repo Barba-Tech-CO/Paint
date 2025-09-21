@@ -1,17 +1,22 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
+import '../../use_case/navigation/navigation_use_case.dart';
 import '../../utils/scroll/infinite_scroll_mixin.dart';
 import '../../viewmodel/material/material_list_viewmodel.dart';
+import '../../viewmodel/zones/zones_list_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/buttons/paint_pro_button.dart';
 import '../../widgets/materials/material_card_widget.dart';
 import '../../widgets/materials/material_filter_widget.dart';
 
 class SelectMaterialView extends StatefulWidget {
-  const SelectMaterialView({super.key});
+  final Map<String, dynamic>? projectData;
+
+  const SelectMaterialView({super.key, this.projectData});
 
   @override
   State<SelectMaterialView> createState() => _SelectMaterialViewState();
@@ -20,17 +25,21 @@ class SelectMaterialView extends StatefulWidget {
 class _SelectMaterialViewState extends State<SelectMaterialView>
     with InfiniteScrollMixin {
   late MaterialListViewModel _viewModel;
+  late ZonesListViewModel _zonesListViewModel;
+  final NavigationUseCase _navigationUseCase = NavigationUseCase();
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _viewModel = getIt<MaterialListViewModel>();
+    _zonesListViewModel = getIt<ZonesListViewModel>();
     _searchController.addListener(_onSearchChanged);
 
     // Inicializa os dados
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _viewModel.initialize();
+      _zonesListViewModel.initialize();
     });
   }
 
@@ -334,15 +343,39 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
                     Spacer(),
                     PaintProButton(
                       text: "Next",
-                      padding: EdgeInsets.zero, // Remove o padding padrão
-                      minimumSize: const Size(100, 40), // Tamanho específico
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(100, 40),
                       borderRadius: 8,
                       onPressed: _viewModel.selectedCount == 0
                           ? null
-                          : () => context.push(
-                              '/overview-zones',
-                              extra: _viewModel.selectedMaterials,
-                            ),
+                          : () {
+                              final materialsWithQuantities = _viewModel
+                                  .getSelectedMaterialsWithQuantities();
+                              log(
+                                'SelectMaterialView: Navigating with ${materialsWithQuantities.length} materials',
+                              );
+                              log(
+                                'SelectMaterialView: Materials: ${materialsWithQuantities.keys.map((m) => '${m.name} (qty: ${materialsWithQuantities[m]})').join(', ')}',
+                              );
+                              log(
+                                'SelectMaterialView: Material types: ${materialsWithQuantities.keys.map((m) => m.runtimeType).join(', ')}',
+                              );
+                              log(
+                                'SelectMaterialView: About to call context.push with extra type: ${materialsWithQuantities.runtimeType}',
+                              );
+                              log(
+                                'SelectMaterialView: Navigating to overview with ${materialsWithQuantities.length} materials',
+                              );
+
+                              _navigationUseCase.navigateToOverviewZones(
+                                context,
+                                materials: materialsWithQuantities.keys
+                                    .toList(),
+                                quantities: materialsWithQuantities,
+                                zones: _zonesListViewModel.zones,
+                                projectData: widget.projectData,
+                              );
+                            },
                     ),
                   ],
                 );
