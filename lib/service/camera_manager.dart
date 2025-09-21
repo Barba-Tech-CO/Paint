@@ -55,7 +55,7 @@ class CameraManager {
 
       _cameraController = CameraController(
         _cameras![_selectedCameraIndex],
-        ResolutionPreset.high,
+        ResolutionPreset.max,
         enableAudio: false,
       );
 
