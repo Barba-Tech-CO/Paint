@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 enum SyncStatus { synced, pending, error }
 
 class ContactModel {
@@ -79,13 +77,6 @@ class ContactModel {
       ].where((part) => part.isNotEmpty).join(' ');
     } else if (json['name'] != null) {
       fullName = json['name']; // Fallback to legacy name field
-    }
-
-    // Debug log for contact creation
-    if (fullName.isNotEmpty) {
-      log(
-        'ContactModel.fromJson: Creating contact - Name: $fullName, ID: ${json['id']}, GHL ID: ${json['ghlId'] ?? json['id']}',
-      );
     }
 
     return ContactModel(
@@ -173,27 +164,9 @@ class ContactModel {
   }
 
   factory ContactModel.fromMap(Map<String, dynamic> map) {
-    // Debug log for contact creation from database
-    final contactName =
-        [
-          map['first_name'] ?? '',
-          map['last_name'] ?? '',
-        ].where((e) => e.isNotEmpty).join(' ').isNotEmpty
-        ? [
-            map['first_name'] ?? '',
-            map['last_name'] ?? '',
-          ].where((e) => e.isNotEmpty).join(' ')
-        : (map['name'] ?? '');
-
-    if (contactName.isNotEmpty) {
-      log(
-        'ContactModel.fromMap: Creating contact from DB - Name: $contactName, ID: ${map['ghl_id']}, LocalID: ${map['id']}',
-      );
-    }
-
     return ContactModel(
       localId: map['id'],
-      id: map['ghl_id'], // Set id to ghl_id to maintain consistency with API response
+      id: map['ghl_id'],
       ghlId: map['ghl_id'],
       locationId: map['location_id'],
       name:
@@ -205,7 +178,7 @@ class ContactModel {
               map['first_name'] ?? '',
               map['last_name'] ?? '',
             ].where((e) => e.isNotEmpty).join(' ')
-          : (map['name'] ?? ''), // Fallback to legacy name field
+          : (map['name'] ?? ''),
       email: map['email'] ?? '',
       phone: map['phone'] ?? '',
       phoneLabel: map['phone_label'],
@@ -276,7 +249,6 @@ class ContactModel {
   }
 
   Map<String, dynamic> toMap() {
-    // Split name into first_name and last_name for database compatibility
     final nameParts = name.trim().split(' ');
     final firstName = nameParts.isNotEmpty ? nameParts.first : '';
     final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
