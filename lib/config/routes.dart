@@ -1,8 +1,8 @@
 import 'package:go_router/go_router.dart';
 
 import '../model/contacts/contact_model.dart';
-import '../model/material_models/material_model.dart';
 import '../model/projects/project_card_model.dart';
+import '../use_case/navigation/navigation_data_use_case.dart';
 import '../view/auth/auth_view.dart';
 import '../view/camera/camera_view.dart';
 import '../view/contact_details/contact_details_view.dart';
@@ -13,7 +13,6 @@ import '../view/edit_zone/edit_zone_view.dart';
 import '../view/home/home_view.dart';
 import '../view/new_contact/new_contact_view.dart';
 import '../view/overview_zones/overview_zones_view.dart';
-import '../widgets/loading/loading_widget.dart';
 import '../view/projects/projects_view.dart';
 import '../view/quotes/quotes_view.dart';
 import '../view/roomplan/roomplan_view.dart';
@@ -22,6 +21,7 @@ import '../view/splash/splash_view.dart';
 import '../view/success/success_view.dart';
 import '../view/zones/zones_view.dart';
 import '../view/zones_details/zones_details_view.dart';
+import '../widgets/loading/loading_widget.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -84,6 +84,20 @@ final router = GoRouter(
       },
     ),
     GoRoute(
+      name: 'loading',
+      path: '/loading',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        return LoadingWidget(
+          title: extra['title'] ?? 'Loading...',
+          subtitle: extra['subtitle'],
+          description: extra['description'],
+          duration: extra['duration'] ?? const Duration(seconds: 3),
+          navigateToOnComplete: extra['navigateToOnComplete'],
+        );
+      },
+    ),
+    GoRoute(
       path: '/contact-details',
       builder: (context, state) {
         final contact = state.extra as ContactModel?;
@@ -107,22 +121,18 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/overview-zones',
+      name: 'overview-zones',
       builder: (context, state) {
-        // Aceita tanto List<MaterialModel> quanto Map com materiais e zonas
-        final extra = state.extra;
-        List<MaterialModel>? selectedMaterials;
-        List<ProjectCardModel>? selectedZones;
-
-        if (extra is List<MaterialModel>) {
-          selectedMaterials = extra;
-        } else if (extra is Map) {
-          selectedMaterials = extra['materials'] as List<MaterialModel>?;
-          selectedZones = extra['zones'] as List<ProjectCardModel>?;
-        }
+        final navigationDataUseCase = NavigationDataUseCase();
+        final navigationData = navigationDataUseCase.processOverviewZonesData(
+          state.extra,
+        );
 
         return OverviewZonesView(
-          selectedMaterials: selectedMaterials,
-          selectedZones: selectedZones,
+          selectedMaterials: navigationData.selectedMaterials,
+          materialQuantities: navigationData.materialQuantities,
+          selectedZones: navigationData.selectedZones,
+          projectData: navigationData.projectData,
         );
       },
     ),
@@ -167,7 +177,8 @@ final router = GoRouter(
     GoRoute(
       path: '/select-material',
       builder: (context, state) {
-        return const SelectMaterialView();
+        final projectData = state.extra as Map<String, dynamic>?;
+        return SelectMaterialView(projectData: projectData);
       },
     ),
     GoRoute(
