@@ -229,15 +229,28 @@ class EstimateService {
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        // O backend pode retornar { success, message, data } ou o objeto direto
+        // O backend retorna { success: true, message: "...", data: {...} }
         final data = response.data;
+
         if (data is Map<String, dynamic>) {
+          // Backend sempre retorna data['data'] com o estimate
           if (data['data'] is Map<String, dynamic>) {
             return Result.ok(EstimateModel.fromJson(data['data']));
           }
+          // Fallback: se não tem data['data'], tenta usar data diretamente
           return Result.ok(EstimateModel.fromJson(data));
         }
-        return Result.error(Exception('Unexpected response format'));
+
+        // Se data é String, pode ser uma mensagem de erro do backend
+        if (data is String) {
+          return Result.error(
+            Exception('Backend error: $data'),
+          );
+        }
+
+        return Result.error(
+          Exception('Unexpected response format: ${data.runtimeType}'),
+        );
       }
 
       return Result.error(
