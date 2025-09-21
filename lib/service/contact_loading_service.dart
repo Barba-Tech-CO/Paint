@@ -34,23 +34,8 @@ class ContactLoadingService {
         final response = result.asOk.value;
         final contacts = response.contacts;
 
-        // Debug log to check contact IDs
-        _logger.info(
-          'ContactLoadingService: Loaded ${contacts.length} contacts',
-        );
-        for (int i = 0; i < contacts.length && i < 3; i++) {
-          final contact = contacts[i];
-          _logger.info(
-            'ContactLoadingService: Contact $i - Name: ${contact.name}, ID: ${contact.id}, GHL ID: ${contact.ghlId}',
-          );
-        }
-
         return contacts;
       } else {
-        // Log the error for debugging
-        _logger.warning(
-          'ContactLoadingService: Failed to load contacts from repository: ${result.asError.error}',
-        );
         return [];
       }
     } catch (e) {
