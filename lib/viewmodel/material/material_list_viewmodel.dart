@@ -302,6 +302,16 @@ class MaterialListViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Obtém materiais selecionados com suas quantidades
+  Map<MaterialModel, int> getSelectedMaterialsWithQuantities() {
+    final Map<MaterialModel, int> result = {};
+    for (final material in _selectedMaterials) {
+      final quantity = _materialQuantities[material] ?? 1;
+      result[material] = quantity < 1 ? 1 : quantity;
+    }
+    return result;
+  }
+
   /// Obtém o total do carrinho
   double get totalPrice {
     return _selectedMaterials.fold(
