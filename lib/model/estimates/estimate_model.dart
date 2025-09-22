@@ -22,6 +22,7 @@ class EstimateModel {
   final double? paintableArea;
   final double? totalCost;
   final List<String>? photos;
+  final List<String>? photosData;
   final List<EstimateElement>? elements;
   final List<ZoneModel>? zones;
   final List<MaterialItemModel>? materials;
@@ -42,6 +43,7 @@ class EstimateModel {
     this.paintableArea,
     this.totalCost,
     this.photos,
+    this.photosData,
     this.elements,
     this.zones,
     this.materials,
@@ -199,6 +201,9 @@ class EstimateModel {
       paintableArea: parseNum(json['paintable_area'])?.toDouble(),
       totalCost: parseNum(json['total_cost'])?.toDouble(),
       photos: json['photos'] != null ? List<String>.from(json['photos']) : null,
+      photosData: json['photos_data'] != null
+          ? List<String>.from(json['photos_data'])
+          : null,
       elements: json['elements'] != null
           ? (json['elements'] as List<dynamic>)
                 .map((element) => EstimateElement.fromJson(element))
