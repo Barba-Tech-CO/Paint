@@ -117,7 +117,6 @@ class LocalStorageService {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    _logger.info('Estimate saved locally with ID: $id');
     return id;
   }
 
@@ -142,7 +141,8 @@ class LocalStorageService {
       orderBy: 'created_at DESC',
     );
 
-    return maps.map(_mapToEstimate).toList();
+    final estimates = maps.map(_mapToEstimate).toList();
+    return estimates;
   }
 
   Future<List<EstimateModel>> getUnsyncedEstimates() async {
@@ -249,95 +249,128 @@ class LocalStorageService {
 
   // Helper methods
   Map<String, dynamic> _estimateToMap(EstimateModel estimate) {
-    return {
-      'id': estimate.id,
-      'project_name': estimate.projectName,
-      'client_name': estimate.clientName,
-      'contact_id': estimate.contactId,
-      'additional_notes': estimate.additionalNotes,
-      'project_type': estimate.projectType?.name,
-      'status': estimate.status.name,
-      'total_area': estimate.totalArea,
-      'paintable_area': estimate.paintableArea,
-      'total_cost': estimate.totalCost,
-      'photos': estimate.photos != null ? jsonEncode(estimate.photos) : null,
-      'photos_data': estimate.photosData != null
-          ? jsonEncode(estimate.photosData)
-          : null,
-      'elements': estimate.elements != null
-          ? jsonEncode(estimate.elements!.map((e) => e.toJson()).toList())
-          : null,
-      'zones': estimate.zones != null
-          ? jsonEncode(estimate.zones!.map((z) => _zoneToMap(z)).toList())
-          : null,
-      'materials': estimate.materials != null
-          ? jsonEncode(
-              estimate.materials!.map((m) => _materialToMap(m)).toList(),
-            )
-          : null,
-      'totals': estimate.totals != null
-          ? jsonEncode(_totalsToMap(estimate.totals!))
-          : null,
-      'created_at': estimate.createdAt?.toIso8601String(),
-      'updated_at': estimate.updatedAt?.toIso8601String(),
-      'completed_at': estimate.completedAt?.toIso8601String(),
-    };
+    try {
+      return {
+        'id': estimate.id,
+        'project_name': estimate.projectName,
+        'client_name': estimate.clientName,
+        'contact_id': estimate.contactId,
+        'additional_notes': estimate.additionalNotes,
+        'project_type': estimate.projectType?.name,
+        'status': estimate.status.name,
+        'total_area': estimate.totalArea,
+        'paintable_area': estimate.paintableArea,
+        'total_cost': estimate.totalCost,
+        'photos': estimate.photos != null ? jsonEncode(estimate.photos) : null,
+        'photos_data': estimate.photosData != null
+            ? jsonEncode(estimate.photosData)
+            : null,
+        'elements': estimate.elements != null
+            ? jsonEncode(estimate.elements!.map((e) => e.toJson()).toList())
+            : null,
+        'zones': estimate.zones != null
+            ? jsonEncode(estimate.zones!.map((z) => _zoneToMap(z)).toList())
+            : null,
+        'materials': estimate.materials != null
+            ? jsonEncode(
+                estimate.materials!.map((m) => _materialToMap(m)).toList(),
+              )
+            : null,
+        'totals': estimate.totals != null
+            ? jsonEncode(_totalsToMap(estimate.totals!))
+            : null,
+        'created_at': estimate.createdAt?.toIso8601String(),
+        'updated_at': estimate.updatedAt?.toIso8601String(),
+        'completed_at': estimate.completedAt?.toIso8601String(),
+      };
+    } catch (e) {
+      _logger.error('Error in _estimateToMap: $e');
+      rethrow;
+    }
   }
 
   EstimateModel _mapToEstimate(Map<String, dynamic> map) {
-    return EstimateModel(
-      id: map['id'],
-      projectName: map['project_name'],
-      clientName: map['client_name'],
-      contactId: map['contact_id'],
-      additionalNotes: map['additional_notes'],
-      projectType: map['project_type'] != null
-          ? ProjectType.values.firstWhere(
-              (e) => e.name == map['project_type'],
-              orElse: () => ProjectType.other,
-            )
-          : null,
-      status: EstimateStatus.values.firstWhere(
-        (e) => e.name == map['status'],
-        orElse: () => EstimateStatus.draft,
-      ),
-      totalArea: map['total_area'],
-      paintableArea: map['paintable_area'],
-      totalCost: map['total_cost'],
-      photos: map['photos'] != null
-          ? List<String>.from(jsonDecode(map['photos']))
-          : null,
-      photosData: map['photos_data'] != null
-          ? List<String>.from(jsonDecode(map['photos_data']))
-          : null,
-      elements: map['elements'] != null
-          ? (jsonDecode(map['elements']) as List)
-                .map((e) => EstimateElement.fromJson(e))
-                .toList()
-          : null,
-      zones: map['zones'] != null
-          ? (jsonDecode(map['zones']) as List)
-                .map((z) => _mapToZone(z))
-                .toList()
-          : null,
-      materials: map['materials'] != null
-          ? (jsonDecode(map['materials']) as List)
-                .map((m) => _mapToMaterial(m))
-                .toList()
-          : null,
-      totals: map['totals'] != null
-          ? _mapToTotals(jsonDecode(map['totals']))
-          : null,
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'])
-          : null,
-      updatedAt: map['updated_at'] != null
-          ? DateTime.parse(map['updated_at'])
-          : null,
-      completedAt: map['completed_at'] != null
-          ? DateTime.parse(map['completed_at'])
-          : null,
-    );
+    try {
+      return EstimateModel(
+        id: map['id'],
+        projectName: map['project_name'],
+        clientName: map['client_name'],
+        contactId: map['contact_id'],
+        additionalNotes: map['additional_notes'],
+        projectType: map['project_type'] != null
+            ? ProjectType.values.firstWhere(
+                (e) => e.name == map['project_type'],
+                orElse: () => ProjectType.both,
+              )
+            : null,
+        status: EstimateStatus.values.firstWhere(
+          (e) => e.name == map['status'],
+          orElse: () => EstimateStatus.draft,
+        ),
+        totalArea: map['total_area'],
+        paintableArea: map['paintable_area'],
+        totalCost: map['total_cost'],
+        photos: map['photos'] != null
+            ? (map['photos'] is String
+                  ? List<String>.from(jsonDecode(map['photos']))
+                  : List<String>.from(map['photos']))
+            : null,
+        photosData: map['photos_data'] != null
+            ? (map['photos_data'] is String
+                  ? List<String>.from(jsonDecode(map['photos_data']))
+                  : List<String>.from(map['photos_data']))
+            : null,
+        elements: map['elements'] != null
+            ? (map['elements'] is String
+                  ? (jsonDecode(map['elements']) as List)
+                        .map(
+                          (e) => EstimateElement.fromJson(
+                            e as Map<String, dynamic>,
+                          ),
+                        )
+                        .toList()
+                  : (map['elements'] as List)
+                        .map(
+                          (e) => EstimateElement.fromJson(
+                            e as Map<String, dynamic>,
+                          ),
+                        )
+                        .toList())
+            : null,
+        zones: map['zones'] != null
+            ? (map['zones'] is String
+                  ? (jsonDecode(map['zones']) as List)
+                        .map((z) => _mapToZone(z as Map<String, dynamic>))
+                        .toList()
+                  : (map['zones'] as List)
+                        .map((z) => _mapToZone(z as Map<String, dynamic>))
+                        .toList())
+            : null,
+        materials: map['materials'] != null
+            ? (map['materials'] is String
+                  ? (jsonDecode(map['materials']) as List)
+                        .map((m) => _mapToMaterial(m as Map<String, dynamic>))
+                        .toList()
+                  : (map['materials'] as List)
+                        .map((m) => _mapToMaterial(m as Map<String, dynamic>))
+                        .toList())
+            : null,
+        totals: map['totals'] != null
+            ? (map['totals'] is String
+                  ? _mapToTotals(
+                      jsonDecode(map['totals']) as Map<String, dynamic>,
+                    )
+                  : _mapToTotals(map['totals'] as Map<String, dynamic>))
+            : null,
+        createdAt: _parseDateTime(map['created_at']),
+        updatedAt: _parseDateTime(map['updated_at']),
+        completedAt: _parseDateTime(map['completed_at']),
+      );
+    } catch (e) {
+      _logger.error('Error in _mapToEstimate: $e');
+      _logger.error('Map data: $map');
+      rethrow;
+    }
   }
 
   // Project operations (mapped from estimates)
@@ -356,7 +389,8 @@ class LocalStorageService {
 
   Future<List<ProjectModel>> getAllProjects() async {
     final estimates = await getAllEstimates();
-    return estimates.map(_mapEstimateToProject).toList();
+    final projects = estimates.map(_mapEstimateToProject).toList();
+    return projects;
   }
 
   ProjectModel _mapEstimateToProject(EstimateModel estimate) {
@@ -382,26 +416,58 @@ class LocalStorageService {
     }
   }
 
+  /// Helper method to safely parse DateTime from various data types
+  DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+
+    try {
+      if (value is DateTime) {
+        return value;
+      } else if (value is String) {
+        return DateTime.parse(value);
+      } else if (value is Map<String, dynamic>) {
+        // Handle case where value might be a Map with date information
+        return null; // Skip complex date objects for now
+      } else {
+        // Try to convert to string first, then parse
+        return DateTime.parse(value.toString());
+      }
+    } catch (e) {
+      _logger.warning('Failed to parse DateTime from value: $value, error: $e');
+      return null;
+    }
+  }
+
   // Helper methods for serialization
   Map<String, dynamic> _zoneToMap(ZoneModel zone) {
-    return {
-      'id': zone.id,
-      'name': zone.name,
-      'zone_type': zone.zoneType,
-      'data': zone.data.map((d) => _zoneDataToMap(d)).toList(),
-    };
+    try {
+      return {
+        'id': zone.id,
+        'name': zone.name,
+        'zone_type': zone.zoneType,
+        'data': zone.data.map((d) => _zoneDataToMap(d)).toList(),
+      };
+    } catch (e) {
+      _logger.error('Error in _zoneToMap: $e');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> _zoneDataToMap(ZoneDataModel data) {
-    return {
-      'floor_dimensions': {
-        'length': data.floorDimensions.length,
-        'width': data.floorDimensions.width,
-        'unit': data.floorDimensions.unit,
-      },
-      'surface_areas': data.surfaceAreas.values,
-      'photos': data.photoPaths,
-    };
+    try {
+      return {
+        'floor_dimensions': {
+          'length': data.floorDimensions.length,
+          'width': data.floorDimensions.width,
+          'unit': data.floorDimensions.unit,
+        },
+        'surface_areas': data.surfaceAreas.values,
+        'photos': data.photoPaths,
+      };
+    } catch (e) {
+      _logger.error('Error in _zoneDataToMap: $e');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> _materialToMap(MaterialItemModel material) {
@@ -425,7 +491,9 @@ class LocalStorageService {
       id: map['id'],
       name: map['name'],
       zoneType: map['zone_type'],
-      data: (map['data'] as List).map((d) => _mapToZoneData(d)).toList(),
+      data: (map['data'] as List)
+          .map((d) => _mapToZoneData(d as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -480,7 +548,6 @@ class LocalStorageService {
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    _logger.info('Dashboard cache saved with key: $cacheKey');
   }
 
   Future<Map<String, dynamic>?> getDashboardCache(String cacheKey) async {
@@ -506,7 +573,6 @@ class LocalStorageService {
       where: 'cache_key = ?',
       whereArgs: [cacheKey],
     );
-    _logger.info('Dashboard cache removed for key: $cacheKey');
   }
 
   Future<void> clearExpiredDashboardCache() async {
@@ -517,6 +583,5 @@ class LocalStorageService {
       where: 'expires_at < ?',
       whereArgs: [now],
     );
-    _logger.info('Expired dashboard cache cleared');
   }
 }
