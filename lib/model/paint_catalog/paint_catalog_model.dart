@@ -1,3 +1,5 @@
+import '../../utils/json_parser_helper.dart';
+
 class PaintBrand {
   final String key;
   final String name;
@@ -195,7 +197,7 @@ class PaintCalculation {
   factory PaintCalculation.fromJson(Map<String, dynamic> json) {
     return PaintCalculation(
       gallonsNeeded: json['gallons_needed'] ?? 0,
-      totalCost: json['total_cost']?.toDouble() ?? 0.0,
+      totalCost: parseDouble(json['total_cost']),
       area: json['area']?.toDouble() ?? 0.0,
       brandKey: json['brand_key'] ?? '',
       colorKey: json['color_key'] ?? '',
