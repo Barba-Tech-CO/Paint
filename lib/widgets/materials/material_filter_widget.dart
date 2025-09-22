@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../model/material_models/material_model.dart' as model;
+import '../../model/material_models/material_filter.dart';
+import '../../model/material_models/material_enums.dart' as enums;
 import '../../config/app_colors.dart';
 import 'drop_down_filter_widget.dart';
 
 class MaterialFilterWidget extends StatefulWidget {
-  final model.MaterialFilter currentFilter;
+  final MaterialFilter currentFilter;
   final List<String> availableBrands;
-  final Function(model.MaterialFilter) onFilterChanged;
+  final Function(MaterialFilter) onFilterChanged;
   final VoidCallback? onClearFilters;
 
   const MaterialFilterWidget({
@@ -24,7 +25,7 @@ class MaterialFilterWidget extends StatefulWidget {
 }
 
 class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
-  late model.MaterialFilter _currentFilter;
+  late MaterialFilter _currentFilter;
 
   @override
   void initState() {
@@ -78,7 +79,7 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
                     TextButton(
                       onPressed: () {
                         setState(() {
-                          _currentFilter = model.MaterialFilter();
+                          _currentFilter = MaterialFilter();
                         });
                         widget.onFilterChanged(_currentFilter);
                         widget.onClearFilters?.call();
@@ -110,10 +111,10 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
           const SizedBox(height: 16),
 
           // Ambient Filter (Type)
-          DropDownFilterWidget<model.MaterialType>(
+          DropDownFilterWidget<enums.MaterialType>(
             label: 'Ambient',
             value: _currentFilter.type,
-            items: model.MaterialType.values,
+            items: enums.MaterialType.values,
             onChanged: (value) {
               setState(() {
                 _currentFilter = _currentFilter.copyWith(type: value);
@@ -124,10 +125,10 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
           const SizedBox(height: 16),
 
           // Finish Filter
-          DropDownFilterWidget<model.MaterialFinish>(
+          DropDownFilterWidget<enums.MaterialFinish>(
             label: 'Finish',
             value: _currentFilter.finish,
-            items: model.MaterialFinish.values,
+            items: enums.MaterialFinish.values,
             onChanged: (value) {
               setState(() {
                 _currentFilter = _currentFilter.copyWith(finish: value);
@@ -148,7 +149,7 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
-            children: model.MaterialQuality.values.map((quality) {
+            children: enums.MaterialQuality.values.map((quality) {
               final isSelected = _currentFilter.quality == quality;
               return FilterChip(
                 label: Text(quality.displayName),
