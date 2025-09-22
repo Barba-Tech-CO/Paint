@@ -2,6 +2,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../model/material_models/material_model.dart';
+import '../model/material_models/material_enums.dart';
 
 class MaterialDatabaseService {
   static Database? _database;
