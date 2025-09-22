@@ -48,7 +48,10 @@ class _HomeViewState extends State<HomeView> {
 
   Future<void> _initializeHomeData() async {
     await getIt<AuthInitializationService>().checkAuthAndFetchUser();
-    await _dashboardViewModel.initialize();
+    // Load current month financial stats for better financial data display
+    await _dashboardViewModel.loadCurrentMonthFinancialStats();
+    // Load recent projects for home display
+    await _homeViewModel.loadRecentProjects();
   }
 
   @override
@@ -259,18 +262,12 @@ class _HomeViewState extends State<HomeView> {
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 16.0),
                                 child: ProjectCardWidget(
+                                  id: project.id,
                                   projectName: project.projectName,
                                   personName: project.personName,
                                   zonesCount: project.zonesCount,
                                   createdDate: project.createdDate,
                                   image: project.image,
-                                  onTap: () {
-                                    // Navigate to project details or zones
-                                    context.push(
-                                      '/zones-details',
-                                      extra: project,
-                                    );
-                                  },
                                 ),
                               );
                             }).toList(),
