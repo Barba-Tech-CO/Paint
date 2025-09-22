@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
 import '../../utils/responsive/responsive_helper.dart';
@@ -6,6 +7,7 @@ import '../dialogs/delete_quote_dialog.dart';
 import '../dialogs/rename_quote_dialog.dart';
 
 class ProjectCardWidget extends StatelessWidget {
+  final int id;
   final String projectName;
   final String personName;
   final int zonesCount;
@@ -22,6 +24,7 @@ class ProjectCardWidget extends StatelessWidget {
 
   const ProjectCardWidget({
     super.key,
+    required this.id,
     required this.projectName,
     required this.personName,
     required this.zonesCount,
@@ -43,18 +46,14 @@ class ProjectCardWidget extends StatelessWidget {
     final dimensions = ResponsiveHelper.getProjectCardDimensions(context);
     final textStyles = ResponsiveHelper.getProjectCardTextStyles(context);
 
-    // Use custom width if provided, otherwise use responsive width
-    final cardWidth = width ?? dimensions.cardWidth;
-
     return InkWell(
-      onTap: onTap,
+      onTap: onTap ?? () => context.push('/estimate-detail', extra: id),
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: cardWidth,
+        width: double.maxFinite,
         constraints: BoxConstraints(
-          minHeight: height!,
+          minHeight: 104,
         ),
-        margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(16),
@@ -70,7 +69,7 @@ class ProjectCardWidget extends StatelessWidget {
           children: [
             // Conteúdo principal
             Padding(
-              padding: EdgeInsets.all(dimensions.padding),
+              padding: EdgeInsets.all(8),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
