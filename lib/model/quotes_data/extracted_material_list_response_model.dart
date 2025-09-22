@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'extracted_material_model.dart';
 import 'pagination_info.dart';
 
@@ -34,11 +32,6 @@ class ExtractedMaterialListResponse {
     if (data['pagination'] == null) {
       throw Exception('Missing required field: data.pagination');
     }
-
-    // Debug filters_applied field
-    log(
-      'ExtractedMaterialListResponse.fromJson: filters_applied type: ${data['filters_applied'].runtimeType}, value: ${data['filters_applied']}',
-    );
 
     return ExtractedMaterialListResponse(
       success: json['success'] as bool,
