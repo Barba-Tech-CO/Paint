@@ -1,3 +1,5 @@
+import '../../utils/json_parser_helper.dart';
+
 class RequiringAttentionModel {
   final int id;
   final String clientName;
@@ -22,7 +24,7 @@ class RequiringAttentionModel {
       projectName: json['project_name'] ?? '',
       status: json['status'] ?? '',
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
-      totalCost: (json['total_cost'] ?? 0.0).toDouble(),
+      totalCost: parseDouble(json['total_cost']),
     );
   }
 
