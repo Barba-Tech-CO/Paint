@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import '../../domain/navigation_data.dart';
 import '../../model/material_models/material_model.dart';
 import '../../model/projects/project_card_model.dart';
@@ -11,9 +9,6 @@ class NavigationDataUseCase {
     if (extra == null) {
       return NavigationData.empty();
     }
-
-    // Log para debug
-    log('NavigationDataUseCase: Processing extra data: $extra');
 
     // Caso 1: Map<MaterialModel, int> (formato direto)
     if (extra is Map<MaterialModel, int>) {
@@ -46,7 +41,6 @@ class NavigationDataUseCase {
   NavigationData _processMapData(Map extra) {
     // Extrair projectData se disponível
     final projectData = extra['projectData'] as Map<String, dynamic>?;
-    log('NavigationDataUseCase: Extracted projectData: $projectData');
 
     // Novo formato: {materials: List<MaterialModel>, quantities: Map<String, int>, zones: List<ProjectCardModel>?}
     if (extra.containsKey('materials') && extra.containsKey('quantities')) {
@@ -71,7 +65,7 @@ class NavigationDataUseCase {
           selectedZones: zones, // Incluir zonas se disponíveis
           projectData: projectData,
         );
-        log('NavigationDataUseCase: Returning NavigationData: $result');
+
         return result;
       }
     }
@@ -116,7 +110,6 @@ class NavigationDataUseCase {
             )
             .toList();
       } catch (e) {
-        log('NavigationDataUseCase: Error converting zones: $e');
         return null;
       }
     }
