@@ -22,8 +22,9 @@ class SyncService {
   /// Check if device is online
   Future<bool> isOnline() async {
     try {
-      final connectivityResult = await _connectivity.checkConnectivity();
-      return connectivityResult != ConnectivityResult.none;
+      final connectivityResults = await _connectivity.checkConnectivity();
+      return connectivityResults.isNotEmpty &&
+          connectivityResults.first != ConnectivityResult.none;
     } catch (e) {
       _logger.error('Error checking connectivity: $e', e);
       return false;
@@ -34,7 +35,6 @@ class SyncService {
   Future<Result<void>> syncEstimates() async {
     try {
       if (!await isOnline()) {
-        _logger.info('Device is offline, skipping sync');
         return Result.ok(null);
       }
 
@@ -44,7 +44,6 @@ class SyncService {
       }
 
       final unsyncedEstimates = unsyncedResult.asOk.value;
-      _logger.info('Found ${unsyncedEstimates.length} unsynced estimates');
 
       for (final estimate in unsyncedEstimates) {
         try {
@@ -62,8 +61,6 @@ class SyncService {
 
             // Mark as synced
             await _offlineRepository.markEstimateAsSynced(syncedEstimate.id!);
-
-            _logger.info('Successfully synced estimate: ${estimate.id}');
           } else {
             _logger.error(
               'Failed to sync estimate ${estimate.id}: ${createResult.asError.error}',
@@ -89,7 +86,9 @@ class SyncService {
       return Result.ok(null);
     } catch (e) {
       _logger.error('Error during estimate sync: $e', e);
-      return Result.error(Exception('Failed to sync estimates: $e'));
+      return Result.error(
+        Exception('Failed to sync estimates'),
+      );
     }
   }
 
@@ -97,7 +96,6 @@ class SyncService {
   Future<Result<void>> syncPendingOperations() async {
     try {
       if (!await isOnline()) {
-        _logger.info('Device is offline, skipping pending operations sync');
         return Result.ok(null);
       }
 
@@ -107,7 +105,6 @@ class SyncService {
       }
 
       final pendingOps = pendingOpsResult.asOk.value;
-      _logger.info('Found ${pendingOps.length} pending operations');
 
       for (final operation in pendingOps) {
         try {
@@ -151,7 +148,6 @@ class SyncService {
 
           if (success) {
             await _offlineRepository.removePendingOperation(operationId);
-            _logger.info('Successfully synced operation: $operationType');
           } else {
             // Increment retry count
             await _offlineRepository.incrementRetryCount(operationId);
@@ -170,15 +166,63 @@ class SyncService {
       return Result.ok(null);
     } catch (e) {
       _logger.error('Error during pending operations sync: $e', e);
-      return Result.error(Exception('Failed to sync pending operations: $e'));
+      return Result.error(
+        Exception('Failed to sync pending operations'),
+      );
+    }
+  }
+
+  /// Pull data from API to local storage (for new devices or when local storage is empty)
+  Future<Result<void>> pullDataFromApi() async {
+    try {
+      if (!await isOnline()) {
+        return Result.ok(null);
+      }
+
+      // Pull estimates from API
+      final estimatesResult = await _estimateRepository.getEstimates(
+        limit: 100, // Get a reasonable number of estimates
+        offset: 0,
+      );
+
+      if (estimatesResult is Ok<List<EstimateModel>>) {
+        final estimates = estimatesResult.asOk.value;
+
+        if (estimates.isEmpty) {
+          return Result.ok(null);
+        }
+
+        // Save each estimate to local storage
+        for (final estimate in estimates) {
+          try {
+            await _offlineRepository.saveEstimate(estimate);
+            // Mark as synced since it came from API
+            await _offlineRepository.markEstimateAsSynced(estimate.id!);
+          } catch (e) {
+            _logger.error(
+              'Error saving estimate ${estimate.id} to local storage: $e',
+            );
+          }
+        }
+      } else {
+        _logger.error(
+          'Failed to pull estimates from API: ${estimatesResult.asError.error}',
+        );
+        return Result.error(estimatesResult.asError.error);
+      }
+
+      return Result.ok(null);
+    } catch (e) {
+      _logger.error('Error during data pull from API: $e', e);
+      return Result.error(
+        Exception('Failed to pull data from API'),
+      );
     }
   }
 
   /// Full sync - estimates and pending operations
   Future<Result<void>> fullSync() async {
     try {
-      _logger.info('Starting full sync...');
-
       // First sync estimates
       final estimatesResult = await syncEstimates();
       if (estimatesResult is Error) {
@@ -195,11 +239,34 @@ class SyncService {
         );
       }
 
-      _logger.info('Full sync completed');
       return Result.ok(null);
     } catch (e) {
       _logger.error('Error during full sync: $e', e);
-      return Result.error(Exception('Failed to perform full sync: $e'));
+      return Result.error(
+        Exception('Failed to perform full sync'),
+      );
+    }
+  }
+
+  /// Smart sync - pulls data from API if local storage is empty, otherwise does full sync
+  Future<Result<void>> smartSync() async {
+    try {
+      // Check if local storage has any estimates
+      final localEstimatesResult = await _offlineRepository.getAllEstimates();
+      final hasLocalData =
+          localEstimatesResult is Ok<List<EstimateModel>> &&
+          localEstimatesResult.asOk.value.isNotEmpty;
+
+      if (!hasLocalData) {
+        return await pullDataFromApi();
+      } else {
+        return await fullSync();
+      }
+    } catch (e) {
+      _logger.error('Error during smart sync: $e', e);
+      return Result.error(
+        Exception('Failed to perform smart sync'),
+      );
     }
   }
 
@@ -209,7 +276,6 @@ class SyncService {
       List<ConnectivityResult> results,
     ) {
       if (results.isNotEmpty && results.first != ConnectivityResult.none) {
-        _logger.info('Connectivity restored, starting auto-sync');
         fullSync();
       }
     });
@@ -235,7 +301,9 @@ class SyncService {
       });
     } catch (e) {
       _logger.error('Error getting sync status: $e', e);
-      return Result.error(Exception('Failed to get sync status: $e'));
+      return Result.error(
+        Exception('Failed to get sync status'),
+      );
     }
   }
 }
