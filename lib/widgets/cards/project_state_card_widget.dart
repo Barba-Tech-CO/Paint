@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
 
@@ -26,6 +27,7 @@ class ProjectStateCardWidget extends StatelessWidget {
   final double buttonBorderRadius;
   final EdgeInsets buttonPadding;
   final Widget? customIcon;
+  final int? projectId;
 
   const ProjectStateCardWidget({
     super.key,
@@ -48,6 +50,7 @@ class ProjectStateCardWidget extends StatelessWidget {
       horizontal: 32,
       vertical: 16,
     ),
+    this.projectId,
   });
 
   @override
@@ -77,10 +80,16 @@ class ProjectStateCardWidget extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            if (buttonText != null && onButtonPressed != null) ...[
+            if (buttonText != null &&
+                (onButtonPressed != null || projectId != null)) ...[
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: onButtonPressed,
+                onPressed:
+                    onButtonPressed ??
+                    (projectId != null
+                        ? () =>
+                              context.push('/estimate-detail', extra: projectId)
+                        : null),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: buttonBackgroundColor,
                   foregroundColor: buttonTextColor,
