@@ -95,33 +95,50 @@ class _ProjectsViewState extends State<ProjectsView> {
               }
 
               if (!viewModel.hasProjects) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.folder_outlined,
-                        size: 64,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No projects',
-                        style: GoogleFonts.albertSans(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                return RefreshIndicator(
+                  onRefresh: () => viewModel.loadProjects(),
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height - 200,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.folder_outlined,
+                              size: 64,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No projects',
+                              style: GoogleFonts.albertSans(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Your projects will appear here',
+                              style: GoogleFonts.albertSans(
+                                fontSize: 16,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Pull down to refresh',
+                              style: GoogleFonts.albertSans(
+                                fontSize: 14,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Your projects will appear here',
-                        style: GoogleFonts.albertSans(
-                          fontSize: 16,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 );
               }
@@ -140,68 +157,81 @@ class _ProjectsViewState extends State<ProjectsView> {
                       ),
                     ),
 
-                  // Projects count
+                  // Projects list
                   if (viewModel.hasProjects)
-                    // Projects list
                     Expanded(
-                      child: viewModel.hasFilteredProjects
-                          ? ListView.builder(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                              itemCount: viewModel.filteredProjects.length,
-                              itemBuilder: (context, index) {
-                                final project =
-                                    viewModel.filteredProjects[index];
-                                return ProjectCardWidget(
-                                  projectName: project.projectName,
-                                  personName: project.personName,
-                                  zonesCount: project.zonesCount,
-                                  createdDate: project.createdDate,
-                                  image: project.image,
-                                  onRename: (newName) {
-                                    viewModel.renameProject(
-                                      project.id.toString(),
-                                      newName,
-                                    );
-                                  },
-                                  onDelete: () {
-                                    viewModel.deleteProject(
-                                      project.id.toString(),
-                                    );
-                                  },
-                                );
-                              },
-                            )
-                          : Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                      child: RefreshIndicator(
+                        onRefresh: () => viewModel.loadProjects(),
+                        child: viewModel.hasFilteredProjects
+                            ? ListView.builder(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                ),
+                                itemCount: viewModel.filteredProjects.length,
+                                itemBuilder: (context, index) {
+                                  final project =
+                                      viewModel.filteredProjects[index];
+                                  return ProjectCardWidget(
+                                    id: project.id,
+                                    projectName: project.projectName,
+                                    personName: project.personName,
+                                    zonesCount: project.zonesCount,
+                                    createdDate: project.createdDate,
+                                    image: project.image,
+                                    onRename: (newName) {
+                                      viewModel.renameProject(
+                                        project.id.toString(),
+                                        newName,
+                                      );
+                                    },
+                                    onDelete: () {
+                                      viewModel.deleteProject(
+                                        project.id.toString(),
+                                      );
+                                    },
+                                  );
+                                },
+                              )
+                            : ListView(
                                 children: [
-                                  const Icon(
-                                    Icons.search_off,
-                                    size: 64,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'No projects found',
-                                    style: GoogleFonts.albertSans(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Try a different search',
-                                    style: GoogleFonts.albertSans(
-                                      fontSize: 14,
-                                      color: AppColors.textSecondary,
+                                  SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height -
+                                        200,
+                                    child: Center(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(
+                                            Icons.search_off,
+                                            size: 64,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'No projects found',
+                                            style: GoogleFonts.albertSans(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.textPrimary,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Try a different search',
+                                            style: GoogleFonts.albertSans(
+                                              fontSize: 14,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
+                      ),
                     ),
                 ],
               );
