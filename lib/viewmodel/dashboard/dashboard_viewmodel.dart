@@ -1,19 +1,22 @@
-import 'dart:developer';
-
 import 'package:flutter/foundation.dart';
 
+import '../../config/dependency_injection.dart';
 import '../../domain/repository/dashboard_repository.dart';
 import '../../model/estimates/dashboard_response_model.dart';
 import '../../model/estimates/dashboard_stats_model.dart';
 import '../../model/estimates/growth_model.dart';
 import '../../model/estimates/monthly_stats_model.dart';
 import '../../model/estimates/requiring_attention_model.dart';
+import '../../use_case/dashboard/dashboard_financial_use_case.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
 enum DashboardState { initial, loading, loaded, error }
 
 class DashboardViewModel extends ChangeNotifier {
   final IDashboardRepository _dashboardRepository;
+  final DashboardFinancialUseCase _financialUseCase;
+  late final AppLogger _logger;
 
   // State
   DashboardState _state = DashboardState.initial;
@@ -42,17 +45,13 @@ class DashboardViewModel extends ChangeNotifier {
   int get requiringAttentionCount =>
       _dashboardData?.data.requiringAttentionCount ?? 0;
 
-  DashboardViewModel(this._dashboardRepository);
+  DashboardViewModel(this._dashboardRepository, this._financialUseCase) {
+    _logger = getIt<AppLogger>();
+  }
 
   /// Initialize dashboard data
   Future<void> initialize() async {
-    log('[DASHBOARD] Initializing DashboardViewModel...');
-    try {
-      await loadDashboardStats();
-      log('[DASHBOARD] DashboardViewModel initialized successfully');
-    } catch (e) {
-      log('[DASHBOARD] Error initializing DashboardViewModel: $e');
-    }
+    await loadDashboardStats();
   }
 
   /// Load dashboard statistics for current month
@@ -79,9 +78,6 @@ class DashboardViewModel extends ChangeNotifier {
     String? compareWith,
   }) async {
     try {
-      log(
-        '[DASHBOARD] Loading dashboard stats for month: $month, compareWith: $compareWith',
-      );
       _setState(DashboardState.loading);
       _clearError();
 
@@ -92,29 +88,180 @@ class DashboardViewModel extends ChangeNotifier {
 
       return result.when(
         ok: (data) {
-          log('[DASHBOARD] Dashboard data loaded successfully');
           _dashboardData = data;
           _setState(DashboardState.loaded);
           return Result.ok(null);
         },
         error: (error) {
-          log('[DASHBOARD] Error loading dashboard data: $error');
-          _setError('Failed to load dashboard data: ${error.toString()}');
+          _logger.error(
+            '[DashboardViewModel] Error loading dashboard data: $error',
+          );
+          _setError('Failed to load dashboard data');
           _setState(DashboardState.error);
           return Result.error(error);
         },
       );
     } catch (e) {
-      log('[DASHBOARD] Exception loading dashboard stats: $e');
-      _setError('Unexpected error: ${e.toString()}');
+      _logger.error(
+        '[DashboardViewModel] Exception loading dashboard stats: $e',
+      );
+      _setError('Unexpected error occurred');
       _setState(DashboardState.error);
-      return Result.error(Exception('Unexpected error: $e'));
+      return Result.error(
+        Exception('Failed to load dashboard data'),
+      );
     }
   }
 
   /// Refresh dashboard data
   Future<Result<void>> refresh() async {
     return await loadDashboardStats();
+  }
+
+  /// Load financial statistics for current month
+  Future<Result<void>> loadCurrentMonthFinancialStats() async {
+    try {
+      _setState(DashboardState.loading);
+      _clearError();
+
+      final result = await _financialUseCase.getCurrentMonthFinancialStats();
+
+      return result.when(
+        ok: (data) {
+          _dashboardData = data;
+          _setState(DashboardState.loaded);
+          return Result.ok(null);
+        },
+        error: (error) {
+          _logger.error(
+            '[DashboardViewModel] Error loading current month financial data: $error',
+          );
+          _setError('Failed to load current month financial data');
+          _setState(DashboardState.error);
+          return Result.error(error);
+        },
+      );
+    } catch (e) {
+      _logger.error(
+        '[DashboardViewModel] Exception loading current month financial stats: $e',
+      );
+      _setError('Unexpected error occurred');
+      _setState(DashboardState.error);
+      return Result.error(
+        Exception('Failed to load current month financial data'),
+      );
+    }
+  }
+
+  /// Load financial statistics for specific month
+  Future<Result<void>> loadMonthFinancialStats(String month) async {
+    try {
+      _setState(DashboardState.loading);
+      _clearError();
+
+      final result = await _financialUseCase.getMonthFinancialStats(month);
+
+      return result.when(
+        ok: (data) {
+          _dashboardData = data;
+          _setState(DashboardState.loaded);
+          return Result.ok(null);
+        },
+        error: (error) {
+          _logger.error(
+            '[DashboardViewModel] Error loading month financial data: $error',
+          );
+          _setError('Failed to load month financial data');
+          _setState(DashboardState.error);
+          return Result.error(error);
+        },
+      );
+    } catch (e) {
+      _logger.error(
+        '[DashboardViewModel] Exception loading month financial stats: $e',
+      );
+      _setError('Unexpected error occurred');
+      _setState(DashboardState.error);
+      return Result.error(
+        Exception('Failed to load month financial data'),
+      );
+    }
+  }
+
+  /// Load financial statistics with comparison
+  Future<Result<void>> loadFinancialStatsWithComparison({
+    required String month,
+    required String compareWith,
+  }) async {
+    try {
+      _setState(DashboardState.loading);
+      _clearError();
+
+      final result = await _financialUseCase.getFinancialStatsWithComparison(
+        month: month,
+        compareWith: compareWith,
+      );
+
+      return result.when(
+        ok: (data) {
+          _dashboardData = data;
+          _setState(DashboardState.loaded);
+          return Result.ok(null);
+        },
+        error: (error) {
+          _logger.error(
+            '[DashboardViewModel] Error loading financial comparison data: $error',
+          );
+          _setError('Failed to load financial comparison data');
+          _setState(DashboardState.error);
+          return Result.error(error);
+        },
+      );
+    } catch (e) {
+      _logger.error(
+        '[DashboardViewModel] Exception loading financial comparison stats: $e',
+      );
+      _setError('Unexpected error occurred');
+      _setState(DashboardState.error);
+      return Result.error(
+        Exception('Failed to load financial comparison data'),
+      );
+    }
+  }
+
+  /// Load previous month financial statistics
+  Future<Result<void>> loadPreviousMonthFinancialStats() async {
+    try {
+      _setState(DashboardState.loading);
+      _clearError();
+
+      final result = await _financialUseCase.getPreviousMonthFinancialStats();
+
+      return result.when(
+        ok: (data) {
+          _dashboardData = data;
+          _setState(DashboardState.loaded);
+          return Result.ok(null);
+        },
+        error: (error) {
+          _logger.error(
+            '[DashboardViewModel] Error loading previous month financial data: $error',
+          );
+          _setError('Failed to load previous month financial data');
+          _setState(DashboardState.error);
+          return Result.error(error);
+        },
+      );
+    } catch (e) {
+      _logger.error(
+        '[DashboardViewModel] Exception loading previous month financial stats: $e',
+      );
+      _setError('Unexpected error occurred');
+      _setState(DashboardState.error);
+      return Result.error(
+        Exception('Failed to load previous month financial data'),
+      );
+    }
   }
 
   /// Get formatted revenue string
@@ -127,6 +274,21 @@ class DashboardViewModel extends ChangeNotifier {
   String getFormattedPercentage(double? percentage) {
     if (percentage == null) return '0.0%';
     return '${percentage.toStringAsFixed(1)}%';
+  }
+
+  /// Get formatted currency using financial use case
+  String getFormattedCurrency(double? amount) {
+    return _financialUseCase.formatCurrency(amount);
+  }
+
+  /// Get formatted percentage using financial use case
+  String getFormattedPercentageFromUseCase(double? percentage) {
+    return _financialUseCase.formatPercentage(percentage);
+  }
+
+  /// Get month display name using financial use case
+  String getMonthDisplayNameFromUseCase(String? monthYear) {
+    return _financialUseCase.getMonthDisplayName(monthYear);
   }
 
   /// Get growth indicator (positive/negative)
@@ -160,7 +322,7 @@ class DashboardViewModel extends ChangeNotifier {
         return '${monthNames[month]} $year';
       }
     } catch (e) {
-      log('[DASHBOARD] Error parsing month year: $monthYear');
+      // Handle parsing error silently
     }
 
     return monthYear;
@@ -187,10 +349,5 @@ class DashboardViewModel extends ChangeNotifier {
   void _setState(DashboardState newState) {
     _state = newState;
     notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }
