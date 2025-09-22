@@ -28,7 +28,7 @@ class ProjectCardWidget extends StatelessWidget {
     required this.createdDate,
     required this.image,
     this.height = 104,
-    this.width = 364,
+    this.width = 326,
     this.imageHeight = 80,
     this.imageWidth = 120,
     this.onTap,
@@ -42,11 +42,6 @@ class ProjectCardWidget extends StatelessWidget {
     // Get responsive dimensions
     final dimensions = ResponsiveHelper.getProjectCardDimensions(context);
     final textStyles = ResponsiveHelper.getProjectCardTextStyles(context);
-    final imageDimensions = ResponsiveHelper.getImageDimensions(
-      baseImageSize: dimensions.imageSize,
-      customWidth: imageWidth,
-      customHeight: imageHeight,
-    );
 
     // Use custom width if provided, otherwise use responsive width
     final cardWidth = width ?? dimensions.cardWidth;
@@ -79,13 +74,15 @@ class ProjectCardWidget extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      image,
-                      fit: BoxFit.cover,
-                      width: imageDimensions.width,
-                      height: imageDimensions.height,
+                  SizedBox(
+                    width: 120,
+                    height: 80,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        image,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   SizedBox(width: dimensions.spacing * 3),
@@ -103,23 +100,19 @@ class ProjectCardWidget extends StatelessWidget {
                           style: textStyles.titleStyle,
                         ),
                         SizedBox(height: dimensions.spacing),
-                        Row(
-                          children: [
-                            Text(
-                              '$zonesCount Zones',
-                              style: textStyles.bodyStyle,
-                            ),
-                            SizedBox(width: dimensions.spacing * 2),
-                            Text(
-                              '• Created $createdDate',
-                              style: textStyles.bodyStyle?.copyWith(
-                                color: Colors.grey[500],
-                                fontSize: textStyles.bodyStyle?.fontSize != null
-                                    ? textStyles.bodyStyle!.fontSize! - 1
-                                    : null,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          '$zonesCount Zones',
+                          style: textStyles.bodyStyle,
+                        ),
+                        SizedBox(height: dimensions.spacing * 0.5),
+                        Text(
+                          'Created $createdDate',
+                          style: textStyles.bodyStyle?.copyWith(
+                            color: Colors.grey[500],
+                            fontSize: textStyles.bodyStyle?.fontSize != null
+                                ? textStyles.bodyStyle!.fontSize! - 1
+                                : null,
+                          ),
                         ),
                       ],
                     ),
@@ -157,21 +150,29 @@ class ProjectCardWidget extends StatelessWidget {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'rename',
                     child: Row(
                       children: [
-                        Icon(Icons.edit),
+                        Image.asset(
+                          'assets/icons/rename.png',
+                          width: 20,
+                          height: 20,
+                        ),
                         SizedBox(width: 8),
                         Text('Rename Project'),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete),
+                        Image.asset(
+                          'assets/icons/delete_black.png',
+                          width: 20,
+                          height: 20,
+                        ),
                         SizedBox(width: 8),
                         Text('Delete Project'),
                       ],
