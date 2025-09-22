@@ -125,6 +125,9 @@ class OfflineRepository implements IOfflineRepository {
   Future<Result<List<ProjectModel>>> getAllProjects() async {
     try {
       final projects = await _localStorageService.getAllProjects();
+      _logger.info(
+        'OfflineRepository: Found ${projects.length} projects in local storage',
+      );
       return Result.ok(projects);
     } catch (e) {
       _logger.error('Error getting all projects from offline storage: $e', e);
