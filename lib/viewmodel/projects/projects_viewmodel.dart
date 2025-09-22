@@ -1,26 +1,16 @@
 import 'package:flutter/foundation.dart';
 
-import '../../domain/repository/estimate_repository.dart';
-import '../../model/estimates/estimate_model.dart';
 import '../../model/projects/project_model.dart';
+import '../../model/projects/projects_state.dart';
+import '../../model/projects/rename_project_data.dart';
+import '../../use_case/projects/project_operations_use_case.dart';
 import '../../utils/command/command.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
-enum ProjectsState { initial, loading, loaded, error }
-
-// Data classes for operations
-class RenameProjectData {
-  final String projectId;
-  final String newName;
-
-  RenameProjectData({
-    required this.projectId,
-    required this.newName,
-  });
-}
-
 class ProjectsViewModel extends ChangeNotifier {
-  final IEstimateRepository _estimateRepository;
+  final ProjectOperationsUseCase _projectOperationsUseCase;
+  final AppLogger _logger;
 
   // State
   ProjectsState _state = ProjectsState.initial;
@@ -88,7 +78,7 @@ class ProjectsViewModel extends ChangeNotifier {
     });
   }
 
-  ProjectsViewModel(this._estimateRepository);
+  ProjectsViewModel(this._projectOperationsUseCase, this._logger);
 
   // Commands
   Command0<void>? _loadProjectsCommand;
@@ -266,131 +256,132 @@ class ProjectsViewModel extends ChangeNotifier {
     }
   }
 
-  // Private methods - Carregar via Estimates API
+  // Private methods - Load via UseCase
   Future<Result<void>> _loadProjectsData() async {
     try {
       _state = ProjectsState.loading;
       _errorMessage = null;
       notifyListeners();
 
-      final result = await _estimateRepository.getEstimates(
-        limit: 50,
-        offset: 0,
-      );
-      if (result is Ok<List<EstimateModel>>) {
-        final estimates = result.asOk.value;
-        _projects = estimates.map(_mapEstimateToProject).toList();
+      final result = await _projectOperationsUseCase.loadProjects();
+      if (result is Ok<List<ProjectModel>>) {
+        _projects = result.asOk.value;
         _filteredProjects = List.from(_projects);
         _state = ProjectsState.loaded;
         notifyListeners();
         return Result.ok(null);
       } else {
         _state = ProjectsState.error;
-        _errorMessage = 'Erro ao carregar projetos: \\${result.asError.error}';
+        _errorMessage = 'Unable to load projects. Please try again.';
+        _logger.error(
+          'Error loading projects: ${result.asError.error}',
+          result.asError.error,
+        );
         notifyListeners();
-        return Result.error(Exception(_errorMessage));
+        return Result.error(
+          Exception(_errorMessage),
+        );
       }
     } catch (e) {
       _state = ProjectsState.error;
-      _errorMessage = 'Erro ao carregar projetos: ${e.toString()}';
+      _errorMessage = 'Unable to load projects. Please try again.';
+      _logger.error('Error loading projects: $e', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception(_errorMessage),
+      );
     }
-  }
-
-  ProjectModel _mapEstimateToProject(EstimateModel e) {
-    final created = e.createdAt != null
-        ? '${e.createdAt!.day.toString().padLeft(2, '0')}/${e.createdAt!.month.toString().padLeft(2, '0')}/${e.createdAt!.year % 100}'
-        : '';
-    final image = (e.photos != null && e.photos!.isNotEmpty)
-        ? e.photos!.first
-        : 'assets/images/kitchen.png';
-    return ProjectModel(
-      id: int.tryParse(e.id ?? '') ?? e.hashCode,
-      projectName: e.projectName ?? 'Estimate',
-      personName: e.clientName ?? '',
-      zonesCount: e.zones?.length ?? 0,
-      createdDate: created,
-      image: image,
-    );
   }
 
   Future<Result<void>> _addProjectData(ProjectModel project) async {
     try {
-      // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
-      // final result = await _projectUseCase.createProject(
-      //   projectName: project.projectName,
-      //   personName: project.personName,
-      //   zonesCount: project.zonesCount,
-      //   createdDate: project.createdDate,
-      //   image: project.image,
-      // );
-
-      // Mock implementation
-      await Future.delayed(const Duration(milliseconds: 300));
-      final newProject = ProjectModel(
-        id: DateTime.now().millisecondsSinceEpoch,
-        projectName: project.projectName,
-        personName: project.personName,
-        zonesCount: project.zonesCount,
-        createdDate: project.createdDate,
-        image: project.image,
-      );
-
-      _projects.add(newProject);
-      _filteredProjects = List.from(_projects);
-      notifyListeners();
-      return Result.ok(null);
+      final result = await _projectOperationsUseCase.createProject(project);
+      if (result is Ok<ProjectModel>) {
+        final newProject = result.asOk.value;
+        _projects.add(newProject);
+        _filteredProjects = List.from(_projects);
+        notifyListeners();
+        return Result.ok(null);
+      } else {
+        _errorMessage = 'Unable to create project. Please try again.';
+        _logger.error(
+          'Error creating project: ${result.asError.error}',
+          result.asError.error,
+        );
+        notifyListeners();
+        return Result.error(
+          Exception(_errorMessage),
+        );
+      }
     } catch (e) {
-      _errorMessage = 'Erro ao adicionar projeto: ${e.toString()}';
+      _errorMessage = 'Unable to create project. Please try again.';
+      _logger.error('Error creating project: $e', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception(_errorMessage),
+      );
     }
   }
 
   Future<Result<void>> _updateProjectData(ProjectModel project) async {
     try {
-      // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
-      // final result = await _projectUseCase.updateProject(
-      //   project.id.toString(),
-      //   projectName: project.projectName,
-      //   personName: project.personName,
-      //   zonesCount: project.zonesCount,
-      //   createdDate: project.createdDate,
-      //   image: project.image,
-      // );
-
-      // Mock implementation
-      await Future.delayed(const Duration(milliseconds: 300));
-      final index = _projects.indexWhere((p) => p.id == project.id);
-      if (index != -1) {
-        _projects[index] = project;
-        _filteredProjects = List.from(_projects);
+      final result = await _projectOperationsUseCase.updateProject(project);
+      if (result is Ok<ProjectModel>) {
+        final updatedProject = result.asOk.value;
+        final index = _projects.indexWhere((p) => p.id == project.id);
+        if (index != -1) {
+          _projects[index] = updatedProject;
+          _filteredProjects = List.from(_projects);
+          notifyListeners();
+        }
+        return Result.ok(null);
+      } else {
+        _errorMessage = 'Unable to update project. Please try again.';
+        _logger.error(
+          'Error updating project: ${result.asError.error}',
+          result.asError.error,
+        );
         notifyListeners();
+        return Result.error(
+          Exception(_errorMessage),
+        );
       }
-      return Result.ok(null);
     } catch (e) {
-      _errorMessage = 'Erro ao atualizar projeto: ${e.toString()}';
+      _errorMessage = 'Unable to update project. Please try again.';
+      _logger.error('Error updating project: $e', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception(_errorMessage),
+      );
     }
   }
 
   Future<Result<void>> _deleteProjectData(String projectId) async {
     try {
-      // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
-      // final result = await _projectUseCase.deleteProject(projectId);
-
-      // Mock implementation
-      await Future.delayed(const Duration(milliseconds: 300));
-      _projects.removeWhere((p) => p.id.toString() == projectId);
-      _filteredProjects = List.from(_projects);
-      notifyListeners();
-      return Result.ok(null);
+      final result = await _projectOperationsUseCase.deleteProject(projectId);
+      if (result is Ok<bool>) {
+        _projects.removeWhere((p) => p.id.toString() == projectId);
+        _filteredProjects = List.from(_projects);
+        notifyListeners();
+        return Result.ok(null);
+      } else {
+        _errorMessage = 'Unable to delete project. Please try again.';
+        _logger.error(
+          'Error deleting project: ${result.asError.error}',
+          result.asError.error,
+        );
+        notifyListeners();
+        return Result.error(
+          Exception(_errorMessage),
+        );
+      }
     } catch (e) {
-      _errorMessage = 'Erro ao deletar projeto: ${e.toString()}';
+      _errorMessage = 'Unable to delete project. Please try again.';
+      _logger.error('Error deleting project: $e', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception(_errorMessage),
+      );
     }
   }
 
@@ -399,23 +390,37 @@ class ProjectsViewModel extends ChangeNotifier {
     String newName,
   ) async {
     try {
-      // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
-      // final result = await _projectUseCase.renameProject(projectId, newName);
-
-      // Mock implementation
-      await Future.delayed(const Duration(milliseconds: 300));
-      final index = _projects.indexWhere((p) => p.id.toString() == projectId);
-      if (index != -1) {
-        final updatedProject = _projects[index].copyWith(projectName: newName);
-        _projects[index] = updatedProject;
-        _filteredProjects = List.from(_projects);
+      final result = await _projectOperationsUseCase.renameProject(
+        projectId,
+        newName,
+      );
+      if (result is Ok<ProjectModel>) {
+        final updatedProject = result.asOk.value;
+        final index = _projects.indexWhere((p) => p.id.toString() == projectId);
+        if (index != -1) {
+          _projects[index] = updatedProject;
+          _filteredProjects = List.from(_projects);
+          notifyListeners();
+        }
+        return Result.ok(null);
+      } else {
+        _errorMessage = 'Unable to rename project. Please try again.';
+        _logger.error(
+          'Error renaming project: ${result.asError.error}',
+          result.asError.error,
+        );
         notifyListeners();
+        return Result.error(
+          Exception(_errorMessage),
+        );
       }
-      return Result.ok(null);
     } catch (e) {
-      _errorMessage = 'Erro ao renomear projeto: ${e.toString()}';
+      _errorMessage = 'Unable to rename project. Please try again.';
+      _logger.error('Error renaming project: $e', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception(_errorMessage),
+      );
     }
   }
 
@@ -427,19 +432,18 @@ class ProjectsViewModel extends ChangeNotifier {
         return Result.ok(null);
       }
 
-      // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
-      // final result = await _projectUseCase.searchProjects(query);
-
-      // Mock implementation - filtrar localmente
+      // Filter projects locally since the API doesn't have search functionality
+      // This is more efficient than making API calls for each search
       _filterProjectsByQuery(query);
       notifyListeners();
       return Result.ok(null);
     } catch (e) {
-      _errorMessage = 'Erro ao buscar projetos: ${e.toString()}';
+      _errorMessage = 'Unable to search projects. Please try again.';
+      _logger.error('Error searching projects: $e', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception(_errorMessage),
+      );
     }
   }
-
-  // Mock generator removido: projetos agora vêm da API de Estimates
 }
