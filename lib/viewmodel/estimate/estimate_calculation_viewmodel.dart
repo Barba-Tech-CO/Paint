@@ -135,7 +135,6 @@ class EstimateCalculationViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Migrated from EstimateBuilder
   /// Builds an EstimateModel from the collected UI data
   Future<EstimateModel> buildEstimateModel({
     required OverviewZonesViewModel viewModel,
@@ -143,12 +142,8 @@ class EstimateCalculationViewModel extends ChangeNotifier {
     required String contactId,
     required String additionalNotes,
     required EstimateStatus status,
-    required String zoneType, // From radio button in "New Project" screen
+    required String zoneType,
   }) async {
-    // Initialize mock photos if no photos are available
-    if (!_photoService.hasPhotos) {
-      await _photoService.initializeMockPhotos();
-    }
     // Convert ProjectCardModel zones to ZoneModel
     final zones = viewModel.selectedZones.map((projectZone) {
       return _buildZoneModel(projectZone, zoneType: zoneType);
@@ -188,16 +183,25 @@ class EstimateCalculationViewModel extends ChangeNotifier {
     ProjectCardModel projectZone, {
     required String zoneType,
   }) {
-    // Extract floor dimensions from project zone
-    final floorDimensionsStr = projectZone.floorDimensionValue;
-    final dimensionsParts = floorDimensionsStr.split(' x ');
-
+    // Extract dimensions from roomPlanData
     double width = 0.0;
     double length = 0.0;
 
-    if (dimensionsParts.length == 2) {
-      width = double.tryParse(dimensionsParts[0].trim()) ?? 0.0;
-      length = double.tryParse(dimensionsParts[1].trim()) ?? 0.0;
+    if (projectZone.roomPlanData != null) {
+      final roomPlanData = projectZone.roomPlanData!;
+      final dimensions = roomPlanData['dimensions'] as Map<String, dynamic>?;
+
+      if (dimensions != null) {
+        width = (dimensions['width'] as num?)?.toDouble() ?? 0.0;
+        length = (dimensions['length'] as num?)?.toDouble() ?? 0.0;
+      }
+    }
+
+    // Validate that we have valid dimensions from RoomPlan
+    if (width <= 0.0 || length <= 0.0) {
+      throw Exception(
+        'Invalid dimensions from RoomPlan: width=$width, length=$length. RoomPlan data must provide valid dimensions.',
+      );
     }
 
     final floorDimensions = FloorDimensionsModel(
@@ -205,12 +209,48 @@ class EstimateCalculationViewModel extends ChangeNotifier {
       length: length,
     );
 
-    // Extract areas from project zone
-    final paintableAreaStr = projectZone.areaPaintable;
-    final paintableArea = double.tryParse(paintableAreaStr) ?? 0.0;
+    // Extract areas from roomPlanData
+    double paintableArea = 0.0;
+    double ceilingArea = 0.0;
 
-    final ceilingAreaStr = projectZone.ceilingArea ?? '0';
-    final ceilingArea = double.tryParse(ceilingAreaStr) ?? 0.0;
+    if (projectZone.roomPlanData != null) {
+      final roomPlanData = projectZone.roomPlanData!;
+      final dimensions = roomPlanData['dimensions'] as Map<String, dynamic>?;
+
+      if (dimensions != null) {
+        // Extract calculated areas from RoomPlan
+        paintableArea =
+            (dimensions['paintableArea'] as num?)?.toDouble() ?? 0.0;
+        ceilingArea = (dimensions['ceilingArea'] as num?)?.toDouble() ?? 0.0;
+
+        // If not available in dimensions, calculate from walls data
+        if (paintableArea == 0.0) {
+          final walls = roomPlanData['walls'] as List<dynamic>? ?? [];
+          double totalWallArea = 0.0;
+
+          for (final wall in walls) {
+            final wallWidth = (wall['width'] as num?)?.toDouble() ?? 0.0;
+            final wallHeight = (wall['height'] as num?)?.toDouble() ?? 0.0;
+            totalWallArea += wallWidth * wallHeight;
+          }
+
+          // Add ceiling area to paintable area
+          final floorArea = width * length;
+          paintableArea = totalWallArea + floorArea;
+        }
+
+        if (ceilingArea == 0.0) {
+          ceilingArea = width * length;
+        }
+      }
+    }
+
+    // Validate that we have valid areas from RoomPlan
+    if (paintableArea <= 0.0 || ceilingArea <= 0.0) {
+      throw Exception(
+        'Invalid areas from RoomPlan: paintableArea=$paintableArea, ceilingArea=$ceilingArea. RoomPlan data must provide valid areas.',
+      );
+    }
 
     final surfaceAreas = SurfaceAreasModel(
       values: {
@@ -249,9 +289,17 @@ class EstimateCalculationViewModel extends ChangeNotifier {
     double totalArea = 0.0;
 
     for (final zone in viewModel.selectedZones) {
-      final areaStr = zone.areaPaintable;
-      final area = double.tryParse(areaStr) ?? 0.0;
-      totalArea += area;
+      // Extract area from roomPlanData if available
+      if (zone.roomPlanData != null) {
+        final roomPlanData = zone.roomPlanData!;
+        final dimensions = roomPlanData['dimensions'] as Map<String, dynamic>?;
+
+        if (dimensions != null) {
+          final paintableArea =
+              (dimensions['paintableArea'] as num?)?.toDouble() ?? 0.0;
+          totalArea += paintableArea;
+        }
+      }
     }
 
     return totalArea;
