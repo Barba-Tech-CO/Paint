@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -140,10 +138,6 @@ class _CreateProjectViewState extends State<CreateProjectView> {
                           setState(() {
                             _selectedClient = contact;
                           });
-                          // Debug log
-                          log(
-                            'CreateProjectView: Selected client: ${contact?.name} (ID: ${contact?.id})',
-                          );
                         },
                         onRetry: _loadContacts,
                       ),
@@ -213,17 +207,6 @@ class _CreateProjectViewState extends State<CreateProjectView> {
                                 .trim(),
                             'isFromCreateProject': true,
                           };
-
-                          // Debug log
-                          log(
-                            'CreateProjectView: Project data being sent: $projectData',
-                          );
-                          log(
-                            'CreateProjectView: Selected client ID: ${_selectedClient?.id}',
-                          );
-                          log(
-                            'CreateProjectView: Selected client name: ${_selectedClient?.name}',
-                          );
 
                           context.push('/camera', extra: projectData);
                         },
