@@ -1,4 +1,3 @@
-
 import '../config/dependency_injection.dart';
 import 'camera_initialization_service.dart';
 import 'http_service.dart';
