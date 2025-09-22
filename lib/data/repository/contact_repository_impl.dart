@@ -2,7 +2,6 @@ import 'dart:async';
 
 import '../../config/dependency_injection.dart';
 import '../../domain/repository/contact_repository.dart';
-import '../../utils/error_utils.dart';
 import '../../model/contacts/contact_list_response.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../service/auth_persistence_service.dart';
@@ -110,6 +109,27 @@ class ContactRepository extends IContactRepository {
         await _initializationCompleter!.future;
       }
 
+      // If no local contacts, try to sync from API
+      if (_contacts.isEmpty) {
+        _logger.info('No local contacts found, attempting to sync from API...');
+        final syncResult = await _syncContactsFromApi();
+        if (syncResult is Ok) {
+          _logger.info(
+            'Successfully synced contacts from API. Total contacts: ${_contacts.length}',
+          );
+        } else {
+          _logger.warning(
+            'Failed to sync contacts from API: ${syncResult.asError.error}',
+          );
+        }
+      } else {
+        // If we have local contacts, sync in background
+        _logger.info(
+          'Found ${_contacts.length} local contacts, syncing in background...',
+        );
+        _syncWithApiInBackground();
+      }
+
       final contactsToReturn = limit != null || offset != null
           ? _contacts.skip(offset ?? 0).take(limit ?? _contacts.length).toList()
           : _contacts;
@@ -122,7 +142,6 @@ class ContactRepository extends IContactRepository {
         offset: offset,
       );
 
-      _syncWithApiInBackground();
       return Result.ok(response);
     } catch (e) {
       _logger.error('Error getting contacts', e);
@@ -268,13 +287,6 @@ class ContactRepository extends IContactRepository {
     List<Map<String, dynamic>>? customFields,
   }) async {
     try {
-      ErrorUtils.logUserAction('Update Contact - Repository', {
-        'contactId': contactId,
-        'hasName': name != null,
-        'hasEmail': email != null,
-        'hasPhone': phone != null,
-      });
-
       final currentContact = await _databaseService.getContact(contactId);
       if (currentContact == null) {
         return Result.error(
@@ -568,15 +580,31 @@ class ContactRepository extends IContactRepository {
 
   Future<Result<void>> _syncContactsFromApi() async {
     try {
+      _logger.info('Starting API sync for contacts...');
+
+      // Check if location ID is available
+      final locationId = _locationService.currentLocationId;
+      _logger.info('Current location ID: $locationId');
+
+      if (locationId == null || locationId.isEmpty) {
+        _logger.error('Location ID not available for API sync');
+        return Result.error(Exception('Location ID not available'));
+      }
+
       final apiResult = await _contactService.getContacts();
 
       if (apiResult is Ok) {
         final apiContacts = apiResult.asOk.value.contacts;
+        _logger.info('API returned ${apiContacts.length} contacts');
+
         for (final contact in apiContacts) {
           await _databaseService.insertContact(contact);
         }
         _contacts = apiContacts;
         notifyListeners();
+        _logger.info(
+          'Successfully saved ${apiContacts.length} contacts to local database',
+        );
         return Result.ok(null);
       } else {
         final error = apiResult.asError.error;
