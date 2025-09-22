@@ -25,10 +25,6 @@ class DashboardRepositoryImpl implements IDashboardRepository {
     String? compareWith,
   }) async {
     try {
-      _logger.info(
-        '[DashboardRepository] Getting dashboard stats for month: $month, compareWith: $compareWith',
-      );
-
       // First try to get cached data
       final cachedResult = await getCachedDashboardData(
         month: month,
@@ -37,12 +33,10 @@ class DashboardRepositoryImpl implements IDashboardRepository {
 
       if (cachedResult.isSuccess && cachedResult.data != null) {
         final cachedData = cachedResult.data!;
-        _logger.info('[DashboardRepository] Using cached dashboard data');
         return Result.ok(cachedData);
       }
 
       // If no valid cache, fetch from API
-      _logger.info('[DashboardRepository] Fetching fresh data from API');
       final apiResult = await _dashboardService.getDashboardStats(
         month: month,
         compareWith: compareWith,
@@ -55,7 +49,6 @@ class DashboardRepositoryImpl implements IDashboardRepository {
           month: month,
           compareWith: compareWith,
         );
-        _logger.info('[DashboardRepository] Fresh data cached successfully');
       }
 
       return apiResult;
@@ -105,9 +98,6 @@ class DashboardRepositoryImpl implements IDashboardRepository {
       };
 
       await _localStorageService.saveDashboardCache(cacheKey, cacheData);
-      _logger.info(
-        '[DashboardRepository] Dashboard data cached with key: $cacheKey',
-      );
       return Result.ok(null);
     } catch (e) {
       _logger.error(
@@ -130,25 +120,17 @@ class DashboardRepositoryImpl implements IDashboardRepository {
       final cachedData = await _localStorageService.getDashboardCache(cacheKey);
 
       if (cachedData == null) {
-        _logger.info(
-          '[DashboardRepository] No cached data found for key: $cacheKey',
-        );
         return Result.ok(null);
       }
 
       final cachedAt = DateTime.parse(cachedData['cached_at']);
       if (!isCacheValid(cachedAt)) {
-        _logger.info(
-          '[DashboardRepository] Cached data expired for key: $cacheKey',
-        );
         await _localStorageService.removeDashboardCache(cacheKey);
         return Result.ok(null);
       }
 
       final dashboardData = DashboardResponseModel.fromJson(cachedData['data']);
-      _logger.info(
-        '[DashboardRepository] Valid cached data found for key: $cacheKey',
-      );
+
       return Result.ok(dashboardData);
     } catch (e) {
       _logger.error(
@@ -172,7 +154,6 @@ class DashboardRepositoryImpl implements IDashboardRepository {
   Future<Result<void>> clearExpiredCache() async {
     try {
       await _localStorageService.clearExpiredDashboardCache();
-      _logger.info('[DashboardRepository] Expired dashboard cache cleared');
       return Result.ok(null);
     } catch (e) {
       _logger.error(
