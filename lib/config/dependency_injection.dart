@@ -1,10 +1,12 @@
 import 'package:get_it/get_it.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 // Data Layer
 import '../data/repository/auth_repository_impl.dart';
 import '../data/repository/contact_repository_impl.dart';
 import '../data/repository/estimate_repository_impl.dart';
 import '../data/repository/material_repository_impl.dart';
+import '../data/repository/offline_repository_impl.dart';
 import '../data/repository/paint_catalog_repository_impl.dart';
 import '../data/repository/quote_repository_impl.dart';
 import '../data/repository/user_repository_impl.dart';
@@ -14,6 +16,7 @@ import '../domain/repository/auth_repository.dart';
 import '../domain/repository/contact_repository.dart';
 import '../domain/repository/estimate_repository.dart';
 import '../domain/repository/material_repository.dart';
+import '../domain/repository/offline_repository.dart';
 import '../domain/repository/paint_catalog_repository.dart';
 import '../domain/repository/quote_repository.dart';
 import '../domain/repository/user_repository.dart';
@@ -38,6 +41,8 @@ import '../service/navigation_service.dart';
 import '../service/paint_catalog_service.dart';
 import '../service/photo_service.dart';
 import '../service/quote_service.dart';
+import '../service/sync_service.dart';
+import '../service/local_storage_service.dart';
 import '../service/user_service.dart';
 import '../service/zones_service.dart';
 import '../service/i_zones_service.dart';
@@ -54,6 +59,7 @@ import '../use_case/auth/handle_webview_navigation_use_case.dart';
 import '../use_case/contacts/contact_operations_use_case.dart';
 import '../use_case/contacts/contact_sync_use_case.dart';
 import '../use_case/estimates/estimate_upload_use_case.dart';
+import '../use_case/projects/project_operations_use_case.dart';
 import '../use_case/quotes/quote_upload_use_case.dart';
 
 // ViewModel Layer
@@ -72,6 +78,7 @@ import '../viewmodel/material/material_list_viewmodel.dart';
 import '../viewmodel/measurements/measurements_viewmodel.dart';
 import '../viewmodel/navigation_viewmodel.dart';
 import '../viewmodel/projects/projects_viewmodel.dart';
+import '../viewmodel/home/home_viewmodel.dart';
 import '../viewmodel/quotes/quotes_viewmodel.dart';
 import '../viewmodel/roomplan/roomplan_viewmodel.dart';
 import '../viewmodel/user/user_viewmodel.dart';
@@ -181,6 +188,12 @@ void setupDependencyInjection() {
     () => ZonesService(),
   );
 
+  getIt.registerLazySingleton<LocalStorageService>(
+    () => LocalStorageService(
+      getIt<AppLogger>(),
+    ),
+  );
+
   // User Service and Repository (needed early for AuthInitializationService)
   getIt.registerLazySingleton<IUserRepository>(
     () => UserRepositoryImpl(
@@ -225,7 +238,9 @@ void setupDependencyInjection() {
     ),
   );
   getIt.registerLazySingleton<IMaterialRepository>(
-    () => MaterialRepository(materialService: getIt<MaterialService>()),
+    () => MaterialRepository(
+      materialService: getIt<MaterialService>(),
+    ),
   );
   getIt.registerLazySingleton<IPaintCatalogRepository>(
     () => PaintCatalogRepository(
@@ -235,6 +250,22 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IQuoteRepository>(
     () => QuoteRepository(
       quoteService: getIt<QuoteService>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<IOfflineRepository>(
+    () => OfflineRepository(
+      getIt<LocalStorageService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<SyncService>(
+    () => SyncService(
+      getIt<IEstimateRepository>(),
+      getIt<IOfflineRepository>(),
+      Connectivity(),
+      getIt<AppLogger>(),
     ),
   );
 
@@ -285,6 +316,16 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<EstimateUploadUseCase>(
     () => EstimateUploadUseCase(
       getIt<IEstimateRepository>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  // Use Cases - Projects
+  getIt.registerLazySingleton<ProjectOperationsUseCase>(
+    () => ProjectOperationsUseCase(
+      getIt<IEstimateRepository>(),
+      getIt<IOfflineRepository>(),
+      getIt<SyncService>(),
       getIt<AppLogger>(),
     ),
   );
@@ -360,7 +401,11 @@ void setupDependencyInjection() {
 
   // ViewModels - Measurements
   getIt.registerFactory<MeasurementsViewModel>(
-    () => MeasurementsViewModel(),
+    () => MeasurementsViewModel(
+      getIt<IOfflineRepository>(),
+      getIt<SyncService>(),
+      getIt<AppLogger>(),
+    ),
   );
 
   // ViewModels - Zones (Refactored)
@@ -387,7 +432,9 @@ void setupDependencyInjection() {
 
   // ViewModels - Material
   getIt.registerFactory<MaterialListViewModel>(
-    () => MaterialListViewModel(getIt<IMaterialRepository>()),
+    () => MaterialListViewModel(
+      getIt<IMaterialRepository>(),
+    ),
   );
 
   // ViewModels - Select Colors
@@ -397,8 +444,6 @@ void setupDependencyInjection() {
       getIt<AppLogger>(),
     ),
   );
-
-  // ViewModels - User (registered earlier for AuthInitializationService)
 
   // ViewModel - Quotes
   getIt.registerFactory<QuotesViewModel>(
@@ -418,20 +463,22 @@ void setupDependencyInjection() {
   // ViewModel - Projects
   getIt.registerFactory<ProjectsViewModel>(
     () => ProjectsViewModel(
-      getIt<IEstimateRepository>(),
+      getIt<ProjectOperationsUseCase>(),
+      getIt<AppLogger>(),
     ),
   );
 
-  // ViewModel - User (with repository pattern) - registered earlier
+  // ViewModel - Home
+  getIt.registerFactory<HomeViewModel>(
+    () => HomeViewModel(
+      getIt<IEstimateRepository>(),
+    ),
+  );
 
   // ViewModel - RoomPlan
   getIt.registerFactory<RoomPlanViewModel>(
     () => RoomPlanViewModel(),
   );
-
-  // ViewModel - Camera (created by view due to BuildContext dependency)
-  // Note: CameraViewModel requires BuildContext for CameraNavigationHandler,
-  // so it's created directly in the view with proper dependencies
 
   // ViewModel - EditZone
   getIt.registerFactory<EditZoneViewModel>(
