@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 
 class AppConfig {
   /// Alterne para `true` para usar o ambiente de produção.
-  static const bool isProduction = false;
+  static const bool isProduction = true;
 
   /// URL de desenvolvimento principal (usada para iOS, Web, Desktop).
   static const String _devBaseUrl = 'http://192.168.0.211:8080/api';
