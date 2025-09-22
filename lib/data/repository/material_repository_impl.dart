@@ -1,5 +1,6 @@
 import '../../domain/repository/material_repository.dart';
 import '../../model/material_models/material_model.dart';
+import '../../model/material_models/material_filter.dart';
 import '../../model/material_models/material_stats_model.dart';
 import '../../service/material_service.dart';
 import '../../utils/result/result.dart';
