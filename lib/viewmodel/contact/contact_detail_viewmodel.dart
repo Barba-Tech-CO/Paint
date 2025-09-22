@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:validatorless/validatorless.dart';
 import 'package:go_router/go_router.dart';
+import 'package:validatorless/validatorless.dart';
 
 import '../../domain/repository/contact_repository.dart';
-import '../../utils/error_utils.dart';
-import '../../utils/snackbar_utils.dart';
 import '../../helpers/contacts/contacts_helper.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../utils/command/command.dart';
+import '../../utils/error_utils.dart';
 import '../../utils/result/result.dart';
+import '../../utils/snackbar_utils.dart';
 
 class ContactDetailViewModel extends ChangeNotifier {
   final IContactRepository _contactRepository;
@@ -118,12 +118,6 @@ class ContactDetailViewModel extends ChangeNotifier {
     Map<String, dynamic> params,
   ) async {
     final contactId = params['contactId'] as String;
-
-    // Log user action for error tracking
-    ErrorUtils.logUserAction(
-      'Update Contact',
-      {'contactId': contactId, 'hasName': params['name'] != null},
-    );
 
     final result = await _contactRepository.updateContact(
       contactId,
