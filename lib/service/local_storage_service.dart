@@ -79,6 +79,16 @@ class LocalStorageService {
       )
     ''');
 
+    // Create dashboard cache table
+    await db.execute('''
+      CREATE TABLE dashboard_cache (
+        cache_key TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        cached_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL
+      )
+    ''');
+
     // Create indexes for better performance
     await db.execute(
       'CREATE INDEX idx_estimates_sync_status ON estimates(sync_status)',
@@ -452,5 +462,61 @@ class LocalStorageService {
       materialsCost: map['materials_cost']?.toDouble(),
       grandTotal: map['grand_total']?.toDouble(),
     );
+  }
+
+  // Dashboard cache operations
+  Future<void> saveDashboardCache(
+    String cacheKey,
+    Map<String, dynamic> data,
+  ) async {
+    final db = await database;
+    await db.insert(
+      'dashboard_cache',
+      {
+        'cache_key': cacheKey,
+        'data': json.encode(data),
+        'cached_at': data['cached_at'],
+        'expires_at': data['expires_at'],
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    _logger.info('Dashboard cache saved with key: $cacheKey');
+  }
+
+  Future<Map<String, dynamic>?> getDashboardCache(String cacheKey) async {
+    final db = await database;
+    final maps = await db.query(
+      'dashboard_cache',
+      where: 'cache_key = ?',
+      whereArgs: [cacheKey],
+    );
+
+    if (maps.isNotEmpty) {
+      final data =
+          json.decode(maps.first['data'] as String) as Map<String, dynamic>;
+      return data;
+    }
+    return null;
+  }
+
+  Future<void> removeDashboardCache(String cacheKey) async {
+    final db = await database;
+    await db.delete(
+      'dashboard_cache',
+      where: 'cache_key = ?',
+      whereArgs: [cacheKey],
+    );
+    _logger.info('Dashboard cache removed for key: $cacheKey');
+  }
+
+  Future<void> clearExpiredDashboardCache() async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    await db.delete(
+      'dashboard_cache',
+      where: 'expires_at < ?',
+      whereArgs: [now],
+    );
+    _logger.info('Expired dashboard cache cleared');
   }
 }
