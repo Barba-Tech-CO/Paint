@@ -1,5 +1,6 @@
 import '../config/dependency_injection.dart';
 import '../model/material_models/material_model.dart';
+import '../model/material_models/material_filter.dart';
 import '../model/material_models/material_price_range_model.dart';
 import '../model/material_models/material_stats_model.dart';
 import '../model/quotes_data/extracted_material_model.dart';
