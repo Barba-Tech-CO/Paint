@@ -104,9 +104,14 @@ class AuthPersistenceService {
 
   // Get stored Sanctum token
   Future<String?> getSanctumToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(_keySanctumToken);
-    return token;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(_keySanctumToken);
+      return token;
+    } catch (e) {
+      _logger.error('[AuthPersistenceService] Error getting token: $e');
+      return null;
+    }
   }
 
   // Check if token is expired without clearing the state
@@ -115,7 +120,7 @@ class AuthPersistenceService {
     final expiresAt = state['expiresAt'] as DateTime?;
 
     if (expiresAt == null) {
-      return false; // No expiration date means not expired
+      return false;
     }
 
     final now = DateTime.now();
