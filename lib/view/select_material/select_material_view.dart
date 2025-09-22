@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -351,21 +350,6 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
                           : () {
                               final materialsWithQuantities = _viewModel
                                   .getSelectedMaterialsWithQuantities();
-                              log(
-                                'SelectMaterialView: Navigating with ${materialsWithQuantities.length} materials',
-                              );
-                              log(
-                                'SelectMaterialView: Materials: ${materialsWithQuantities.keys.map((m) => '${m.name} (qty: ${materialsWithQuantities[m]})').join(', ')}',
-                              );
-                              log(
-                                'SelectMaterialView: Material types: ${materialsWithQuantities.keys.map((m) => m.runtimeType).join(', ')}',
-                              );
-                              log(
-                                'SelectMaterialView: About to call context.push with extra type: ${materialsWithQuantities.runtimeType}',
-                              );
-                              log(
-                                'SelectMaterialView: Navigating to overview with ${materialsWithQuantities.length} materials',
-                              );
 
                               _navigationUseCase.navigateToOverviewZones(
                                 context,
