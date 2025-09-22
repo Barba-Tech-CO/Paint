@@ -193,14 +193,26 @@ class EstimateModel {
       projectType: json['project_type'] != null
           ? ProjectType.values.firstWhere(
               (e) => e.name == json['project_type'],
-              orElse: () => ProjectType.other,
+              orElse: () => ProjectType.both,
             )
           : null,
       status: parseStatus(json['status'] as String?),
       totalArea: parseNum(json['total_area'])?.toDouble(),
       paintableArea: parseNum(json['paintable_area'])?.toDouble(),
       totalCost: parseNum(json['total_cost'])?.toDouble(),
-      photos: json['photos'] != null ? List<String>.from(json['photos']) : null,
+      photos: json['photos'] != null
+          ? (json['photos'] as List)
+                .map((photo) {
+                  if (photo is String) {
+                    return photo;
+                  } else if (photo is Map<String, dynamic>) {
+                    return photo['url'] as String? ?? '';
+                  }
+                  return '';
+                })
+                .where((url) => url.isNotEmpty)
+                .toList()
+          : null,
       photosData: json['photos_data'] != null
           ? List<String>.from(json['photos_data'])
           : null,
@@ -212,15 +224,9 @@ class EstimateModel {
       zones: parseZones(json['zones']),
       materials: parseMaterials(json['materials']),
       totals: parseTotals(json['totals']),
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : null,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
-          : null,
-      completedAt: json['completed_at'] != null
-          ? DateTime.parse(json['completed_at'])
-          : null,
+      createdAt: _parseDateTimeFromJson(json['created_at']),
+      updatedAt: _parseDateTimeFromJson(json['updated_at']),
+      completedAt: _parseDateTimeFromJson(json['completed_at']),
     );
   }
 
@@ -435,6 +441,28 @@ class EstimateModel {
     }
 
     return formData;
+  }
+
+  /// Helper method to safely parse DateTime from JSON data
+  static DateTime? _parseDateTimeFromJson(dynamic value) {
+    if (value == null) return null;
+
+    try {
+      if (value is DateTime) {
+        return value;
+      } else if (value is String) {
+        return DateTime.parse(value);
+      } else if (value is Map<String, dynamic>) {
+        // Handle case where value might be a Map with date information
+        return null; // Skip complex date objects for now
+      } else {
+        // Try to convert to string first, then parse
+        return DateTime.parse(value.toString());
+      }
+    } catch (e) {
+      // Silently handle parsing errors to avoid breaking the app
+      return null;
+    }
   }
 }
 
