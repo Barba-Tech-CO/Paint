@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -71,22 +69,12 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
     // Se materiais foram passados, configurá-los no ViewModel
     if (widget.selectedMaterials != null &&
         widget.selectedMaterials!.isNotEmpty) {
-      log(
-        'OverviewZonesView: Setting ${widget.selectedMaterials!.length} materials',
-      );
       _viewModel.setSelectedMaterials(widget.selectedMaterials!);
 
       // Se quantidades foram passadas, configurá-las também
       if (widget.materialQuantities != null) {
-        log(
-          'OverviewZonesView: Setting material quantities: ${widget.materialQuantities!.length} items',
-        );
         _viewModel.setMaterialQuantities(widget.materialQuantities!);
-      } else {
-        log('OverviewZonesView: No material quantities provided');
       }
-    } else {
-      log('OverviewZonesView: No materials provided or empty list');
     }
 
     // Se zonas foram passadas, configurá-las no ViewModel
@@ -265,7 +253,7 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                             return MaterialItemRowWidget(
                               title: material.name,
                               subtitle:
-                                  '${material.code} - ${material.priceUnit} (Qty: $quantity)',
+                                  '${material.code} - ${material.priceUnit} (Qty: ${quantity.toInt()})',
                               price: '\$${totalPrice.toStringAsFixed(2)}',
                             );
                           },
@@ -380,56 +368,8 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                             onPressed: _estimateUploadViewModel.isUploading
                                 ? null
                                 : () async {
-                                    log('=== SEND ESTIMATE BUTTON PRESSED ===');
-
-                                    // Log project data
-                                    log(
-                                      'Project Entity: ${_projectEntity?.toMap()}',
-                                    );
-                                    log(
-                                      'Selected Materials Count: ${_viewModel.selectedMaterials.length}',
-                                    );
-                                    log(
-                                      'Selected Zones Count: ${_viewModel.selectedZones.length}',
-                                    );
-                                    log(
-                                      'Total Materials Cost: \$${_viewModel.totalMaterialsCost.toStringAsFixed(2)}',
-                                    );
-                                    log(
-                                      'Total Project Cost: \$${_viewModel.totalProjectCost.toStringAsFixed(2)}',
-                                    );
-
-                                    // Log materials details
-                                    for (
-                                      int i = 0;
-                                      i < _viewModel.selectedMaterials.length;
-                                      i++
-                                    ) {
-                                      final material =
-                                          _viewModel.selectedMaterials[i];
-                                      final quantity = _viewModel.getQuantity(
-                                        material,
-                                      );
-                                      log(
-                                        'Material $i: ${material.name} - Qty: $quantity - Price: \$${material.price} - Total: \$${(material.price * quantity).toStringAsFixed(2)}',
-                                      );
-                                    }
-
-                                    // Log zones details
-                                    for (
-                                      int i = 0;
-                                      i < _viewModel.selectedZones.length;
-                                      i++
-                                    ) {
-                                      final zone = _viewModel.selectedZones[i];
-                                      log(
-                                        'Zone $i: ${zone.title} - Area: ${zone.floorAreaValue} - Dimensions: ${zone.floorDimensionValue}',
-                                      );
-                                    }
-
                                     try {
                                       // Build EstimateModel from collected data
-                                      log('Building EstimateModel...');
                                       final estimateModel =
                                           await _estimateCalculationViewModel
                                               .buildEstimateModel(
@@ -451,23 +391,12 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                                                     'interior',
                                               );
 
-                                      log(
-                                        'EstimateModel created successfully: ${estimateModel.toString()}',
-                                      );
-
                                       // Upload estimate using the ViewModel
-                                      log('Starting estimate upload...');
                                       await _estimateUploadViewModel.upload(
                                         estimateModel,
                                       );
-                                      log(
-                                        'Estimate upload completed successfully',
-                                      );
-                                    } catch (e, stackTrace) {
-                                      log(
-                                        'Error during estimate creation/upload: $e',
-                                      );
-                                      log('Stack trace: $stackTrace');
+                                    } catch (e) {
+                                      // Handle error silently or show user-friendly message
                                     }
                                   },
                           ),
