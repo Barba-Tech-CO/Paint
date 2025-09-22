@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,6 +9,7 @@ import '../../service/auth_initialization_service.dart';
 import '../../viewmodel/navigation_viewmodel.dart';
 import '../../viewmodel/user/user_viewmodel.dart';
 import '../../viewmodel/home/home_viewmodel.dart';
+import '../../viewmodel/dashboard/dashboard_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/cards/greeting_card_widget.dart';
 import '../../widgets/cards/project_state_card_widget.dart';
@@ -29,17 +28,16 @@ class _HomeViewState extends State<HomeView> {
   late final NavigationViewModel _navigationViewModel;
   late final UserViewModel _userViewModel;
   late final HomeViewModel _homeViewModel;
+  late final DashboardViewModel _dashboardViewModel;
 
   @override
   void initState() {
     super.initState();
-    log('[HOME_VIEW] Initializing HomeView...');
 
     _navigationViewModel = getIt<NavigationViewModel>();
     _userViewModel = getIt<UserViewModel>();
     _homeViewModel = getIt<HomeViewModel>();
-
-    log('[HOME_VIEW] ViewModels initialized');
+    _dashboardViewModel = getIt<DashboardViewModel>();
 
     // Update the current route to home
     _navigationViewModel.updateCurrentRoute('/home');
@@ -49,21 +47,8 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _initializeHomeData() async {
-    try {
-      log('[HOME_VIEW] Starting home data initialization...');
-
-      // Initialize user data
-      log('[HOME_VIEW] Checking auth and fetching user...');
-      await getIt<AuthInitializationService>().checkAuthAndFetchUser();
-      log('[HOME_VIEW] User data initialized');
-
-      // Initialize recent projects
-      log('[HOME_VIEW] Initializing home view model...');
-      await _homeViewModel.initialize();
-      log('[HOME_VIEW] Home data initialization completed');
-    } catch (e) {
-      log('[HOME_VIEW] Error initializing home data: $e');
-    }
+    await getIt<AuthInitializationService>().checkAuthAndFetchUser();
+    await _dashboardViewModel.initialize();
   }
 
   @override
@@ -72,6 +57,7 @@ class _HomeViewState extends State<HomeView> {
       providers: [
         ChangeNotifierProvider.value(value: _userViewModel),
         ChangeNotifierProvider.value(value: _homeViewModel),
+        ChangeNotifierProvider.value(value: _dashboardViewModel),
       ],
       child: MainLayout(
         currentRoute: '/home',
@@ -102,7 +88,7 @@ class _HomeViewState extends State<HomeView> {
                     }
 
                     return GreetingCardWidget(
-                      greeting: "Good morning!",
+                      greeting: _homeViewModel.getDynamicGreeting(),
                       name: displayName,
                     );
                   },
@@ -112,44 +98,93 @@ class _HomeViewState extends State<HomeView> {
                   child: Column(
                     spacing: 8,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: StatsCardWidget(
-                              title: "2",
-                              description: "active projects",
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: StatsCardWidget(
-                              title: "\$30,050",
-                              description: "this month",
-                              backgroundColor: AppColors.cardDark,
-                              titleColor: AppColors.success,
-                              descriptionColor: AppColors.textOnDark,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: StatsCardWidget(
-                              title: "6",
-                              description: "completed",
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: StatsCardWidget(
-                              title: "85%",
-                              description: "conversion",
-                            ),
-                          ),
-                        ],
+                      Consumer<DashboardViewModel>(
+                        builder: (context, dashboardViewModel, child) {
+                          if (dashboardViewModel.isLoading) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(40.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+
+                          if (dashboardViewModel.hasError) {
+                            return StatsCardWidget(
+                              title: "Error",
+                              description: "Failed to load stats",
+                            );
+                          }
+
+                          final statistics = dashboardViewModel.statistics;
+                          final currentMonth = dashboardViewModel.currentMonth;
+                          final growth = dashboardViewModel.growth;
+
+                          return Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: StatsCardWidget(
+                                      title:
+                                          "${statistics?.totalEstimates ?? 0}",
+                                      description: "total estimates",
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: StatsCardWidget(
+                                      title: dashboardViewModel
+                                          .getFormattedRevenue(
+                                            currentMonth?.totalRevenue,
+                                          ),
+                                      description: "this month",
+                                      backgroundColor: AppColors.primary
+                                          .withValues(
+                                            alpha: 0.15,
+                                          ),
+                                      titleColor: AppColors.textPrimary,
+                                      descriptionColor: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: StatsCardWidget(
+                                      title: dashboardViewModel
+                                          .getFormattedRevenue(
+                                            currentMonth?.averageEstimateValue,
+                                          ),
+                                      description: "avg estimate",
+                                      backgroundColor: AppColors.primary
+                                          .withValues(
+                                            alpha: 0.15,
+                                          ),
+                                      titleColor: AppColors.textPrimary,
+                                      descriptionColor: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: StatsCardWidget(
+                                      title: dashboardViewModel
+                                          .getFormattedPercentage(
+                                            growth?.revenuePercentage,
+                                          ),
+                                      description: "growth value",
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -186,24 +221,7 @@ class _HomeViewState extends State<HomeView> {
                       SizedBox(height: 16),
                       Consumer<HomeViewModel>(
                         builder: (context, homeViewModel, child) {
-                          log(
-                            '[HOME_VIEW] Building Consumer - State: ${homeViewModel.state}',
-                          );
-                          log(
-                            '[HOME_VIEW] IsLoading: ${homeViewModel.isLoading}',
-                          );
-                          log(
-                            '[HOME_VIEW] HasError: ${homeViewModel.hasError}',
-                          );
-                          log(
-                            '[HOME_VIEW] HasProjects: ${homeViewModel.hasProjects}',
-                          );
-                          log(
-                            '[HOME_VIEW] Projects count: ${homeViewModel.recentProjects.length}',
-                          );
-
                           if (homeViewModel.isLoading) {
-                            log('[HOME_VIEW] Showing loading state');
                             return const Center(
                               child: Padding(
                                 padding: EdgeInsets.all(40.0),
@@ -213,7 +231,6 @@ class _HomeViewState extends State<HomeView> {
                           }
 
                           if (homeViewModel.hasError) {
-                            log('[HOME_VIEW] Showing error state');
                             return ProjectStateCardWidget(
                               title: "Error loading projects",
                               description: "Unable to load recent projects",
@@ -224,7 +241,6 @@ class _HomeViewState extends State<HomeView> {
                           }
 
                           if (!homeViewModel.hasProjects) {
-                            log('[HOME_VIEW] Showing empty state');
                             return ProjectStateCardWidget(
                               title: "No projects yet",
                               description:
@@ -236,16 +252,10 @@ class _HomeViewState extends State<HomeView> {
                             );
                           }
 
-                          log(
-                            '[HOME_VIEW] Showing projects list with ${homeViewModel.recentProjects.length} projects',
-                          );
                           return Column(
                             children: homeViewModel.recentProjects.map((
                               project,
                             ) {
-                              log(
-                                '[HOME_VIEW] Rendering project: ${project.projectName} - ${project.personName}',
-                              );
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 16.0),
                                 child: ProjectCardWidget(
