@@ -1,6 +1,9 @@
+import '../config/dependency_injection.dart';
 import '../service/auth_persistence_service.dart';
 import '../service/http_service.dart';
 import '../service/location_service.dart';
+import '../service/sync_service.dart';
+import '../utils/result/result.dart';
 import '../viewmodel/user/user_viewmodel.dart';
 
 class AuthInitializationService {
@@ -68,10 +71,23 @@ class AuthInitializationService {
 
         if (locationId != null && locationId.isNotEmpty) {
           _locationService.setLocationId(locationId);
-        }
+        } else {}
 
         // Fetch user data immediately
         await _userViewModel.fetchUser();
+
+        // Trigger smart sync to pull data from API if local storage is empty
+        try {
+          final syncService = getIt<SyncService>();
+          final syncResult = await syncService.smartSync();
+          if (syncResult is Ok) {
+            // Sync successful
+          } else {
+            // Sync failed, but don't fail initialization
+          }
+        } catch (e) {
+          // Error during sync, but don't fail initialization
+        }
       }
     }
   }
