@@ -61,4 +61,35 @@ class DashboardService {
   }) async {
     return getDashboardStats(month: month, compareWith: compareWith);
   }
+
+  /// Get financial statistics for specific month
+  Future<Result<DashboardResponseModel>> getFinancialStats({
+    String? month,
+    String? compareWith,
+  }) async {
+    return getDashboardStats(month: month, compareWith: compareWith);
+  }
+
+  /// Get current month financial statistics
+  Future<Result<DashboardResponseModel>> getCurrentMonthFinancialStats() async {
+    return getDashboardStats();
+  }
+
+  /// Get previous month financial statistics
+  Future<Result<DashboardResponseModel>>
+  getPreviousMonthFinancialStats() async {
+    final now = DateTime.now();
+    final previousMonth = DateTime(now.year, now.month - 1);
+    final monthString =
+        '${previousMonth.year}-${previousMonth.month.toString().padLeft(2, '0')}';
+    return getDashboardStats(month: monthString);
+  }
+
+  /// Get financial statistics with growth comparison
+  Future<Result<DashboardResponseModel>> getFinancialStatsWithGrowth({
+    required String month,
+    String? compareWith,
+  }) async {
+    return getDashboardStats(month: month, compareWith: compareWith);
+  }
 }
