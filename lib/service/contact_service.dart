@@ -34,17 +34,28 @@ class ContactService {
         );
       }
 
+      final fullUrl = '$_baseUrl/search';
+      _logger.info('ContactService: Making API call to $fullUrl');
+      _logger.info(
+        'ContactService: Request data: locationId=$locationId, limit=$limit, offset=$offset',
+      );
+
+      final requestData = {
+        'locationId': locationId,
+        if (limit != null) 'pageLimit': limit,
+        // Converter offset para page
+        if (offset != null && limit != null && limit > 0)
+          'page': (offset / limit).floor() + 1,
+      };
+
+      _logger.info('ContactService: Final request data: $requestData');
+      _logger.info('ContactService: Full URL: $fullUrl');
+
       // Usar a rota de busca para listar todos os contatos
       // Esta rota não tem validação restritiva como a rota POST principal
       final response = await _httpService.post(
         '$_baseUrl/search',
-        data: {
-          'locationId': locationId,
-          if (limit != null) 'pageLimit': limit,
-          // Converter offset para page
-          if (offset != null && limit != null && limit > 0)
-            'page': (offset / limit).floor() + 1,
-        },
+        data: requestData,
         options: Options(
           headers: {
             'X-GHL-Location-ID': locationId,
@@ -54,10 +65,32 @@ class ContactService {
         ),
       );
 
+      _logger.info(
+        'ContactService: API response status: ${response.statusCode}',
+      );
+      _logger.info('ContactService: API response data: ${response.data}');
+      _logger.info(
+        'ContactService: API response data type: ${response.data.runtimeType}',
+      );
+
       // Handle successful response (200 OK)
       if (response.statusCode == 200) {
-        final contactListResponse = ContactListResponse.fromJson(response.data);
-        return Result.ok(contactListResponse);
+        _logger.info('ContactService: Parsing response data...');
+        try {
+          final contactListResponse = ContactListResponse.fromJson(
+            response.data,
+          );
+          _logger.info(
+            'ContactService: Parsed response successfully. Contacts count: ${contactListResponse.contacts.length}',
+          );
+          return Result.ok(contactListResponse);
+        } catch (e) {
+          _logger.error('ContactService: Error parsing response: $e');
+          _logger.error(
+            'ContactService: Response data structure: ${response.data}',
+          );
+          return Result.error(Exception('Error parsing contact response: $e'));
+        }
       } else {
         final errorMessage = response.data['message'];
         _logger.error('Error listing contacts', errorMessage);
