@@ -68,7 +68,7 @@ class ResponsiveHelper {
     if (screenWidth < 360) {
       // Small screen (small phone)
       return ResponsiveDimensions(
-        cardWidth: screenWidth * 0.9,
+        cardWidth: screenWidth,
         imageSize: 80,
         fontSize: 13,
         padding: 8,
