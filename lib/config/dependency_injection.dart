@@ -6,6 +6,7 @@ import '../data/repository/auth_repository_impl.dart';
 import '../data/repository/contact_repository_impl.dart';
 import '../data/repository/dashboard_repository_impl.dart';
 import '../data/repository/estimate_repository_impl.dart';
+import '../data/repository/estimate_detail_repository_impl.dart';
 import '../data/repository/material_repository_impl.dart';
 import '../data/repository/offline_repository_impl.dart';
 import '../data/repository/paint_catalog_repository_impl.dart';
@@ -17,6 +18,7 @@ import '../domain/repository/auth_repository.dart';
 import '../domain/repository/contact_repository.dart';
 import '../domain/repository/dashboard_repository.dart';
 import '../domain/repository/estimate_repository.dart';
+import '../domain/repository/estimate_detail_repository.dart';
 import '../domain/repository/material_repository.dart';
 import '../domain/repository/offline_repository.dart';
 import '../domain/repository/paint_catalog_repository.dart';
@@ -61,7 +63,9 @@ import '../use_case/auth/handle_deep_link_use_case.dart';
 import '../use_case/auth/handle_webview_navigation_use_case.dart';
 import '../use_case/contacts/contact_operations_use_case.dart';
 import '../use_case/contacts/contact_sync_use_case.dart';
+import '../use_case/dashboard/dashboard_financial_use_case.dart';
 import '../use_case/estimates/estimate_upload_use_case.dart';
+import '../use_case/estimate/estimate_detail_use_case.dart';
 import '../use_case/projects/project_operations_use_case.dart';
 import '../use_case/quotes/quote_upload_use_case.dart';
 
@@ -246,6 +250,11 @@ void setupDependencyInjection() {
       estimateService: getIt<EstimateService>(),
     ),
   );
+  getIt.registerLazySingleton<IEstimateDetailRepository>(
+    () => EstimateDetailRepositoryImpl(
+      getIt<HttpService>(),
+    ),
+  );
   getIt.registerLazySingleton<IDashboardRepository>(
     () => DashboardRepositoryImpl(
       getIt<DashboardService>(),
@@ -335,6 +344,11 @@ void setupDependencyInjection() {
       getIt<AppLogger>(),
     ),
   );
+  getIt.registerLazySingleton<EstimateDetailUseCase>(
+    () => EstimateDetailUseCase(
+      getIt<IEstimateDetailRepository>(),
+    ),
+  );
 
   // Use Cases - Projects
   getIt.registerLazySingleton<ProjectOperationsUseCase>(
@@ -342,6 +356,14 @@ void setupDependencyInjection() {
       getIt<IEstimateRepository>(),
       getIt<IOfflineRepository>(),
       getIt<SyncService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  // Use Cases - Dashboard Financial
+  getIt.registerLazySingleton<DashboardFinancialUseCase>(
+    () => DashboardFinancialUseCase(
+      getIt<IDashboardRepository>(),
       getIt<AppLogger>(),
     ),
   );
@@ -395,7 +417,8 @@ void setupDependencyInjection() {
   );
   getIt.registerFactory<EstimateDetailViewModel>(
     () => EstimateDetailViewModel(
-      getIt<IEstimateRepository>(),
+      getIt<EstimateDetailUseCase>(),
+      getIt<IMaterialRepository>(),
     ),
   );
   getIt.registerFactory<EstimateUploadViewModel>(
@@ -495,6 +518,7 @@ void setupDependencyInjection() {
   getIt.registerFactory<DashboardViewModel>(
     () => DashboardViewModel(
       getIt<IDashboardRepository>(),
+      getIt<DashboardFinancialUseCase>(),
     ),
   );
 
