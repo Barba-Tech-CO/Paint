@@ -1,15 +1,8 @@
-import 'dart:developer';
-
-import 'package:flutter/foundation.dart';
-
 /// Helper class to transform technical errors into user-friendly messages
 class ErrorUtils {
   /// Converts technical errors into user-friendly messages
   /// while logging detailed error information to console
   static String getUserFriendlyMessage(dynamic error) {
-    // Log detailed error information to console for debugging
-    _logDetailedError(error);
-
     if (error == null) {
       return 'An unexpected error occurred. Please try again.';
     }
@@ -88,36 +81,5 @@ class ErrorUtils {
 
     // Generic fallback
     return 'An unexpected error occurred. Please try again.';
-  }
-
-  /// Logs detailed error information to console for debugging
-  static void _logDetailedError(dynamic error) {
-    if (kDebugMode) {
-      log('🚨 DETAILED ERROR INFORMATION:', name: 'ErrorHandler');
-      log('Error Type: ${error.runtimeType}', name: 'ErrorHandler');
-      log('Error Message: $error', name: 'ErrorHandler');
-
-      if (error is Exception) {
-        log('Exception Details: ${error.toString()}', name: 'ErrorHandler');
-      }
-
-      // Log stack trace if available
-      try {
-        throw error;
-      } catch (e, stackTrace) {
-        log('Stack Trace:', name: 'ErrorHandler');
-        log(stackTrace.toString(), name: 'ErrorHandler');
-      }
-    }
-  }
-
-  /// Logs user action for error tracking
-  static void logUserAction(String action, Map<String, dynamic>? context) {
-    if (kDebugMode) {
-      log('👤 USER ACTION: $action', name: 'ErrorHandler');
-      if (context != null) {
-        log('Context: $context', name: 'ErrorHandler');
-      }
-    }
   }
 }
