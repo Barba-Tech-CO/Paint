@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'quote_status.dart';
 import 'quote_status_extension.dart';
 
@@ -64,16 +63,10 @@ class QuoteModel {
     }
 
     if (json['created_at'] == null) {
-      log(
-        'DEBUG: PdfUploadModel.fromJson - Missing required field: created_at',
-      );
       throw Exception('Missing required field: created_at');
     }
 
     if (json['updated_at'] == null) {
-      log(
-        'DEBUG: PdfUploadModel.fromJson - Missing required field: updated_at',
-      );
       throw Exception('Missing required field: updated_at');
     }
 
