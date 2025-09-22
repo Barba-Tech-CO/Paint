@@ -1,4 +1,4 @@
-import '../../model/material_models/material_model.dart';
+import '../../model/material_models/material_enums.dart';
 
 /// Utilitários para mapear campos de materiais extraídos para MaterialModel
 class MaterialMapper {
