@@ -40,6 +40,7 @@ class HttpService implements IHttpService {
         onRequest: (options, handler) async {
           // Get token from memory first, then from storage if not available
           String? token = _authToken;
+
           if (token == null) {
             token = await _authPersistenceService.getSanctumToken();
             if (token != null) {
@@ -66,8 +67,13 @@ class HttpService implements IHttpService {
               _logger.warning(
                 '[HttpService] No auth token available for /contacts request',
               );
+            } else if (options.path.contains('/estimates')) {
+              _logger.warning(
+                '[HttpService] No auth token available for /estimates request',
+              );
             }
           }
+
           handler.next(options);
         },
         onError: (error, handler) async {
@@ -83,9 +89,6 @@ class HttpService implements IHttpService {
 
             // Trigger auth failure callback
             try {
-              _logger.info(
-                '[HttpService] Token expired, triggering auth failure callback',
-              );
               if (_onAuthFailure != null) {
                 _onAuthFailure!();
               } else {
@@ -137,6 +140,7 @@ class HttpService implements IHttpService {
   Future<void> initializeAuthToken() async {
     try {
       final token = await _authPersistenceService.getSanctumToken();
+
       if (token != null && token.isNotEmpty) {
         _authToken = token;
       } else {
@@ -165,9 +169,7 @@ class HttpService implements IHttpService {
         options: options,
       );
       // Only log errors and important status codes
-      if (response.statusCode != 200) {
-        _logger.info('API Call: GET $path - Status: ${response.statusCode}');
-      }
+      if (response.statusCode != 200) {}
 
       return response;
     } on DioException catch (e) {
@@ -202,9 +204,7 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      if (response.statusCode != 200) {
-        _logger.info('POST $path - Status: ${response.statusCode}');
-      }
+      if (response.statusCode != 200) {}
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: POST $path', e, e.stackTrace);
@@ -227,9 +227,7 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      if (response.statusCode != 200) {
-        _logger.info('PUT $path - Status: ${response.statusCode}');
-      }
+      if (response.statusCode != 200) {}
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: PUT $path', e, e.stackTrace);
@@ -252,9 +250,7 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      if (response.statusCode != 200) {
-        _logger.info('PATCH $path - Status: ${response.statusCode}');
-      }
+      if (response.statusCode != 200) {}
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: PATCH $path', e, e.stackTrace);
@@ -277,9 +273,7 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      if (response.statusCode != 200) {
-        _logger.info('DELETE $path - Status: ${response.statusCode}');
-      }
+      if (response.statusCode != 200) {}
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: DELETE $path', e, e.stackTrace);
