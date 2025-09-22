@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 // Data Layer
 import '../data/repository/auth_repository_impl.dart';
 import '../data/repository/contact_repository_impl.dart';
+import '../data/repository/dashboard_repository_impl.dart';
 import '../data/repository/estimate_repository_impl.dart';
 import '../data/repository/material_repository_impl.dart';
 import '../data/repository/offline_repository_impl.dart';
@@ -14,6 +15,7 @@ import '../data/repository/user_repository_impl.dart';
 // Domain Layer
 import '../domain/repository/auth_repository.dart';
 import '../domain/repository/contact_repository.dart';
+import '../domain/repository/dashboard_repository.dart';
 import '../domain/repository/estimate_repository.dart';
 import '../domain/repository/material_repository.dart';
 import '../domain/repository/offline_repository.dart';
@@ -31,6 +33,7 @@ import '../service/camera_service.dart';
 import '../service/contact_service.dart';
 import '../service/contact_database_service.dart';
 import '../service/contact_loading_service.dart';
+import '../service/dashboard_service.dart';
 import '../service/deep_link_service.dart';
 import '../service/estimate_service.dart';
 import '../service/http_service.dart';
@@ -76,6 +79,7 @@ import '../viewmodel/estimate/estimate_upload_viewmodel.dart';
 import '../viewmodel/estimate/estimate_calculation_viewmodel.dart';
 import '../viewmodel/material/material_list_viewmodel.dart';
 import '../viewmodel/measurements/measurements_viewmodel.dart';
+import '../viewmodel/dashboard/dashboard_viewmodel.dart';
 import '../viewmodel/navigation_viewmodel.dart';
 import '../viewmodel/projects/projects_viewmodel.dart';
 import '../viewmodel/home/home_viewmodel.dart';
@@ -132,6 +136,11 @@ void setupDependencyInjection() {
   );
   getIt.registerLazySingleton<EstimateService>(
     () => EstimateService(
+      getIt<HttpService>(),
+    ),
+  );
+  getIt.registerLazySingleton<DashboardService>(
+    () => DashboardService(
       getIt<HttpService>(),
     ),
   );
@@ -235,6 +244,13 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IEstimateRepository>(
     () => EstimateRepository(
       estimateService: getIt<EstimateService>(),
+    ),
+  );
+  getIt.registerLazySingleton<IDashboardRepository>(
+    () => DashboardRepositoryImpl(
+      getIt<DashboardService>(),
+      getIt<LocalStorageService>(),
+      getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<IMaterialRepository>(
@@ -472,6 +488,13 @@ void setupDependencyInjection() {
   getIt.registerFactory<HomeViewModel>(
     () => HomeViewModel(
       getIt<IEstimateRepository>(),
+    ),
+  );
+
+  // ViewModel - Dashboard
+  getIt.registerFactory<DashboardViewModel>(
+    () => DashboardViewModel(
+      getIt<IDashboardRepository>(),
     ),
   );
 
