@@ -29,19 +29,40 @@ class ProjectOperationsUseCase {
       if (offlineResult is Ok<List<ProjectModel>>) {
         final offlineProjects = offlineResult.asOk.value;
         _logger.info(
-          'Loaded ${offlineProjects.length} projects from offline storage',
+          'ProjectOperationsUseCase: Loaded ${offlineProjects.length} projects from offline storage',
         );
 
-        // Try to sync with API in background
-        _syncService.fullSync();
-
-        // If we have offline data, return it immediately
+        // If we have offline data, return it immediately and sync in background
         if (offlineProjects.isNotEmpty) {
+          // Try to sync with API in background
+          _syncService.fullSync();
           return Result.ok(offlineProjects);
         }
+      } else {
+        _logger.error(
+          'ProjectOperationsUseCase: Error loading from offline storage: ${offlineResult.asError.error}',
+        );
       }
 
-      // If no offline data or offline failed, try API
+      // If no offline data, try smart sync (which will pull from API if local storage is empty)
+      _logger.info('No local projects found, attempting smart sync...');
+      final syncResult = await _syncService.smartSync();
+
+      if (syncResult is Ok) {
+        // After sync, try to load from offline storage again
+        final updatedOfflineResult = await _offlineRepository.getAllProjects();
+        if (updatedOfflineResult is Ok<List<ProjectModel>>) {
+          final updatedProjects = updatedOfflineResult.asOk.value;
+          _logger.info(
+            'After smart sync, loaded ${updatedProjects.length} projects from offline storage',
+          );
+          return Result.ok(updatedProjects);
+        }
+      } else {
+        _logger.error('Smart sync failed: ${syncResult.asError.error}');
+      }
+
+      // Fallback: try API directly
       final result = await _estimateRepository.getEstimates(
         limit: 50,
         offset: 0,
