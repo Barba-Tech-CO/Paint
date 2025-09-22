@@ -41,10 +41,15 @@ class EstimateService {
         queryParameters: queryParams,
       );
 
-      final estimates = (response.data['estimates'] as List)
-          .map((estimate) => EstimateModel.fromJson(estimate))
-          .toList();
-      return Result.ok(estimates);
+      try {
+        final estimates = (response.data['estimates'] as List)
+            .map((estimate) => EstimateModel.fromJson(estimate))
+            .toList();
+
+        return Result.ok(estimates);
+      } catch (e) {
+        return Result.error(Exception('Error parsing estimate response: $e'));
+      }
     } catch (e) {
       return Result.error(
         Exception('Error listing estimates: $e'),
