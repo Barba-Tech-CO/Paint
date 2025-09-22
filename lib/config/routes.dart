@@ -21,6 +21,7 @@ import '../view/splash/splash_view.dart';
 import '../view/success/success_view.dart';
 import '../view/zones/zones_view.dart';
 import '../view/zones_details/zones_details_view.dart';
+import '../view/estimate/estimate_detail_view.dart';
 import '../widgets/loading/loading_widget.dart';
 
 final router = GoRouter(
@@ -189,6 +190,13 @@ final router = GoRouter(
       path: '/success',
       builder: (context, state) {
         return const SuccessView();
+      },
+    ),
+    GoRoute(
+      path: '/estimate-detail',
+      builder: (context, state) {
+        final projectId = state.extra as int? ?? 0;
+        return EstimateDetailView(projectId: projectId);
       },
     ),
   ],
