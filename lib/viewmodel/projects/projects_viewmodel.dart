@@ -268,13 +268,16 @@ class ProjectsViewModel extends ChangeNotifier {
         _projects = result.asOk.value;
         _filteredProjects = List.from(_projects);
         _state = ProjectsState.loaded;
+        _logger.info(
+          'ProjectsViewModel: Successfully loaded ${_projects.length} projects',
+        );
         notifyListeners();
         return Result.ok(null);
       } else {
         _state = ProjectsState.error;
         _errorMessage = 'Unable to load projects. Please try again.';
         _logger.error(
-          'Error loading projects: ${result.asError.error}',
+          'ProjectsViewModel: Error loading projects: ${result.asError.error}',
           result.asError.error,
         );
         notifyListeners();
@@ -285,7 +288,7 @@ class ProjectsViewModel extends ChangeNotifier {
     } catch (e) {
       _state = ProjectsState.error;
       _errorMessage = 'Unable to load projects. Please try again.';
-      _logger.error('Error loading projects: $e', e);
+      _logger.error('ProjectsViewModel: Exception loading projects: $e', e);
       notifyListeners();
       return Result.error(
         Exception(_errorMessage),
