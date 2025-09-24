@@ -3,37 +3,36 @@ import '../../model/material_models/material_model.dart';
 import '../../model/material_models/material_filter.dart';
 import '../../model/material_models/material_stats_model.dart';
 import '../../service/material_service.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
 class MaterialRepository implements IMaterialRepository {
   final MaterialService _materialService;
+  final AppLogger _logger;
 
   MaterialRepository({
     required MaterialService materialService,
-  }) : _materialService = materialService;
+    required AppLogger logger,
+  }) : _materialService = materialService,
+       _logger = logger;
 
   @override
   Future<Result<List<MaterialModel>>> getAllMaterials({
     int? limit,
     int? offset,
   }) async {
-    // Orquestra entre cache e API baseado na disponibilidade de dados
-    final hasCache = await _materialService.hasMaterialsInCache();
-    final cacheCount = await _materialService.getMaterialsCount();
-    final requestedEndIndex = (offset ?? 0) + (limit ?? cacheCount);
-    final hasSufficientCache = hasCache && requestedEndIndex <= cacheCount;
+    try {
+      // Offline-first strategy: Always try to sync from API first
+      _logger.info('MaterialRepository: Attempting to sync materials from API');
+      final apiResult = await _materialService.getAllMaterialsFromApi();
 
-    if (hasSufficientCache) {
-      return await _materialService.getMaterialsFromCache(
-        limit: limit,
-        offset: offset,
-      );
-    }
+      if (apiResult is Ok) {
+        final allMaterials = apiResult.asOk.value;
+        _logger.info(
+          'MaterialRepository: Successfully synced ${allMaterials.length} materials from API',
+        );
 
-    // Cache insuficiente, busca da API e aplica paginação
-    final apiResult = await _materialService.getAllMaterialsFromApi();
-    return apiResult.when(
-      ok: (allMaterials) {
+        // Apply pagination to API results
         if (limit != null) {
           final startIndex = offset ?? 0;
           final paginatedMaterials = allMaterials
@@ -43,9 +42,31 @@ class MaterialRepository implements IMaterialRepository {
           return Result.ok(paginatedMaterials);
         }
         return Result.ok(allMaterials);
-      },
-      error: (error) => Result.error(error),
-    );
+      } else {
+        _logger.warning(
+          'MaterialRepository: API sync failed: ${apiResult.asError.error}',
+        );
+
+        // If API fails, try to get from cache
+        final hasCache = await _materialService.hasMaterialsInCache();
+        if (hasCache) {
+          _logger.info('MaterialRepository: Returning materials from cache');
+          return await _materialService.getMaterialsFromCache(
+            limit: limit,
+            offset: offset,
+          );
+        }
+
+        return Result.error(
+          Exception('No materials available offline and API sync failed'),
+        );
+      }
+    } catch (e) {
+      _logger.error('MaterialRepository: Error getting materials: $e', e);
+      return Result.error(
+        Exception('Error getting materials'),
+      );
+    }
   }
 
   @override
@@ -54,23 +75,21 @@ class MaterialRepository implements IMaterialRepository {
     int? limit,
     int? offset,
   }) async {
-    // Tenta buscar do cache primeiro
-    final cacheResult = await _materialService.getMaterialsWithFilterFromCache(
-      filter,
-      limit: limit,
-      offset: offset,
-    );
+    try {
+      // Offline-first strategy: Always try to sync from API first
+      _logger.info(
+        'MaterialRepository: Attempting to sync materials with filter from API',
+      );
+      final apiResult = await _materialService.getAllMaterialsFromApi();
 
-    if (cacheResult is Ok<List<MaterialModel>> &&
-        cacheResult.value.isNotEmpty) {
-      return cacheResult;
-    }
-
-    // Cache não tem dados filtrados, busca da API e aplica filtros
-    final apiResult = await _materialService.getAllMaterialsFromApi();
-    return apiResult.when(
-      ok: (allMaterials) {
+      if (apiResult is Ok) {
+        final allMaterials = apiResult.asOk.value;
         final filteredMaterials = _applyFilters(allMaterials, filter);
+        _logger.info(
+          'MaterialRepository: Successfully synced and filtered ${filteredMaterials.length} materials from API',
+        );
+
+        // Apply pagination to filtered results
         if (limit != null) {
           final startIndex = offset ?? 0;
           final paginatedMaterials = filteredMaterials
@@ -80,68 +99,179 @@ class MaterialRepository implements IMaterialRepository {
           return Result.ok(paginatedMaterials);
         }
         return Result.ok(filteredMaterials);
-      },
-      error: (error) => Result.error(error),
-    );
+      } else {
+        _logger.warning(
+          'MaterialRepository: API sync failed: ${apiResult.asError.error}',
+        );
+
+        // If API fails, try to get filtered results from cache
+        final cacheResult = await _materialService
+            .getMaterialsWithFilterFromCache(
+              filter,
+              limit: limit,
+              offset: offset,
+            );
+
+        if (cacheResult is Ok<List<MaterialModel>> &&
+            cacheResult.value.isNotEmpty) {
+          _logger.info(
+            'MaterialRepository: Returning filtered materials from cache',
+          );
+          return cacheResult;
+        }
+
+        return Result.error(
+          Exception(
+            'No filtered materials available offline and API sync failed',
+          ),
+        );
+      }
+    } catch (e) {
+      _logger.error(
+        'MaterialRepository: Error getting filtered materials: $e',
+        e,
+      );
+      return Result.error(
+        Exception('Error getting filtered materials'),
+      );
+    }
   }
 
   @override
   Future<Result<MaterialModel?>> getMaterialById(String id) async {
-    // Busca primeiro do cache
-    final cacheResult = await _materialService.getMaterialByIdFromCache(id);
-    if (cacheResult is Ok<MaterialModel?> && cacheResult.value != null) {
-      return cacheResult;
-    }
+    try {
+      // Offline-first strategy: Always try to sync from API first
+      _logger.info(
+        'MaterialRepository: Attempting to sync material $id from API',
+      );
+      final apiResult = await _materialService.getAllMaterialsFromApi();
 
-    // Se não encontrou no cache, busca da API
-    final apiResult = await _materialService.getAllMaterialsFromApi();
-    return apiResult.when(
-      ok: (materials) {
+      if (apiResult is Ok) {
+        final materials = apiResult.asOk.value;
         try {
           final material = materials.firstWhere(
             (material) => material.id == id,
             orElse: () => throw Exception('Material not found'),
           );
+          _logger.info(
+            'MaterialRepository: Successfully found material $id from API',
+          );
           return Result.ok(material);
         } catch (e) {
+          _logger.warning(
+            'MaterialRepository: Material $id not found in API response',
+          );
           return Result.ok(null);
         }
-      },
-      error: (error) => Result.error(error),
-    );
+      } else {
+        _logger.warning(
+          'MaterialRepository: API sync failed: ${apiResult.asError.error}',
+        );
+
+        // If API fails, try to get from cache
+        final cacheResult = await _materialService.getMaterialByIdFromCache(id);
+        if (cacheResult is Ok<MaterialModel?> && cacheResult.value != null) {
+          _logger.info('MaterialRepository: Returning material $id from cache');
+          return cacheResult;
+        }
+
+        return Result.error(
+          Exception('Material not found offline and API sync failed'),
+        );
+      }
+    } catch (e) {
+      _logger.error('MaterialRepository: Error getting material $id: $e', e);
+      return Result.error(
+        Exception('Error getting material by ID'),
+      );
+    }
   }
 
   @override
   Future<Result<MaterialStatsModel>> getMaterialStats() async {
-    // Busca primeiro do cache
-    final cacheResult = await _materialService.getMaterialStatsFromCache();
-    if (cacheResult is Ok<MaterialStatsModel> &&
-        cacheResult.value.totalMaterials > 0) {
-      return cacheResult;
-    }
+    try {
+      // Offline-first strategy: Always try to sync from API first
+      _logger.info(
+        'MaterialRepository: Attempting to sync material stats from API',
+      );
+      final apiResult = await _materialService.getAllMaterialsFromApi();
 
-    // Se cache vazio, busca da API e recalcula
-    final apiResult = await _materialService.getAllMaterialsFromApi();
-    return apiResult.when(
-      ok: (materials) => _materialService.getMaterialStatsFromCache(),
-      error: (error) => Result.error(error),
-    );
+      if (apiResult is Ok) {
+        _logger.info(
+          'MaterialRepository: Successfully synced materials from API, calculating stats',
+        );
+        // After syncing from API, get stats from cache
+        return await _materialService.getMaterialStatsFromCache();
+      } else {
+        _logger.warning(
+          'MaterialRepository: API sync failed: ${apiResult.asError.error}',
+        );
+
+        // If API fails, try to get stats from existing cache
+        final cacheResult = await _materialService.getMaterialStatsFromCache();
+        if (cacheResult is Ok<MaterialStatsModel> &&
+            cacheResult.value.totalMaterials > 0) {
+          _logger.info(
+            'MaterialRepository: Returning material stats from cache',
+          );
+          return cacheResult;
+        }
+
+        return Result.error(
+          Exception('No material stats available offline and API sync failed'),
+        );
+      }
+    } catch (e) {
+      _logger.error('MaterialRepository: Error getting material stats: $e', e);
+      return Result.error(
+        Exception('Error getting material stats'),
+      );
+    }
   }
 
   @override
   Future<Result<List<String>>> getAvailableBrands() async {
-    // Busca primeiro do cache
-    final cacheResult = await _materialService.getAvailableBrandsFromCache();
-    if (cacheResult is Ok<List<String>> && cacheResult.value.isNotEmpty) {
-      return cacheResult;
-    }
+    try {
+      // Offline-first strategy: Always try to sync from API first
+      _logger.info(
+        'MaterialRepository: Attempting to sync available brands from API',
+      );
+      final apiResult = await _materialService.getAllMaterialsFromApi();
 
-    // Se cache vazio, busca da API
-    final apiResult = await _materialService.getAllMaterialsFromApi();
-    return apiResult.when(
-      ok: (materials) => _materialService.getAvailableBrandsFromCache(),
-      error: (error) => Result.error(error),
-    );
+      if (apiResult is Ok) {
+        _logger.info(
+          'MaterialRepository: Successfully synced materials from API, getting available brands',
+        );
+        // After syncing from API, get brands from cache
+        return await _materialService.getAvailableBrandsFromCache();
+      } else {
+        _logger.warning(
+          'MaterialRepository: API sync failed: ${apiResult.asError.error}',
+        );
+
+        // If API fails, try to get brands from existing cache
+        final cacheResult = await _materialService
+            .getAvailableBrandsFromCache();
+        if (cacheResult is Ok<List<String>> && cacheResult.value.isNotEmpty) {
+          _logger.info(
+            'MaterialRepository: Returning available brands from cache',
+          );
+          return cacheResult;
+        }
+
+        return Result.error(
+          Exception('No brands available offline and API sync failed'),
+        );
+      }
+    } catch (e) {
+      _logger.error(
+        'MaterialRepository: Error getting available brands: $e',
+        e,
+      );
+      return Result.error(
+        Exception('Error getting available brands'),
+      );
+    }
   }
 
   /// Aplica filtros localmente aos materiais
