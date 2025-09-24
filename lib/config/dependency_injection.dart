@@ -241,13 +241,16 @@ void setupDependencyInjection() {
     () => ContactRepository(
       contactService: getIt<ContactService>(),
       databaseService: getIt<ContactDatabaseService>(),
-      logger: getIt<AppLogger>(),
       locationService: getIt<LocationService>(),
+      userService: getIt<UserService>(),
+      logger: getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<IEstimateRepository>(
     () => EstimateRepository(
       estimateService: getIt<EstimateService>(),
+      offlineRepository: getIt<IOfflineRepository>(),
+      logger: getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<IEstimateDetailRepository>(
@@ -265,6 +268,7 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IMaterialRepository>(
     () => MaterialRepository(
       materialService: getIt<MaterialService>(),
+      logger: getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<IPaintCatalogRepository>(
@@ -275,6 +279,8 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IQuoteRepository>(
     () => QuoteRepository(
       quoteService: getIt<QuoteService>(),
+      localStorageService: getIt<LocalStorageService>(),
+      logger: getIt<AppLogger>(),
     ),
   );
 
@@ -354,8 +360,6 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<ProjectOperationsUseCase>(
     () => ProjectOperationsUseCase(
       getIt<IEstimateRepository>(),
-      getIt<IOfflineRepository>(),
-      getIt<SyncService>(),
       getIt<AppLogger>(),
     ),
   );
