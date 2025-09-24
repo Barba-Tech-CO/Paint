@@ -277,7 +277,9 @@ class EstimateModel {
                         'width': d.floorDimensions.width,
                         'unit': d.floorDimensions.unit,
                       },
-                      'surface_areas': d.surfaceAreas.values,
+                      'surface_areas': Map<String, dynamic>.from(
+                        d.surfaceAreas.values,
+                      ),
                       'photos': d.photoPaths,
                     },
                   )
