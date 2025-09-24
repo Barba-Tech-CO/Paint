@@ -25,40 +25,54 @@ class DashboardRepositoryImpl implements IDashboardRepository {
     String? compareWith,
   }) async {
     try {
-      // First try to get cached data
-      final cachedResult = await getCachedDashboardData(
-        month: month,
-        compareWith: compareWith,
+      // Offline-first strategy: Always try to sync from API first
+      _logger.info(
+        'DashboardRepository: Attempting to sync dashboard stats from API',
       );
-
-      if (cachedResult.isSuccess && cachedResult.data != null) {
-        final cachedData = cachedResult.data!;
-        return Result.ok(cachedData);
-      }
-
-      // If no valid cache, fetch from API
       final apiResult = await _dashboardService.getDashboardStats(
         month: month,
         compareWith: compareWith,
       );
 
       if (apiResult.isSuccess) {
-        // Cache the fresh data
+        // Cache the fresh data from API
         await cacheDashboardData(
           apiResult.data,
           month: month,
           compareWith: compareWith,
         );
-      }
+        _logger.info(
+          'DashboardRepository: Successfully synced dashboard stats from API',
+        );
+        return apiResult;
+      } else {
+        _logger.warning(
+          'DashboardRepository: API sync failed: ${apiResult.error}',
+        );
 
-      return apiResult;
+        // If API fails, try to get cached data
+        final cachedResult = await getCachedDashboardData(
+          month: month,
+          compareWith: compareWith,
+        );
+
+        if (cachedResult.isSuccess && cachedResult.data != null) {
+          final cachedData = cachedResult.data!;
+          _logger.info('DashboardRepository: Returning cached dashboard data');
+          return Result.ok(cachedData);
+        }
+
+        return Result.error(
+          Exception('No dashboard data available offline and API sync failed'),
+        );
+      }
     } catch (e) {
       _logger.error(
-        '[DashboardRepository] Error getting dashboard stats: $e',
+        'DashboardRepository: Error getting dashboard stats: $e',
         e,
       );
       return Result.error(
-        Exception('Failed to get dashboard statistics: $e'),
+        Exception('Failed to get dashboard statistics'),
       );
     }
   }
@@ -101,11 +115,11 @@ class DashboardRepositoryImpl implements IDashboardRepository {
       return Result.ok(null);
     } catch (e) {
       _logger.error(
-        '[DashboardRepository] Error caching dashboard data: $e',
+        'DashboardRepository: Error caching dashboard data: $e',
         e,
       );
       return Result.error(
-        Exception('Failed to cache dashboard data: $e'),
+        Exception('Failed to cache dashboard data'),
       );
     }
   }
@@ -134,11 +148,11 @@ class DashboardRepositoryImpl implements IDashboardRepository {
       return Result.ok(dashboardData);
     } catch (e) {
       _logger.error(
-        '[DashboardRepository] Error getting cached dashboard data: $e',
+        'DashboardRepository: Error getting cached dashboard data: $e',
         e,
       );
       return Result.error(
-        Exception('Failed to get cached dashboard data: $e'),
+        Exception('Failed to get cached dashboard data'),
       );
     }
   }
@@ -157,11 +171,11 @@ class DashboardRepositoryImpl implements IDashboardRepository {
       return Result.ok(null);
     } catch (e) {
       _logger.error(
-        '[DashboardRepository] Error clearing expired cache: $e',
+        'DashboardRepository: Error clearing expired cache: $e',
         e,
       );
       return Result.error(
-        Exception('Failed to clear expired cache: $e'),
+        Exception('Failed to clear expired cache'),
       );
     }
   }
