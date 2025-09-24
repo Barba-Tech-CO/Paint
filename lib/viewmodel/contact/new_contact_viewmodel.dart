@@ -95,7 +95,6 @@ class NewContactViewModel extends ChangeNotifier {
   /// Gets company name validation rules
   static String? Function(String?) get companyNameValidator =>
       Validatorless.multiple([
-        Validatorless.required('Company Name is required'),
         Validatorless.min(3, 'Company Name must be at least 3 characters'),
       ]);
 
