@@ -68,17 +68,8 @@ class HomeViewModel extends ChangeNotifier {
             return;
           }
 
-          // Filter estimates that have photos
-          final estimatesWithPhotos = estimates.where((estimate) {
-            final hasPhotos =
-                (estimate.photos != null && estimate.photos!.isNotEmpty) ||
-                (estimate.photosData != null &&
-                    estimate.photosData!.isNotEmpty);
-            return hasPhotos;
-          }).toList();
-
           // Map estimates to projects and sort by creation date (most recent first)
-          final projects = estimatesWithPhotos
+          final projects = estimates
               .map(_mapEstimateToProject)
               .toList();
 
