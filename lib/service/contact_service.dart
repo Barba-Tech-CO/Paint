@@ -75,7 +75,6 @@ class ContactService {
 
       // Handle successful response (200 OK)
       if (response.statusCode == 200) {
-        _logger.info('ContactService: Parsing response data...');
         try {
           final contactListResponse = ContactListResponse.fromJson(
             response.data,
@@ -304,14 +303,27 @@ class ContactService {
 
       final requestData = <String, dynamic>{};
 
-      // Add name field as expected by API
+      // Add name fields as expected by API
       if (name != null && name.trim().isNotEmpty) {
-        requestData['name'] = name.trim();
+        final nameParts = name.trim().split(' ');
+        final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+        final lastName = nameParts.length > 1
+            ? nameParts.skip(1).join(' ')
+            : '';
+
+        requestData['firstName'] = firstName;
+        if (lastName.isNotEmpty) {
+          requestData['lastName'] = lastName;
+        }
       }
 
       // Add optional fields
-      if (email != null) requestData['email'] = email;
-      if (phone != null) requestData['phone'] = phone;
+      if (email != null && email.trim().isNotEmpty) {
+        requestData['email'] = email.trim();
+      }
+      if (phone != null && phone.trim().isNotEmpty) {
+        requestData['phone'] = phone.trim();
+      }
       if (companyName != null && companyName.trim().isNotEmpty) {
         requestData['companyName'] = companyName.trim();
       }
@@ -321,13 +333,22 @@ class ContactService {
       if (city != null) requestData['city'] = city;
       if (state != null) requestData['state'] = state;
       if (postalCode != null) requestData['postalCode'] = postalCode;
-      if (country != null) requestData['country'] = country;
+      if (country != null &&
+          country.trim().isNotEmpty &&
+          country.toLowerCase() != 'any') {
+        requestData['country'] = country.trim();
+      }
       if (tags != null && tags.isNotEmpty) {
         requestData['tags'] = tags;
       }
       if (customFields != null && customFields.isNotEmpty) {
+        _logger.info('Adding customFields: $customFields');
         requestData['customFields'] = customFields;
       }
+
+      // Log the request data for debugging
+      _logger.info('Creating contact with data: $requestData');
+      _logger.info('Location ID: $locationId');
 
       // Use the correct endpoint for creating contacts (POST /api/contacts)
       final response = await _httpService.post(
@@ -369,9 +390,13 @@ class ContactService {
         }
       } else {
         final errorMessage = response.data['message'];
-        _logger.error('Error creating contact', errorMessage);
+        final errors = response.data['errors'];
+        _logger.error('Error creating contact - Message: $errorMessage');
+        if (errors != null) {
+          _logger.error('Validation errors: $errors');
+        }
         return Result.error(
-          Exception('Error updating contact'),
+          Exception('Validation failed. $errorMessage'),
         );
       }
     } on DioException catch (e) {
