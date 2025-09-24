@@ -253,7 +253,7 @@ class ContactModel {
     final firstName = nameParts.isNotEmpty ? nameParts.first : '';
     final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
 
-    return {
+    final map = <String, dynamic>{
       'ghl_id': ghlId,
       'location_id': locationId,
       'first_name': firstName,
@@ -285,6 +285,13 @@ class ContactModel {
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
+
+    // Only include user_id if it's not null
+    if (localId != null) {
+      map['user_id'] = localId;
+    }
+
+    return map;
   }
 
   String get fullName {
