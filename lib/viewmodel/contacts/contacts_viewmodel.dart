@@ -57,10 +57,14 @@ class ContactsViewModel extends ChangeNotifier {
   set searchQuery(String value) {
     if (_searchQuery != value) {
       _searchQuery = value;
-      // Use Future.microtask to defer the filtering and notification
+      // Use Future.microtask to defer the search and notification
       Future.microtask(() {
-        _filterContactsByQuery(value);
-        notifyListeners();
+        if (value.isEmpty) {
+          _filteredContacts = List.from(_contacts);
+          notifyListeners();
+        } else {
+          _searchContactsData(value);
+        }
       });
     }
   }
@@ -405,6 +409,21 @@ class ContactsViewModel extends ChangeNotifier {
       if (result is Ok) {
         final response = result.asOk.value;
         _filteredContacts = response.contacts;
+
+        // Update the main contacts list with new contacts from API search
+        for (final contact in response.contacts) {
+          final existingIndex = _contacts.indexWhere(
+            (c) => c.id == contact.id || c.ghlId == contact.ghlId,
+          );
+          if (existingIndex == -1) {
+            // Add new contact to main list
+            _contacts.add(contact);
+          } else {
+            // Update existing contact with fresh data from API
+            _contacts[existingIndex] = contact;
+          }
+        }
+
         notifyListeners();
         return Result.ok(null);
       } else {
