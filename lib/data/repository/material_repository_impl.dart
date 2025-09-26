@@ -23,14 +23,11 @@ class MaterialRepository implements IMaterialRepository {
   }) async {
     try {
       // Offline-first strategy: Always try to sync from API first
-      _logger.info('MaterialRepository: Attempting to sync materials from API');
       final apiResult = await _materialService.getAllMaterialsFromApi();
 
       if (apiResult is Ok) {
         final allMaterials = apiResult.asOk.value;
-        _logger.info(
-          'MaterialRepository: Successfully synced ${allMaterials.length} materials from API',
-        );
+        
 
         // Apply pagination to API results
         if (limit != null) {
@@ -50,7 +47,7 @@ class MaterialRepository implements IMaterialRepository {
         // If API fails, try to get from cache
         final hasCache = await _materialService.hasMaterialsInCache();
         if (hasCache) {
-          _logger.info('MaterialRepository: Returning materials from cache');
+          
           return await _materialService.getMaterialsFromCache(
             limit: limit,
             offset: offset,
@@ -77,17 +74,12 @@ class MaterialRepository implements IMaterialRepository {
   }) async {
     try {
       // Offline-first strategy: Always try to sync from API first
-      _logger.info(
-        'MaterialRepository: Attempting to sync materials with filter from API',
-      );
       final apiResult = await _materialService.getAllMaterialsFromApi();
 
       if (apiResult is Ok) {
         final allMaterials = apiResult.asOk.value;
         final filteredMaterials = _applyFilters(allMaterials, filter);
-        _logger.info(
-          'MaterialRepository: Successfully synced and filtered ${filteredMaterials.length} materials from API',
-        );
+        
 
         // Apply pagination to filtered results
         if (limit != null) {
@@ -114,9 +106,7 @@ class MaterialRepository implements IMaterialRepository {
 
         if (cacheResult is Ok<List<MaterialModel>> &&
             cacheResult.value.isNotEmpty) {
-          _logger.info(
-            'MaterialRepository: Returning filtered materials from cache',
-          );
+          
           return cacheResult;
         }
 
@@ -140,45 +130,19 @@ class MaterialRepository implements IMaterialRepository {
   @override
   Future<Result<MaterialModel?>> getMaterialById(String id) async {
     try {
-      // Offline-first strategy: Always try to sync from API first
-      _logger.info(
-        'MaterialRepository: Attempting to sync material $id from API',
-      );
-      final apiResult = await _materialService.getAllMaterialsFromApi();
-
-      if (apiResult is Ok) {
-        final materials = apiResult.asOk.value;
-        try {
-          final material = materials.firstWhere(
-            (material) => material.id == id,
-            orElse: () => throw Exception('Material not found'),
-          );
-          _logger.info(
-            'MaterialRepository: Successfully found material $id from API',
-          );
-          return Result.ok(material);
-        } catch (e) {
-          _logger.warning(
-            'MaterialRepository: Material $id not found in API response',
-          );
-          return Result.ok(null);
-        }
-      } else {
-        _logger.warning(
-          'MaterialRepository: API sync failed: ${apiResult.asError.error}',
-        );
-
-        // If API fails, try to get from cache
-        final cacheResult = await _materialService.getMaterialByIdFromCache(id);
-        if (cacheResult is Ok<MaterialModel?> && cacheResult.value != null) {
-          _logger.info('MaterialRepository: Returning material $id from cache');
-          return cacheResult;
-        }
-
-        return Result.error(
-          Exception('Material not found offline and API sync failed'),
-        );
+      // Try cache first
+      final cacheResult = await _materialService.getMaterialByIdFromCache(id);
+      if (cacheResult is Ok<MaterialModel?> && cacheResult.value != null) {
+        return cacheResult;
       }
+
+      // Fetch directly by ID from API, cache it, and return
+      final apiResult = await _materialService.getMaterialByIdFromApi(id);
+      if (apiResult is Ok<MaterialModel?>) {
+        return apiResult;
+      }
+
+      return Result.error(Exception('Material not found with id: $id'));
     } catch (e) {
       _logger.error('MaterialRepository: Error getting material $id: $e', e);
       return Result.error(
@@ -191,15 +155,10 @@ class MaterialRepository implements IMaterialRepository {
   Future<Result<MaterialStatsModel>> getMaterialStats() async {
     try {
       // Offline-first strategy: Always try to sync from API first
-      _logger.info(
-        'MaterialRepository: Attempting to sync material stats from API',
-      );
       final apiResult = await _materialService.getAllMaterialsFromApi();
 
       if (apiResult is Ok) {
-        _logger.info(
-          'MaterialRepository: Successfully synced materials from API, calculating stats',
-        );
+        
         // After syncing from API, get stats from cache
         return await _materialService.getMaterialStatsFromCache();
       } else {
@@ -211,9 +170,7 @@ class MaterialRepository implements IMaterialRepository {
         final cacheResult = await _materialService.getMaterialStatsFromCache();
         if (cacheResult is Ok<MaterialStatsModel> &&
             cacheResult.value.totalMaterials > 0) {
-          _logger.info(
-            'MaterialRepository: Returning material stats from cache',
-          );
+          
           return cacheResult;
         }
 
@@ -233,15 +190,10 @@ class MaterialRepository implements IMaterialRepository {
   Future<Result<List<String>>> getAvailableBrands() async {
     try {
       // Offline-first strategy: Always try to sync from API first
-      _logger.info(
-        'MaterialRepository: Attempting to sync available brands from API',
-      );
       final apiResult = await _materialService.getAllMaterialsFromApi();
 
       if (apiResult is Ok) {
-        _logger.info(
-          'MaterialRepository: Successfully synced materials from API, getting available brands',
-        );
+        
         // After syncing from API, get brands from cache
         return await _materialService.getAvailableBrandsFromCache();
       } else {
@@ -253,9 +205,7 @@ class MaterialRepository implements IMaterialRepository {
         final cacheResult = await _materialService
             .getAvailableBrandsFromCache();
         if (cacheResult is Ok<List<String>> && cacheResult.value.isNotEmpty) {
-          _logger.info(
-            'MaterialRepository: Returning available brands from cache',
-          );
+          
           return cacheResult;
         }
 
