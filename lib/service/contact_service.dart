@@ -20,42 +20,20 @@ class ContactService {
     this._logger,
   );
 
-  /// Lista contatos com paginação
-  Future<Result<ContactListResponse>> getContacts({
-    int? limit,
-    int? offset,
-  }) async {
+  /// Dispara sincronização completa de contatos no backend (GHL -> DB API)
+  Future<Result<Map<String, dynamic>>> syncContacts({int limit = 100}) async {
     try {
       final locationId = _locationService.currentLocationId;
-
       if (locationId == null || locationId.isEmpty) {
         return Result.error(
           Exception('Location ID not available. User not authenticated.'),
         );
       }
 
-      final fullUrl = '$_baseUrl/search';
-      _logger.info('ContactService: Making API call to $fullUrl');
-      _logger.info(
-        'ContactService: Request data: locationId=$locationId, limit=$limit, offset=$offset',
-      );
-
-      final requestData = {
-        'locationId': locationId,
-        if (limit != null) 'pageLimit': limit,
-        // Converter offset para page
-        if (offset != null && limit != null && limit > 0)
-          'page': (offset / limit).floor() + 1,
-      };
-
-      _logger.info('ContactService: Final request data: $requestData');
-      _logger.info('ContactService: Full URL: $fullUrl');
-
-      // Usar a rota de busca para listar todos os contatos
-      // Esta rota não tem validação restritiva como a rota POST principal
+      _logger.info('ContactService: Triggering /contacts/sync (limit=$limit, location=$locationId)');
       final response = await _httpService.post(
-        '$_baseUrl/search',
-        data: requestData,
+        '$_baseUrl/sync',
+        data: {'limit': limit},
         options: Options(
           headers: {
             'X-GHL-Location-ID': locationId,
@@ -65,22 +43,71 @@ class ContactService {
         ),
       );
 
-      _logger.info(
-        'ContactService: API response status: ${response.statusCode}',
+      if (response.statusCode == 200) {
+        final data = Map<String, dynamic>.from(response.data as Map);
+        final stats = data['stats'];
+        if (stats is Map) {
+          _logger.info(
+            'ContactService: Sync completed — total=${stats['total']}, created=${stats['created']}, updated=${stats['updated']}, pages=${stats['pages']}',
+          );
+        } else {
+          _logger.info('ContactService: Sync completed — no stats payload');
+        }
+        return Result.ok(data);
+      }
+      return Result.error(
+        Exception('Failed to sync contacts: ${response.statusCode}'),
       );
-      _logger.info('ContactService: API response data: ${response.data}');
-      _logger.info(
-        'ContactService: API response data type: ${response.data.runtimeType}',
+    } on DioException catch (e) {
+      _logger.error('ContactService: Error syncing contacts', e);
+      return _handleDioException(e, 'syncing contacts');
+    } catch (e) {
+      _logger.error('ContactService: Error syncing contacts', e);
+      return Result.error(
+        Exception('Error syncing contacts'),
+      );
+    }
+  }
+
+  /// Lista contatos com paginação (via POST /contacts sem body => lista DB+GHL)
+  Future<Result<ContactListResponse>> getContacts({
+    int? limit,
+    int? offset,
+  }) async {
+    try {
+      final locationId = _locationService.currentLocationId;
+      if (locationId == null || locationId.isEmpty) {
+        return Result.error(
+          Exception('Location ID not available. User not authenticated.'),
+        );
+      }
+
+      final effLimit = limit ?? 100;
+      final page = (offset != null && effLimit > 0)
+          ? ((offset / effLimit).floor() + 1)
+          : 1;
+
+      // POST sem body cai na listagem (ver controller store -> listContacts)
+      final response = await _httpService.post(
+        _baseUrl,
+        data: const {},
+        queryParameters: {
+          'limit': effLimit,
+          'page': page,
+        },
+        options: Options(
+          headers: {
+            'X-GHL-Location-ID': locationId,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        ),
       );
 
-      // Handle successful response (200 OK)
       if (response.statusCode == 200) {
         try {
           final contactListResponse = ContactListResponse.fromJson(
             response.data,
-          );
-          _logger.info(
-            'ContactService: Parsed response successfully. Contacts count: ${contactListResponse.contacts.length}',
           );
           return Result.ok(contactListResponse);
         } catch (e) {
@@ -88,15 +115,19 @@ class ContactService {
           _logger.error(
             'ContactService: Response data structure: ${response.data}',
           );
-          return Result.error(Exception('Error parsing contact response: $e'));
+          return Result.error(
+            Exception('Error parsing contact response: $e'),
+          );
         }
-      } else {
-        final errorMessage = response.data['message'];
-        _logger.error('Error listing contacts', errorMessage);
-        return Result.error(
-          Exception('Error listing contacts'),
-        );
       }
+
+      final errorMessage = response.data is Map
+          ? (response.data['message'] ?? 'Unknown error')
+          : 'Unknown error';
+      _logger.error('Error listing contacts', errorMessage);
+      return Result.error(
+        Exception('Error listing contacts'),
+      );
     } on DioException catch (e) {
       _logger.error('Error listing contacts', e);
       return _handleDioException(e, 'listing contacts');
