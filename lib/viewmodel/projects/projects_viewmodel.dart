@@ -268,9 +268,7 @@ class ProjectsViewModel extends ChangeNotifier {
         _projects = result.asOk.value;
         _filteredProjects = List.from(_projects);
         _state = ProjectsState.loaded;
-        _logger.info(
-          'ProjectsViewModel: Successfully loaded ${_projects.length} projects',
-        );
+        
         notifyListeners();
         return Result.ok(null);
       } else {
