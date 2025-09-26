@@ -8,4 +8,29 @@ class FloorDimensionsModel {
     required this.width,
     this.unit = 'ft',
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'length': length,
+      'width': width,
+      'unit': unit,
+    };
+  }
+
+  factory FloorDimensionsModel.fromMap(Map<String, dynamic> map) {
+    num _parseNum(dynamic v) {
+      if (v is num) return v;
+      if (v is String) {
+        final parsed = double.tryParse(v);
+        return parsed ?? 0.0;
+      }
+      return 0.0;
+    }
+
+    return FloorDimensionsModel(
+      length: _parseNum(map['length']),
+      width: _parseNum(map['width']),
+      unit: (map['unit'] ?? 'ft').toString(),
+    );
+  }
 }
