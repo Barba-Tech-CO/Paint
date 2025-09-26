@@ -135,7 +135,22 @@ class EstimateModel {
             final sa =
                 (md['surface_areas'] as Map<String, dynamic>?) ??
                 <String, dynamic>{};
-            final photos = (md['photos'] as List?)?.cast<String>() ?? const [];
+            final rawPhotos = md['photos'];
+            final List<String> photos = <String>[];
+            if (rawPhotos is List) {
+              for (final p in rawPhotos) {
+                if (p is String) {
+                  photos.add(p);
+                } else if (p is Map<String, dynamic>) {
+                  final url = p['url'] ?? p['path'];
+                  if (url is String && url.isNotEmpty) {
+                    photos.add(url);
+                  }
+                } else if (p != null) {
+                  photos.add(p.toString());
+                }
+              }
+            }
             return ZoneDataModel(
               floorDimensions: FloorDimensionsModel(
                 length: parseNum(fd['length']) ?? 0,
