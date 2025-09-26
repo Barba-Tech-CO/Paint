@@ -78,10 +78,7 @@ class ProjectCardWidget extends StatelessWidget {
                     height: 80,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        image,
-                        fit: BoxFit.cover,
-                      ),
+                      child: _buildImage(),
                     ),
                   ),
                   SizedBox(width: dimensions.spacing * 3),
@@ -183,6 +180,27 @@ class ProjectCardWidget extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildImage() {
+    final hasNetwork = image.isNotEmpty &&
+        (image.startsWith('http://') || image.startsWith('https://'));
+    if (hasNetwork) {
+      return Image.network(
+        image,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.asset(
+            'assets/images/kitchen.png',
+            fit: BoxFit.cover,
+          );
+        },
+      );
+    }
+    return Image.asset(
+      'assets/images/kitchen.png',
+      fit: BoxFit.cover,
     );
   }
 }
