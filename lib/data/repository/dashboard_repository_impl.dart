@@ -1,13 +1,13 @@
 import '../../domain/repository/dashboard_repository.dart';
 import '../../model/estimates/dashboard_response_model.dart';
 import '../../service/dashboard_service.dart';
-import '../../service/local_storage_service.dart';
+import '../../service/local/dashboard_cache_local_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
 class DashboardRepositoryImpl implements IDashboardRepository {
   final DashboardService _dashboardService;
-  final LocalStorageService _localStorageService;
+  final DashboardCacheLocalService _dashboardCacheService;
   final AppLogger _logger;
 
   // Cache duration: 15 minutes
@@ -15,7 +15,7 @@ class DashboardRepositoryImpl implements IDashboardRepository {
 
   DashboardRepositoryImpl(
     this._dashboardService,
-    this._localStorageService,
+    this._dashboardCacheService,
     this._logger,
   );
 
@@ -26,9 +26,6 @@ class DashboardRepositoryImpl implements IDashboardRepository {
   }) async {
     try {
       // Offline-first strategy: Always try to sync from API first
-      _logger.info(
-        'DashboardRepository: Attempting to sync dashboard stats from API',
-      );
       final apiResult = await _dashboardService.getDashboardStats(
         month: month,
         compareWith: compareWith,
@@ -40,9 +37,6 @@ class DashboardRepositoryImpl implements IDashboardRepository {
           apiResult.data,
           month: month,
           compareWith: compareWith,
-        );
-        _logger.info(
-          'DashboardRepository: Successfully synced dashboard stats from API',
         );
         return apiResult;
       } else {
@@ -58,7 +52,6 @@ class DashboardRepositoryImpl implements IDashboardRepository {
 
         if (cachedResult.isSuccess && cachedResult.data != null) {
           final cachedData = cachedResult.data!;
-          _logger.info('DashboardRepository: Returning cached dashboard data');
           return Result.ok(cachedData);
         }
 
@@ -111,7 +104,7 @@ class DashboardRepositoryImpl implements IDashboardRepository {
             .toIso8601String(),
       };
 
-      await _localStorageService.saveDashboardCache(cacheKey, cacheData);
+      await _dashboardCacheService.saveDashboardCache(cacheKey, cacheData);
       return Result.ok(null);
     } catch (e) {
       _logger.error(
@@ -131,7 +124,9 @@ class DashboardRepositoryImpl implements IDashboardRepository {
   }) async {
     try {
       final cacheKey = _buildCacheKey(month: month, compareWith: compareWith);
-      final cachedData = await _localStorageService.getDashboardCache(cacheKey);
+      final cachedData = await _dashboardCacheService.getDashboardCache(
+        cacheKey,
+      );
 
       if (cachedData == null) {
         return Result.ok(null);
@@ -139,7 +134,7 @@ class DashboardRepositoryImpl implements IDashboardRepository {
 
       final cachedAt = DateTime.parse(cachedData['cached_at']);
       if (!isCacheValid(cachedAt)) {
-        await _localStorageService.removeDashboardCache(cacheKey);
+        await _dashboardCacheService.removeDashboardCache(cacheKey);
         return Result.ok(null);
       }
 
@@ -167,7 +162,7 @@ class DashboardRepositoryImpl implements IDashboardRepository {
   @override
   Future<Result<void>> clearExpiredCache() async {
     try {
-      await _localStorageService.clearExpiredDashboardCache();
+      await _dashboardCacheService.clearExpiredDashboardCache();
       return Result.ok(null);
     } catch (e) {
       _logger.error(
