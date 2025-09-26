@@ -80,13 +80,19 @@ class ContactRepository extends IContactRepository {
         if (user.id != null) {
           return Result.ok(user.id!);
         } else {
-          return Result.error(Exception('User ID not available'));
+          return Result.error(
+            Exception('User ID not available'),
+          );
         }
       } else {
-        return Result.error(Exception('Failed to get user data'));
+        return Result.error(
+          Exception('Failed to get user data'),
+        );
       }
     } catch (e) {
-      return Result.error(Exception('Error getting user ID: $e'));
+      return Result.error(
+        Exception('Error getting user ID: $e'),
+      );
     }
   }
 
@@ -131,15 +137,10 @@ class ContactRepository extends IContactRepository {
         await _initializationCompleter!.future;
       }
 
-      // Offline-first strategy: Always try to sync from API first, then return local data
-      _logger.info('ContactRepository: Attempting to sync contacts from API');
+      // Offline-first strategy: sync via API then return local data
       final syncResult = await _syncContactsFromApi();
 
-      if (syncResult is Ok) {
-        _logger.info(
-          'ContactRepository: Successfully synced ${_contacts.length} contacts from API',
-        );
-      } else {
+      if (syncResult is Error) {
         _logger.warning(
           'ContactRepository: Failed to sync contacts from API: ${syncResult.asError.error}',
         );
@@ -679,40 +680,35 @@ class ContactRepository extends IContactRepository {
 
       if (locationId == null || locationId.isEmpty) {
         _logger.error('Location ID not available for API sync');
-        return Result.error(Exception('Location ID not available'));
+        return Result.error(
+          Exception('Location ID not available'),
+        );
       }
+      // 1) Trigger backend sync (GHL -> API DB)
+      await _contactService.syncContacts(limit: 100);
 
-      final apiResult = await _contactService.getContacts();
+      // 2) Fetch ONLY 100 contacts from API (single page, DB+GHL) and save locally
+      final listResult = await _contactService.getContacts(
+        limit: 100,
+        offset: 0,
+      );
 
-      if (apiResult is Ok) {
-        final apiContacts = apiResult.asOk.value.contacts;
-
-        for (final contact in apiContacts) {
-          await _databaseService.insertContact(contact);
+      if (listResult is Ok<ContactListResponse>) {
+        final fetched = listResult.asOk.value.contacts;
+        for (final c in fetched) {
+          // Inject location_id if missing from API payload
+          final withLoc = c.locationId == null || c.locationId!.isEmpty
+              ? c.copyWith(locationId: _locationService.currentLocationId)
+              : c;
+          await _databaseService.insertContact(withLoc);
         }
-        _contacts = apiContacts;
+        _contacts = fetched;
         notifyListeners();
         return Result.ok(null);
-      } else {
-        final error = apiResult.asError.error;
-        _logger.error(
-          'API sync error: $error',
-          error,
-        );
-
-        // Check if this is an authentication error
-        if (error.toString().contains('Authentication required') ||
-            error.toString().contains('401')) {
-          // Don't return an error for auth failures - just skip sync
-          return Result.ok(null);
-        }
-
-        return Result.error(
-          Exception(
-            'Failed to sync contacts from API',
-          ),
-        );
       }
+
+      // If API search failed, keep existing local data and don't error the flow
+      return Result.ok(null);
     } catch (e) {
       _logger.error('Error syncing contacts from API: $e', e);
       return Result.error(
