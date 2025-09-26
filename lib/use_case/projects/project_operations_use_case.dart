@@ -58,17 +58,24 @@ class ProjectOperationsUseCase {
     }
   }
 
-  /// Adjust image URL based on environment (development vs production) - EXACTLY same as Home
+  /// Adjust image URL to absolute and point to the correct host (same as Home)
   String _adjustImageUrl(String originalUrl) {
-    if (!AppConfig.isProduction) {
-      // In development, replace production domain with local development domain
-      final localBaseUrl = AppConfig.baseUrl.replaceAll('/api', '');
-      return originalUrl.replaceAll(
-        'https://paintpro.barbatech.company',
-        localBaseUrl,
-      );
+    final baseHost = AppConfig.baseUrl.replaceAll(RegExp(r"/api/?$"), '');
+
+    // Already absolute URL
+    if (originalUrl.startsWith('http://') || originalUrl.startsWith('https://')) {
+      if (!AppConfig.isProduction) {
+        return originalUrl.replaceAll(
+          'https://paintpro.barbatech.company',
+          baseHost,
+        );
+      }
+      return originalUrl;
     }
-    return originalUrl;
+
+    // Relative path returned by API
+    final normalized = originalUrl.replaceFirst(RegExp(r'^/+'), '');
+    return '$baseHost/$normalized';
   }
 
   /// Map EstimateModel to ProjectModel - EXACTLY same as Home
@@ -78,34 +85,25 @@ class ProjectOperationsUseCase {
           ? '${estimate.createdAt!.month.toString().padLeft(2, '0')}/${estimate.createdAt!.day.toString().padLeft(2, '0')}/${estimate.createdAt!.year % 100}'
           : '';
 
-      // Debug: log what photos are available
-      _logger.error('Estimate ${estimate.id} - photos: ${estimate.photos}, photosData: ${estimate.photosData}');
+      // Debug: log what photos are available (use debug level to avoid noise)
+      _logger.debug('Estimate ${estimate.id} - photos: ${estimate.photos}, photosData: ${estimate.photosData}');
       if (estimate.zones != null) {
-        _logger.error('Estimate ${estimate.id} - zones count: ${estimate.zones!.length}');
+        _logger.debug('Estimate ${estimate.id} - zones count: ${estimate.zones!.length}');
       }
 
-      // Get first photo from API - EXACTLY same as Home
+      // Get first available photo; if none, keep empty to let UI show placeholder
       String image = '';
       if (estimate.photosData != null && estimate.photosData!.isNotEmpty) {
         image = _adjustImageUrl(estimate.photosData!.first);
       } else if (estimate.photos != null && estimate.photos!.isNotEmpty) {
         image = _adjustImageUrl(estimate.photos!.first);
       } else if (estimate.zones != null && estimate.zones!.isNotEmpty) {
-        // Try to get photo from zones as fallback
-        bool foundPhoto = false;
         for (final zone in estimate.zones!) {
           if (zone.data.isNotEmpty && zone.data.first.photoPaths.isNotEmpty) {
             image = _adjustImageUrl(zone.data.first.photoPaths.first);
-            _logger.error('Using zone photo: $image');
-            foundPhoto = true;
             break;
           }
         }
-        if (!foundPhoto) {
-          throw Exception('No photos found in estimate ${estimate.id}');
-        }
-      } else {
-        throw Exception('No photos found in estimate ${estimate.id}');
       }
 
       // Count zones from estimate data
@@ -122,8 +120,17 @@ class ProjectOperationsUseCase {
 
       return project;
     } catch (e) {
-      // Re-throw the error instead of returning a default project
-      rethrow;
+      // Gracefully fallback to a minimal project entry
+      return ProjectModel(
+        id: int.tryParse(estimate.id ?? '') ?? estimate.hashCode,
+        projectName: estimate.projectName ?? 'Estimate',
+        personName: estimate.clientName ?? 'No Client',
+        zonesCount: estimate.zones?.length ?? 0,
+        createdDate: estimate.createdAt != null
+            ? '${estimate.createdAt!.month.toString().padLeft(2, '0')}/${estimate.createdAt!.day.toString().padLeft(2, '0')}/${estimate.createdAt!.year % 100}'
+            : '',
+        image: '',
+      );
     }
   }
 
