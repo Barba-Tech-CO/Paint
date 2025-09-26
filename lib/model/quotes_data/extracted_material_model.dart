@@ -38,39 +38,63 @@ class ExtractedMaterialModel {
   });
 
   factory ExtractedMaterialModel.fromJson(Map<String, dynamic> json) {
+    int _parseInt(dynamic v) {
+      if (v == null) return 0;
+      if (v is int) return v;
+      final s = v.toString();
+      return int.tryParse(s) ?? 0;
+    }
+
+    double _parseDouble(dynamic v) {
+      if (v == null) return 0.0;
+      if (v is num) return v.toDouble();
+      final s = v.toString();
+      return double.tryParse(s) ?? 0.0;
+    }
+
+    String _parseString(dynamic v) => v == null ? '' : v.toString();
+
+    DateTime _parseDate(dynamic v) {
+      if (v == null) return DateTime.fromMillisecondsSinceEpoch(0);
+      if (v is DateTime) return v;
+      if (v is String) {
+        try {
+          return DateTime.parse(v);
+        } catch (_) {
+          return DateTime.fromMillisecondsSinceEpoch(0);
+        }
+      }
+      return DateTime.fromMillisecondsSinceEpoch(0);
+    }
+
+    final pdfUploadRaw = json['pdf_upload'];
+    final pdfUpload = pdfUploadRaw is Map<String, dynamic>
+        ? PdfUploadInfo.fromJson(pdfUploadRaw)
+        : null;
+
+    final specsRaw = json['specifications'];
+    final specifications = specsRaw is Map<String, dynamic>
+        ? specsRaw
+        : (specsRaw is List ? null : specsRaw as Map<String, dynamic>?);
+
     return ExtractedMaterialModel(
-      id: json['id'] is int
-          ? json['id'] as int
-          : int.parse(json['id'].toString()),
-      pdfUploadId: json['pdf_upload_id'] is int
-          ? json['pdf_upload_id'] as int
-          : int.parse(json['pdf_upload_id'].toString()),
-      userId: json['user_id'] is int
-          ? json['user_id'] as int
-          : int.parse(json['user_id'].toString()),
-      brand: json['brand'] as String,
-      description: json['description'] as String,
-      type: json['type'] as String,
-      unit: json['unit'] as String,
-      unitPrice: json['unit_price'] is num
-          ? (json['unit_price'] as num).toDouble()
-          : double.parse(json['unit_price'].toString()),
-      finish: json['finish'] as String?,
-      qualityGrade: json['quality_grade'] as String?,
-      category: json['category'] as String?,
-      specifications: json['specifications'] is Map<String, dynamic>
-          ? json['specifications'] as Map<String, dynamic>
-          : json['specifications'] is List
-          ? null
-          : json['specifications'] as Map<String, dynamic>?,
-      lineNumber: json['line_number'] is int
-          ? json['line_number'] as int
-          : int.parse(json['line_number'].toString()),
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      pdfUpload: json['pdf_upload'] != null
-          ? PdfUploadInfo.fromJson(json['pdf_upload'] as Map<String, dynamic>)
-          : null,
+      id: _parseInt(json['id']),
+      pdfUploadId: _parseInt(json['pdf_upload_id']),
+      userId: _parseInt(json['user_id']),
+      brand: _parseString(json['brand']),
+      description: _parseString(json['description']),
+      type: _parseString(json['type']),
+      unit: _parseString(json['unit']),
+      unitPrice: _parseDouble(json['unit_price']),
+      finish: json['finish'] == null ? null : _parseString(json['finish']),
+      qualityGrade:
+          json['quality_grade'] == null ? null : _parseString(json['quality_grade']),
+      category: json['category'] == null ? null : _parseString(json['category']),
+      specifications: specifications,
+      lineNumber: _parseInt(json['line_number']),
+      createdAt: _parseDate(json['created_at']),
+      updatedAt: _parseDate(json['updated_at']),
+      pdfUpload: pdfUpload,
     );
   }
 
