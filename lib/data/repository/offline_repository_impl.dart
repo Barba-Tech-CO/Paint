@@ -2,21 +2,30 @@ import '../../domain/repository/offline_repository.dart';
 import '../../model/estimates/estimate_model.dart';
 import '../../model/estimates/estimate_status.dart';
 import '../../model/projects/project_model.dart';
-import '../../service/local_storage_service.dart';
+import '../../service/local/estimates_local_service.dart';
+import '../../service/local/pending_operations_local_service.dart';
+import '../../service/database_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
 class OfflineRepository implements IOfflineRepository {
-  final LocalStorageService _localStorageService;
+  final EstimatesLocalService _estimatesLocalService;
+  final PendingOperationsLocalService _pendingOpsService;
+  final DatabaseService _databaseService;
   final AppLogger _logger;
 
-  OfflineRepository(this._localStorageService, this._logger);
+  OfflineRepository(
+    this._estimatesLocalService,
+    this._pendingOpsService,
+    this._databaseService,
+    this._logger,
+  );
 
   @override
   Future<Result<String>> saveEstimate(EstimateModel estimate) async {
     try {
-      final id = await _localStorageService.saveEstimate(estimate);
-      _logger.info('Estimate saved offline with ID: $id');
+      final id = await _estimatesLocalService.saveEstimate(estimate);
+
       return Result.ok(id);
     } catch (e) {
       _logger.error('Error saving estimate offline: $e', e);
@@ -29,7 +38,7 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<EstimateModel?>> getEstimate(String id) async {
     try {
-      final estimate = await _localStorageService.getEstimate(id);
+      final estimate = await _estimatesLocalService.getEstimate(id);
       return Result.ok(estimate);
     } catch (e) {
       _logger.error('Error getting estimate from offline storage: $e', e);
@@ -42,7 +51,7 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<List<EstimateModel>>> getAllEstimates() async {
     try {
-      final estimates = await _localStorageService.getAllEstimates();
+      final estimates = await _estimatesLocalService.getAllEstimates();
       return Result.ok(estimates);
     } catch (e) {
       _logger.error('Error getting all estimates from offline storage: $e', e);
@@ -55,7 +64,7 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<List<EstimateModel>>> getUnsyncedEstimates() async {
     try {
-      final estimates = await _localStorageService.getUnsyncedEstimates();
+      final estimates = await _estimatesLocalService.getUnsyncedEstimates();
       return Result.ok(estimates);
     } catch (e) {
       _logger.error('Error getting unsynced estimates: $e', e);
@@ -68,8 +77,8 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<void>> updateEstimate(EstimateModel estimate) async {
     try {
-      await _localStorageService.updateEstimate(estimate);
-      _logger.info('Estimate updated offline with ID: ${estimate.id}');
+      await _estimatesLocalService.updateEstimate(estimate);
+
       return Result.ok(null);
     } catch (e) {
       _logger.error('Error updating estimate offline: $e', e);
@@ -82,8 +91,8 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<void>> markEstimateAsSynced(String id) async {
     try {
-      await _localStorageService.markEstimateAsSynced(id);
-      _logger.info('Estimate marked as synced: $id');
+      await _estimatesLocalService.markEstimateAsSynced(id);
+
       return Result.ok(null);
     } catch (e) {
       _logger.error('Error marking estimate as synced: $e', e);
@@ -96,8 +105,8 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<void>> deleteEstimate(String id) async {
     try {
-      await _localStorageService.deleteEstimate(id);
-      _logger.info('Estimate deleted from offline storage: $id');
+      await _estimatesLocalService.deleteEstimate(id);
+
       return Result.ok(null);
     } catch (e) {
       _logger.error('Error deleting estimate from offline storage: $e', e);
@@ -110,8 +119,8 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<String>> saveProject(ProjectModel project) async {
     try {
-      final id = await _localStorageService.saveProject(project);
-      _logger.info('Project saved offline with ID: $id');
+      final id = await _estimatesLocalService.saveProject(project);
+
       return Result.ok(id);
     } catch (e) {
       _logger.error('Error saving project offline: $e', e);
@@ -124,10 +133,8 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<List<ProjectModel>>> getAllProjects() async {
     try {
-      final projects = await _localStorageService.getAllProjects();
-      _logger.info(
-        'OfflineRepository: Found ${projects.length} projects in local storage',
-      );
+      final projects = await _estimatesLocalService.getAllProjects();
+
       return Result.ok(projects);
     } catch (e) {
       _logger.error('Error getting all projects from offline storage: $e', e);
@@ -149,8 +156,8 @@ class OfflineRepository implements IOfflineRepository {
         updatedAt: DateTime.now(),
       );
 
-      await _localStorageService.updateEstimate(estimate);
-      _logger.info('Project updated offline with ID: ${project.id}');
+      await _estimatesLocalService.updateEstimate(estimate);
+
       return Result.ok(null);
     } catch (e) {
       _logger.error('Error updating project offline: $e', e);
@@ -163,8 +170,8 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<void>> deleteProject(String projectId) async {
     try {
-      await _localStorageService.deleteEstimate(projectId);
-      _logger.info('Project deleted from offline storage: $projectId');
+      await _estimatesLocalService.deleteEstimate(projectId);
+
       return Result.ok(null);
     } catch (e) {
       _logger.error('Error deleting project from offline storage: $e', e);
@@ -180,8 +187,8 @@ class OfflineRepository implements IOfflineRepository {
     Map<String, dynamic> data,
   ) async {
     try {
-      await _localStorageService.addPendingOperation(operationType, data);
-      _logger.info('Pending operation added: $operationType');
+      await _pendingOpsService.addPendingOperation(operationType, data);
+
       return Result.ok(null);
     } catch (e) {
       _logger.error('Error adding pending operation: $e', e);
@@ -194,7 +201,7 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<List<Map<String, dynamic>>>> getPendingOperations() async {
     try {
-      final operations = await _localStorageService.getPendingOperations();
+      final operations = await _pendingOpsService.getPendingOperations();
       return Result.ok(operations);
     } catch (e) {
       _logger.error('Error getting pending operations: $e', e);
@@ -207,8 +214,8 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<void>> removePendingOperation(int id) async {
     try {
-      await _localStorageService.removePendingOperation(id);
-      _logger.info('Pending operation removed: $id');
+      await _pendingOpsService.removePendingOperation(id);
+
       return Result.ok(null);
     } catch (e) {
       _logger.error('Error removing pending operation: $e', e);
@@ -221,8 +228,8 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<void>> incrementRetryCount(int id) async {
     try {
-      await _localStorageService.incrementRetryCount(id);
-      _logger.info('Retry count incremented for operation: $id');
+      await _pendingOpsService.incrementRetryCount(id);
+
       return Result.ok(null);
     } catch (e) {
       _logger.error('Error incrementing retry count: $e', e);
@@ -235,8 +242,8 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<void>> clearAllData() async {
     try {
-      await _localStorageService.close();
-      _logger.info('All offline data cleared');
+      await _databaseService.close();
+
       return Result.ok(null);
     } catch (e) {
       _logger.error('Error clearing all data: $e', e);
@@ -249,8 +256,8 @@ class OfflineRepository implements IOfflineRepository {
   @override
   Future<Result<Map<String, int>>> getStorageStats() async {
     try {
-      final estimates = await _localStorageService.getAllEstimates();
-      final pendingOps = await _localStorageService.getPendingOperations();
+      final estimates = await _estimatesLocalService.getAllEstimates();
+      final pendingOps = await _pendingOpsService.getPendingOperations();
 
       return Result.ok({
         'total_estimates': estimates.length,
