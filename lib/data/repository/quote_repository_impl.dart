@@ -9,22 +9,22 @@ import '../../model/quotes_data/pagination_info.dart';
 import '../../model/quotes_data/quote_list_response.dart';
 import '../../model/quotes_data/quote_model.dart';
 import '../../model/quotes_data/quote_response.dart';
-import '../../service/local_storage_service.dart';
+import '../../service/local/quotes_local_service.dart';
 import '../../service/quote_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
 class QuoteRepository implements IQuoteRepository {
   final QuoteService _quoteService;
-  final LocalStorageService _localStorageService;
+  final QuotesLocalService _quotesLocalService;
   final AppLogger _logger;
 
   QuoteRepository({
     required QuoteService quoteService,
-    required LocalStorageService localStorageService,
+    required QuotesLocalService localStorageService,
     required AppLogger logger,
   }) : _quoteService = quoteService,
-       _localStorageService = localStorageService,
+       _quotesLocalService = localStorageService,
        _logger = logger;
 
   @override
@@ -43,7 +43,7 @@ class QuoteRepository implements IQuoteRepository {
         final response = apiResult.asOk.value;
 
         // Cache the newly uploaded quote for offline access
-        await _localStorageService.saveQuote(response.quote);
+        await _quotesLocalService.saveQuote(response.quote);
         _logger.info(
           'QuoteRepository: Cached newly uploaded quote ${response.quote.id}',
         );
@@ -72,7 +72,7 @@ class QuoteRepository implements IQuoteRepository {
         'QuoteRepository: Attempting to load quotes from offline storage',
       );
 
-      final offlineQuotes = await _localStorageService.getAllQuotes();
+      final offlineQuotes = await _quotesLocalService.getAllQuotes();
 
       if (offlineQuotes.isNotEmpty) {
         _logger.info(
@@ -141,7 +141,7 @@ class QuoteRepository implements IQuoteRepository {
         // Cache all quotes for future offline access
         for (final quote in response.quotes) {
           try {
-            await _localStorageService.saveQuote(quote);
+            await _quotesLocalService.saveQuote(quote);
           } catch (e) {
             _logger.warning(
               'QuoteRepository: Failed to cache quote ${quote.id}: $e',
@@ -175,7 +175,7 @@ class QuoteRepository implements IQuoteRepository {
         // Update cached quotes
         for (final quote in response.quotes) {
           try {
-            await _localStorageService.saveQuote(quote);
+            await _quotesLocalService.saveQuote(quote);
           } catch (e) {
             _logger.warning(
               'QuoteRepository: Failed to update cached quote ${quote.id}: $e',
@@ -200,7 +200,7 @@ class QuoteRepository implements IQuoteRepository {
         'QuoteRepository: Attempting to load quote status $quoteId from offline storage',
       );
 
-      final offlineQuote = await _localStorageService.getQuote(quoteId);
+      final offlineQuote = await _quotesLocalService.getQuote(quoteId);
 
       if (offlineQuote != null) {
         _logger.info(
@@ -224,7 +224,7 @@ class QuoteRepository implements IQuoteRepository {
         final quote = apiResult.asOk.value;
 
         // Cache the quote for future offline access
-        await _localStorageService.saveQuote(quote);
+        await _quotesLocalService.saveQuote(quote);
         _logger.info('QuoteRepository: Cached quote $quoteId from API');
 
         return Result.ok(quote);
@@ -246,7 +246,7 @@ class QuoteRepository implements IQuoteRepository {
 
       if (apiResult is Ok<QuoteModel>) {
         final updatedQuote = apiResult.asOk.value;
-        await _localStorageService.saveQuote(updatedQuote);
+        await _quotesLocalService.saveQuote(updatedQuote);
         _logger.info(
           'QuoteRepository: Updated quote $quoteId status in background',
         );
@@ -277,7 +277,7 @@ class QuoteRepository implements IQuoteRepository {
 
       if (apiResult is Ok<bool> && apiResult.asOk.value) {
         // Remove from offline cache
-        await _localStorageService.deleteQuote(quoteId);
+        await _quotesLocalService.deleteQuote(quoteId);
         _logger.info(
           'QuoteRepository: Removed deleted quote $quoteId from cache',
         );
