@@ -30,87 +30,30 @@ class EstimateRepository implements IEstimateRepository {
     String? status,
   }) async {
     try {
-      // Offline-first strategy: Always try to sync from API first
-      _logger.info('EstimateRepository: Attempting to sync estimates from API');
-      final syncResult = await _pullEstimatesFromApi();
+      // Try to sync from API (offline-first). Proceed regardless of result.
+      final syncOk = (await _pullEstimatesFromApi()) is Ok;
 
-      if (syncResult is Ok) {
-        // After successful sync, get data from offline storage
-        final offlineResult = await _offlineRepository.getAllEstimates();
-
-        if (offlineResult is Ok<List<EstimateModel>>) {
-          final syncedEstimates = offlineResult.asOk.value;
-
-          // Apply filters to synced data
-          List<EstimateModel> filteredEstimates = syncedEstimates;
-
-          if (status != null) {
-            filteredEstimates = filteredEstimates
-                .where((e) => e.status.name == status)
-                .toList();
-          }
-
-          if (limit != null) {
-            final startIndex = offset ?? 0;
-            filteredEstimates = filteredEstimates
-                .skip(startIndex)
-                .take(limit)
-                .toList();
-          }
-
-          _logger.info(
-            'EstimateRepository: Successfully synced and loaded ${filteredEstimates.length} estimates',
+      // Always fetch from offline storage and apply filters.
+      final offlineResult = await _offlineRepository.getAllEstimates();
+      if (offlineResult is Ok<List<EstimateModel>>) {
+        final all = offlineResult.asOk.value;
+        if (all.isEmpty && !syncOk) {
+          return Result.error(
+            Exception('No estimates available offline and API sync failed'),
           );
-          return Result.ok(filteredEstimates);
         }
-      } else {
-        _logger.warning(
-          'EstimateRepository: Failed to sync estimates from API: ${syncResult.asError.error}',
-        );
-
-        // If API fails, try to get existing offline data
-        final offlineResult = await _offlineRepository.getAllEstimates();
-
-        if (offlineResult is Ok<List<EstimateModel>>) {
-          final offlineEstimates = offlineResult.asOk.value;
-
-          if (offlineEstimates.isNotEmpty) {
-            _logger.info(
-              'EstimateRepository: Found ${offlineEstimates.length} estimates in offline storage',
-            );
-
-            // Apply filters to offline data
-            List<EstimateModel> filteredEstimates = offlineEstimates;
-
-            // Filter by status if provided
-            if (status != null) {
-              filteredEstimates = filteredEstimates
-                  .where((e) => e.status.name == status)
-                  .toList();
-            }
-
-            // Apply limit and offset
-            if (limit != null) {
-              final startIndex = offset ?? 0;
-              filteredEstimates = filteredEstimates
-                  .skip(startIndex)
-                  .take(limit)
-                  .toList();
-            }
-
-            return Result.ok(filteredEstimates);
-          }
-        }
-
-        return Result.error(
-          Exception('No estimates available offline and API sync failed'),
+        return Result.ok(
+          _applyFilters(
+            all,
+            limit: limit,
+            offset: offset,
+            status: status,
+          ),
         );
       }
 
       return Result.error(
-        Exception(
-          'Failed to get estimates from offline storage after API sync',
-        ),
+        Exception('Failed to get estimates from offline storage'),
       );
     } catch (e) {
       _logger.error('EstimateRepository: Error in getEstimates: $e', e);
@@ -133,9 +76,6 @@ class EstimateRepository implements IEstimateRepository {
 
         // Cache the newly created estimate for offline access
         await _offlineRepository.saveEstimate(estimate);
-        _logger.info(
-          'EstimateRepository: Cached newly created estimate ${estimate.id}',
-        );
 
         return Result.ok(estimate);
       }
@@ -164,9 +104,6 @@ class EstimateRepository implements IEstimateRepository {
 
         // Cache the newly created estimate for offline access
         await _offlineRepository.saveEstimate(createdEstimate);
-        _logger.info(
-          'EstimateRepository: Cached newly created multipart estimate ${createdEstimate.id}',
-        );
 
         return Result.ok(createdEstimate);
       }
@@ -187,39 +124,18 @@ class EstimateRepository implements IEstimateRepository {
   Future<Result<EstimateModel>> getEstimate(String estimateId) async {
     try {
       // Offline-first strategy: Try to get estimate from local storage first
-      _logger.info(
-        'EstimateRepository: Attempting to load estimate $estimateId from offline storage',
-      );
 
       final offlineResult = await _offlineRepository.getEstimate(estimateId);
 
       if (offlineResult is Ok<EstimateModel?>) {
         final offlineEstimate = offlineResult.asOk.value;
-
         if (offlineEstimate != null) {
-          _logger.info(
-            'EstimateRepository: Found estimate $estimateId in offline storage',
-          );
-
-          // Try to sync in background to get latest data
           _syncEstimateInBackground(estimateId);
-
           return Result.ok(offlineEstimate);
-        } else {
-          _logger.info(
-            'EstimateRepository: Estimate $estimateId not found in offline storage, trying API',
-          );
         }
-      } else {
-        _logger.warning(
-          'EstimateRepository: Failed to load estimate $estimateId from offline storage: ${offlineResult.asError.error}',
-        );
       }
 
       // If not found offline, try API and cache the result
-      _logger.info(
-        'EstimateRepository: Attempting to load estimate $estimateId from API',
-      );
       final apiResult = await _estimateService.getEstimate(estimateId);
 
       if (apiResult is Ok<EstimateModel>) {
@@ -227,9 +143,6 @@ class EstimateRepository implements IEstimateRepository {
 
         // Cache the estimate for future offline access
         await _offlineRepository.saveEstimate(estimate);
-        _logger.info(
-          'EstimateRepository: Cached estimate $estimateId from API',
-        );
 
         return Result.ok(estimate);
       }
@@ -257,7 +170,6 @@ class EstimateRepository implements IEstimateRepository {
 
         // Update the cached estimate
         await _offlineRepository.updateEstimate(updatedEstimate);
-        _logger.info('EstimateRepository: Updated cached estimate $estimateId');
 
         return Result.ok(updatedEstimate);
       }
@@ -278,12 +190,7 @@ class EstimateRepository implements IEstimateRepository {
       final apiResult = await _estimateService.deleteEstimate(estimateId);
 
       if (apiResult is Ok<bool> && apiResult.asOk.value) {
-        // Remove from offline cache
         await _offlineRepository.deleteEstimate(estimateId);
-        _logger.info(
-          'EstimateRepository: Removed deleted estimate $estimateId from cache',
-        );
-
         return Result.ok(true);
       }
 
@@ -344,8 +251,7 @@ class EstimateRepository implements IEstimateRepository {
         // Save each estimate to local storage
         for (final estimate in estimates) {
           try {
-            await _offlineRepository.saveEstimate(estimate);
-            await _offlineRepository.markEstimateAsSynced(estimate.id!);
+            await _saveAndMarkSynced(estimate);
           } catch (e) {
             _logger.error(
               'EstimateRepository: Error saving estimate ${estimate.id} to local storage: $e',
@@ -368,6 +274,23 @@ class EstimateRepository implements IEstimateRepository {
     }
   }
 
+  List<EstimateModel> _applyFilters(
+    List<EstimateModel> estimates, {
+    int? limit,
+    int? offset,
+    String? status,
+  }) {
+    var filtered = estimates;
+    if (status != null) {
+      filtered = filtered.where((e) => e.status.name == status).toList();
+    }
+    if (limit != null) {
+      final start = offset ?? 0;
+      filtered = filtered.skip(start).take(limit).toList();
+    }
+    return filtered;
+  }
+
   /// Sync specific estimate in background
   Future<void> _syncEstimateInBackground(String estimateId) async {
     try {
@@ -375,16 +298,20 @@ class EstimateRepository implements IEstimateRepository {
 
       if (apiResult is Ok<EstimateModel>) {
         final estimate = apiResult.asOk.value;
-        await _offlineRepository.saveEstimate(estimate);
-        await _offlineRepository.markEstimateAsSynced(estimateId);
-        _logger.info(
-          'EstimateRepository: Updated estimate $estimateId in background',
-        );
+        await _saveAndMarkSynced(estimate);
       }
     } catch (e) {
       _logger.warning(
         'EstimateRepository: Failed to update estimate $estimateId in background: $e',
       );
+    }
+  }
+
+  Future<void> _saveAndMarkSynced(EstimateModel estimate) async {
+    await _offlineRepository.saveEstimate(estimate);
+    final id = estimate.id;
+    if (id != null && id.isNotEmpty) {
+      await _offlineRepository.markEstimateAsSynced(id);
     }
   }
 }
