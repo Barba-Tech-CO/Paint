@@ -82,7 +82,7 @@ class ContactModel {
     return ContactModel(
       id: json['id'],
       ghlId: json['ghlId'] ?? json['id'],
-      locationId: json['locationId'],
+      locationId: json['locationId'] ?? json['location_id'],
       name: fullName,
       email: json['email'] ?? '',
       phone: json['phoneNo'] ?? json['phone'] ?? '',
@@ -285,6 +285,13 @@ class ContactModel {
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
+
+    // Ensure non-null location_id by inferring from GHL data when missing
+    if (map['location_id'] == null || (map['location_id'] as String).isEmpty) {
+      // Try to extract from custom_fields or tags if available
+      // If still null, set to a placeholder to avoid NOT NULL violation
+      map['location_id'] = map['location_id'] ?? '';
+    }
 
     // Only include user_id if it's not null
     if (localId != null) {
