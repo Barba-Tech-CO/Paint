@@ -61,6 +61,30 @@ class MaterialService {
     }
   }
 
+  /// Busca um material específico da API por ID (usando endpoint direto)
+  Future<Result<MaterialModel?>> getMaterialByIdFromApi(String id) async {
+    try {
+      final intId = int.tryParse(id);
+      if (intId == null) {
+        return Result.error(Exception('Invalid material id: $id'));
+      }
+
+      final result = await _quoteService.getExtractedMaterial(intId);
+      return result.when(
+        ok: (extracted) async {
+          final material = _convertExtractedToMaterials([extracted]).first;
+          // Cache it for future offline access
+          await _databaseService.upsertMaterial(material);
+          return Result.ok(material);
+        },
+        error: (error) => Result.error(error),
+      );
+    } catch (e) {
+      _logger.error('[MaterialService] Error fetching material by ID from API: $e');
+      return Result.error(Exception('Failed to fetch material by ID'));
+    }
+  }
+
   /// Verifica se há materiais no cache
   Future<bool> hasMaterialsInCache() async {
     return await _databaseService.hasMaterials();
