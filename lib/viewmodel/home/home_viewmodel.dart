@@ -27,17 +27,27 @@ class HomeViewModel extends ChangeNotifier {
 
   HomeViewModel(this._estimateRepository);
 
-  /// Adjust image URL based on environment (development vs production)
+  /// Adjust image URL to absolute and point to the correct host.
+  /// - API may return relative paths like `storage/estimates/...`
+  /// - In development, we map prod domain to local base host.
   String _adjustImageUrl(String originalUrl) {
-    if (!AppConfig.isProduction) {
-      // In development, replace production domain with local development domain
-      final localBaseUrl = AppConfig.baseUrl.replaceAll('/api', '');
-      return originalUrl.replaceAll(
-        'https://paintpro.barbatech.company',
-        localBaseUrl,
-      );
+    final baseHost = AppConfig.baseUrl.replaceAll(RegExp(r"/api/?$"), '');
+
+    // If it's already absolute
+    if (originalUrl.startsWith('http://') || originalUrl.startsWith('https://')) {
+      if (!AppConfig.isProduction) {
+        // Map prod domain to local when running in dev
+        return originalUrl.replaceAll(
+          'https://paintpro.barbatech.company',
+          baseHost,
+        );
+      }
+      return originalUrl;
     }
-    return originalUrl;
+
+    // Handle relative paths from API (e.g. storage/..., /storage/...)
+    final normalized = originalUrl.replaceFirst(RegExp(r'^/+'), '');
+    return '$baseHost/$normalized';
   }
 
   /// Initialize the home view model
@@ -98,14 +108,20 @@ class HomeViewModel extends ChangeNotifier {
           ? '${estimate.createdAt!.month.toString().padLeft(2, '0')}/${estimate.createdAt!.day.toString().padLeft(2, '0')}/${estimate.createdAt!.year % 100}'
           : '';
 
-      // Get first photo from API - must exist
-      String image;
+      // Get first photo if available; otherwise leave empty to use placeholder in UI
+      String image = '';
       if (estimate.photosData != null && estimate.photosData!.isNotEmpty) {
         image = _adjustImageUrl(estimate.photosData!.first);
       } else if (estimate.photos != null && estimate.photos!.isNotEmpty) {
         image = _adjustImageUrl(estimate.photos!.first);
-      } else {
-        throw Exception('No photos found in estimate ${estimate.id}');
+      } else if (estimate.zones != null && estimate.zones!.isNotEmpty) {
+        // Try a zone photo as fallback
+        for (final z in estimate.zones!) {
+          if (z.data.isNotEmpty && z.data.first.photoPaths.isNotEmpty) {
+            image = _adjustImageUrl(z.data.first.photoPaths.first);
+            break;
+          }
+        }
       }
 
       // Count zones from estimate data
@@ -122,8 +138,17 @@ class HomeViewModel extends ChangeNotifier {
 
       return project;
     } catch (e) {
-      // Re-throw the error instead of returning a default project
-      rethrow;
+      // If mapping fails for any unexpected reason, fallback to a minimal project
+      return ProjectModel(
+        id: int.tryParse(estimate.id ?? '') ?? estimate.hashCode,
+        projectName: estimate.projectName ?? 'Estimate',
+        personName: estimate.clientName ?? 'No Client',
+        zonesCount: estimate.zones?.length ?? 0,
+        createdDate: estimate.createdAt != null
+            ? '${estimate.createdAt!.month.toString().padLeft(2, '0')}/${estimate.createdAt!.day.toString().padLeft(2, '0')}/${estimate.createdAt!.year % 100}'
+            : '',
+        image: '',
+      );
     }
   }
 
