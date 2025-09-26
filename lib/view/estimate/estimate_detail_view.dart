@@ -212,8 +212,8 @@ class _EstimateDetailViewState extends State<EstimateDetailView> {
                                 material.id,
                               ),
                               builder: (context, snapshot) {
-                                final materialName =
-                                    snapshot.data ?? material.product;
+                                final isDone = snapshot.connectionState == ConnectionState.done;
+                                final materialName = snapshot.data ?? (isDone ? 'Unknown Material' : 'Loading…');
                                 return MaterialItemRowWidget(
                                   title: materialName,
                                   subtitle:
