@@ -242,35 +242,11 @@ class EstimateDetailViewModel extends ChangeNotifier {
   Future<String> getMaterialNameById(String materialId) async {
     try {
       final result = await _materialRepository.getMaterialById(materialId);
-
-      if (result is Ok) {
-        final material = result.asOk.value;
-        if (material != null) {
-          return material.name;
-        } else {
-          // If material not found in database, try to get from estimate materials
-          if (_estimateDetail != null) {
-            final estimateMaterial = _estimateDetail!.materials.firstWhere(
-              (m) => m.id == materialId,
-              orElse: () => throw Exception('Material not found in estimate'),
-            );
-            return estimateMaterial.product;
-          }
-        }
+      if (result is Ok && result.asOk.value != null) {
+        return result.asOk.value!.name;
       }
     } catch (e) {
-      // Fallback: try to get from estimate materials
-      if (_estimateDetail != null) {
-        try {
-          final estimateMaterial = _estimateDetail!.materials.firstWhere(
-            (m) => m.id == materialId,
-            orElse: () => throw Exception('Material not found in estimate'),
-          );
-          return estimateMaterial.product;
-        } catch (fallbackError) {
-          // Fallback failed, continue to return Unknown Material
-        }
-      }
+      // Swallow error and return default below
     }
     return 'Unknown Material';
   }
