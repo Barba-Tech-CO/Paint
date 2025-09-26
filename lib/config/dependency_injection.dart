@@ -47,7 +47,11 @@ import '../service/paint_catalog_service.dart';
 import '../service/photo_service.dart';
 import '../service/quote_service.dart';
 import '../service/sync_service.dart';
-import '../service/local_storage_service.dart';
+import '../service/database_service.dart';
+import '../service/local/estimates_local_service.dart';
+import '../service/local/pending_operations_local_service.dart';
+import '../service/local/dashboard_cache_local_service.dart';
+import '../service/local/quotes_local_service.dart';
 import '../service/user_service.dart';
 import '../service/zones_service.dart';
 import '../service/i_zones_service.dart';
@@ -201,9 +205,28 @@ void setupDependencyInjection() {
     () => ZonesService(),
   );
 
-  getIt.registerLazySingleton<LocalStorageService>(
-    () => LocalStorageService(
+  // Database + Local Services
+  getIt.registerLazySingleton<DatabaseService>(() => DatabaseService());
+  getIt.registerLazySingleton<EstimatesLocalService>(
+    () => EstimatesLocalService(
+      getIt<DatabaseService>(),
       getIt<AppLogger>(),
+    ),
+  );
+  getIt.registerLazySingleton<PendingOperationsLocalService>(
+    () => PendingOperationsLocalService(
+      getIt<DatabaseService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+  getIt.registerLazySingleton<DashboardCacheLocalService>(
+    () => DashboardCacheLocalService(
+      getIt<DatabaseService>(),
+    ),
+  );
+  getIt.registerLazySingleton<QuotesLocalService>(
+    () => QuotesLocalService(
+      getIt<DatabaseService>(),
     ),
   );
 
@@ -261,7 +284,7 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IDashboardRepository>(
     () => DashboardRepositoryImpl(
       getIt<DashboardService>(),
-      getIt<LocalStorageService>(),
+      getIt<DashboardCacheLocalService>(),
       getIt<AppLogger>(),
     ),
   );
@@ -279,14 +302,16 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IQuoteRepository>(
     () => QuoteRepository(
       quoteService: getIt<QuoteService>(),
-      localStorageService: getIt<LocalStorageService>(),
+      localStorageService: getIt<QuotesLocalService>(),
       logger: getIt<AppLogger>(),
     ),
   );
 
   getIt.registerLazySingleton<IOfflineRepository>(
     () => OfflineRepository(
-      getIt<LocalStorageService>(),
+      getIt<EstimatesLocalService>(),
+      getIt<PendingOperationsLocalService>(),
+      getIt<DatabaseService>(),
       getIt<AppLogger>(),
     ),
   );
