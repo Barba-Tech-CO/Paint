@@ -4,6 +4,8 @@ import 'package:sqflite/sqflite.dart';
 /// Provides a single sqflite [Database] instance and manages schema creation.
 class DatabaseService {
   static Database? _database;
+  static const _databaseName = 'paint_pro_local.db';
+  static const _databaseVersion = 2;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -13,13 +15,19 @@ class DatabaseService {
 
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'paint_pro_local.db');
+    final path = join(dbPath, _databaseName);
 
     return await openDatabase(
       path,
-      version: 1,
+      version: _databaseVersion,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+      onOpen: _onOpen,
     );
+  }
+
+  Future<void> _onOpen(Database db) async {
+    await _ensureQuotesSchema(db);
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -69,44 +77,22 @@ class DatabaseService {
       )
     ''');
 
-    await db.execute('''
-      CREATE TABLE quotes (
-        id INTEGER PRIMARY KEY,
-        user_id INTEGER,
-        original_name TEXT NOT NULL,
-        display_name TEXT,
-        file_path TEXT NOT NULL,
-        r2_url TEXT,
-        file_hash TEXT,
-        status TEXT NOT NULL,
-        materials_extracted INTEGER DEFAULT 0,
-        extraction_metadata TEXT,
-        error_message TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        is_synced INTEGER DEFAULT 1,
-        sync_status TEXT DEFAULT 'synced'
-      )
-    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_estimates_sync_status ON estimates(sync_status)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_estimates_created_at ON estimates(created_at)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_pending_operations_type ON pending_operations(operation_type)',
+    );
+    await _ensureQuotesSchema(db);
+  }
 
-    await db.execute(
-      'CREATE INDEX idx_estimates_sync_status ON estimates(sync_status)',
-    );
-    await db.execute(
-      'CREATE INDEX idx_estimates_created_at ON estimates(created_at)',
-    );
-    await db.execute(
-      'CREATE INDEX idx_pending_operations_type ON pending_operations(operation_type)',
-    );
-    await db.execute(
-      'CREATE INDEX idx_quotes_sync_status ON quotes(sync_status)',
-    );
-    await db.execute(
-      'CREATE INDEX idx_quotes_created_at ON quotes(created_at)',
-    );
-    await db.execute(
-      'CREATE INDEX idx_quotes_user_id ON quotes(user_id)',
-    );
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _ensureQuotesSchema(db);
+    }
   }
 
   Future<void> close() async {
@@ -118,3 +104,34 @@ class DatabaseService {
   }
 }
 
+Future<void> _ensureQuotesSchema(Database db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS quotes (
+      id INTEGER PRIMARY KEY,
+      user_id INTEGER,
+      original_name TEXT NOT NULL,
+      display_name TEXT,
+      file_path TEXT NOT NULL,
+      r2_url TEXT,
+      file_hash TEXT,
+      status TEXT NOT NULL,
+      materials_extracted INTEGER DEFAULT 0,
+      extraction_metadata TEXT,
+      error_message TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      is_synced INTEGER DEFAULT 1,
+      sync_status TEXT DEFAULT 'synced'
+    )
+  ''');
+
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_quotes_sync_status ON quotes(sync_status)',
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_quotes_created_at ON quotes(created_at)',
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_quotes_user_id ON quotes(user_id)',
+  );
+}
