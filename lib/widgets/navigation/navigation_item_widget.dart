@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/app_colors.dart';
 import '../../model/navigation/navigation_item_model.dart';
+import 'navigation_item_icon.dart';
 
 class NavigationItemWidget extends StatelessWidget {
   final NavigationItemModel item;
@@ -33,12 +34,9 @@ class NavigationItemWidget extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                isActive ? item.activeIcon : item.icon,
-                color: isActive
-                    ? AppColors.navigationActive
-                    : AppColors.navigationInactive,
-                size: 26,
+              NavigationItemIcon(
+                item: item,
+                isActive: isActive,
               ),
               const SizedBox(height: 2),
               Flexible(
