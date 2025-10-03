@@ -11,6 +11,9 @@ import 'service/app_services_initializer.dart';
 import 'service/location_service.dart';
 import 'service/navigation_service.dart';
 import 'viewmodel/auth/auth_viewmodel.dart';
+import 'viewmodel/auth/login_viewmodel.dart';
+import 'viewmodel/auth/signup_viewmodel.dart';
+import 'viewmodel/auth/verify_otp_viewmodel.dart';
 import 'viewmodel/contact/contact_list_viewmodel.dart';
 import 'viewmodel/contacts/contacts_viewmodel.dart';
 import 'viewmodel/estimate/estimate_calculation_viewmodel.dart';
@@ -54,6 +57,15 @@ class PaintProApp extends StatelessWidget {
         // Auth ViewModels
         ChangeNotifierProvider<AuthViewModel>(
           create: (_) => getIt<AuthViewModel>(),
+        ),
+        ChangeNotifierProvider<LoginViewModel>(
+          create: (_) => getIt<LoginViewModel>(),
+        ),
+        ChangeNotifierProvider<SignUpViewModel>(
+          create: (_) => getIt<SignUpViewModel>(),
+        ),
+        ChangeNotifierProvider<VerifyOtpViewModel>(
+          create: (_) => getIt<VerifyOtpViewModel>(),
         ),
         // Contact ViewModels
         ChangeNotifierProvider<ContactListViewModel>(

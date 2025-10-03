@@ -76,6 +76,9 @@ import '../use_case/quotes/quote_upload_use_case.dart';
 // ViewModel Layer
 import '../viewmodel/select_colors_viewmodel.dart';
 import '../viewmodel/auth/auth_viewmodel.dart';
+import '../viewmodel/auth/login_viewmodel.dart';
+import '../viewmodel/auth/signup_viewmodel.dart';
+import '../viewmodel/auth/verify_otp_viewmodel.dart';
 import '../viewmodel/contact/contact_list_viewmodel.dart';
 import '../viewmodel/contact/contact_detail_viewmodel.dart';
 import '../viewmodel/contact/new_contact_viewmodel.dart';
@@ -122,10 +125,15 @@ void setupDependencyInjection() {
     () => AuthStateManager(),
   );
 
+  getIt.registerLazySingleton<AuthPersistenceService>(
+    () => AuthPersistenceService(),
+  );
+
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(
       getIt<HttpService>(),
       getIt<LocationService>(),
+      getIt<AuthPersistenceService>(),
       getIt<AppLogger>(),
     ),
   );
@@ -172,9 +180,6 @@ void setupDependencyInjection() {
   );
   getIt.registerLazySingleton<DeepLinkService>(
     () => DeepLinkService(),
-  );
-  getIt.registerLazySingleton<AuthPersistenceService>(
-    () => AuthPersistenceService(),
   );
   getIt.registerLazySingleton<ContactLoadingService>(
     () => ContactLoadingService(
@@ -416,6 +421,33 @@ void setupDependencyInjection() {
       getIt<HandleWebViewNavigationUseCase>(),
       getIt<DeepLinkService>(),
       getIt<AuthPersistenceService>(),
+      getIt<HttpService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<LoginViewModel>(
+    () => LoginViewModel(
+      getIt<HttpService>(),
+      getIt<AuthPersistenceService>(),
+      getIt<LocationService>(),
+      getIt<UserService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<SignUpViewModel>(
+    () => SignUpViewModel(
+      getIt<HttpService>(),
+      getIt<AuthPersistenceService>(),
+      getIt<LocationService>(),
+      getIt<UserService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<VerifyOtpViewModel>(
+    () => VerifyOtpViewModel(
       getIt<HttpService>(),
       getIt<AppLogger>(),
     ),

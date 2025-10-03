@@ -4,6 +4,9 @@ import '../model/contacts/contact_model.dart';
 import '../model/projects/project_card_model.dart';
 import '../use_case/navigation/navigation_data_use_case.dart';
 import '../view/auth/auth_view.dart';
+import '../view/auth/login_screen.dart';
+import '../view/auth/signup_screen.dart';
+import '../view/auth/verify_otp_screen.dart';
 import '../view/camera/camera_view.dart';
 import '../view/contact_details/contact_details_view.dart';
 import '../view/contacts/contacts_view.dart';
@@ -34,6 +37,21 @@ final router = GoRouter(
     GoRoute(
       path: '/auth',
       builder: (context, state) => const AuthView(),
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/signup',
+      builder: (context, state) => const SignUpScreen(),
+    ),
+    GoRoute(
+      path: '/verify-otp',
+      builder: (context, state) {
+        final email = state.extra as String? ?? '';
+        return VerifyOtpScreen(email: email);
+      },
     ),
     GoRoute(
       path: '/home',
