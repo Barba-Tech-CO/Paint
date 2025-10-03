@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../config/app_colors.dart';
+import '../../config/dependency_injection.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/logger/logger_app_logger_impl.dart';
 import '../../viewmodel/auth/auth_viewmodel.dart';
-import '../../widgets/appbars/paint_pro_app_bar.dart';
-import 'auth_content.dart';
+import '../../viewmodel/auth/login_viewmodel.dart';
+import 'login_screen.dart';
 import 'marketplace_popup_helper.dart';
 
 class AuthView extends StatelessWidget {
@@ -20,13 +20,16 @@ class AuthView extends StatelessWidget {
     return Consumer<AuthViewModel>(
       builder: (context, viewModel, child) {
         _handleSideEffects(context, viewModel);
-        return Scaffold(
-          appBar: PaintProAppBar(
-            title: 'Authentication',
-            backgroundColor: AppColors.primary,
-            toolbarHeight: 80,
+
+        // Use LoginScreen instead of webview
+        return ChangeNotifierProvider(
+          create: (_) => getIt<LoginViewModel>(),
+          child: Consumer<LoginViewModel>(
+            builder: (context, loginViewModel, child) {
+              _handleLoginSideEffects(context, loginViewModel);
+              return const LoginScreen();
+            },
           ),
-          body: const AuthContent(),
         );
       },
     );
@@ -44,6 +47,19 @@ class AuthView extends StatelessWidget {
 
       if (viewModel.shouldShowPopup && viewModel.popupUrl != null) {
         MarketplacePopupHelper.show(context, viewModel.popupUrl!, viewModel);
+      }
+    });
+  }
+
+  void _handleLoginSideEffects(BuildContext context, LoginViewModel loginViewModel) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Se o login foi bem-sucedido, navegar para o dashboard
+      if (loginViewModel.loginSuccess) {
+        try {
+          context.go('/home');
+        } catch (e) {
+          _logger.error('[AuthView] Error navigating to home after login: $e');
+        }
       }
     });
   }
