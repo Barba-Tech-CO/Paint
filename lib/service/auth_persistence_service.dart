@@ -26,6 +26,8 @@ class AuthPersistenceService {
 
     if (locationId != null) {
       await prefs.setString(_keyLocationId, locationId);
+    } else {
+      await prefs.remove(_keyLocationId);
     }
 
     if (expiresAt != null) {
@@ -34,6 +36,8 @@ class AuthPersistenceService {
 
     if (sanctumToken != null) {
       await prefs.setString(_keySanctumToken, sanctumToken);
+    } else {
+      await prefs.remove(_keySanctumToken);
     }
   }
 

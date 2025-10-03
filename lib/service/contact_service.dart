@@ -30,7 +30,9 @@ class ContactService {
         );
       }
 
-      _logger.info('ContactService: Triggering /contacts/sync (limit=$limit, location=$locationId)');
+      _logger.info(
+        'ContactService: Triggering /contacts/sync (limit=$limit, location=$locationId)',
+      );
       final response = await _httpService.post(
         '$_baseUrl/sync',
         data: {'limit': limit},
@@ -88,9 +90,8 @@ class ContactService {
           : 1;
 
       // POST sem body cai na listagem (ver controller store -> listContacts)
-      final response = await _httpService.post(
+      final response = await _httpService.get(
         _baseUrl,
-        data: const {},
         queryParameters: {
           'limit': effLimit,
           'page': page,
@@ -99,16 +100,23 @@ class ContactService {
           headers: {
             'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
-            'Content-Type': 'application/json',
           },
         ),
       );
 
       if (response.statusCode == 200) {
         try {
-          final contactListResponse = ContactListResponse.fromJson(
-            response.data,
-          );
+          final data = response.data;
+          if (data is! Map<String, dynamic>) {
+            _logger.error(
+              'ContactService: Unexpected response structure when listing contacts',
+            );
+            return Result.error(
+              Exception('Unexpected response while listing contacts'),
+            );
+          }
+
+          final contactListResponse = ContactListResponse.fromJson(data);
           return Result.ok(contactListResponse);
         } catch (e) {
           _logger.error('ContactService: Error parsing response: $e');
@@ -150,7 +158,7 @@ class ContactService {
       }
 
       final response = await _httpService.post(
-        _baseUrl,
+        '$_baseUrl/search',
         data: {
           'locationId': locationId,
           'query': query,
@@ -166,7 +174,16 @@ class ContactService {
 
       // Handle successful response (200 OK)
       if (response.statusCode == 200) {
-        final contactListResponse = ContactListResponse.fromJson(response.data);
+        final data = response.data;
+        if (data is! Map<String, dynamic>) {
+          _logger.error(
+            'ContactService: Unexpected response structure on search',
+          );
+          return Result.error(
+            Exception('Unexpected response while searching contacts'),
+          );
+        }
+        final contactListResponse = ContactListResponse.fromJson(data);
         return Result.ok(contactListResponse);
       } else {
         final errorMessage = response.data['message'];

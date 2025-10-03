@@ -14,7 +14,30 @@ class UserService {
   Future<Result<UserModel>> getUser() async {
     try {
       final response = await _httpService.get('/user');
-      final user = UserModel.fromJson(response.data);
+      if (response.statusCode == 401) {
+        return Result.error(
+          AuthServiceException(
+            message: 'Authentication required',
+            errorType: AuthServiceErrorType.invalidCredentials,
+            technicalDetails: 'GET /user returned 401',
+          ),
+        );
+      }
+
+      if (response.statusCode != 200) {
+        return Result.error(
+          Exception('Failed to load user data: ${response.statusCode}'),
+        );
+      }
+
+      final data = response.data;
+      if (data is! Map<String, dynamic>) {
+        return Result.error(
+          Exception('Unexpected user payload format'),
+        );
+      }
+
+      final user = UserModel.fromJson(data);
       return Result.ok(user);
     } on AuthServiceException catch (e) {
       _logger.error('[UserService] Technical details: ${e.technicalDetails}');

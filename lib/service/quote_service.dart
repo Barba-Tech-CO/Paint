@@ -58,6 +58,7 @@ class QuoteService {
 
       // Create FormData for multipart upload
       final formData = FormData.fromMap({
+        // Backend expects field name `quote` (docs reference `pdf`), keep aligned with API request class
         'quote': await MultipartFile.fromFile(
           quoteFile.path,
           filename: finalFilename,
