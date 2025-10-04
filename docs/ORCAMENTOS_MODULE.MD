@@ -1,6 +1,20 @@
 # MÓDULO DE ORÇAMENTOS - ORCAMENTOS_MODULE
 
-Este módulo gerencia orçamentos de pintura (estimates), permitindo criar, listar, atualizar e acompanhar o progresso de projetos de pintura com cálculo automático de materiais e custos.
+## 📌 Visão Geral
+
+Responsável por todo o ciclo de orçamento de pintura, desde a coleta das fotos até o envio final para o CRM. O módulo combina fluxos manuais (CRUD via API) e automações guiadas pelo Jamie AI.
+
+## 🔗 Links Rápidos
+- Referência de endpoints: `docs/reference/estimates.md`
+- Fluxo Jamie AI (one-shot estimate): `docs/reference/jamie-ai.md`
+- Materiais e PDFs relacionados: `docs/reference/materials.md`
+- Coleção Postman (`/Estimates`): `docs/collections/api-postman.json`
+
+## 🧱 Componentes Principais
+- **Modelo `Estimate`** – Entidade central com status de workflow e dados agregados.
+- **Enums e Policies** – Garantem transições válidas de status e isolamento por usuário.
+- **Processador de fotos & IA** – Normaliza fotos, alimenta o Jamie AI e atualiza campos automáticos.
+- **Integração GHL** – Sincroniza orçamentos aprovados com o pipeline de vendas.
 
 ## 1. Modelos de Dados e Estrutura da Tabela
 
@@ -37,9 +51,9 @@ Este módulo gerencia orçamentos de pintura (estimates), permitindo criar, list
 - `created_at` (timestamp, not null) - Data de criação
 - `updated_at` (timestamp, not null) - Data de atualização
 
-**Estrutura da Tabela `paint_pro_estimates`:**
+**Estrutura da Tabela `estimates`:**
 ```sql
-CREATE TABLE paint_pro_estimates (
+CREATE TABLE estimates (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NULL,
     ghl_estimate_id VARCHAR(255) NULL,
@@ -51,12 +65,15 @@ CREATE TABLE paint_pro_estimates (
     additional_notes TEXT NULL,
     status ENUM('draft', 'photos_uploaded', 'photos_processed', 'elements_selected', 'materials_calculated', 'completed', 'sent') DEFAULT 'draft',
     photos_data JSON NULL,
+    zones JSON NULL,
     measurements JSON NULL,
     paint_elements JSON NULL,
     wall_condition ENUM('very_good', 'good', 'poor', 'very_poor') NOT NULL,
     has_accent_wall BOOLEAN DEFAULT FALSE,
     extra_notes TEXT NULL,
     materials_calculation JSON NULL,
+    materials JSON NULL,
+    totals JSON NULL,
     labor_calculation JSON NULL,
     total_cost DECIMAL(10,2) NOT NULL,
     complete BOOLEAN DEFAULT FALSE,
