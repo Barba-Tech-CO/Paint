@@ -1,0 +1,760 @@
+{
+  "info": {
+    "name": "PaintPro API Collection",
+    "description": "Complete API collection for PaintPro API - Paint estimate management with GoHighLevel integration and AI-powered materials extraction",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearer_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://paintpro.barbatech.company",
+      "type": "string"
+    },
+    {
+      "key": "local_url", 
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "bearer_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ghl_location_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test Contact Creation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/test-contacts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "test-contacts"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "GoHighLevel Auth",
+      "item": [
+        {
+          "name": "Start OAuth Flow",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/redirect",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "redirect"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Auth Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "refresh"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "GoHighLevel Contacts",
+      "item": [
+        {
+          "name": "List Contacts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-GHL-Location-ID",
+                "value": "{{ghl_location_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/contacts?location_id={{ghl_location_id}}&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts"],
+              "query": [
+                {
+                  "key": "location_id",
+                  "value": "{{ghl_location_id}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Contact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-GHL-Location-ID",
+                "value": "{{ghl_location_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Maria\",\n  \"lastName\": \"Silva\",\n  \"email\": \"maria@example.com\",\n  \"phone\": \"+1234567890\",\n  \"companyName\": \"Silva Construções\",\n  \"address1\": \"123 Main Street\",\n  \"city\": \"São Paulo\",\n  \"state\": \"SP\",\n  \"postalCode\": \"01234-567\",\n  \"country\": \"Brazil\",\n  \"tags\": [\"prospect\", \"referral\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/contacts?location_id={{ghl_location_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts"],
+              "query": [
+                {
+                  "key": "location_id",
+                  "value": "{{ghl_location_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Contacts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-GHL-Location-ID",
+                "value": "{{ghl_location_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"locationId\": \"{{ghl_location_id}}\",\n  \"query\": \"maria\",\n  \"pageLimit\": 20,\n  \"page\": 1,\n  \"filters\": [\n    {\n      \"field\": \"email\",\n      \"operator\": \"contains\",\n      \"value\": \"maria\"\n    }\n  ],\n  \"sort\": [\n    {\n      \"field\": \"dateAdded\",\n      \"direction\": \"desc\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/contacts/search",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts", "search"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Contact",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-GHL-Location-ID",
+                "value": "{{ghl_location_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/contacts/:contactId?location_id={{ghl_location_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts", ":contactId"],
+              "query": [
+                {
+                  "key": "location_id",
+                  "value": "{{ghl_location_id}}"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "contactId",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Contact",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-GHL-Location-ID",
+                "value": "{{ghl_location_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Maria\",\n  \"lastName\": \"Silva Santos\",\n  \"email\": \"maria.santos@example.com\",\n  \"phone\": \"+1234567891\",\n  \"companyName\": \"Santos & Cia Ltda\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/contacts/:contactId?location_id={{ghl_location_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts", ":contactId"],
+              "query": [
+                {
+                  "key": "location_id",
+                  "value": "{{ghl_location_id}}"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "contactId",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Contact",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-GHL-Location-ID",
+                "value": "{{ghl_location_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/contacts/:contactId?location_id={{ghl_location_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts", ":contactId"],
+              "query": [
+                {
+                  "key": "location_id",
+                  "value": "{{ghl_location_id}}"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "contactId",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Estimates",
+      "item": [
+        {
+          "name": "List Estimates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estimates?limit=15&status=completed",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estimates"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "15"
+                },
+                {
+                  "key": "status",
+                  "value": "completed"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Estimate",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estimates/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estimates", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Estimate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "project_name",
+                  "value": "Casa da Maria - Pintura Externa",
+                  "type": "text"
+                },
+                {
+                  "key": "client_name",
+                  "value": "Maria Silva",
+                  "type": "text"
+                },
+                {
+                  "key": "project_type",
+                  "value": "exterior",
+                  "type": "text"
+                },
+                {
+                  "key": "contact",
+                  "value": "Maria Silva",
+                  "type": "text"
+                },
+                {
+                  "key": "ghl_contact_id",
+                  "value": "60d5ec49e1b2c50012345678",
+                  "type": "text"
+                },
+                {
+                  "key": "wall_condition",
+                  "value": "good",
+                  "type": "text"
+                },
+                {
+                  "key": "has_accent_wall",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "total_cost",
+                  "value": "350.75",
+                  "type": "text"
+                },
+                {
+                  "key": "complete",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "materials_calculation",
+                  "value": "{\"gallons_needed\":2.5,\"cans_needed\":3,\"unit\":\"gallon\"}",
+                  "type": "text"
+                },
+                {
+                  "key": "photos[]",
+                  "value": "",
+                  "type": "file",
+                  "description": "Upload 3-9 photos (JPEG, PNG, WEBP, max 5MB each)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/estimates",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estimates"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Estimate",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "project_name",
+                  "value": "Casa da Maria - Pintura Externa Atualizada",
+                  "type": "text"
+                },
+                {
+                  "key": "total_cost",
+                  "value": "2500.00",
+                  "type": "text"
+                },
+                {
+                  "key": "has_accent_wall",
+                  "value": "true",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/estimates/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estimates", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Estimate",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estimates/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estimates", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Dashboard Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estimates/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estimates", "dashboard"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Materials Extraction",
+      "item": [
+        {
+          "name": "Upload PDF",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "pdf",
+                  "value": "",
+                  "type": "file",
+                  "description": "PDF file (max 10MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/materials/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "materials", "upload"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Uploads",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/materials/uploads?status=completed&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "materials", "uploads"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "completed"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Processing Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/materials/status/:pdfUploadId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "materials", "status", ":pdfUploadId"],
+              "variable": [
+                {
+                  "key": "pdfUploadId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update PDF Info",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"display_name\": \"Paint Quote - Updated Name\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/materials/update/:pdfUploadId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "materials", "update", ":pdfUploadId"],
+              "variable": [
+                {
+                  "key": "pdfUploadId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete PDF Upload",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/materials/delete/:pdfUploadId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "materials", "delete", ":pdfUploadId"],
+              "variable": [
+                {
+                  "key": "pdfUploadId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          "// Auto-set bearer token if available in environment",
+          "const token = pm.environment.get('bearer_token');",
+          "if (token) {",
+          "    pm.request.headers.upsert({key: 'Authorization', value: `Bearer ${token}`});",
+          "}"
+        ],
+        "type": "text/javascript"
+      }
+    }
+  ]
+}
