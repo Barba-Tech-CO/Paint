@@ -8,7 +8,6 @@ import '../../service/auth_persistence_service.dart';
 import '../../service/contact_database_service.dart';
 import '../../service/contact_service.dart';
 import '../../service/http_service.dart';
-import '../../service/location_service.dart';
 import '../../service/user_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
@@ -16,7 +15,6 @@ import '../../utils/result/result.dart';
 class ContactRepository extends IContactRepository {
   final ContactService _contactService;
   final ContactDatabaseService _databaseService;
-  final LocationService _locationService;
   final UserService _userService;
   final AppLogger _logger;
 
@@ -34,12 +32,10 @@ class ContactRepository extends IContactRepository {
   ContactRepository({
     required ContactService contactService,
     required ContactDatabaseService databaseService,
-    required LocationService locationService,
     required UserService userService,
     required AppLogger logger,
   }) : _contactService = contactService,
        _databaseService = databaseService,
-       _locationService = locationService,
        _userService = userService,
        _logger = logger {
     _initializeFromDatabase();
@@ -62,16 +58,6 @@ class ContactRepository extends IContactRepository {
   }
 
   // Helper methods for common operations
-  Future<Result<String>> _getCurrentLocationId() async {
-    final locationId = _locationService.currentLocationId;
-    if (locationId == null || locationId.isEmpty) {
-      return Result.error(
-        Exception('Location ID not available. User not authenticated.'),
-      );
-    }
-    return Result.ok(locationId);
-  }
-
   Future<Result<int>> _getCurrentUserId() async {
     try {
       final userResult = await _userService.getUser();
@@ -94,22 +80,6 @@ class ContactRepository extends IContactRepository {
         Exception('Error getting user ID: $e'),
       );
     }
-  }
-
-  Future<Result<String>> _validateLocationAccess(
-    String contactLocationId,
-  ) async {
-    final locationResult = await _getCurrentLocationId();
-    if (locationResult is Error) return locationResult;
-
-    final currentLocationId = locationResult.asOk.value;
-    if (contactLocationId != currentLocationId) {
-      _logger.error('Contact does not belong to current user location.');
-      return Result.error(
-        Exception('Contact does not belong to current user location.'),
-      );
-    }
-    return Result.ok(currentLocationId);
   }
 
   void _updateContactInMemory(ContactModel contact) {
@@ -183,11 +153,6 @@ class ContactRepository extends IContactRepository {
     List<Map<String, dynamic>>? customFields,
   }) async {
     try {
-      final locationResult = await _getCurrentLocationId();
-      if (locationResult is Error) {
-        return Result.error(locationResult.asError.error);
-      }
-
       final tempGhlId =
           'temp_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecond}';
       final now = DateTime.now();
@@ -201,7 +166,7 @@ class ContactRepository extends IContactRepository {
       final tempContact = ContactModel(
         localId: userIdResult.asOk.value, // Use actual user ID
         ghlId: tempGhlId,
-        locationId: locationResult.asOk.value,
+        locationId: null,
         name: name ?? '',
         email: email ?? '',
         phone: phone ?? '',
@@ -350,13 +315,6 @@ class ContactRepository extends IContactRepository {
         );
       }
 
-      final locationResult = await _validateLocationAccess(
-        currentContact.locationId!,
-      );
-      if (locationResult is Error) {
-        return Result.error(locationResult.asError.error);
-      }
-
       final updatedContact = currentContact.copyWith(
         name: name,
         email: email,
@@ -448,13 +406,6 @@ class ContactRepository extends IContactRepository {
     try {
       final currentContact = await _databaseService.getContact(contactId);
       if (currentContact != null) {
-        final locationResult = await _validateLocationAccess(
-          currentContact.locationId!,
-        );
-        if (locationResult is Error) {
-          return Result.error(locationResult.asError.error);
-        }
-
         await _databaseService.updateSyncStatus(contactId, SyncStatus.pending);
       }
 
@@ -478,34 +429,26 @@ class ContactRepository extends IContactRepository {
     try {
       // Offline-first strategy: Always try to search in API first
       _logger.info('ContactRepository: Attempting to search contacts in API');
-      final locationResult = await _getCurrentLocationId();
+      final apiResult = await _contactService.searchContacts(query);
 
-      if (locationResult is Ok) {
-        final apiResult = await _contactService.searchContacts(query);
+      if (apiResult is Ok) {
+        final apiResponse = apiResult.asOk.value;
+        _logger.info(
+          'ContactRepository: Successfully searched contacts in API, found ${apiResponse.contacts.length} results',
+        );
 
-        if (apiResult is Ok) {
-          final apiResponse = apiResult.asOk.value;
-          _logger.info(
-            'ContactRepository: Successfully searched contacts in API, found ${apiResponse.contacts.length} results',
-          );
-
-          // Update local database with API results
-          for (final contact in apiResponse.contacts) {
-            try {
-              await _databaseService.insertContact(contact);
-            } catch (e) {
-              _logger.warning('Failed to save contact to local database: $e');
-            }
+        // Update local database with API results
+        for (final contact in apiResponse.contacts) {
+          try {
+            await _databaseService.insertContact(contact);
+          } catch (e) {
+            _logger.warning('Failed to save contact to local database: $e');
           }
-          return Result.ok(apiResponse);
-        } else {
-          _logger.warning(
-            'ContactRepository: API search failed: ${apiResult.asError.error}',
-          );
         }
+        return Result.ok(apiResponse);
       } else {
         _logger.warning(
-          'ContactRepository: Location ID not available: ${locationResult.asError.error}',
+          'ContactRepository: API search failed: ${apiResult.asError.error}',
         );
       }
 
@@ -538,17 +481,8 @@ class ContactRepository extends IContactRepository {
     try {
       // Offline-first strategy: Always try API first
       _logger.info('ContactRepository: Attempting advanced search in API');
-      final locationResult = await _getCurrentLocationId();
-
-      if (locationResult is Error) {
-        _logger.warning(
-          'ContactRepository: Location ID not available: ${locationResult.asError.error}',
-        );
-        return Result.error(locationResult.asError.error);
-      }
 
       final apiResult = await _contactService.advancedSearch(
-        locationId: locationResult.asOk.value,
         pageLimit: pageLimit,
         page: page,
         query: query,
@@ -675,15 +609,6 @@ class ContactRepository extends IContactRepository {
 
   Future<Result<void>> _syncContactsFromApi() async {
     try {
-      // Check if location ID is available
-      final locationId = _locationService.currentLocationId;
-
-      if (locationId == null || locationId.isEmpty) {
-        _logger.error('Location ID not available for API sync');
-        return Result.error(
-          Exception('Location ID not available'),
-        );
-      }
       // 1) Trigger backend sync (GHL -> API DB)
       await _contactService.syncContacts(limit: 100);
 
@@ -696,11 +621,7 @@ class ContactRepository extends IContactRepository {
       if (listResult is Ok<ContactListResponse>) {
         final fetched = listResult.asOk.value.contacts;
         for (final c in fetched) {
-          // Inject location_id if missing from API payload
-          final withLoc = c.locationId == null || c.locationId!.isEmpty
-              ? c.copyWith(locationId: _locationService.currentLocationId)
-              : c;
-          await _databaseService.insertContact(withLoc);
+          await _databaseService.insertContact(c);
         }
         _contacts = fetched;
         notifyListeners();
