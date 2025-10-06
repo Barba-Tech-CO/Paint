@@ -6,7 +6,6 @@ import '../utils/logger/logger_app_logger_impl.dart';
 class AuthPersistenceService {
   static const String _keyAuthenticated = 'auth_authenticated';
   static const String _keyNeedsLogin = 'auth_needs_login';
-  static const String _keyLocationId = 'auth_location_id';
   static const String _keyExpiresAt = 'auth_expires_at';
   static const String _keySanctumToken = 'auth_sanctum_token';
 
@@ -16,19 +15,12 @@ class AuthPersistenceService {
   Future<void> saveAuthState({
     required bool authenticated,
     required bool needsLogin,
-    String? locationId,
     DateTime? expiresAt,
     String? sanctumToken,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyAuthenticated, authenticated);
     await prefs.setBool(_keyNeedsLogin, needsLogin);
-
-    if (locationId != null) {
-      await prefs.setString(_keyLocationId, locationId);
-    } else {
-      await prefs.remove(_keyLocationId);
-    }
 
     if (expiresAt != null) {
       await prefs.setString(_keyExpiresAt, expiresAt.toIso8601String());
@@ -47,7 +39,6 @@ class AuthPersistenceService {
 
     final authenticated = prefs.getBool(_keyAuthenticated) ?? false;
     final needsLogin = prefs.getBool(_keyNeedsLogin) ?? true;
-    final locationId = prefs.getString(_keyLocationId);
     final sanctumToken = prefs.getString(_keySanctumToken);
 
     DateTime? expiresAt;
@@ -63,7 +54,6 @@ class AuthPersistenceService {
     final state = {
       'authenticated': authenticated,
       'needsLogin': needsLogin,
-      'locationId': locationId,
       'expiresAt': expiresAt,
       'sanctumToken': sanctumToken,
     };
@@ -76,7 +66,6 @@ class AuthPersistenceService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyAuthenticated);
     await prefs.remove(_keyNeedsLogin);
-    await prefs.remove(_keyLocationId);
     await prefs.remove(_keyExpiresAt);
     await prefs.remove(_keySanctumToken);
   }
