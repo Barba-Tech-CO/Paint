@@ -42,7 +42,6 @@ import '../service/http_service.dart';
 import '../service/location_service.dart';
 import '../service/material_service.dart';
 import '../service/material_database_service.dart';
-import '../service/navigation_service.dart';
 import '../service/paint_catalog_service.dart';
 import '../service/photo_service.dart';
 import '../service/quote_service.dart';
@@ -79,6 +78,7 @@ import '../viewmodel/auth/auth_viewmodel.dart';
 import '../viewmodel/auth/login_viewmodel.dart';
 import '../viewmodel/auth/signup_viewmodel.dart';
 import '../viewmodel/auth/verify_otp_viewmodel.dart';
+import '../viewmodel/auth/reset_password_viewmodel.dart';
 import '../viewmodel/contact/contact_list_viewmodel.dart';
 import '../viewmodel/contact/contact_detail_viewmodel.dart';
 import '../viewmodel/contact/new_contact_viewmodel.dart';
@@ -174,9 +174,6 @@ void setupDependencyInjection() {
     () => PaintCatalogService(
       getIt<HttpService>(),
     ),
-  );
-  getIt.registerLazySingleton<NavigationService>(
-    () => NavigationService(),
   );
   getIt.registerLazySingleton<DeepLinkService>(
     () => DeepLinkService(),
@@ -407,7 +404,6 @@ void setupDependencyInjection() {
       getIt<AuthService>(),
       getIt<AuthPersistenceService>(),
       getIt<AuthStateManager>(),
-      getIt<NavigationService>(),
       getIt<DeepLinkService>(),
       getIt<HttpService>(),
     ),
@@ -431,7 +427,6 @@ void setupDependencyInjection() {
       getIt<HttpService>(),
       getIt<AuthPersistenceService>(),
       getIt<LocationService>(),
-      getIt<UserService>(),
       getIt<AppLogger>(),
     ),
   );
@@ -441,13 +436,19 @@ void setupDependencyInjection() {
       getIt<HttpService>(),
       getIt<AuthPersistenceService>(),
       getIt<LocationService>(),
-      getIt<UserService>(),
       getIt<AppLogger>(),
     ),
   );
 
   getIt.registerFactory<VerifyOtpViewModel>(
     () => VerifyOtpViewModel(
+      getIt<HttpService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<ResetPasswordViewModel>(
+    () => ResetPasswordViewModel(
       getIt<HttpService>(),
       getIt<AppLogger>(),
     ),
