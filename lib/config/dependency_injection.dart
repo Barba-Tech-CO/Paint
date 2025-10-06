@@ -263,7 +263,6 @@ void setupDependencyInjection() {
     () => ContactRepository(
       contactService: getIt<ContactService>(),
       databaseService: getIt<ContactDatabaseService>(),
-      userService: getIt<UserService>(),
       logger: getIt<AppLogger>(),
     ),
   );
