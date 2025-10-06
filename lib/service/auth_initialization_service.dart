@@ -1,24 +1,20 @@
 import '../config/dependency_injection.dart';
 import '../service/auth_persistence_service.dart';
 import '../service/http_service.dart';
-import '../service/location_service.dart';
 import '../service/sync_service.dart';
 import '../utils/result/result.dart';
 import '../viewmodel/user/user_viewmodel.dart';
 
 class AuthInitializationService {
   final AuthPersistenceService _authPersistenceService;
-  final LocationService _locationService;
   final UserViewModel _userViewModel;
   final HttpService _httpService;
 
   AuthInitializationService({
     required AuthPersistenceService authPersistenceService,
-    required LocationService locationService,
     required UserViewModel userViewModel,
     required HttpService httpService,
   }) : _authPersistenceService = authPersistenceService,
-       _locationService = locationService,
        _userViewModel = userViewModel,
        _httpService = httpService;
 
@@ -27,13 +23,6 @@ class AuthInitializationService {
     // Check if we have a valid token
     final token = await _authPersistenceService.getSanctumToken();
     if (token != null) {
-      // Load location ID from persistence and set it in LocationService
-      final authState = await _authPersistenceService.loadAuthState();
-      final locationId = authState['locationId'] as String?;
-      if (locationId != null && locationId.isNotEmpty) {
-        _locationService.setLocationId(locationId);
-      }
-
       // Token exists, fetch user data
       await _userViewModel.fetchUser();
     } else {
@@ -41,13 +30,6 @@ class AuthInitializationService {
       await Future.delayed(const Duration(milliseconds: 1000));
       final retryToken = await _authPersistenceService.getSanctumToken();
       if (retryToken != null) {
-        // Load location ID from persistence and set it in LocationService
-        final authState = await _authPersistenceService.loadAuthState();
-        final locationId = authState['locationId'] as String?;
-        if (locationId != null && locationId.isNotEmpty) {
-          _locationService.setLocationId(locationId);
-        }
-
         await _userViewModel.fetchUser();
       }
     }
@@ -65,14 +47,6 @@ class AuthInitializationService {
       final token = await _authPersistenceService.getSanctumToken();
 
       if (token != null) {
-        // Load location ID from persistence and set it in LocationService
-        final authState = await _authPersistenceService.loadAuthState();
-        final locationId = authState['locationId'] as String?;
-
-        if (locationId != null && locationId.isNotEmpty) {
-          _locationService.setLocationId(locationId);
-        } else {}
-
         // Fetch user data immediately
         await _userViewModel.fetchUser();
 
