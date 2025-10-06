@@ -1,9 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../../model/user_model.dart';
 import '../../service/auth_persistence_service.dart';
 import '../../service/http_service.dart';
-import '../../service/location_service.dart';
 import '../../utils/auth/token_sanitizer.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
@@ -11,7 +9,6 @@ import '../../utils/result/result.dart';
 class LoginViewModel extends ChangeNotifier {
   final HttpService _httpService;
   final AuthPersistenceService _authPersistenceService;
-  final LocationService _locationService;
   final AppLogger _logger;
 
   bool _isLoading = false;
@@ -25,7 +22,6 @@ class LoginViewModel extends ChangeNotifier {
   LoginViewModel(
     this._httpService,
     this._authPersistenceService,
-    this._locationService,
     this._logger,
   );
 
@@ -69,33 +65,10 @@ class LoginViewModel extends ChangeNotifier {
 
         _httpService.setAuthToken(sanitizedToken);
 
-        // Parse user from response
-        String? locationId;
-        if (data['user'] != null) {
-          try {
-            final user = UserModel.fromJson(data['user']);
-            final userLocationId = user.ghlLocationId;
-            if (userLocationId != null && userLocationId.isNotEmpty) {
-              locationId = userLocationId;
-              _locationService.setLocationId(userLocationId);
-            } else {
-              _locationService.clearLocationId();
-            }
-          } catch (e) {
-            _logger.warning(
-              '[LoginViewModel] Unable to parse user from response: $e',
-            );
-            _locationService.clearLocationId();
-          }
-        } else {
-          _locationService.clearLocationId();
-        }
-
         await _authPersistenceService.saveAuthState(
           authenticated: true,
           needsLogin: false,
           expiresAt: null,
-          locationId: locationId,
           sanctumToken: sanitizedToken,
         );
 
