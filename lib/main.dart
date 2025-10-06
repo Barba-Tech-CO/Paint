@@ -9,7 +9,6 @@ import 'config/theme.dart';
 import 'firebase_options.dart';
 import 'service/app_services_initializer.dart';
 import 'service/location_service.dart';
-import 'service/navigation_service.dart';
 import 'viewmodel/auth/auth_viewmodel.dart';
 import 'viewmodel/auth/login_viewmodel.dart';
 import 'viewmodel/auth/signup_viewmodel.dart';
@@ -87,9 +86,6 @@ class PaintProApp extends StatelessWidget {
         // Navigation
         ChangeNotifierProvider<NavigationViewModel>(
           create: (_) => getIt<NavigationViewModel>(),
-        ),
-        Provider<NavigationService>(
-          create: (_) => getIt<NavigationService>(),
         ),
         // Measurements ViewModel
         ChangeNotifierProvider<MeasurementsViewModel>(
