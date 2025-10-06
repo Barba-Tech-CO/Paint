@@ -4,7 +4,6 @@ import '../../model/user_model.dart';
 import '../../service/auth_persistence_service.dart';
 import '../../service/http_service.dart';
 import '../../service/location_service.dart';
-import '../../service/user_service.dart';
 import '../../utils/auth/token_sanitizer.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
@@ -13,7 +12,6 @@ class LoginViewModel extends ChangeNotifier {
   final HttpService _httpService;
   final AuthPersistenceService _authPersistenceService;
   final LocationService _locationService;
-  final UserService _userService;
   final AppLogger _logger;
 
   bool _isLoading = false;
@@ -28,7 +26,6 @@ class LoginViewModel extends ChangeNotifier {
     this._httpService,
     this._authPersistenceService,
     this._locationService,
-    this._userService,
     this._logger,
   );
 
@@ -50,6 +47,7 @@ class LoginViewModel extends ChangeNotifier {
         data: {
           'email': email,
           'password': password,
+          'device_name': 'mobile_app',
         },
       );
 
@@ -71,13 +69,11 @@ class LoginViewModel extends ChangeNotifier {
 
         _httpService.setAuthToken(sanitizedToken);
 
-        String? locationId = data['location_id'] ?? data['locationId'];
-
-        // Fetch user profile to obtain location and persist user info
-        try {
-          final userResult = await _userService.getUser();
-          if (userResult is Ok<UserModel>) {
-            final user = userResult.asOk.value;
+        // Parse user from response
+        String? locationId;
+        if (data['user'] != null) {
+          try {
+            final user = UserModel.fromJson(data['user']);
             final userLocationId = user.ghlLocationId;
             if (userLocationId != null && userLocationId.isNotEmpty) {
               locationId = userLocationId;
@@ -85,20 +81,14 @@ class LoginViewModel extends ChangeNotifier {
             } else {
               _locationService.clearLocationId();
             }
-          } else if (locationId != null && locationId.isNotEmpty) {
-            final resolvedLocation = locationId;
-            _locationService.setLocationId(resolvedLocation);
-          }
-        } catch (e) {
-          _logger.warning(
-            '[LoginViewModel] Unable to fetch user after login: $e',
-          );
-          if (locationId != null && locationId.isNotEmpty) {
-            final resolvedLocation = locationId;
-            _locationService.setLocationId(resolvedLocation);
-          } else {
+          } catch (e) {
+            _logger.warning(
+              '[LoginViewModel] Unable to parse user from response: $e',
+            );
             _locationService.clearLocationId();
           }
+        } else {
+          _locationService.clearLocationId();
         }
 
         await _authPersistenceService.saveAuthState(
