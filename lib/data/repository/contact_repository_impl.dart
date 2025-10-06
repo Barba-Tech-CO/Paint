@@ -8,14 +8,12 @@ import '../../service/auth_persistence_service.dart';
 import '../../service/contact_database_service.dart';
 import '../../service/contact_service.dart';
 import '../../service/http_service.dart';
-import '../../service/user_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
 class ContactRepository extends IContactRepository {
   final ContactService _contactService;
   final ContactDatabaseService _databaseService;
-  final UserService _userService;
   final AppLogger _logger;
 
   // Source of truth - internal state
@@ -32,11 +30,9 @@ class ContactRepository extends IContactRepository {
   ContactRepository({
     required ContactService contactService,
     required ContactDatabaseService databaseService,
-    required UserService userService,
     required AppLogger logger,
   }) : _contactService = contactService,
        _databaseService = databaseService,
-       _userService = userService,
        _logger = logger {
     _initializeFromDatabase();
   }
@@ -54,31 +50,6 @@ class ContactRepository extends IContactRepository {
     } finally {
       _initializationCompleter?.complete();
       _initializationCompleter = null;
-    }
-  }
-
-  // Helper methods for common operations
-  Future<Result<int>> _getCurrentUserId() async {
-    try {
-      final userResult = await _userService.getUser();
-      if (userResult is Ok) {
-        final user = userResult.asOk.value;
-        if (user.id != null) {
-          return Result.ok(user.id!);
-        } else {
-          return Result.error(
-            Exception('User ID not available'),
-          );
-        }
-      } else {
-        return Result.error(
-          Exception('Failed to get user data'),
-        );
-      }
-    } catch (e) {
-      return Result.error(
-        Exception('Error getting user ID: $e'),
-      );
     }
   }
 
@@ -153,40 +124,6 @@ class ContactRepository extends IContactRepository {
     List<Map<String, dynamic>>? customFields,
   }) async {
     try {
-      final tempGhlId =
-          'temp_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecond}';
-      final now = DateTime.now();
-
-      // Get current user ID
-      final userIdResult = await _getCurrentUserId();
-      if (userIdResult is Error) {
-        return Result.error(userIdResult.asError.error);
-      }
-
-      final tempContact = ContactModel(
-        localId: userIdResult.asOk.value, // Use actual user ID
-        ghlId: tempGhlId,
-        locationId: null,
-        name: name ?? '',
-        email: email ?? '',
-        phone: phone ?? '',
-        additionalPhones: additionalPhones,
-        additionalEmails: additionalEmails,
-        companyName: companyName,
-        address: address ?? '',
-        city: city ?? '',
-        state: state ?? '',
-        postalCode: postalCode ?? '',
-        country: country ?? '',
-        customFields: customFields,
-        syncStatus: SyncStatus.pending,
-        createdAt: now,
-        updatedAt: now,
-      );
-
-      await _databaseService.insertContact(tempContact);
-      _updateContactInMemory(tempContact);
-
       final apiResult = await _contactService.createContact(
         name: name,
         email: email,
@@ -203,20 +140,15 @@ class ContactRepository extends IContactRepository {
       );
 
       if (apiResult is Ok) {
-        final syncedContact = apiResult.asOk.value;
-        await _databaseService.updateContact(syncedContact);
-        await _databaseService.updateSyncStatus(
-          syncedContact.ghlId!,
-          SyncStatus.synced,
-        );
-        await _databaseService.deleteContact(tempGhlId);
-        _updateContactInMemory(syncedContact);
-        return Result.ok(syncedContact);
+        final contact = apiResult.asOk.value;
+        await _databaseService.insertContact(contact);
+        _updateContactInMemory(contact);
+        return Result.ok(contact);
       } else {
         _logger.error(
-          'API call failed, keeping contact locally: ${apiResult.asError.error}',
+          'API call failed: ${apiResult.asError.error}',
         );
-        return Result.ok(tempContact);
+        return Result.error(apiResult.asError.error);
       }
     } catch (e) {
       _logger.error('Error creating contact', e);
@@ -609,8 +541,13 @@ class ContactRepository extends IContactRepository {
 
   Future<Result<void>> _syncContactsFromApi() async {
     try {
-      // 1) Trigger backend sync (GHL -> API DB)
-      await _contactService.syncContacts(limit: 100);
+      // 1) Trigger backend sync (GHL -> API DB) - optional if GHL not configured
+      try {
+        await _contactService.syncContacts(limit: 100);
+      } catch (e) {
+        // Ignore sync errors (400 = no GHL credentials) - sync is optional
+        _logger.info('GHL sync skipped (no credentials configured): $e');
+      }
 
       // 2) Fetch ONLY 100 contacts from API (single page, DB+GHL) and save locally
       final listResult = await _contactService.getContacts(
