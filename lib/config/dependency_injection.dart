@@ -132,7 +132,6 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(
       getIt<HttpService>(),
-      getIt<LocationService>(),
       getIt<AuthPersistenceService>(),
       getIt<AppLogger>(),
     ),
@@ -143,7 +142,6 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<ContactService>(
     () => ContactService(
       getIt<HttpService>(),
-      getIt<LocationService>(),
       getIt<AppLogger>(),
     ),
   );
@@ -250,7 +248,6 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AuthInitializationService>(
     () => AuthInitializationService(
       authPersistenceService: getIt<AuthPersistenceService>(),
-      locationService: getIt<LocationService>(),
       userViewModel: getIt<UserViewModel>(),
       httpService: getIt<HttpService>(),
     ),
@@ -266,7 +263,6 @@ void setupDependencyInjection() {
     () => ContactRepository(
       contactService: getIt<ContactService>(),
       databaseService: getIt<ContactDatabaseService>(),
-      locationService: getIt<LocationService>(),
       userService: getIt<UserService>(),
       logger: getIt<AppLogger>(),
     ),
@@ -426,7 +422,6 @@ void setupDependencyInjection() {
     () => LoginViewModel(
       getIt<HttpService>(),
       getIt<AuthPersistenceService>(),
-      getIt<LocationService>(),
       getIt<AppLogger>(),
     ),
   );
@@ -435,7 +430,6 @@ void setupDependencyInjection() {
     () => SignUpViewModel(
       getIt<HttpService>(),
       getIt<AuthPersistenceService>(),
-      getIt<LocationService>(),
       getIt<AppLogger>(),
     ),
   );
