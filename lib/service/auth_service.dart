@@ -7,17 +7,14 @@ import '../utils/result/result.dart';
 import 'auth_persistence_service.dart';
 import 'auth_service_exception.dart';
 import 'http_service.dart';
-import 'location_service.dart';
 
 class AuthService {
   final HttpService _httpService;
-  final LocationService _locationService;
   final AuthPersistenceService _authPersistenceService;
   final AppLogger _logger;
 
   AuthService(
     this._httpService,
-    this._locationService,
     this._authPersistenceService,
     this._logger,
   );
@@ -86,7 +83,6 @@ class AuthService {
 
       if (token == null || token.isEmpty) {
         _httpService.clearAuthToken();
-        _locationService.clearLocationId();
         return _authStatusResult(
           _buildAuthModel(
             authenticated: false,
@@ -128,21 +124,13 @@ class AuthService {
       final user = UserModel.fromJson(response.data as Map<String, dynamic>);
       final resolvedLocation = user.ghlLocationId?.isNotEmpty == true
           ? user.ghlLocationId
-          : null;
-
-      if (resolvedLocation != null) {
-        _locationService.setLocationId(resolvedLocation);
-      } else if (locationFromStore != null && locationFromStore.isNotEmpty) {
-        _locationService.setLocationId(locationFromStore);
-      } else {
-        _locationService.clearLocationId();
-      }
+          : locationFromStore;
 
       return _authStatusResult(
         _buildAuthModel(
           authenticated: true,
           needsLogin: false,
-          locationId: resolvedLocation ?? locationFromStore,
+          locationId: resolvedLocation,
           token: token,
           expiresAt: expiresAt,
         ),
@@ -213,14 +201,9 @@ class AuthService {
   /// Obtém o location_id atual
   Future<Result<String?>> getCurrentLocationId() async {
     try {
-      if (_locationService.hasLocationId) {
-        return Result.ok(_locationService.currentLocationId);
-      }
-
       final storedState = await _loadStoredAuthState();
       final storedLocation = storedState['locationId'] as String?;
       if (storedLocation != null && storedLocation.isNotEmpty) {
-        _locationService.setLocationId(storedLocation);
         return Result.ok(storedLocation);
       }
 
@@ -279,6 +262,5 @@ class AuthService {
   Future<void> logout() async {
     await _authPersistenceService.clearAuthState();
     _httpService.clearAuthToken();
-    _locationService.clearLocationId();
   }
 }
