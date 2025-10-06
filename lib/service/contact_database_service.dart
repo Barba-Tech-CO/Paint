@@ -20,7 +20,7 @@ class ContactDatabaseService {
     return await openDatabase(
       path,
       version:
-          3, // Updated version to force migration for API contract compliance
+          5, // Updated to remove location_id - only API manages this field
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -31,10 +31,9 @@ class ContactDatabaseService {
       CREATE TABLE $_tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER, -- Isolamento por usuário
-        
+
         -- Identificadores GoHighLevel
-        ghl_id TEXT UNIQUE NOT NULL, -- ID único no GoHighLevel
-        location_id TEXT NOT NULL, -- ID da localização no GHL
+        ghl_id TEXT UNIQUE, -- ID único no GoHighLevel (nullable para contatos locais)
         
         -- Informações Pessoais
         first_name TEXT,
@@ -87,9 +86,6 @@ class ContactDatabaseService {
       'CREATE INDEX idx_ghl_contacts_ghl_id ON $_tableName(ghl_id)',
     );
     await db.execute(
-      'CREATE INDEX idx_ghl_contacts_location_id ON $_tableName(location_id)',
-    );
-    await db.execute(
       'CREATE INDEX idx_ghl_contacts_email ON $_tableName(email)',
     );
     await db.execute(
@@ -99,16 +95,13 @@ class ContactDatabaseService {
       'CREATE INDEX idx_ghl_contacts_sync_status ON $_tableName(sync_status)',
     );
     await db.execute(
-      'CREATE INDEX idx_ghl_contacts_location_sync ON $_tableName(location_id, sync_status)',
-    );
-    await db.execute(
       'CREATE INDEX idx_ghl_contacts_user_sync ON $_tableName(user_id, sync_status, updated_at)',
     );
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 3) {
-      // For API contract compliance, recreate the table with updated schema
+    if (oldVersion < 5) {
+      // Remove location_id - only API manages this field
       await db.execute('DROP TABLE IF EXISTS $_tableName');
       await _onCreate(db, newVersion);
     }
@@ -126,11 +119,6 @@ class ContactDatabaseService {
   Future<int> insertContact(ContactModel contact) async {
     final db = await database;
 
-    // Ensure ghlId is not null
-    if (contact.ghlId == null || contact.ghlId!.isEmpty) {
-      throw Exception('ghlId cannot be null or empty');
-    }
-
     final data = contact.toMap();
     data.remove('id');
 
@@ -146,13 +134,21 @@ class ContactDatabaseService {
   Future<int> updateContact(ContactModel contact) async {
     final db = await database;
 
-    // Ensure ghlId is not null
-    if (contact.ghlId == null || contact.ghlId!.isEmpty) {
-      throw Exception('ghlId cannot be null or empty');
-    }
-
     final data = contact.toMap();
     data.remove('id'); // Remove localId as it's auto-generated
+
+    // Update by local id if ghlId is null (local-only contact)
+    if (contact.ghlId == null || contact.ghlId!.isEmpty) {
+      if (contact.localId == null) {
+        throw Exception('Cannot update contact without ghlId or localId');
+      }
+      return await db.update(
+        _tableName,
+        data,
+        where: 'id = ?',
+        whereArgs: [contact.localId],
+      );
+    }
 
     return await db.update(
       _tableName,
