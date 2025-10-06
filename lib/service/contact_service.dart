@@ -6,39 +6,28 @@ import '../model/contacts/contact_model.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/result/result.dart';
 import 'http_service.dart';
-import 'location_service.dart';
 
 class ContactService {
   final HttpService _httpService;
-  final LocationService _locationService;
   final AppLogger _logger;
   static const String _baseUrl = AppUrls.contactsBaseUrl;
 
   ContactService(
     this._httpService,
-    this._locationService,
     this._logger,
   );
 
   /// Dispara sincronização completa de contatos no backend (GHL -> DB API)
   Future<Result<Map<String, dynamic>>> syncContacts({int limit = 100}) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       _logger.info(
-        'ContactService: Triggering /contacts/sync (limit=$limit, location=$locationId)',
+        'ContactService: Triggering /contacts/sync (limit=$limit)',
       );
       final response = await _httpService.post(
         '$_baseUrl/sync',
         data: {'limit': limit},
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
@@ -77,13 +66,6 @@ class ContactService {
     int? offset,
   }) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final effLimit = limit ?? 100;
       final page = (offset != null && effLimit > 0)
           ? ((offset / effLimit).floor() + 1)
@@ -98,7 +80,6 @@ class ContactService {
         },
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
           },
         ),
@@ -150,22 +131,13 @@ class ContactService {
   /// Busca contatos por nome, email ou telefone
   Future<Result<ContactListResponse>> searchContacts(String query) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final response = await _httpService.post(
         '$_baseUrl/search',
         data: {
-          'locationId': locationId,
           'query': query,
         },
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
@@ -205,7 +177,6 @@ class ContactService {
 
   /// Busca avançada de contatos
   Future<Result<ContactListResponse>> advancedSearch({
-    String? locationId,
     int? pageLimit,
     int? page,
     String? query,
@@ -213,18 +184,9 @@ class ContactService {
     List<Map<String, dynamic>>? sort,
   }) async {
     try {
-      final currentLocationId =
-          locationId ?? _locationService.currentLocationId;
-      if (currentLocationId == null || currentLocationId.isEmpty) {
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final response = await _httpService.post(
         '$_baseUrl/search',
         data: {
-          'locationId': currentLocationId,
           if (pageLimit != null) 'pageLimit': pageLimit,
           if (page != null) 'page': page,
           if (query != null) 'query': query,
@@ -233,7 +195,6 @@ class ContactService {
         },
         options: Options(
           headers: {
-            'X-GHL-Location-ID': currentLocationId,
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
@@ -265,21 +226,10 @@ class ContactService {
   /// Obtém um contato específico
   Future<Result<ContactModel>> getContact(String contactId) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final response = await _httpService.get(
         '$_baseUrl/$contactId',
-        queryParameters: {
-          'location_id': locationId,
-        },
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
           },
         ),
@@ -342,13 +292,6 @@ class ContactService {
     List<String>? tags,
   }) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final requestData = <String, dynamic>{};
 
       // Add name fields as expected by API
@@ -396,18 +339,13 @@ class ContactService {
 
       // Log the request data for debugging
       _logger.info('Creating contact with data: $requestData');
-      _logger.info('Location ID: $locationId');
 
       // Use the correct endpoint for creating contacts (POST /api/contacts)
       final response = await _httpService.post(
         _baseUrl,
         data: requestData,
-        queryParameters: {
-          'location_id': locationId,
-        },
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
@@ -476,14 +414,6 @@ class ContactService {
     List<String>? tags,
   }) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        _logger.error('Location ID not available. User not authenticated.');
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final updateData = <String, dynamic>{};
 
       // Add name field as expected by API
@@ -534,7 +464,6 @@ class ContactService {
         data: updateData,
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
@@ -584,22 +513,10 @@ class ContactService {
   /// Remove um contato
   Future<Result<bool>> deleteContact(String contactId) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        _logger.error('Location ID not available. User not authenticated.');
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final response = await _httpService.delete(
         '$_baseUrl/$contactId',
-        queryParameters: {
-          'location_id': locationId,
-        },
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
           },
         ),
