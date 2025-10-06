@@ -2,7 +2,7 @@ name: painter_pro
 description: "Paint Estimator - Professional painting project management app."
 publish_to: "none"
 
-version: 1.0.1
+version: 1.1.0
 
 environment:
   sdk: ^3.8.1
