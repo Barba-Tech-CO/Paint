@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../config/dependency_injection.dart';
 import '../utils/result/result.dart';
@@ -8,13 +9,11 @@ import 'auth_service.dart';
 import 'auth_state_manager.dart';
 import 'deep_link_service.dart';
 import 'http_service.dart';
-import 'navigation_service.dart';
 
 class AppInitializationService {
   final AuthService _authService;
   final AuthPersistenceService _authPersistenceService;
   final AuthStateManager _authStateManager;
-  final NavigationService _navigationService;
   final DeepLinkService _deepLinkService;
   final HttpService _httpService;
 
@@ -22,7 +21,6 @@ class AppInitializationService {
     this._authService,
     this._authPersistenceService,
     this._authStateManager,
-    this._navigationService,
     this._deepLinkService,
     this._httpService,
   );
@@ -38,7 +36,7 @@ class AppInitializationService {
     // Set up auth failure callback for automatic navigation BEFORE initializing AuthStateManager
     _authStateManager.onAuthFailure(() {
       if (context.mounted) {
-        _navigationService.navigateToAuth(context);
+        context.go('/auth');
       }
     });
 
@@ -58,7 +56,7 @@ class AppInitializationService {
     if (!isLocallyAuthenticated) {
       // Token expired or no local authentication, go to auth
       if (context.mounted) {
-        _navigationService.navigateToAuth(context);
+        context.go('/auth');
       }
       return;
     }
@@ -69,7 +67,7 @@ class AppInitializationService {
       await getIt<AuthInitializationService>().initializeUserData();
 
       if (context.mounted) {
-        _navigationService.navigateToDashboard(context);
+        context.go('/home');
       }
       return;
     }
@@ -85,17 +83,17 @@ class AppInitializationService {
         await getIt<AuthInitializationService>().initializeUserData();
 
         if (context.mounted) {
-          _navigationService.navigateToDashboard(context);
+          context.go('/home');
         }
       } else {
         if (context.mounted) {
-          _navigationService.navigateToAuth(context);
+          context.go('/auth');
         }
       }
     } else {
       // Em caso de erro, vai para autenticação
       if (context.mounted) {
-        _navigationService.navigateToAuth(context);
+        context.go('/auth');
       }
     }
   }
