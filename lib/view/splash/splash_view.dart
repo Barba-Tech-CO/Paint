@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../config/dependency_injection.dart';
 import '../../service/app_initialization_service.dart';
-import '../../service/navigation_service.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -78,8 +79,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
     } catch (e) {
       // Em caso de erro, vai para autenticação
       if (mounted) {
-        final navigationService = getIt<NavigationService>();
-        navigationService.navigateToAuth(context);
+        context.go('/auth');
       }
     }
   }
