@@ -54,7 +54,11 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
   }
 
   Future<void> _loadContactDetails() async {
-    final result = await _viewModel.getContactDetails(widget.contact.id!);
+    final contactId =
+        widget.contact.ghlId ?? widget.contact.id?.toString() ?? '';
+    if (contactId.isEmpty) return;
+
+    final result = await _viewModel.getContactDetails(contactId);
     if (result is Ok && mounted) {
       setState(() {
         _currentContact = result.asOk.value;
