@@ -31,33 +31,37 @@ class VerifyOtpViewModel extends ChangeNotifier {
       // Validação básica
       if (email.isEmpty || code.isEmpty) {
         _setError('Email and code are required');
-        return Result.error(Exception('Email and code are required'));
+        return Result.error(
+          Exception('Email and code are required'),
+        );
       }
 
       if (code.length != 6) {
         _setError('Please enter a valid 6-digit code');
-        return Result.error(Exception('Invalid code length'));
+        return Result.error(
+          Exception('Invalid code length'),
+        );
       }
 
       // Chamada à API de verificação OTP
       final response = await _httpService.post(
         '/auth/verify-otp',
         data: {
-          'email': email,
+          'email': email.trim().toLowerCase(),
           'code': code,
         },
       );
 
       // Processar resposta
       if (response.data['success'] == true) {
-        _logger.info('[VerifyOtpViewModel] OTP verification successful');
         _verificationSuccess = true;
         _setLoading(false);
         return Result.ok(null);
       } else {
-        final errorMsg = response.data['message'] ??
-                        response.data['error'] ??
-                        'Verification failed';
+        final errorMsg =
+            response.data['message'] ??
+            response.data['error'] ??
+            'Verification failed';
         _setError(errorMsg);
         return Result.error(Exception(errorMsg));
       }
@@ -74,7 +78,8 @@ class VerifyOtpViewModel extends ChangeNotifier {
         errorMsg = 'Code expired. Please request a new code.';
       } else if (errorStr.contains('429') || errorStr.contains('too many')) {
         errorMsg = 'Too many attempts. Please try again later.';
-      } else if (errorStr.contains('network') || errorStr.contains('connection')) {
+      } else if (errorStr.contains('network') ||
+          errorStr.contains('connection')) {
         errorMsg = 'Network error. Please check your connection.';
       } else if (errorStr.contains('timeout')) {
         errorMsg = 'Request timeout. Please try again.';
@@ -93,27 +98,29 @@ class VerifyOtpViewModel extends ChangeNotifier {
       // Validação básica
       if (email.isEmpty) {
         _setError('Email is required');
-        return Result.error(Exception('Email is required'));
+        return Result.error(
+          Exception('Email is required'),
+        );
       }
 
       // Chamada à API para reenviar código (usa endpoint de forgot password)
       final response = await _httpService.post(
         '/auth/password/forgot',
         data: {
-          'email': email,
+          'email': email.trim().toLowerCase(),
         },
       );
 
       // Processar resposta
       if (response.data['success'] == true) {
-        _logger.info('[VerifyOtpViewModel] Code resent successfully');
         _setSuccess('Code sent! Check your email.');
         _setLoading(false);
         return Result.ok(null);
       } else {
-        final errorMsg = response.data['message'] ??
-                        response.data['error'] ??
-                        'Failed to resend code';
+        final errorMsg =
+            response.data['message'] ??
+            response.data['error'] ??
+            'Failed to resend code';
         _setError(errorMsg);
         return Result.error(Exception(errorMsg));
       }
@@ -125,7 +132,8 @@ class VerifyOtpViewModel extends ChangeNotifier {
       final errorStr = e.toString().toLowerCase();
       if (errorStr.contains('429') || errorStr.contains('too many')) {
         errorMsg = 'Too many requests. Please wait a moment.';
-      } else if (errorStr.contains('network') || errorStr.contains('connection')) {
+      } else if (errorStr.contains('network') ||
+          errorStr.contains('connection')) {
         errorMsg = 'Network error. Please check your connection.';
       }
 
