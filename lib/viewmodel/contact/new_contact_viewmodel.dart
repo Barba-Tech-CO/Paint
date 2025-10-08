@@ -115,14 +115,14 @@ class NewContactViewModel extends ChangeNotifier {
   static String? Function(String?) get stateValidator =>
       Validatorless.multiple([
         Validatorless.required('State is required'),
-        Validatorless.min(3, 'State must be at least 3 characters'),
+        Validatorless.min(2, 'State must be at least 2 characters'),
       ]);
 
   /// Gets postal code validation rules
   static String? Function(String?) get postalCodeValidator =>
       Validatorless.multiple([
         Validatorless.required('Postal Code is required'),
-        Validatorless.min(3, 'Postal Code must be at least 3 characters'),
+        Validatorless.min(5, 'Postal Code must be at least 5 characters'),
       ]);
 
   /// Gets country validation rules
