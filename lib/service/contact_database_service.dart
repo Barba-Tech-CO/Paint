@@ -5,7 +5,7 @@ import '../model/contacts/contact_model.dart';
 
 class ContactDatabaseService {
   static Database? _database;
-  static const String _tableName = 'ghl_contacts';
+  static const String _tableName = 'contacts'; // Aligned with API table name
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -19,8 +19,7 @@ class ContactDatabaseService {
 
     return await openDatabase(
       path,
-      version:
-          5, // Updated to remove location_id - only API manages this field
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -29,48 +28,49 @@ class ContactDatabaseService {
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE $_tableName (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER, -- Isolamento por usuário
+        id INTEGER PRIMARY KEY, -- Mirrors API id (from API, not auto-increment)
+        user_id INTEGER NOT NULL, -- User isolation (required)
 
-        -- Identificadores GoHighLevel
-        ghl_id TEXT UNIQUE, -- ID único no GoHighLevel (nullable para contatos locais)
+        -- GoHighLevel Identifiers (both nullable to support local-only contacts)
+        ghl_id TEXT UNIQUE, -- Unique ID in GoHighLevel (nullable for local contacts)
+        location_id TEXT, -- GoHighLevel location ID (nullable - API manages this)
         
-        -- Informações Pessoais
+        -- Personal Information
         first_name TEXT,
         last_name TEXT,
         email TEXT,
         phone TEXT,
         phone_label TEXT,
         
-        -- Informações Empresa
+        -- Company Information
         company_name TEXT,
         business_name TEXT,
         
-        -- Endereço Completo
+        -- Full Address
         address TEXT,
         city TEXT,
         state TEXT,
         postal_code TEXT,
         country TEXT,
         
-        -- Dados Complexos (JSON como TEXT no SQLite)
+        -- Complex Data (JSON as TEXT in SQLite)
         additional_emails TEXT, -- JSON: ["email1@example.com", "email2@example.com"]
         additional_phones TEXT, -- JSON: ["+1234567890", "+0987654321"]
         custom_fields TEXT, -- JSON: [{"id":"field1", "key":"project_type", "field_value":"exterior"}]
         tags TEXT, -- JSON: ["prospect", "paint-service"]
         
-        -- Configurações
+        -- Settings
         type TEXT, -- lead, contact, etc
-        source TEXT, -- Fonte do contato
+        source TEXT, -- Contact source
         dnd INTEGER DEFAULT 0, -- Do Not Disturb (0=false, 1=true)
         dnd_settings TEXT, -- JSON: {"Call": {"status": "active"}, "Email": {"status": "inactive"}}
         
-        -- Controle de Sincronização Offline-First
+        -- Offline-First Sync Control
         sync_status TEXT DEFAULT 'synced', -- synced, pending, error
         last_synced_at TEXT, -- ISO 8601 timestamp
         sync_error TEXT,
         
-        -- Timestamps GoHighLevel
+        -- GoHighLevel Timestamps
         ghl_created_at TEXT, -- ISO 8601 timestamp
         ghl_updated_at TEXT, -- ISO 8601 timestamp
         created_at TEXT, -- ISO 8601 timestamp
@@ -78,30 +78,34 @@ class ContactDatabaseService {
       )
     ''');
 
-    // Create indexes for better performance - Following API contract requirements
+    // Create indexes for better performance - Aligned with API indexes
     await db.execute(
-      'CREATE INDEX idx_ghl_contacts_user_id ON $_tableName(user_id)',
+      'CREATE INDEX idx_contacts_user_id ON $_tableName(user_id)',
     );
     await db.execute(
-      'CREATE INDEX idx_ghl_contacts_ghl_id ON $_tableName(ghl_id)',
+      'CREATE INDEX idx_contacts_ghl_id ON $_tableName(ghl_id)',
     );
     await db.execute(
-      'CREATE INDEX idx_ghl_contacts_email ON $_tableName(email)',
+      'CREATE INDEX idx_contacts_location_id ON $_tableName(location_id)',
     );
     await db.execute(
-      'CREATE INDEX idx_ghl_contacts_phone ON $_tableName(phone)',
+      'CREATE INDEX idx_contacts_email ON $_tableName(email)',
     );
     await db.execute(
-      'CREATE INDEX idx_ghl_contacts_sync_status ON $_tableName(sync_status)',
+      'CREATE INDEX idx_contacts_phone ON $_tableName(phone)',
     );
     await db.execute(
-      'CREATE INDEX idx_ghl_contacts_user_sync ON $_tableName(user_id, sync_status, updated_at)',
+      'CREATE INDEX idx_contacts_sync_status ON $_tableName(sync_status)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_contacts_user_sync ON $_tableName(user_id, sync_status, updated_at)',
     );
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 5) {
-      // Remove location_id - only API manages this field
+    if (oldVersion < 6) {
+      // Recreate table with aligned structure (ghl_contacts -> contacts with location_id)
+      await db.execute('DROP TABLE IF EXISTS ghl_contacts');
       await db.execute('DROP TABLE IF EXISTS $_tableName');
       await _onCreate(db, newVersion);
     }
@@ -115,12 +119,11 @@ class ContactDatabaseService {
     _database = null; // Force recreation on next access
   }
 
-  /// Inserts a new contact into the local database
+  /// Inserts a new contact into the local database (mirrors API data)
   Future<int> insertContact(ContactModel contact) async {
     final db = await database;
 
     final data = contact.toMap();
-    data.remove('id');
 
     // Use INSERT OR REPLACE to handle duplicates gracefully
     return await db.insert(
@@ -134,27 +137,18 @@ class ContactDatabaseService {
   Future<int> updateContact(ContactModel contact) async {
     final db = await database;
 
-    final data = contact.toMap();
-    data.remove('id'); // Remove localId as it's auto-generated
-
-    // Update by local id if ghlId is null (local-only contact)
-    if (contact.ghlId == null || contact.ghlId!.isEmpty) {
-      if (contact.localId == null) {
-        throw Exception('Cannot update contact without ghlId or localId');
-      }
-      return await db.update(
-        _tableName,
-        data,
-        where: 'id = ?',
-        whereArgs: [contact.localId],
-      );
+    if (contact.id == null) {
+      throw Exception('Cannot update contact without id (API primary key)');
     }
+
+    final data = contact.toMap();
+    data.remove('id');
 
     return await db.update(
       _tableName,
       data,
-      where: 'ghl_id = ?',
-      whereArgs: [contact.ghlId],
+      where: 'id = ?',
+      whereArgs: [contact.id],
     );
   }
 
@@ -181,8 +175,9 @@ class ContactDatabaseService {
     return ContactModel.fromMap(maps.first);
   }
 
-  /// Gets all contacts from the local database
+  /// Gets all contacts from the local database for a specific user
   Future<List<ContactModel>> getAllContacts({
+    int? userId,
     int? limit,
     int? offset,
   }) async {
@@ -190,6 +185,8 @@ class ContactDatabaseService {
 
     final maps = await db.query(
       _tableName,
+      where: userId != null ? 'user_id = ?' : null,
+      whereArgs: userId != null ? [userId] : null,
       limit: limit,
       offset: offset,
       orderBy: 'created_at DESC',
@@ -198,26 +195,35 @@ class ContactDatabaseService {
     return maps.map((map) => ContactModel.fromMap(map)).toList();
   }
 
-  /// Gets contacts by sync status
-  Future<List<ContactModel>> getContactsBySyncStatus(SyncStatus status) async {
+  /// Gets contacts by sync status for a specific user
+  Future<List<ContactModel>> getContactsBySyncStatus(
+    SyncStatus status, {
+    int? userId,
+  }) async {
     final db = await database;
+
+    final where = userId != null
+        ? 'sync_status = ? AND user_id = ?'
+        : 'sync_status = ?';
+    final whereArgs = userId != null ? [status.name, userId] : [status.name];
+
     final maps = await db.query(
       _tableName,
-      where: 'sync_status = ?',
-      whereArgs: [status.name],
+      where: where,
+      whereArgs: whereArgs,
     );
 
     return maps.map((map) => ContactModel.fromMap(map)).toList();
   }
 
   /// Gets pending contacts for synchronization
-  Future<List<ContactModel>> getPendingContacts() async {
-    return await getContactsBySyncStatus(SyncStatus.pending);
+  Future<List<ContactModel>> getPendingContacts({int? userId}) async {
+    return await getContactsBySyncStatus(SyncStatus.pending, userId: userId);
   }
 
   /// Gets contacts with sync errors
-  Future<List<ContactModel>> getErrorContacts() async {
-    return await getContactsBySyncStatus(SyncStatus.error);
+  Future<List<ContactModel>> getErrorContacts({int? userId}) async {
+    return await getContactsBySyncStatus(SyncStatus.error, userId: userId);
   }
 
   /// Updates sync status for a contact
@@ -245,38 +251,66 @@ class ContactDatabaseService {
     );
   }
 
-  /// Searches contacts by name, email, or phone
-  Future<List<ContactModel>> searchContacts(String query) async {
+  /// Searches contacts by name, email, or phone for a specific user
+  Future<List<ContactModel>> searchContacts(
+    String query, {
+    int? userId,
+  }) async {
     final db = await database;
     final searchQuery = '%$query%';
 
-    final maps = await db.query(
-      _tableName,
-      where: '''
+    final where = userId != null
+        ? '''
+        (first_name LIKE ? OR 
+        last_name LIKE ? OR 
+        email LIKE ? OR 
+        phone LIKE ? OR
+        company_name LIKE ?) AND user_id = ?
+      '''
+        : '''
         first_name LIKE ? OR 
         last_name LIKE ? OR 
         email LIKE ? OR 
         phone LIKE ? OR
         company_name LIKE ?
-      ''',
-      whereArgs: [
-        searchQuery,
-        searchQuery,
-        searchQuery,
-        searchQuery,
-        searchQuery,
-      ],
+      ''';
+
+    final whereArgs = userId != null
+        ? [
+            searchQuery,
+            searchQuery,
+            searchQuery,
+            searchQuery,
+            searchQuery,
+            userId,
+          ]
+        : [
+            searchQuery,
+            searchQuery,
+            searchQuery,
+            searchQuery,
+            searchQuery,
+          ];
+
+    final maps = await db.query(
+      _tableName,
+      where: where,
+      whereArgs: whereArgs,
       orderBy: 'created_at DESC',
     );
 
     return maps.map((map) => ContactModel.fromMap(map)).toList();
   }
 
-  /// Gets the total count of contacts
-  Future<int> getContactsCount() async {
+  /// Gets the total count of contacts for a specific user
+  Future<int> getContactsCount({int? userId}) async {
     final db = await database;
+    final query = userId != null
+        ? 'SELECT COUNT(*) as count FROM $_tableName WHERE user_id = ?'
+        : 'SELECT COUNT(*) as count FROM $_tableName';
     final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM $_tableName',
+      query,
+      userId != null ? [userId] : null,
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
