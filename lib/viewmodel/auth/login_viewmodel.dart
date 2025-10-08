@@ -34,14 +34,16 @@ class LoginViewModel extends ChangeNotifier {
       // Validação básica
       if (email.isEmpty || password.isEmpty) {
         _setError('Email and password are required');
-        return Result.error(Exception('Email and password are required'));
+        return Result.error(
+          Exception('Email and password are required'),
+        );
       }
 
       // Chamada à API de login
       final response = await _httpService.post(
         '/auth/login',
         data: {
-          'email': email,
+          'email': email.trim().toLowerCase(),
           'password': password,
           'device_name': 'mobile_app',
         },
@@ -50,7 +52,9 @@ class LoginViewModel extends ChangeNotifier {
       final data = response.data;
       if (data is! Map<String, dynamic>) {
         _setError('Unexpected response from server.');
-        return Result.error(Exception('Unexpected login response format'));
+        return Result.error(
+          Exception('Unexpected login response format'),
+        );
       }
 
       if (data['success'] == true) {
@@ -60,7 +64,9 @@ class LoginViewModel extends ChangeNotifier {
         final sanitizedToken = TokenSanitizer.sanitizeToken(rawToken);
         if (sanitizedToken == null) {
           _setError('Authentication failed. Invalid token received.');
-          return Result.error(Exception('Invalid token received'));
+          return Result.error(
+            Exception('Invalid token received'),
+          );
         }
 
         _httpService.setAuthToken(sanitizedToken);
@@ -79,7 +85,9 @@ class LoginViewModel extends ChangeNotifier {
       } else {
         final errorMsg = data['message'] ?? data['error'] ?? 'Login failed';
         _setError(errorMsg);
-        return Result.error(Exception(errorMsg));
+        return Result.error(
+          Exception(errorMsg),
+        );
       }
     } catch (e, stack) {
       _logger.error('[LoginViewModel] Login error', e, stack);
@@ -98,7 +106,9 @@ class LoginViewModel extends ChangeNotifier {
       }
 
       _setError(errorMsg);
-      return Result.error(e is Exception ? e : Exception(e.toString()));
+      return Result.error(
+        e is Exception ? e : Exception(e.toString()),
+      );
     }
   }
 
