@@ -28,7 +28,7 @@ class AuthService {
     DateTime? expiresAt,
   }) {
     final now = DateTime.now();
-    final remaining = expiresAt != null ? expiresAt.difference(now) : null;
+    final remaining = expiresAt?.difference(now);
 
     return AuthModel(
       authenticated: authenticated,
