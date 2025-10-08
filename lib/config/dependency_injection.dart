@@ -263,6 +263,7 @@ void setupDependencyInjection() {
     () => ContactRepository(
       contactService: getIt<ContactService>(),
       databaseService: getIt<ContactDatabaseService>(),
+      authService: getIt<AuthService>(),
       logger: getIt<AppLogger>(),
     ),
   );
@@ -551,6 +552,7 @@ void setupDependencyInjection() {
   getIt.registerFactory<ContactsViewModel>(
     () => ContactsViewModel(
       getIt<ContactOperationsUseCase>(),
+      getIt<IContactRepository>(),
     ),
   );
 
