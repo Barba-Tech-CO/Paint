@@ -18,11 +18,9 @@ class ContactService {
   );
 
   /// Dispara sincronização completa de contatos no backend (GHL -> DB API)
+  /// Sempre retorna sucesso: com GHL sincroniza do CRM, sem GHL retorna local
   Future<Result<Map<String, dynamic>>> syncContacts({int limit = 100}) async {
     try {
-      _logger.info(
-        'ContactService: Triggering /contacts/sync (limit=$limit)',
-      );
       final response = await _httpService.post(
         '$_baseUrl/sync',
         data: {'limit': limit},
@@ -36,14 +34,7 @@ class ContactService {
 
       if (response.statusCode == 200) {
         final data = Map<String, dynamic>.from(response.data as Map);
-        final stats = data['stats'];
-        if (stats is Map) {
-          _logger.info(
-            'ContactService: Sync completed — total=${stats['total']}, created=${stats['created']}, updated=${stats['updated']}, pages=${stats['pages']}',
-          );
-        } else {
-          _logger.info('ContactService: Sync completed — no stats payload');
-        }
+        
         return Result.ok(data);
       }
       return Result.error(
@@ -98,6 +89,7 @@ class ContactService {
           }
 
           final contactListResponse = ContactListResponse.fromJson(data);
+
           return Result.ok(contactListResponse);
         } catch (e) {
           _logger.error('ContactService: Error parsing response: $e');
@@ -310,7 +302,7 @@ class ContactService {
 
       // Add optional fields
       if (email != null && email.trim().isNotEmpty) {
-        requestData['email'] = email.trim();
+        requestData['email'] = email.trim().toLowerCase();
       }
       if (phone != null && phone.trim().isNotEmpty) {
         requestData['phone'] = phone.trim();
@@ -319,7 +311,7 @@ class ContactService {
         requestData['companyName'] = companyName.trim();
       }
       if (address != null) {
-        requestData['address1'] = address;
+        requestData['address'] = address;
       }
       if (city != null) requestData['city'] = city;
       if (state != null) requestData['state'] = state;
@@ -333,12 +325,8 @@ class ContactService {
         requestData['tags'] = tags;
       }
       if (customFields != null && customFields.isNotEmpty) {
-        _logger.info('Adding customFields: $customFields');
         requestData['customFields'] = customFields;
       }
-
-      // Log the request data for debugging
-      _logger.info('Creating contact with data: $requestData');
 
       // Use the correct endpoint for creating contacts (POST /api/contacts)
       final response = await _httpService.post(
@@ -352,13 +340,14 @@ class ContactService {
         ),
       );
 
-      // Handle successful response (201 Created)
-      if (response.statusCode == 201) {
+      // Handle successful response (200 OK or 201 Created)
+      if (response.statusCode == 200 || response.statusCode == 201) {
         if (response.data['success'] == true &&
             response.data['contactDetails'] != null) {
           final contact = ContactModel.fromJson(
             response.data['contactDetails'],
           );
+
           return Result.ok(contact);
         } else if (response.data['contactDetails'] != null) {
           final contact = ContactModel.fromJson(
@@ -423,7 +412,7 @@ class ContactService {
 
       // Add other fields with detailed logging
       if (email != null && email.trim().isNotEmpty) {
-        updateData['email'] = email.trim();
+        updateData['email'] = email.trim().toLowerCase();
       }
       if (phone != null && phone.trim().isNotEmpty) {
         updateData['phone'] = phone.trim();
@@ -432,7 +421,7 @@ class ContactService {
         updateData['companyName'] = companyName.trim();
       }
       if (address != null && address.trim().isNotEmpty) {
-        updateData['address1'] = address.trim();
+        updateData['address'] = address.trim();
       }
       if (city != null && city.trim().isNotEmpty) {
         updateData['city'] = city.trim();
