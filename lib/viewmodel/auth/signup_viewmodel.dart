@@ -45,8 +45,8 @@ class SignUpViewModel extends ChangeNotifier {
       final response = await _httpService.post(
         '/auth/register',
         data: {
-          'name': name,
-          'email': email,
+          'name': name.trim(),
+          'email': email.trim().toLowerCase(),
           'password': password,
           'device_name': 'mobile_app',
         },
