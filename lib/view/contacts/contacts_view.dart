@@ -178,7 +178,11 @@ class _ContactsViewState extends State<ContactsView> {
                                         },
                                         onDelete: () {
                                           // Deletar o contato
-                                          _viewModel.deleteContact(contact.id!);
+                                          final contactId =
+                                              contact.ghlId ??
+                                              contact.id?.toString() ??
+                                              '';
+                                          _viewModel.deleteContact(contactId);
                                         },
                                       );
                                     },
