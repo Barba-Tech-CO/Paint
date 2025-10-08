@@ -34,12 +34,16 @@ class ResetPasswordViewModel extends ChangeNotifier {
       // Validação básica
       if (email.isEmpty || token.isEmpty || password.isEmpty) {
         _setError('All fields are required');
-        return Result.error(Exception('All fields are required'));
+        return Result.error(
+          Exception('All fields are required'),
+        );
       }
 
       if (token.length != 6) {
         _setError('Please enter a valid 6-digit code');
-        return Result.error(Exception('Invalid token length'));
+        return Result.error(
+          Exception('Invalid token length'),
+        );
       }
 
       // Chamada à API de reset de senha
@@ -47,7 +51,7 @@ class ResetPasswordViewModel extends ChangeNotifier {
         '/auth/password/reset',
         data: {
           'token': token,
-          'email': email,
+          'email': email.trim().toLowerCase(),
           'password': password,
         },
       );
@@ -62,7 +66,6 @@ class ResetPasswordViewModel extends ChangeNotifier {
       }
 
       if (data['success'] == true) {
-        _logger.info('[ResetPasswordViewModel] Password reset successful');
         _resetSuccess = true;
         _setLoading(false);
         return Result.ok(null);
@@ -70,7 +73,9 @@ class ResetPasswordViewModel extends ChangeNotifier {
         final errorMsg =
             data['message'] ?? data['error'] ?? 'Password reset failed';
         _setError(errorMsg);
-        return Result.error(Exception(errorMsg));
+        return Result.error(
+          Exception(errorMsg),
+        );
       }
     } catch (e, stack) {
       _logger.error('[ResetPasswordViewModel] Password reset error', e, stack);
@@ -85,8 +90,7 @@ class ResetPasswordViewModel extends ChangeNotifier {
         errorMsg = 'Reset code not found. Please request a new code.';
       } else if (errorStr.contains('422') || errorStr.contains('validation')) {
         errorMsg = 'Invalid data. Please check your information.';
-      } else if (errorStr.contains('429') ||
-          errorStr.contains('too many')) {
+      } else if (errorStr.contains('429') || errorStr.contains('too many')) {
         errorMsg = 'Too many attempts. Please try again later.';
       } else if (errorStr.contains('network') ||
           errorStr.contains('connection')) {
@@ -96,7 +100,9 @@ class ResetPasswordViewModel extends ChangeNotifier {
       }
 
       _setError(errorMsg);
-      return Result.error(e is Exception ? e : Exception(e.toString()));
+      return Result.error(
+        e is Exception ? e : Exception(e.toString()),
+      );
     }
   }
 
