@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:validatorless/validatorless.dart';
 
 import '../../config/app_colors.dart';
+import '../../utils/validators/password_validator.dart';
 import '../../viewmodel/auth/signup_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/buttons/paint_pro_button.dart';
@@ -116,15 +117,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               label: 'Password',
                               controller: _passwordController,
                               hintText: '**********',
-                              validator: Validatorless.multiple([
-                                Validatorless.required(
-                                  'Please enter your password',
-                                ),
-                                Validatorless.min(
-                                  6,
-                                  'Password must be at least 6 characters',
-                                ),
-                              ]),
+                              validator: PasswordValidator.validate,
                             ),
                             const SizedBox(height: 32),
                             PaintProButton(
