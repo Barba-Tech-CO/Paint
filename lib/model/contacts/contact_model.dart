@@ -1,8 +1,8 @@
 enum SyncStatus { synced, pending, error }
 
 class ContactModel {
-  final int? localId;
-  final String? id;
+  final int? id;
+  final int? userId;
   final String? ghlId;
   final String? locationId;
   final String name;
@@ -33,8 +33,8 @@ class ContactModel {
   final DateTime? updatedAt;
 
   ContactModel({
-    this.localId,
     this.id,
+    this.userId,
     this.ghlId,
     this.locationId,
     required this.name,
@@ -69,58 +69,63 @@ class ContactModel {
     // Handle name field - combine firstName and lastName from API response
     String fullName = '';
     if (json['firstName'] != null || json['lastName'] != null) {
-      final firstName = json['firstName'] ?? '';
-      final lastName = json['lastName'] ?? '';
+      final firstName = json['firstName']?.toString() ?? '';
+      final lastName = json['lastName']?.toString() ?? '';
       fullName = [
         firstName,
         lastName,
       ].where((part) => part.isNotEmpty).join(' ');
     } else if (json['name'] != null) {
-      fullName = json['name']; // Fallback to legacy name field
+      fullName = json['name'].toString(); // Fallback to legacy name field
     }
 
     return ContactModel(
-      id: json['id'],
-      ghlId: json['ghlId'] ?? json['id'],
-      locationId: json['locationId'] ?? json['location_id'],
+      id: json['id'] is int
+          ? json['id']
+          : (json['id'] != null ? int.tryParse(json['id'].toString()) : null),
+      ghlId: json['ghlId']?.toString() ?? json['id']?.toString(),
+      locationId:
+          json['locationId']?.toString() ?? json['location_id']?.toString(),
       name: fullName,
-      email: json['email'] ?? '',
-      phone: json['phoneNo'] ?? json['phone'] ?? '',
-      phoneLabel: json['phoneLabel'],
+      email: json['email']?.toString() ?? '',
+      phone: json['phoneNo']?.toString() ?? json['phone']?.toString() ?? '',
+      phoneLabel: json['phoneLabel']?.toString(),
       additionalEmails: json['additionalEmails'] != null
-          ? List<String>.from(json['additionalEmails'])
+          ? List<String>.from(json['additionalEmails'].map((e) => e.toString()))
           : null,
       additionalPhones: json['additionalPhones'] != null
-          ? List<String>.from(json['additionalPhones'])
+          ? List<String>.from(json['additionalPhones'].map((e) => e.toString()))
           : null,
-      companyName: json['companyName'] ?? '',
-      businessName: json['businessName'],
-      address: json['address'] ?? '',
-      city: json['city'] ?? '',
-      state: json['state'] ?? '',
-      postalCode: json['postalCode'] ?? '',
-      country: json['country'] ?? '',
+      companyName: json['companyName']?.toString() ?? '',
+      businessName: json['businessName']?.toString(),
+      address: json['address']?.toString() ?? '',
+      city: json['city']?.toString() ?? '',
+      state: json['state']?.toString() ?? '',
+      postalCode: json['postalCode']?.toString() ?? '',
+      country: json['country']?.toString() ?? '',
       customFields: json['customFields'] != null
           ? List<Map<String, dynamic>>.from(json['customFields'])
           : null,
-      tags: json['tags'] != null ? List<String>.from(json['tags']) : null,
-      type: json['type'],
-      source: json['source'],
+      tags: json['tags'] != null
+          ? List<String>.from(json['tags'].map((e) => e.toString()))
+          : null,
+      type: json['type']?.toString(),
+      source: json['source']?.toString(),
       dnd: json['dnd'],
       dndSettings: json['dndSettings'] != null
           ? List<Map<String, dynamic>>.from(json['dndSettings'])
           : null,
       ghlCreatedAt: json['dateAdded'] != null
-          ? DateTime.parse(json['dateAdded'])
+          ? DateTime.parse(json['dateAdded'].toString())
           : null,
       ghlUpdatedAt: json['dateUpdated'] != null
-          ? DateTime.parse(json['dateUpdated'])
+          ? DateTime.parse(json['dateUpdated'].toString())
           : null,
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
+          ? DateTime.parse(json['createdAt'].toString())
           : null,
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
+          ? DateTime.parse(json['updatedAt'].toString())
           : null,
     );
   }
@@ -165,8 +170,8 @@ class ContactModel {
 
   factory ContactModel.fromMap(Map<String, dynamic> map) {
     return ContactModel(
-      localId: map['id'],
-      id: map['ghl_id'],
+      id: map['id'],
+      userId: map['user_id'],
       ghlId: map['ghl_id'],
       locationId: map['location_id'],
       name:
@@ -253,7 +258,8 @@ class ContactModel {
     final firstName = nameParts.isNotEmpty ? nameParts.first : '';
     final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
 
-    final map = <String, dynamic>{
+    return <String, dynamic>{
+      'user_id': userId,
       'ghl_id': ghlId,
       'location_id': locationId,
       'first_name': firstName,
@@ -285,20 +291,6 @@ class ContactModel {
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
-
-    // Ensure non-null location_id by inferring from GHL data when missing
-    if (map['location_id'] == null || (map['location_id'] as String).isEmpty) {
-      // Try to extract from custom_fields or tags if available
-      // If still null, set to a placeholder to avoid NOT NULL violation
-      map['location_id'] = map['location_id'] ?? '';
-    }
-
-    // Only include user_id if it's not null
-    if (localId != null) {
-      map['user_id'] = localId;
-    }
-
-    return map;
   }
 
   String get fullName {
@@ -307,8 +299,8 @@ class ContactModel {
   }
 
   ContactModel copyWith({
-    int? localId,
-    String? id,
+    int? id,
+    int? userId,
     String? ghlId,
     String? locationId,
     String? name,
@@ -339,8 +331,8 @@ class ContactModel {
     DateTime? updatedAt,
   }) {
     return ContactModel(
-      localId: localId ?? this.localId,
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       ghlId: ghlId ?? this.ghlId,
       locationId: locationId ?? this.locationId,
       name: name ?? this.name,
