@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
+import '../../domain/repository/contact_repository.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../use_case/contacts/contact_operations_use_case.dart';
 import '../../utils/command/command.dart';
@@ -10,6 +11,7 @@ enum ContactsState { initial, loading, loaded, error }
 
 class ContactsViewModel extends ChangeNotifier {
   final ContactOperationsUseCase _contactUseCase;
+  final IContactRepository _contactRepository;
 
   // State
   ContactsState _state = ContactsState.initial;
@@ -81,7 +83,30 @@ class ContactsViewModel extends ChangeNotifier {
     });
   }
 
-  ContactsViewModel(this._contactUseCase);
+  ContactsViewModel(this._contactUseCase, this._contactRepository) {
+    // Listen to repository changes
+    _contactRepository.addListener(_onRepositoryChanged);
+  }
+
+  @override
+  void dispose() {
+    _contactRepository.removeListener(_onRepositoryChanged);
+    super.dispose();
+  }
+
+  void _onRepositoryChanged() {
+    // When repository updates contacts, sync with local state
+    final repositoryContacts = _contactRepository.contacts;
+    if (repositoryContacts.isNotEmpty &&
+        repositoryContacts.length != _contacts.length) {
+      _contacts = List.from(repositoryContacts);
+      _filteredContacts = List.from(_contacts);
+      if (_searchQuery.isNotEmpty) {
+        _filterContactsByQuery(_searchQuery);
+      }
+      notifyListeners();
+    }
+  }
 
   // Commands
   Command0<void>? _loadContactsCommand;
@@ -248,7 +273,9 @@ class ContactsViewModel extends ChangeNotifier {
   }
 
   void removeContactFromList(String contactId) {
-    _contacts.removeWhere((c) => c.id == contactId);
+    _contacts.removeWhere(
+      (c) => c.ghlId == contactId || c.id?.toString() == contactId,
+    );
     _filterContactsByQuery(_searchQuery);
     // Use Future.microtask to defer notification
     Future.microtask(() {
@@ -258,7 +285,10 @@ class ContactsViewModel extends ChangeNotifier {
 
   ContactModel? getContactById(String id) {
     try {
-      return _contacts.firstWhere((contact) => contact.id == id);
+      // Try to find by ghlId first, then by id converted to string
+      return _contacts.firstWhere(
+        (contact) => contact.ghlId == id || contact.id?.toString() == id,
+      );
     } catch (e) {
       return null;
     }
@@ -331,8 +361,8 @@ class ContactsViewModel extends ChangeNotifier {
 
   Future<Result<void>> _updateContactData(ContactModel contact) async {
     try {
-      final contactId = contact.ghlId ?? contact.id;
-      if (contactId == null) {
+      final contactId = contact.ghlId ?? contact.id?.toString() ?? '';
+      if (contactId.isEmpty) {
         _errorMessage = 'ID do contato não encontrado';
         notifyListeners();
         return Result.error(Exception(_errorMessage));
@@ -380,7 +410,10 @@ class ContactsViewModel extends ChangeNotifier {
       final result = await _contactUseCase.deleteContact(contactId);
 
       if (result is Ok) {
-        _contacts.removeWhere((c) => c.id == contactId);
+        // Remove by comparing both ghlId and id (as string)
+        _contacts.removeWhere(
+          (c) => c.ghlId == contactId || c.id?.toString() == contactId,
+        );
         _filteredContacts = List.from(_contacts);
         notifyListeners();
         return Result.ok(null);
@@ -413,7 +446,9 @@ class ContactsViewModel extends ChangeNotifier {
         // Update the main contacts list with new contacts from API search
         for (final contact in response.contacts) {
           final existingIndex = _contacts.indexWhere(
-            (c) => c.id == contact.id || c.ghlId == contact.ghlId,
+            (c) =>
+                (c.id != null && c.id == contact.id) ||
+                (c.ghlId != null && c.ghlId == contact.ghlId),
           );
           if (existingIndex == -1) {
             // Add new contact to main list
