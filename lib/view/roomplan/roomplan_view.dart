@@ -81,7 +81,6 @@ class _RoomPlanViewState extends State<RoomPlanView> {
         context,
         'Camera permission denied. Please grant camera access in Settings.',
       );
-    } on ScanCancelledException {
     } catch (e) {
       // Handle specific world tracking failure
       if (e.toString().contains('World tracking failure') ||
