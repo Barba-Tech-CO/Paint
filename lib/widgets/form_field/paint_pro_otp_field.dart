@@ -64,8 +64,8 @@ class _PaintProOtpFieldState extends State<PaintProOtpField> {
     }
   }
 
-  void _onKeyEvent(RawKeyEvent event, int index) {
-    if (event is RawKeyDownEvent) {
+  void _onKeyEvent(KeyEvent event, int index) {
+    if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.backspace) {
         if (_controllers[index].text.isEmpty && index > 0) {
           // Move to previous field on backspace
@@ -95,9 +95,9 @@ class _PaintProOtpFieldState extends State<PaintProOtpField> {
         (index) => SizedBox(
           width: 45,
           height: 56,
-          child: RawKeyboardListener(
+          child: KeyboardListener(
             focusNode: FocusNode(),
-            onKey: (event) => _onKeyEvent(event, index),
+            onKeyEvent: (event) => _onKeyEvent(event, index),
             child: TextField(
               controller: _controllers[index],
               focusNode: _focusNodes[index],
