@@ -608,25 +608,14 @@ class ContactRepository extends IContactRepository {
   }
 
   Future<Result<void>> _syncContactsFromApi() async {
-    _logger.info('=== ContactRepository: Starting sync from API ===');
-
     try {
       // 1) Trigger backend sync (GHL -> API DB if available, or local contacts)
-      _logger.info(
-        'ContactRepository: Step 1 - Triggering backend sync (GHL -> API DB)',
-      );
       final syncStopwatch = Stopwatch()..start();
 
       final syncResult = await _contactService.syncContacts(limit: 100);
       syncStopwatch.stop();
 
-      if (syncResult is Ok) {
-        final syncData = syncResult.asOk.value;
-        _logger.info(
-          'ContactRepository: Backend sync completed successfully in ${syncStopwatch.elapsedMilliseconds}ms',
-        );
-        _logger.info('ContactRepository: Sync stats: $syncData');
-      } else if (syncResult is Error) {
+      if (syncResult is Error) {
         _logger.warning(
           'ContactRepository: Backend sync failed: ${syncResult.asError.error}',
         );
@@ -634,9 +623,6 @@ class ContactRepository extends IContactRepository {
       }
 
       // 2) Fetch ONLY 100 contacts from API (single page, DB+GHL) and save locally
-      _logger.info(
-        'ContactRepository: Step 2 - Fetching contacts from API (limit: 100)',
-      );
       final fetchStopwatch = Stopwatch()..start();
 
       final listResult = await _contactService.getContacts(
@@ -645,15 +631,9 @@ class ContactRepository extends IContactRepository {
       );
 
       fetchStopwatch.stop();
-      _logger.info(
-        'ContactRepository: API fetch completed in ${fetchStopwatch.elapsedMilliseconds}ms',
-      );
 
       if (listResult is Ok<ContactListResponse>) {
         final fetchedContacts = listResult.asOk.value.contacts;
-        _logger.info(
-          'ContactRepository: Received ${fetchedContacts.length} contacts from API',
-        );
 
         final contactsWithUserId = <ContactModel>[];
         final dbStopwatch = Stopwatch()..start();
@@ -665,16 +645,8 @@ class ContactRepository extends IContactRepository {
         }
 
         dbStopwatch.stop();
-        _logger.info(
-          'ContactRepository: Saved ${contactsWithUserId.length} contacts to local DB in ${dbStopwatch.elapsedMilliseconds}ms',
-        );
 
         // Merge fetched contacts with existing ones instead of replacing
-        _logger.info('ContactRepository: Merging contacts...');
-        _logger.info(
-          'ContactRepository: Existing contacts before merge: ${_contacts.length}',
-        );
-
         // Create a map of existing contacts for quick lookup
         final existingContactsMap = <String, ContactModel>{};
         for (final contact in _contacts) {
@@ -696,29 +668,18 @@ class ContactRepository extends IContactRepository {
         // Convert back to list
         _contacts = existingContactsMap.values.toList();
 
-        _logger.info(
-          'ContactRepository: Total contacts after merge: ${_contacts.length}',
-        );
-
         notifyListeners();
-        _logger.info('=== ContactRepository: Sync completed successfully ===');
         return Result.ok(null);
       } else if (listResult is Error) {
-        _logger.error(
-          'ContactRepository: Failed to fetch contacts: ${listResult.asError.error}',
+        _logger.warning(
+          'Failed to fetch contacts, keeping existing local data: ${listResult.asError.error}',
         );
-        _logger.warning('ContactRepository: Keeping existing local data');
       }
 
       // If API search failed, keep existing local data and don't error the flow
-      _logger.info('=== ContactRepository: Sync completed (with warnings) ===');
       return Result.ok(null);
-    } catch (e, stackTrace) {
-      _logger.error('ContactRepository: Error syncing contacts from API');
-      _logger.error('ContactRepository: Error: $e');
-      _logger.error('ContactRepository: StackTrace: $stackTrace', e);
-      _logger.error('=== ContactRepository: Sync failed ===');
-
+    } catch (e) {
+      _logger.error('Error syncing contacts from API', e);
       return Result.error(
         Exception('Error syncing contacts from database'),
       );
@@ -762,7 +723,6 @@ class ContactRepository extends IContactRepository {
         );
         _updateContactInMemory(syncedContact);
       } else {
-        _logger.error('Failed to sync contact: ${result.asError.error}');
         await _databaseService.updateSyncStatus(
           contact.ghlId ?? 'unknown',
           SyncStatus.error,
@@ -770,10 +730,7 @@ class ContactRepository extends IContactRepository {
         );
       }
     } catch (e) {
-      _logger.error(
-        'Exception during sync for contact ${contact.ghlId}: $e',
-        e,
-      );
+      _logger.error('Exception during sync for contact ${contact.ghlId}', e);
       await _databaseService.updateSyncStatus(
         contact.ghlId ?? 'unknown',
         SyncStatus.error,
