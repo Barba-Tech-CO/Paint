@@ -148,16 +148,11 @@ class QuotesViewModel extends ChangeNotifier {
 
       if (result == null) {
         _updateState();
-        _logger.info('File selection cancelled');
         return Result.ok(null);
       }
 
       final file = File(result.files.single.path!);
       final fileName = result.files.single.name;
-
-      _logger.info('Selected file: $fileName');
-      _logger.info('File path: ${file.path}');
-      _logger.info('File size: ${await file.length()} bytes');
 
       final validationResult = await _validateFile(file);
       if (!validationResult) {
@@ -183,9 +178,6 @@ class QuotesViewModel extends ChangeNotifier {
       if (!_validateFileName(file)) return false;
       if (!await _validateFileContent(file)) return false;
 
-      _logger.info(
-        'File validation passed. Note: Backend requires USD currency in PDF content.',
-      );
       return true;
     } catch (e) {
       _setError('Error validating file');
@@ -278,16 +270,8 @@ class QuotesViewModel extends ChangeNotifier {
       _quotes.add(newQuote);
       _updateState();
 
-      _logger.info('Quote uploaded successfully: ${newQuote.titulo}');
-      _logger.info('Status: ${newQuote.statusDisplay}');
-
       if (newQuote.isPending || newQuote.isProcessing) {
-        _logger.info('Starting status polling for new quote: ${newQuote.id}');
         _startStatusPolling(newQuote.id);
-      } else {
-        _logger.info(
-          'Quote ${newQuote.id} has final status: ${newQuote.statusDisplay}',
-        );
       }
     }
 
@@ -297,9 +281,7 @@ class QuotesViewModel extends ChangeNotifier {
 
   /// Stops polling for a specific quote
   void _stopPolling(String quoteId) {
-    if (_pollingQuotes.remove(quoteId)) {
-      _logger.info('Stopped polling for quote: $quoteId');
-    }
+    _pollingQuotes.remove(quoteId);
   }
 
   /// Stops polling for a specific quote (public method)
@@ -310,9 +292,6 @@ class QuotesViewModel extends ChangeNotifier {
   /// Stops all active polling
   void _stopAllPolling() {
     if (_pollingQuotes.isNotEmpty) {
-      _logger.info(
-        'Stopping all active polling for ${_pollingQuotes.length} quotes',
-      );
       _pollingQuotes.clear();
     }
   }
@@ -340,16 +319,13 @@ class QuotesViewModel extends ChangeNotifier {
 
   /// Shows current polling status in logs for debugging
   void logPollingStatus() {
-    _logger.info('Current polling status: $pollingStatus');
+    // Status available via pollingStatus getter
   }
 
   /// Inicia polling do status do upload
   Future<Result<void>> _startStatusPolling(String quoteId) async {
     // Prevent multiple polling instances for the same quote
     if (_pollingQuotes.contains(quoteId)) {
-      _logger.info(
-        'Quote $quoteId is already being polled, skipping duplicate request',
-      );
       return Result.ok(null);
     }
 
@@ -365,8 +341,6 @@ class QuotesViewModel extends ChangeNotifier {
         );
       }
 
-      _logger.info('Starting status polling for quote: $quoteId');
-
       final result = await _quoteUploadUseCase.pollQuoteStatus(parsedQuoteId);
 
       return result.when(
@@ -377,13 +351,6 @@ class QuotesViewModel extends ChangeNotifier {
             _quotes[index] = QuotesModel.fromQuote(upload);
             _updateState();
             notifyListeners();
-
-            _logger.info('Quote status updated: ${upload.status.value}');
-
-            // Se o status for final, para o polling
-            if (upload.isCompleted || upload.isFailed || upload.isError) {
-              _logger.info('Quote processing completed, stopping polling');
-            }
           }
 
           return Result.ok(null);
@@ -426,8 +393,6 @@ class QuotesViewModel extends ChangeNotifier {
       return Result.error(Exception('Invalid quote ID'));
     }
 
-    _logger.info('Starting delete operation for quote: $id');
-
     final result = await _handleUseCaseCall(
       () => _quoteUploadUseCase.deleteQuote(quoteId),
       'delete quote',
@@ -438,7 +403,6 @@ class QuotesViewModel extends ChangeNotifier {
       _stopPolling(id);
       _updateState();
       notifyListeners();
-      _logger.info('Quote deleted successfully: $id');
     }
 
     _setDeleting(false);
@@ -465,7 +429,6 @@ class QuotesViewModel extends ChangeNotifier {
         _quotes[index] = QuotesModel.fromQuote(upload);
         _filterQuotes();
         notifyListeners();
-        _logger.info('Quote renamed successfully');
       }
     }
 
