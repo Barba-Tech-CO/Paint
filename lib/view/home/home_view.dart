@@ -15,6 +15,7 @@ import '../../widgets/cards/greeting_card_widget.dart';
 import '../../widgets/cards/project_state_card_widget.dart';
 import '../../widgets/cards/project_card_widget.dart';
 import '../../widgets/cards/stats_card_widget.dart';
+import '../../widgets/drawer/paint_pro_drawer.dart';
 import '../layout/main_layout.dart';
 
 class HomeView extends StatefulWidget {
@@ -29,6 +30,7 @@ class _HomeViewState extends State<HomeView> {
   late final UserViewModel _userViewModel;
   late final HomeViewModel _homeViewModel;
   late final DashboardViewModel _dashboardViewModel;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -64,11 +66,27 @@ class _HomeViewState extends State<HomeView> {
       ],
       child: MainLayout(
         currentRoute: '/home',
+        drawer: PaintProDrawer(
+          userViewModel: _userViewModel,
+          homeViewModel: _homeViewModel,
+        ),
+        scaffoldKey: _scaffoldKey,
         child: Scaffold(
           backgroundColor: AppColors.background,
           appBar: PaintProAppBar(
             title: 'Home',
             toolbarHeight: 80,
+            leading: Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(
+                  Icons.menu,
+                  color: AppColors.textOnPrimary,
+                ),
+                onPressed: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+              ),
+            ),
           ),
           body: SingleChildScrollView(
             child: Column(
