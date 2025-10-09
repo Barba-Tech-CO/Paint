@@ -22,9 +22,7 @@ class QuoteUploadUseCase {
       final result = await repositoryCall();
 
       result.when(
-        ok: (data) {
-          _logger.info('$operation successful');
-        },
+        ok: (data) {},
         error: (error) {
           _logger.error('$operation failed: $error', error);
         },
@@ -44,8 +42,6 @@ class QuoteUploadUseCase {
     File quoteFile, {
     String? filename,
   }) async {
-    _logger.info('Starting quote upload for file: ${quoteFile.path}');
-
     return _handleRepositoryCall(
       () => _quoteRepository.uploadQuote(quoteFile, filename: filename),
       'quote upload',
@@ -58,8 +54,6 @@ class QuoteUploadUseCase {
     int limit = 10,
     int page = 1,
   }) async {
-    _logger.info('Fetching quotes with status: $status, page: $page');
-
     return _handleRepositoryCall(
       () => _quoteRepository.getQuotes(
         status: status,
@@ -72,8 +66,6 @@ class QuoteUploadUseCase {
 
   /// Check the processing status of a specific quote upload
   Future<Result<QuoteModel>> getQuoteStatus(int quoteId) async {
-    _logger.info('Checking status for quote upload: $quoteId');
-
     return _handleRepositoryCall(
       () => _quoteRepository.getQuoteStatus(quoteId),
       'get quote status',
@@ -85,8 +77,6 @@ class QuoteUploadUseCase {
     int quoteId,
     String displayName,
   ) async {
-    _logger.info('Updating quote display name: $quoteId -> $displayName');
-
     return _handleRepositoryCall(
       () => _quoteRepository.updateQuote(quoteId, displayName),
       'update quote',
@@ -95,8 +85,6 @@ class QuoteUploadUseCase {
 
   /// Delete an uploaded quote and all extracted materials
   Future<Result<bool>> deleteQuote(int quoteId) async {
-    _logger.info('Deleting quote upload: $quoteId');
-
     return _handleRepositoryCall(
       () => _quoteRepository.deleteQuote(quoteId),
       'delete quote',
@@ -109,8 +97,6 @@ class QuoteUploadUseCase {
     Duration interval = const Duration(seconds: 2),
     Duration timeout = const Duration(minutes: 5),
   }) async {
-    _logger.info('Starting status polling for quote: $quoteId');
-
     return _handleRepositoryCall(
       () => _quoteRepository.pollQuoteStatus(
         quoteId,
