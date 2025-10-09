@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 
+import '../../model/user_model.dart';
 import '../../service/auth_persistence_service.dart';
 import '../../service/http_service.dart';
+import '../../service/local/user_local_service.dart';
 import '../../utils/auth/token_sanitizer.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
@@ -9,6 +11,7 @@ import '../../utils/result/result.dart';
 class LoginViewModel extends ChangeNotifier {
   final HttpService _httpService;
   final AuthPersistenceService _authPersistenceService;
+  final UserLocalService _userLocalService;
   final AppLogger _logger;
 
   bool _isLoading = false;
@@ -22,6 +25,7 @@ class LoginViewModel extends ChangeNotifier {
   LoginViewModel(
     this._httpService,
     this._authPersistenceService,
+    this._userLocalService,
     this._logger,
   );
 
@@ -77,6 +81,23 @@ class LoginViewModel extends ChangeNotifier {
           expiresAt: null,
           sanctumToken: sanitizedToken,
         );
+
+        // Fetch user data and save to local database
+        try {
+          final userResponse = await _httpService.get('/user');
+          if (userResponse.statusCode == 200) {
+            final user = UserModel.fromJson(
+              userResponse.data as Map<String, dynamic>,
+            );
+            await _userLocalService.saveUser(user);
+            _logger.info(
+              '[LoginViewModel] User saved to local database: ${user.id}',
+            );
+          }
+        } catch (e) {
+          _logger.error('[LoginViewModel] Failed to fetch/save user: $e');
+          // Don't fail login if user save fails
+        }
 
         _logger.info('[LoginViewModel] Login successful');
         _loginSuccess = true;
