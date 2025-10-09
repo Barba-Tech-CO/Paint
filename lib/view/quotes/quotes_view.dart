@@ -106,39 +106,44 @@ class _QuotesViewState extends State<QuotesView> {
                             onButtonPressed: () => quotesViewModel.pickFile(),
                           )
                         : quotesViewModel.currentState == QuotesState.loaded
-                        ? ListView.builder(
-                            padding: const EdgeInsets.only(
-                              bottom: 140,
-                              left: 16,
-                              right: 16,
-                            ),
-                            itemCount: quotesViewModel.quotes.length,
-                            itemBuilder: (context, index) {
-                              final quote = quotesViewModel.quotes[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 12.0),
-                                child: QuoteCardWidget(
-                                  id: quote.id,
-                                  titulo: quote.titulo,
-                                  dateUpload: quote.dateUpload,
-                                  status: quote.status?.value,
-                                  errorMessage: quote.errorMessage,
-                                  isDeleting: quotesViewModel
-                                      .isQuoteBeingDeleted(
-                                        quote.id,
-                                      ), // Use specific quote state
-                                  onRename: (newName) {
-                                    quotesViewModel.renameQuote(
-                                      quote.id,
-                                      newName,
-                                    );
-                                  },
-                                  onDelete: () {
-                                    quotesViewModel.removeQuote(quote.id);
-                                  },
-                                ),
-                              );
+                        ? RefreshIndicator(
+                            onRefresh: () async {
+                              await quotesViewModel.refresh();
                             },
+                            child: ListView.builder(
+                              padding: const EdgeInsets.only(
+                                bottom: 140,
+                                left: 16,
+                                right: 16,
+                              ),
+                              itemCount: quotesViewModel.quotes.length,
+                              itemBuilder: (context, index) {
+                                final quote = quotesViewModel.quotes[index];
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12.0),
+                                  child: QuoteCardWidget(
+                                    id: quote.id,
+                                    titulo: quote.titulo,
+                                    dateUpload: quote.dateUpload,
+                                    status: quote.status?.value,
+                                    errorMessage: quote.errorMessage,
+                                    isDeleting: quotesViewModel
+                                        .isQuoteBeingDeleted(
+                                          quote.id,
+                                        ), // Use specific quote state
+                                    onRename: (newName) {
+                                      quotesViewModel.renameQuote(
+                                        quote.id,
+                                        newName,
+                                      );
+                                    },
+                                    onDelete: () {
+                                      quotesViewModel.removeQuote(quote.id);
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
                           )
                         : TryAgainWidget(
                             onPressed: () => quotesViewModel.clearError(),
