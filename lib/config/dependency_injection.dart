@@ -12,11 +12,14 @@ import '../data/repository/offline_repository_impl.dart';
 import '../data/repository/paint_catalog_repository_impl.dart';
 import '../data/repository/quote_repository_impl.dart';
 import '../data/repository/user_repository_impl.dart';
+import '../service/ghl/ghl_repository_impl.dart';
+import '../service/ghl/ghl_service.dart';
 
 // Domain Layer
 import '../domain/repository/auth_repository.dart';
 import '../domain/repository/contact_repository.dart';
 import '../domain/repository/dashboard_repository.dart';
+import '../domain/repository/ghl_repository.dart';
 import '../domain/repository/estimate_repository.dart';
 import '../domain/repository/estimate_detail_repository.dart';
 import '../domain/repository/material_repository.dart';
@@ -101,6 +104,7 @@ import '../viewmodel/zones/zones_list_viewmodel.dart';
 import '../viewmodel/zones/zone_detail_viewmodel.dart';
 import '../viewmodel/zones/zones_summary_viewmodel.dart';
 import '../viewmodel/zones/zones_card_viewmodel.dart';
+import '../viewmodel/connect_ghl/connect_ghl_viewmodel.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -204,6 +208,12 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IZonesService>(
     () => ZonesService(),
   );
+  getIt.registerLazySingleton<GhlService>(
+    () => GhlService(
+      getIt<HttpService>(),
+      getIt<AppLogger>(),
+    ),
+  );
 
   // Database + Local Services
   getIt.registerLazySingleton<DatabaseService>(() => DatabaseService());
@@ -295,6 +305,12 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IPaintCatalogRepository>(
     () => PaintCatalogRepository(
       paintCatalogService: getIt<PaintCatalogService>(),
+    ),
+  );
+  getIt.registerLazySingleton<IGhlRepository>(
+    () => GhlRepositoryImpl(
+      getIt<GhlService>(),
+      getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<IQuoteRepository>(
@@ -492,6 +508,15 @@ void setupDependencyInjection() {
   // ViewModels - Navigation
   getIt.registerFactory<NavigationViewModel>(
     () => NavigationViewModel(),
+  );
+
+  // ViewModels - GHL
+  getIt.registerFactory<ConnectGhlViewModel>(
+    () => ConnectGhlViewModel(
+      getIt<IGhlRepository>(),
+      getIt<AuthService>(),
+      getIt<AppLogger>(),
+    ),
   );
 
   // ViewModels - Measurements
