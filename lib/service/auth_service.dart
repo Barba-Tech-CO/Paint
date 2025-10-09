@@ -7,15 +7,18 @@ import '../utils/result/result.dart';
 import 'auth_persistence_service.dart';
 import 'auth_service_exception.dart';
 import 'http_service.dart';
+import 'local/user_local_service.dart';
 
 class AuthService {
   final HttpService _httpService;
   final AuthPersistenceService _authPersistenceService;
+  final UserLocalService _userLocalService;
   final AppLogger _logger;
 
   AuthService(
     this._httpService,
     this._authPersistenceService,
+    this._userLocalService,
     this._logger,
   );
 
@@ -125,6 +128,14 @@ class AuthService {
       final resolvedLocation = user.ghlLocationId?.isNotEmpty == true
           ? user.ghlLocationId
           : locationFromStore;
+
+      // Save user to local database for foreign key relationships
+      try {
+        await _userLocalService.saveUser(user);
+        _logger.info('[AuthService] User saved to local database: ${user.id}');
+      } catch (e) {
+        _logger.error('[AuthService] Failed to save user to local DB: $e');
+      }
 
       return _authStatusResult(
         _buildAuthModel(
