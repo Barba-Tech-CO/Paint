@@ -20,10 +20,21 @@ class ContactService {
   /// Dispara sincronização completa de contatos no backend (GHL -> DB API)
   /// Sempre retorna sucesso: com GHL sincroniza do CRM, sem GHL retorna local
   Future<Result<Map<String, dynamic>>> syncContacts({int limit = 100}) async {
+    _logger.info('=== SYNC CONTACTS STARTED ===');
+    _logger.info('ContactService: Starting sync with limit: $limit');
+
     try {
+      final endpoint = '$_baseUrl/sync';
+      final requestData = {'limit': limit};
+
+      _logger.info('ContactService: Sending POST request to: $endpoint');
+      _logger.info('ContactService: Request data: $requestData');
+
+      final stopwatch = Stopwatch()..start();
+
       final response = await _httpService.post(
-        '$_baseUrl/sync',
-        data: {'limit': limit},
+        endpoint,
+        data: requestData,
         options: Options(
           headers: {
             'Accept': 'application/json',
@@ -32,19 +43,52 @@ class ContactService {
         ),
       );
 
+      stopwatch.stop();
+      _logger.info(
+        'ContactService: Response received in ${stopwatch.elapsedMilliseconds}ms',
+      );
+      _logger.info(
+        'ContactService: Response status code: ${response.statusCode}',
+      );
+
       if (response.statusCode == 200) {
         final data = Map<String, dynamic>.from(response.data as Map);
-        
+
+        _logger.info('ContactService: Sync successful');
+        _logger.info('ContactService: Response data: $data');
+        _logger.info(
+          'ContactService: Stats - Total: ${data['stats']?['total']}, Created: ${data['stats']?['created']}, Updated: ${data['stats']?['updated']}, Errors: ${data['stats']?['errors']}',
+        );
+        _logger.info('ContactService: Source: ${data['source']}');
+        _logger.info('=== SYNC CONTACTS COMPLETED SUCCESSFULLY ===');
+
         return Result.ok(data);
       }
+
+      _logger.warning(
+        'ContactService: Sync failed with status code: ${response.statusCode}',
+      );
+      _logger.warning('ContactService: Response data: ${response.data}');
+      _logger.warning('=== SYNC CONTACTS FAILED ===');
+
       return Result.error(
         Exception('Failed to sync contacts: ${response.statusCode}'),
       );
     } on DioException catch (e) {
-      _logger.error('ContactService: Error syncing contacts', e);
+      _logger.error('ContactService: DioException during sync');
+      _logger.error('ContactService: Error type: ${e.type}');
+      _logger.error('ContactService: Error message: ${e.message}');
+      _logger.error('ContactService: Response: ${e.response?.data}');
+      _logger.error('ContactService: Status code: ${e.response?.statusCode}');
+      _logger.error('=== SYNC CONTACTS FAILED WITH DIO EXCEPTION ===', e);
+
       return _handleDioException(e, 'syncing contacts');
-    } catch (e) {
-      _logger.error('ContactService: Error syncing contacts', e);
+    } catch (e, stackTrace) {
+      _logger.error('ContactService: Unexpected error during sync');
+      _logger.error('ContactService: Error: $e');
+      _logger.error('ContactService: StackTrace: $stackTrace');
+      _logger.error('=== SYNC CONTACTS FAILED WITH EXCEPTION ===', e);
+
       return Result.error(
         Exception('Error syncing contacts'),
       );
