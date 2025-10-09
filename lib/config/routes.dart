@@ -25,6 +25,7 @@ import '../view/success/success_view.dart';
 import '../view/zones/zones_view.dart';
 import '../view/zones_details/zones_details_view.dart';
 import '../view/estimate/estimate_detail_view.dart';
+import '../view/connect_ghl/connect_ghl_view.dart';
 import '../widgets/loading/loading_widget.dart';
 
 final router = GoRouter(
@@ -216,6 +217,10 @@ final router = GoRouter(
         final projectId = state.extra as int? ?? 0;
         return EstimateDetailView(projectId: projectId);
       },
+    ),
+    GoRoute(
+      path: '/connect-ghl',
+      builder: (context, state) => const ConnectGhlView(),
     ),
   ],
 );
