@@ -54,6 +54,7 @@ import '../service/local/estimates_local_service.dart';
 import '../service/local/pending_operations_local_service.dart';
 import '../service/local/dashboard_cache_local_service.dart';
 import '../service/local/quotes_local_service.dart';
+import '../service/local/user_local_service.dart';
 import '../service/user_service.dart';
 import '../service/zones_service.dart';
 import '../service/i_zones_service.dart';
@@ -137,6 +138,7 @@ void setupDependencyInjection() {
     () => AuthService(
       getIt<HttpService>(),
       getIt<AuthPersistenceService>(),
+      getIt<UserLocalService>(),
       getIt<AppLogger>(),
     ),
   );
@@ -236,6 +238,12 @@ void setupDependencyInjection() {
   );
   getIt.registerLazySingleton<QuotesLocalService>(
     () => QuotesLocalService(
+      getIt<DatabaseService>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<UserLocalService>(
+    () => UserLocalService(
       getIt<DatabaseService>(),
     ),
   );
@@ -438,6 +446,7 @@ void setupDependencyInjection() {
     () => LoginViewModel(
       getIt<HttpService>(),
       getIt<AuthPersistenceService>(),
+      getIt<UserLocalService>(),
       getIt<AppLogger>(),
     ),
   );
