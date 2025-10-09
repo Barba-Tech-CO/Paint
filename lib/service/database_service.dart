@@ -14,7 +14,7 @@ import '../data/tables/utility_tables.dart';
 class DatabaseService {
   static Database? _database;
   static const _databaseName = 'paint_pro_local.db';
-  static const _databaseVersion = 3;
+  static const _databaseVersion = 4;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -53,9 +53,10 @@ class DatabaseService {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     // Migration from version 1 to 2
     if (oldVersion < 2) {
-      // quotes table was added
+      // Legacy migration - pdf_uploads table added
+      // This will be properly structured in v4
       await db.execute('''
-        CREATE TABLE IF NOT EXISTS quotes (
+        CREATE TABLE IF NOT EXISTS pdf_uploads (
           id INTEGER PRIMARY KEY,
           user_id INTEGER,
           original_name TEXT NOT NULL,
@@ -68,25 +69,23 @@ class DatabaseService {
           extraction_metadata TEXT,
           error_message TEXT,
           created_at TEXT NOT NULL,
-          updated_at TEXT NOT NULL,
-          is_synced INTEGER DEFAULT 1,
-          sync_status TEXT DEFAULT 'synced'
+          updated_at TEXT NOT NULL
         )
       ''');
       await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_quotes_sync_status ON quotes(sync_status)',
+        'CREATE INDEX IF NOT EXISTS idx_pdf_uploads_user_id ON pdf_uploads(user_id)',
       );
       await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_quotes_created_at ON quotes(created_at)',
+        'CREATE INDEX IF NOT EXISTS idx_pdf_uploads_status ON pdf_uploads(status)',
       );
       await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_quotes_user_id ON quotes(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_pdf_uploads_created_at ON pdf_uploads(created_at)',
       );
     }
 
     // Migration from version 2 to 3 - Complete database restructure
     if (oldVersion < 3) {
-      // Drop old quotes table if exists (will be replaced by pdf_uploads)
+      // Drop old quotes table if it exists from very old versions
       await db.execute('DROP TABLE IF EXISTS quotes');
 
       // Create all new tables
@@ -94,6 +93,16 @@ class DatabaseService {
 
       // Migrate existing estimates data
       await _migrateEstimatesV3(db);
+    }
+
+    // Migration from version 3 to 4 - Recreate pdf_uploads with proper structure
+    if (oldVersion < 4) {
+      // Drop and recreate pdf_uploads with exact API structure
+      await db.execute('DROP TABLE IF EXISTS pdf_uploads');
+      await db.execute('DROP TABLE IF EXISTS quotes');
+
+      // Create pdf_uploads table with proper structure matching API
+      await createPdfUploadsTable(db);
     }
   }
 
