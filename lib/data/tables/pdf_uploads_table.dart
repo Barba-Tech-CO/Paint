@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 /// Creates pdf_uploads table and indexes
+/// This table structure matches exactly the API's pdf_uploads table
 Future<void> createPdfUploadsTable(Database db) async {
   await db.execute('''
     CREATE TABLE pdf_uploads (
@@ -17,7 +18,6 @@ Future<void> createPdfUploadsTable(Database db) async {
       error_message TEXT,
       created_at TEXT,
       updated_at TEXT,
-      sync_status TEXT DEFAULT 'pending',
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   ''');
@@ -29,7 +29,10 @@ Future<void> createPdfUploadsTable(Database db) async {
     'CREATE INDEX idx_pdf_uploads_status ON pdf_uploads(status)',
   );
   await db.execute(
-    'CREATE INDEX idx_pdf_uploads_sync_status ON pdf_uploads(sync_status)',
+    'CREATE INDEX idx_pdf_uploads_user_status ON pdf_uploads(user_id, status)',
+  );
+  await db.execute(
+    'CREATE INDEX idx_pdf_uploads_created_at ON pdf_uploads(created_at)',
   );
   await db.execute(
     'CREATE UNIQUE INDEX idx_pdf_uploads_user_file_hash ON pdf_uploads(user_id, file_hash)',
