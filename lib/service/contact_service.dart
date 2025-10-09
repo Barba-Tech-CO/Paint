@@ -20,15 +20,9 @@ class ContactService {
   /// Dispara sincronização completa de contatos no backend (GHL -> DB API)
   /// Sempre retorna sucesso: com GHL sincroniza do CRM, sem GHL retorna local
   Future<Result<Map<String, dynamic>>> syncContacts({int limit = 100}) async {
-    _logger.info('=== SYNC CONTACTS STARTED ===');
-    _logger.info('ContactService: Starting sync with limit: $limit');
-
     try {
       final endpoint = '$_baseUrl/sync';
       final requestData = {'limit': limit};
-
-      _logger.info('ContactService: Sending POST request to: $endpoint');
-      _logger.info('ContactService: Request data: $requestData');
 
       final stopwatch = Stopwatch()..start();
 
@@ -44,23 +38,9 @@ class ContactService {
       );
 
       stopwatch.stop();
-      _logger.info(
-        'ContactService: Response received in ${stopwatch.elapsedMilliseconds}ms',
-      );
-      _logger.info(
-        'ContactService: Response status code: ${response.statusCode}',
-      );
 
       if (response.statusCode == 200) {
         final data = Map<String, dynamic>.from(response.data as Map);
-
-        _logger.info('ContactService: Sync successful');
-        _logger.info('ContactService: Response data: $data');
-        _logger.info(
-          'ContactService: Stats - Total: ${data['stats']?['total']}, Created: ${data['stats']?['created']}, Updated: ${data['stats']?['updated']}, Errors: ${data['stats']?['errors']}',
-        );
-        _logger.info('ContactService: Source: ${data['source']}');
-        _logger.info('=== SYNC CONTACTS COMPLETED SUCCESSFULLY ===');
 
         return Result.ok(data);
       }
@@ -75,20 +55,9 @@ class ContactService {
         Exception('Failed to sync contacts: ${response.statusCode}'),
       );
     } on DioException catch (e) {
-      _logger.error('ContactService: DioException during sync');
-      _logger.error('ContactService: Error type: ${e.type}');
-      _logger.error('ContactService: Error message: ${e.message}');
-      _logger.error('ContactService: Response: ${e.response?.data}');
-      _logger.error('ContactService: Status code: ${e.response?.statusCode}');
-      _logger.error('=== SYNC CONTACTS FAILED WITH DIO EXCEPTION ===', e);
-
       return _handleDioException(e, 'syncing contacts');
-    } catch (e, stackTrace) {
-      _logger.error('ContactService: Unexpected error during sync');
-      _logger.error('ContactService: Error: $e');
-      _logger.error('ContactService: StackTrace: $stackTrace');
-      _logger.error('=== SYNC CONTACTS FAILED WITH EXCEPTION ===', e);
-
+    } catch (e) {
+      _logger.error('Error syncing contacts', e);
       return Result.error(
         Exception('Error syncing contacts'),
       );
@@ -124,9 +93,6 @@ class ContactService {
         try {
           final data = response.data;
           if (data is! Map<String, dynamic>) {
-            _logger.error(
-              'ContactService: Unexpected response structure when listing contacts',
-            );
             return Result.error(
               Exception('Unexpected response while listing contacts'),
             );
@@ -136,25 +102,17 @@ class ContactService {
 
           return Result.ok(contactListResponse);
         } catch (e) {
-          _logger.error('ContactService: Error parsing response: $e');
-          _logger.error(
-            'ContactService: Response data structure: ${response.data}',
-          );
+          _logger.error('Error parsing contact response', e);
           return Result.error(
             Exception('Error parsing contact response: $e'),
           );
         }
       }
 
-      final errorMessage = response.data is Map
-          ? (response.data['message'] ?? 'Unknown error')
-          : 'Unknown error';
-      _logger.error('Error listing contacts', errorMessage);
       return Result.error(
         Exception('Error listing contacts'),
       );
     } on DioException catch (e) {
-      _logger.error('Error listing contacts', e);
       return _handleDioException(e, 'listing contacts');
     } catch (e) {
       _logger.error('Error listing contacts', e);
@@ -184,9 +142,6 @@ class ContactService {
       if (response.statusCode == 200) {
         final data = response.data;
         if (data is! Map<String, dynamic>) {
-          _logger.error(
-            'ContactService: Unexpected response structure on search',
-          );
           return Result.error(
             Exception('Unexpected response while searching contacts'),
           );
@@ -194,14 +149,11 @@ class ContactService {
         final contactListResponse = ContactListResponse.fromJson(data);
         return Result.ok(contactListResponse);
       } else {
-        final errorMessage = response.data['message'];
-        _logger.error('Error searching contacts', errorMessage);
         return Result.error(
           Exception('Error searching contacts'),
         );
       }
     } on DioException catch (e) {
-      _logger.error('Error searching contacts', e);
       return _handleDioException(e, 'searching contacts');
     } catch (e) {
       _logger.error('Error searching contacts', e);
@@ -242,14 +194,11 @@ class ContactService {
         final contactListResponse = ContactListResponse.fromJson(response.data);
         return Result.ok(contactListResponse);
       } else {
-        final errorMessage = response.data['message'];
-        _logger.error('Error in advanced search', errorMessage);
         return Result.error(
           Exception('Error in advanced search'),
         );
       }
     } on DioException catch (e) {
-      _logger.error('Error in advanced search', e);
       return _handleDioException(e, 'advanced search');
     } catch (e) {
       _logger.error('Error in advanced search', e);
@@ -288,20 +237,16 @@ class ContactService {
           final contact = ContactModel.fromJson(response.data['data']);
           return Result.ok(contact);
         } else {
-          _logger.error('Contact data not found in response');
           return Result.error(
             Exception('Contact data not found'),
           );
         }
       } else {
-        final errorMessage = response.data['message'];
-        _logger.error('Contact not found', errorMessage);
         return Result.error(
           Exception('Contact not found'),
         );
       }
     } on DioException catch (e) {
-      _logger.error('Error getting contact', e);
       return _handleDioException(e, 'getting contact');
     } catch (e) {
       _logger.error('Error getting contact', e);
@@ -402,24 +347,16 @@ class ContactService {
           final contact = ContactModel.fromJson(response.data['data']);
           return Result.ok(contact);
         } else {
-          _logger.error('Contact data not found in response');
           return Result.error(
             Exception('Contact data not found'),
           );
         }
       } else {
-        final errorMessage = response.data['message'];
-        final errors = response.data['errors'];
-        _logger.error('Error creating contact - Message: $errorMessage');
-        if (errors != null) {
-          _logger.error('Validation errors: $errors');
-        }
         return Result.error(
-          Exception('Validation failed. $errorMessage'),
+          Exception('Error creating contact'),
         );
       }
     } on DioException catch (e) {
-      _logger.error('Error creating contact', e);
       return _handleDioException(e, 'creating contact');
     } catch (e) {
       _logger.error('Error creating contact', e);
@@ -520,20 +457,16 @@ class ContactService {
           final contact = ContactModel.fromJson(response.data['data']);
           return Result.ok(contact);
         } else {
-          _logger.error('Contact data not found in response');
           return Result.error(
             Exception('Contact data not found in response'),
           );
         }
       } else {
-        final errorMessage = response.data['message'];
-        _logger.error('Error updating contact', errorMessage);
         return Result.error(
           Exception('Error updating contact'),
         );
       }
     } on DioException catch (e) {
-      _logger.error('Error updating contact', e);
       return _handleDioException(e, 'updating contact');
     } catch (e) {
       _logger.error('Error updating contact', e);
@@ -559,14 +492,11 @@ class ContactService {
       if (response.statusCode == 200) {
         return Result.ok(true);
       } else {
-        final errorMessage = response.data['message'];
-        _logger.error('Error deleting contact', errorMessage);
         return Result.error(
           Exception('Error deleting contact'),
         );
       }
     } on DioException catch (e) {
-      _logger.error('Error deleting contact', e);
       return _handleDioException(e, 'deleting contact');
     } catch (e) {
       _logger.error('Error deleting contact', e);
