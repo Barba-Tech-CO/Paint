@@ -587,6 +587,7 @@ void setupDependencyInjection() {
     () => ContactsViewModel(
       getIt<ContactOperationsUseCase>(),
       getIt<IContactRepository>(),
+      getIt<AppLogger>(),
     ),
   );
 
