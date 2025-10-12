@@ -1,14 +1,11 @@
 import 'dart:async';
 
-import '../../config/dependency_injection.dart';
 import '../../domain/repository/contact_repository.dart';
 import '../../model/contacts/contact_list_response.dart';
 import '../../model/contacts/contact_model.dart';
-import '../../service/auth_persistence_service.dart';
 import '../../service/auth_service.dart';
 import '../../service/contact_database_service.dart';
 import '../../service/contact_service.dart';
-import '../../service/http_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
@@ -47,27 +44,18 @@ class ContactRepository extends IContactRepository {
       _initializationCompleter = Completer<void>();
 
       // Get current user ID
-      int? userId;
-      try {
-        final userResult = await _authService.getUser();
-        if (userResult is Ok) {
-          userId = userResult.asOk.value.id;
-        }
-      } catch (e) {
-        _logger.warning('Failed to get user ID for contact initialization: $e');
-      }
+      final userResult = await _authService.getUser();
+      final userId = userResult is Ok ? userResult.asOk.value.id : null;
 
+      // Load from local database
       final localContacts = await _databaseService.getAllContacts(
         userId: userId,
       );
 
       _contacts = localContacts;
-
       notifyListeners();
-
-      _syncWithApiInBackground();
     } catch (e) {
-      _logger.error('Failed to initialize contacts from database: $e', e);
+      _logger.error('ContactRepository: Failed to initialize: $e', e);
       _contacts = [];
     } finally {
       _initializationCompleter?.complete();
@@ -149,34 +137,38 @@ class ContactRepository extends IContactRepository {
     int? offset,
   }) async {
     try {
+      // Wait for initialization if needed
       if (_initializationCompleter != null) {
         await _initializationCompleter!.future;
       }
 
-      // Offline-first strategy: sync via API then return local data
-      final syncResult = await _syncContactsFromApi();
-
-      if (syncResult is Error) {
-        _logger.warning(
-          'ContactRepository: Failed to sync contacts from API: ${syncResult.asError.error}',
-        );
-      }
-
+      // Return local data immediately (offline-first)
       final contactsToReturn = limit != null || offset != null
           ? _contacts.skip(offset ?? 0).take(limit ?? _contacts.length).toList()
           : _contacts;
 
-      final response = ContactListResponse(
-        contacts: contactsToReturn,
-        count: contactsToReturn.length,
-        total: _contacts.length,
-        limit: limit,
-        offset: offset,
-      );
+      // Trigger background sync for first batch only
+      if ((offset ?? 0) == 0 && !_isSyncing) {
+        _syncContactsFromApi(limit: limit, offset: offset).then((result) {
+          if (result is Error) {
+            _logger.warning(
+              'Background sync failed: ${result.asError.error}',
+            );
+          }
+        });
+      }
 
-      return Result.ok(response);
+      return Result.ok(
+        ContactListResponse(
+          contacts: contactsToReturn,
+          count: contactsToReturn.length,
+          total: _contacts.length,
+          limit: limit,
+          offset: offset,
+        ),
+      );
     } catch (e) {
-      _logger.error('Error getting contacts', e);
+      _logger.error('ContactRepository.getContacts: Error', e);
       return Result.error(
         Exception('Error getting contacts'),
       );
@@ -559,130 +551,74 @@ class ContactRepository extends IContactRepository {
   }
 
   // Private helper methods
-  /// Check if user is authenticated before making API calls
-  Future<bool> _isUserAuthenticated() async {
+
+  Future<Result<void>> _syncContactsFromApi({
+    int? limit,
+    int? offset,
+  }) async {
+    if (_isSyncing) return Result.ok(null);
+
+    _isSyncing = true;
+
     try {
-      final authPersistenceService = getIt<AuthPersistenceService>();
-      return await authPersistenceService.isUserAuthenticated();
-    } catch (e) {
-      _logger.warning('Error checking authentication status: $e');
-      return false;
-    }
-  }
+      final effectiveLimit = limit ?? 100;
+      final effectiveOffset = offset ?? 0;
 
-  Future<Result<void>> _syncWithApiInBackground() async {
-    try {
-      // Prevent multiple simultaneous sync attempts
-      if (_isSyncing) {
-        return Result.ok(null);
-      }
-
-      // Check if user is authenticated before attempting API sync
-      final isAuthenticated = await _isUserAuthenticated();
-      if (!isAuthenticated) {
-        return Result.ok(null);
-      }
-
-      // Ensure token is initialized before checking availability
-      final httpService = getIt<HttpService>();
-      await httpService.initializeAuthToken();
-
-      final token = httpService.ghlToken;
-
-      if (token == null || token.isEmpty) {
-        return Result.ok(null);
-      }
-
-      _isSyncing = true;
+      // 1) Try backend sync with timeout (optional, non-critical)
       try {
-        return await _syncContactsFromApi();
-      } finally {
-        _isSyncing = false;
-      }
-    } catch (e) {
-      _isSyncing = false;
-      _logger.error('Background sync error: $e', e);
-      // Don't return error for background sync failures to prevent UI disruption
-      return Result.ok(null);
-    }
-  }
-
-  Future<Result<void>> _syncContactsFromApi() async {
-    try {
-      // 1) Trigger backend sync (GHL -> API DB if available, or local contacts)
-      final syncStopwatch = Stopwatch()..start();
-
-      final syncResult = await _contactService.syncContacts(limit: 100);
-      syncStopwatch.stop();
-
-      if (syncResult is Error) {
-        _logger.warning(
-          'ContactRepository: Backend sync failed: ${syncResult.asError.error}',
-        );
-        _logger.warning('ContactRepository: Continuing with local fetch...');
+        await _contactService
+            .syncContacts(limit: effectiveLimit)
+            .timeout(
+              const Duration(seconds: 5),
+              onTimeout: () => Result.error(Exception('Sync timeout')),
+            );
+      } catch (e) {
+        _logger.warning('Backend sync error (ignoring): $e');
       }
 
-      // 2) Fetch ONLY 100 contacts from API (single page, DB+GHL) and save locally
-      final fetchStopwatch = Stopwatch()..start();
-
+      // 2) Fetch contacts from API and save locally
       final listResult = await _contactService.getContacts(
-        limit: 100,
-        offset: 0,
+        limit: effectiveLimit,
+        offset: effectiveOffset,
       );
-
-      fetchStopwatch.stop();
 
       if (listResult is Ok<ContactListResponse>) {
         final fetchedContacts = listResult.asOk.value.contacts;
 
+        // Inject userId and save to DB
         final contactsWithUserId = <ContactModel>[];
-        final dbStopwatch = Stopwatch()..start();
-
         for (final c in fetchedContacts) {
           final contactWithUserId = await _injectUserId(c);
           await _databaseService.insertContact(contactWithUserId);
           contactsWithUserId.add(contactWithUserId);
         }
 
-        dbStopwatch.stop();
+        // Merge with existing contacts (deduplicate by ghlId/id)
+        final existingMap = <String, ContactModel>{
+          for (final c in _contacts)
+            if ((c.ghlId ?? c.id?.toString() ?? '').isNotEmpty)
+              c.ghlId ?? c.id!.toString(): c,
+        };
 
-        // Merge fetched contacts with existing ones instead of replacing
-        // Create a map of existing contacts for quick lookup
-        final existingContactsMap = <String, ContactModel>{};
-        for (final contact in _contacts) {
-          final key = contact.ghlId ?? contact.id?.toString() ?? '';
-          if (key.isNotEmpty) {
-            existingContactsMap[key] = contact;
-          }
+        for (final c in contactsWithUserId) {
+          final key = c.ghlId ?? c.id?.toString() ?? '';
+          if (key.isNotEmpty) existingMap[key] = c;
         }
 
-        // Update or add fetched contacts
-        for (final fetchedContact in contactsWithUserId) {
-          final key =
-              fetchedContact.ghlId ?? fetchedContact.id?.toString() ?? '';
-          if (key.isNotEmpty) {
-            existingContactsMap[key] = fetchedContact;
-          }
-        }
-
-        // Convert back to list
-        _contacts = existingContactsMap.values.toList();
-
+        _contacts = existingMap.values.toList();
         notifyListeners();
         return Result.ok(null);
-      } else if (listResult is Error) {
-        _logger.warning(
-          'Failed to fetch contacts, keeping existing local data: ${listResult.asError.error}',
-        );
       }
 
-      // If API search failed, keep existing local data and don't error the flow
+      _logger.warning('API fetch failed: ${(listResult as Error).error}');
       return Result.ok(null);
     } catch (e) {
-      _logger.error('Error syncing contacts from API', e);
+      _logger.error('Sync error: $e');
       return Result.error(
-        Exception('Error syncing contacts from database'),
+        Exception('Error syncing contacts'),
       );
+    } finally {
+      _isSyncing = false;
     }
   }
 
