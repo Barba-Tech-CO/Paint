@@ -5,6 +5,7 @@ import '../../domain/repository/contact_repository.dart';
 import '../../model/contacts/contact_model.dart';
 import '../../use_case/contacts/contact_operations_use_case.dart';
 import '../../utils/command/command.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
 enum ContactsState { initial, loading, loaded, error }
@@ -12,6 +13,7 @@ enum ContactsState { initial, loading, loaded, error }
 class ContactsViewModel extends ChangeNotifier {
   final ContactOperationsUseCase _contactUseCase;
   final IContactRepository _contactRepository;
+  final AppLogger _logger;
 
   // State
   ContactsState _state = ContactsState.initial;
@@ -23,11 +25,11 @@ class ContactsViewModel extends ChangeNotifier {
 
   set contacts(List<ContactModel> value) {
     _contacts = value;
-    _filteredContacts = List.from(value);
-    // Use Future.microtask to defer notification
-    Future.microtask(() {
-      notifyListeners();
-    });
+    // Filter out contacts without names when setting contacts
+    _filteredContacts = value.where((contact) {
+      return contact.name.trim().isNotEmpty;
+    }).toList();
+    notifyListeners();
   }
 
   List<ContactModel> _filteredContacts = [];
@@ -35,10 +37,7 @@ class ContactsViewModel extends ChangeNotifier {
 
   set filteredContacts(List<ContactModel> value) {
     _filteredContacts = value;
-    // Use Future.microtask to defer notification
-    Future.microtask(() {
-      notifyListeners();
-    });
+    notifyListeners();
   }
 
   ContactModel? _selectedContact;
@@ -46,10 +45,7 @@ class ContactsViewModel extends ChangeNotifier {
 
   set selectedContact(ContactModel? value) {
     _selectedContact = value;
-    // Use Future.microtask to defer notification
-    Future.microtask(() {
-      notifyListeners();
-    });
+    notifyListeners();
   }
 
   // Search
@@ -59,15 +55,12 @@ class ContactsViewModel extends ChangeNotifier {
   set searchQuery(String value) {
     if (_searchQuery != value) {
       _searchQuery = value;
-      // Use Future.microtask to defer the search and notification
-      Future.microtask(() {
-        if (value.isEmpty) {
-          _filteredContacts = List.from(_contacts);
-          notifyListeners();
-        } else {
-          _searchContactsData(value);
-        }
-      });
+      if (value.isEmpty) {
+        _filteredContacts = List.from(_contacts);
+        notifyListeners();
+      } else {
+        _searchContactsData(value);
+      }
     }
   }
 
@@ -77,13 +70,21 @@ class ContactsViewModel extends ChangeNotifier {
 
   set errorMessage(String? value) {
     _errorMessage = value;
-    // Use Future.microtask to defer notification
-    Future.microtask(() {
-      notifyListeners();
-    });
+    notifyListeners();
   }
 
-  ContactsViewModel(this._contactUseCase, this._contactRepository) {
+  // Loading progress
+  int _loadedCount = 0;
+  int get loadedCount => _loadedCount;
+
+  String _loadingMessage = 'Loading contacts...';
+  String get loadingMessage => _loadingMessage;
+
+  ContactsViewModel(
+    this._contactUseCase,
+    this._contactRepository,
+    this._logger,
+  ) {
     // Listen to repository changes
     _contactRepository.addListener(_onRepositoryChanged);
   }
@@ -100,9 +101,13 @@ class ContactsViewModel extends ChangeNotifier {
     if (repositoryContacts.isNotEmpty &&
         repositoryContacts.length != _contacts.length) {
       _contacts = List.from(repositoryContacts);
-      _filteredContacts = List.from(_contacts);
-      if (_searchQuery.isNotEmpty) {
-        _filterContactsByQuery(_searchQuery);
+      // Don't overwrite filtered results if user is actively searching via API
+      // API search results are more accurate than local filtering
+      if (_searchQuery.isEmpty) {
+        // Filter out contacts without names
+        _filteredContacts = _contacts.where((contact) {
+          return contact.name.trim().isNotEmpty;
+        }).toList();
       }
       notifyListeners();
     }
@@ -217,33 +222,42 @@ class ContactsViewModel extends ChangeNotifier {
 
   void clearSearch() {
     _searchQuery = '';
-    _filteredContacts = List.from(_contacts);
-    // Use Future.microtask to defer notification
-    Future.microtask(() {
-      notifyListeners();
-    });
+    // Filter out contacts without names when clearing search
+    _filteredContacts = _contacts.where((contact) {
+      return contact.name.trim().isNotEmpty;
+    }).toList();
+    notifyListeners();
   }
 
   void selectContact(ContactModel? contact) {
     _selectedContact = contact;
-    // Use Future.microtask to defer notification
-    Future.microtask(() {
-      notifyListeners();
-    });
+    notifyListeners();
   }
 
   // Private helper methods
   void _filterContactsByQuery(String query) {
+    // First, filter out contacts without names
+    final contactsWithNames = _contacts.where((contact) {
+      return contact.name.trim().isNotEmpty;
+    }).toList();
+
     if (query.isEmpty) {
-      _filteredContacts = List.from(_contacts);
+      _filteredContacts = contactsWithNames;
     } else {
       final searchLower = query.toLowerCase();
-      _filteredContacts = _contacts.where((contact) {
+      _filteredContacts = contactsWithNames.where((contact) {
         final fullName = contact.name.toLowerCase();
         final phone = contact.phone.toLowerCase();
         final email = contact.email.toLowerCase();
 
-        return fullName.contains(searchLower) ||
+        // Match if the search term appears as a word or at the start of a word
+        // This prevents "mike" from matching "Miranda" or "Michele"
+        final nameWords = fullName.split(' ');
+        final matchesName = nameWords.any(
+          (word) => word.startsWith(searchLower) || word == searchLower,
+        );
+
+        return matchesName ||
             phone.contains(searchLower) ||
             email.contains(searchLower);
       }).toList();
@@ -254,10 +268,7 @@ class ContactsViewModel extends ChangeNotifier {
   void addContactToList(ContactModel contact) {
     _contacts.add(contact);
     _filterContactsByQuery(_searchQuery);
-    // Use Future.microtask to defer notification
-    Future.microtask(() {
-      notifyListeners();
-    });
+    notifyListeners();
   }
 
   void updateContactInList(ContactModel updatedContact) {
@@ -297,30 +308,133 @@ class ContactsViewModel extends ChangeNotifier {
   // Private methods - API integration through repository
   Future<Result<void>> _loadContactsData() async {
     try {
+      final localContacts = _contactRepository.contacts;
+
+      // Show local data immediately if available
+      if (localContacts.isNotEmpty) {
+        _contacts = List.from(localContacts);
+        // Filter out contacts without names
+        _filteredContacts = _contacts.where((contact) {
+          return contact.name.trim().isNotEmpty;
+        }).toList();
+        _loadedCount = _contacts.length;
+        _state = ContactsState.loaded;
+        notifyListeners();
+
+        // Sync in background
+        _syncWithApiInBackground();
+        return Result.ok(null);
+      }
+
+      // No local data - fetch from API
       _state = ContactsState.loading;
       _errorMessage = null;
+      _loadedCount = 0;
+      _loadingMessage = 'Loading contacts from server...';
       notifyListeners();
 
-      final result = await _contactUseCase.getContacts();
+      final result = await _contactUseCase.getContacts(limit: 100);
 
       if (result is Ok) {
         final response = result.asOk.value;
         _contacts = response.contacts;
-        _filteredContacts = List.from(_contacts);
+        // Filter out contacts without names
+        _filteredContacts = _contacts.where((contact) {
+          return contact.name.trim().isNotEmpty;
+        }).toList();
+        _loadedCount = _contacts.length;
+        _state = ContactsState.loaded;
+        notifyListeners();
+
+        // Load remaining in background if needed
+        if (response.total != null && response.total! > 100) {
+          _loadRemainingContactsInBackground(100, response.total!);
+        }
+
+        return Result.ok(null);
+      }
+
+      // Handle error - use local data if available
+      if (_contacts.isNotEmpty) {
         _state = ContactsState.loaded;
         notifyListeners();
         return Result.ok(null);
-      } else {
-        _state = ContactsState.error;
-        _errorMessage = 'Erro ao carregar contatos: ${result.asError.error}';
+      }
+
+      _state = ContactsState.error;
+      _logger.error(
+        'Failed to load contacts from API: ${result.asError.error}',
+      );
+      notifyListeners();
+      return Result.error(
+        Exception('Unable to load contacts'),
+      );
+    } catch (e) {
+      _logger.error('Error loading contacts', e);
+
+      // Fallback to local data if available
+      if (_contacts.isNotEmpty) {
+        _state = ContactsState.loaded;
         notifyListeners();
-        return Result.error(Exception(_errorMessage));
+        return Result.ok(null);
+      }
+
+      _state = ContactsState.error;
+      notifyListeners();
+      return Result.error(
+        Exception('Unable to load contacts'),
+      );
+    }
+  }
+
+  /// Sync with API in background without showing loading state
+  Future<void> _syncWithApiInBackground() async {
+    try {
+      final result = await _contactUseCase.getContacts(limit: 100);
+
+      if (result is Ok) {
+        final response = result.asOk.value;
+        _contacts = response.contacts;
+        // Filter out contacts without names
+        _filteredContacts = _contacts.where((contact) {
+          return contact.name.trim().isNotEmpty;
+        }).toList();
+        _loadedCount = _contacts.length;
+        notifyListeners();
+
+        // Load remaining contacts if needed
+        if (response.total != null && response.total! > 100) {
+          _loadRemainingContactsInBackground(100, response.total!);
+        }
       }
     } catch (e) {
-      _state = ContactsState.error;
-      _errorMessage = 'Erro ao carregar contatos: ${e.toString()}';
-      notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      _logger.error('Background sync error: $e', e);
+    }
+  }
+
+  /// Load remaining contacts in background without blocking UI
+  Future<void> _loadRemainingContactsInBackground(
+    int offset,
+    int total,
+  ) async {
+    try {
+      final result = await _contactUseCase.getContacts(
+        limit: total - offset,
+        offset: offset,
+      );
+
+      if (result is Ok) {
+        final allContacts = [..._contacts, ...result.asOk.value.contacts];
+        _contacts = allContacts;
+        // Filter out contacts without names
+        _filteredContacts = _contacts.where((contact) {
+          return contact.name.trim().isNotEmpty;
+        }).toList();
+        _loadedCount = _contacts.length;
+        notifyListeners();
+      }
+    } catch (e) {
+      _logger.error('Background loading error: $e', e);
     }
   }
 
@@ -344,18 +458,25 @@ class ContactsViewModel extends ChangeNotifier {
       if (result is Ok) {
         final newContact = result.asOk.value;
         _contacts.add(newContact);
-        _filteredContacts = List.from(_contacts);
+        // Filter out contacts without names
+        _filteredContacts = _contacts.where((contact) {
+          return contact.name.trim().isNotEmpty;
+        }).toList();
         notifyListeners();
         return Result.ok(null);
       } else {
-        _errorMessage = 'Erro ao adicionar contato: ${result.asError.error}';
+        _logger.error('Failed to add contact: ${result.asError.error}');
         notifyListeners();
-        return Result.error(Exception(_errorMessage));
+        return Result.error(
+          Exception('Failed to add contact'),
+        );
       }
     } catch (e) {
-      _errorMessage = 'Erro ao adicionar contato: ${e.toString()}';
+      _logger.error('Error adding contact', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception('Failed to add contact'),
+      );
     }
   }
 
@@ -363,9 +484,11 @@ class ContactsViewModel extends ChangeNotifier {
     try {
       final contactId = contact.ghlId ?? contact.id?.toString() ?? '';
       if (contactId.isEmpty) {
-        _errorMessage = 'ID do contato não encontrado';
+        _logger.error('Contact ID is empty or null');
         notifyListeners();
-        return Result.error(Exception(_errorMessage));
+        return Result.error(
+          Exception('Contact ID not found'),
+        );
       }
 
       final result = await _contactUseCase.updateContact(
@@ -389,19 +512,26 @@ class ContactsViewModel extends ChangeNotifier {
         final index = _contacts.indexWhere((c) => c.id == updatedContact.id);
         if (index != -1) {
           _contacts[index] = updatedContact;
-          _filteredContacts = List.from(_contacts);
+          // Filter out contacts without names
+          _filteredContacts = _contacts.where((contact) {
+            return contact.name.trim().isNotEmpty;
+          }).toList();
           notifyListeners();
         }
         return Result.ok(null);
       } else {
-        _errorMessage = 'Erro ao atualizar contato: ${result.asError.error}';
+        _logger.error('Failed to update contact: ${result.asError.error}');
         notifyListeners();
-        return Result.error(Exception(_errorMessage));
+        return Result.error(
+          Exception('Failed to update contact'),
+        );
       }
     } catch (e) {
-      _errorMessage = 'Erro ao atualizar contato: ${e.toString()}';
+      _logger.error('Error updating contact', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception('Failed to update contact'),
+      );
     }
   }
 
@@ -414,25 +544,35 @@ class ContactsViewModel extends ChangeNotifier {
         _contacts.removeWhere(
           (c) => c.ghlId == contactId || c.id?.toString() == contactId,
         );
-        _filteredContacts = List.from(_contacts);
+        // Filter out contacts without names
+        _filteredContacts = _contacts.where((contact) {
+          return contact.name.trim().isNotEmpty;
+        }).toList();
         notifyListeners();
         return Result.ok(null);
       } else {
-        _errorMessage = 'Erro ao deletar contato: ${result.asError.error}';
+        _logger.error('Failed to delete contact: ${result.asError.error}');
         notifyListeners();
-        return Result.error(Exception(_errorMessage));
+        return Result.error(
+          Exception('Failed to delete contact'),
+        );
       }
     } catch (e) {
-      _errorMessage = 'Erro ao deletar contato: ${e.toString()}';
+      _logger.error('Error deleting contact', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception('Failed to delete contact'),
+      );
     }
   }
 
   Future<Result<void>> _searchContactsData(String query) async {
     try {
       if (query.isEmpty) {
-        _filteredContacts = List.from(_contacts);
+        // Filter out contacts without names when clearing search
+        _filteredContacts = _contacts.where((contact) {
+          return contact.name.trim().isNotEmpty;
+        }).toList();
         notifyListeners();
         return Result.ok(null);
       }
@@ -441,7 +581,10 @@ class ContactsViewModel extends ChangeNotifier {
 
       if (result is Ok) {
         final response = result.asOk.value;
-        _filteredContacts = response.contacts;
+        // Filter out contacts without names from search results
+        _filteredContacts = response.contacts.where((contact) {
+          return contact.name.trim().isNotEmpty;
+        }).toList();
 
         // Update the main contacts list with new contacts from API search
         for (final contact in response.contacts) {
@@ -462,14 +605,18 @@ class ContactsViewModel extends ChangeNotifier {
         notifyListeners();
         return Result.ok(null);
       } else {
-        _errorMessage = 'Erro ao buscar contatos: ${result.asError.error}';
+        _logger.error('Failed to search contacts: ${result.asError.error}');
         notifyListeners();
-        return Result.error(Exception(_errorMessage));
+        return Result.error(
+          Exception('Failed to search contacts'),
+        );
       }
     } catch (e) {
-      _errorMessage = 'Erro ao buscar contatos: ${e.toString()}';
+      _logger.error('Error searching contacts', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception('Failed to search contacts'),
+      );
     }
   }
 
@@ -527,9 +674,32 @@ class ContactsViewModel extends ChangeNotifier {
   }
 
   /// Gets loading widget for contacts
-  static Widget getLoadingWidget() {
-    return const Center(
-      child: CircularProgressIndicator(),
+  Widget getLoadingWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 24),
+          Text(
+            _loadingMessage,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (_loadedCount > 0) ...[
+            const SizedBox(height: 8),
+            Text(
+              '$_loadedCount ${_loadedCount == 1 ? 'contact' : 'contacts'} loaded',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
