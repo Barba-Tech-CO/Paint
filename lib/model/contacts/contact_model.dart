@@ -71,10 +71,18 @@ class ContactModel {
     if (json['firstName'] != null || json['lastName'] != null) {
       final firstName = json['firstName']?.toString() ?? '';
       final lastName = json['lastName']?.toString() ?? '';
-      fullName = [
-        firstName,
-        lastName,
-      ].where((part) => part.isNotEmpty).join(' ');
+      fullName =
+          [
+                firstName,
+                lastName,
+              ]
+              .where(
+                (part) =>
+                    part.isNotEmpty &&
+                    part.toLowerCase() != 'null' &&
+                    part.toLowerCase() != 'undefined',
+              )
+              .join(' ');
     } else if (json['name'] != null) {
       fullName = json['name'].toString(); // Fallback to legacy name field
     }
@@ -169,21 +177,28 @@ class ContactModel {
   }
 
   factory ContactModel.fromMap(Map<String, dynamic> map) {
+    // Build full name from first_name and last_name
+    final nameParts =
+        [
+              map['first_name']?.toString() ?? '',
+              map['last_name']?.toString() ?? '',
+            ]
+            .where(
+              (part) =>
+                  part.isNotEmpty &&
+                  part.toLowerCase() != 'null' &&
+                  part.toLowerCase() != 'undefined',
+            )
+            .join(' ');
+
+    final finalName = nameParts.isNotEmpty ? nameParts : (map['name'] ?? '');
+
     return ContactModel(
       id: map['id'],
       userId: map['user_id'],
       ghlId: map['ghl_id'],
       locationId: map['location_id'],
-      name:
-          [
-            map['first_name'] ?? '',
-            map['last_name'] ?? '',
-          ].where((e) => e.isNotEmpty).join(' ').isNotEmpty
-          ? [
-              map['first_name'] ?? '',
-              map['last_name'] ?? '',
-            ].where((e) => e.isNotEmpty).join(' ')
-          : (map['name'] ?? ''),
+      name: finalName,
       email: map['email'] ?? '',
       phone: map['phone'] ?? '',
       phoneLabel: map['phone_label'],
