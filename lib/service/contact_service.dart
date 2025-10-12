@@ -24,8 +24,6 @@ class ContactService {
       final endpoint = '$_baseUrl/sync';
       final requestData = {'limit': limit};
 
-      final stopwatch = Stopwatch()..start();
-
       final response = await _httpService.post(
         endpoint,
         data: requestData,
@@ -34,10 +32,10 @@ class ContactService {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
+          receiveTimeout: const Duration(seconds: 30),
+          sendTimeout: const Duration(seconds: 30),
         ),
       );
-
-      stopwatch.stop();
 
       if (response.statusCode == 200) {
         final data = Map<String, dynamic>.from(response.data as Map);
@@ -75,7 +73,6 @@ class ContactService {
           ? ((offset / effLimit).floor() + 1)
           : 1;
 
-      // POST sem body cai na listagem (ver controller store -> listContacts)
       final response = await _httpService.get(
         _baseUrl,
         queryParameters: {
