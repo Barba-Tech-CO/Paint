@@ -73,7 +73,7 @@ class _ContactsViewState extends State<ContactsView> {
             body: Consumer<ContactsViewModel>(
               builder: (context, viewModel, child) {
                 if (viewModel.isLoading) {
-                  return ContactsViewModel.getLoadingWidget();
+                  return viewModel.getLoadingWidget();
                 }
 
                 if (viewModel.hasError) {
