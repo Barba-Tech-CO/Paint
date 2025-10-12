@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import '../../config/app_colors.dart';
 import '../../model/contacts/contact_model.dart';
 
-class ContactDropdownWidget extends StatelessWidget {
+class ContactDropdownWidget extends StatefulWidget {
   final ContactModel? selectedContact;
   final List<ContactModel> contacts;
   final ValueChanged<ContactModel?> onChanged;
@@ -23,13 +24,26 @@ class ContactDropdownWidget extends StatelessWidget {
   });
 
   @override
+  State<ContactDropdownWidget> createState() => _ContactDropdownWidgetState();
+}
+
+class _ContactDropdownWidgetState extends State<ContactDropdownWidget> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (label != null) ...[
+        if (widget.label != null) ...[
           Text(
-            label!,
+            widget.label!,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -38,8 +52,9 @@ class ContactDropdownWidget extends StatelessWidget {
           ),
           const SizedBox(height: 8),
         ],
-        DropdownButtonFormField<ContactModel?>(
-          initialValue: selectedContact,
+        DropdownButtonFormField2<ContactModel?>(
+          isExpanded: true,
+          value: widget.selectedContact,
           decoration: InputDecoration(
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -65,9 +80,9 @@ class ContactDropdownWidget extends StatelessWidget {
               horizontal: 12,
               vertical: 16,
             ),
-            errorText: errorText,
+            errorText: widget.errorText,
           ),
-          hint: isLoading
+          hint: widget.isLoading
               ? const Row(
                   children: [
                     SizedBox(
@@ -79,41 +94,85 @@ class ContactDropdownWidget extends StatelessWidget {
                     Text('Loading contacts...'),
                   ],
                 )
-              : Text(label != null ? 'Select $label' : 'Select contact'),
-          items: contacts.map((contact) {
-            return DropdownMenuItem<ContactModel?>(
-              value: contact,
-              child: contact.companyName?.isNotEmpty == true
-                  ? Text(
-                      '${contact.name} - ${contact.companyName}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    )
-                  : Text(
-                      contact.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
+              : Text(
+                  widget.label != null
+                      ? 'Select ${widget.label}'
+                      : 'Select contact',
+                ),
+          items: widget.contacts
+              .where((contact) => contact.name.trim().isNotEmpty)
+              .map((contact) {
+                return DropdownMenuItem<ContactModel?>(
+                  value: contact,
+                  child: Text(
+                    contact.name,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                     ),
-            );
-          }).toList(),
-          onChanged: isLoading ? null : onChanged,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                );
+              })
+              .toList(),
+          onChanged: widget.isLoading ? null : widget.onChanged,
+          dropdownStyleData: DropdownStyleData(
+            maxHeight: 300,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            offset: const Offset(0, -5),
+            direction: DropdownDirection.textDirection,
+          ),
+          menuItemStyleData: const MenuItemStyleData(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+          ),
+          dropdownSearchData: DropdownSearchData(
+            searchController: _searchController,
+            searchInnerWidgetHeight: 50,
+            searchInnerWidget: Container(
+              height: 50,
+              padding: const EdgeInsets.only(
+                top: 8,
+                bottom: 4,
+                right: 8,
+                left: 8,
+              ),
+              child: TextFormField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  hintText: 'Search contact...',
+                  hintStyle: const TextStyle(fontSize: 14),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                ),
+              ),
+            ),
+            searchMatchFn: (item, searchValue) {
+              final contact = item.value;
+              if (contact == null) return false;
+              return contact.name.toLowerCase().contains(
+                searchValue.toLowerCase(),
+              );
+            },
+          ),
         ),
-        if (errorText != null && onRetry != null)
+        if (widget.errorText != null && widget.onRetry != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
-                    errorText!,
+                    widget.errorText!,
                     style: const TextStyle(
                       color: Colors.red,
                       fontSize: 12,
@@ -121,7 +180,7 @@ class ContactDropdownWidget extends StatelessWidget {
                   ),
                 ),
                 TextButton.icon(
-                  onPressed: onRetry,
+                  onPressed: widget.onRetry,
                   icon: const Icon(Icons.refresh, size: 16),
                   label: const Text('Retry'),
                   style: TextButton.styleFrom(
