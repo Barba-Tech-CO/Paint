@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
@@ -58,7 +59,7 @@ class _RenameQuoteDialogState extends State<RenameQuoteDialog> {
             'Save',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 16.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -70,7 +71,7 @@ class _RenameQuoteDialogState extends State<RenameQuoteDialog> {
             style: TextStyle(
               color: AppColors.primary,
               fontWeight: FontWeight.bold,
-              fontSize: 16,
+              fontSize: 16.sp,
             ),
           ),
         ),
