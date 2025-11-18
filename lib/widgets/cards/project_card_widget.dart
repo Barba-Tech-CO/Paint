@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
@@ -48,20 +49,20 @@ class ProjectCardWidget extends StatelessWidget {
 
     return InkWell(
       onTap: onTap ?? () => context.push('/estimate-detail', extra: id),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(16.r),
       child: Container(
         width: double.maxFinite,
         constraints: BoxConstraints(
-          minHeight: 104,
+          minHeight: 104.h,
         ),
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: .05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+              blurRadius: 4.r,
+              offset: Offset(0, 2.h),
             ),
           ],
         ),
@@ -69,15 +70,15 @@ class ProjectCardWidget extends StatelessWidget {
           children: [
             // Conteúdo principal
             Padding(
-              padding: EdgeInsets.all(8),
+              padding: EdgeInsets.all(8.w),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   SizedBox(
-                    width: 120,
-                    height: 80,
+                    width: 120.w,
+                    height: 80.h,
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12.r),
                       child: _buildImage(),
                     ),
                   ),
@@ -123,7 +124,7 @@ class ProjectCardWidget extends StatelessWidget {
               right: 0,
               child: PopupMenuButton(
                 color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12.r),
                 tooltip: '',
                 icon: Icon(Icons.more_vert, color: Colors.grey[700]),
                 onSelected: (value) async {
@@ -152,10 +153,10 @@ class ProjectCardWidget extends StatelessWidget {
                       children: [
                         Image.asset(
                           'assets/icons/rename.png',
-                          width: 20,
-                          height: 20,
+                          width: 20.w,
+                          height: 20.h,
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                         Text('Rename Project'),
                       ],
                     ),
@@ -166,10 +167,10 @@ class ProjectCardWidget extends StatelessWidget {
                       children: [
                         Image.asset(
                           'assets/icons/delete_black.png',
-                          width: 20,
-                          height: 20,
+                          width: 20.w,
+                          height: 20.h,
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                         Text('Delete Project'),
                       ],
                     ),

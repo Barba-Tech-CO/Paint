@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class StatsCardWidget extends StatelessWidget {
   final String title;
@@ -44,23 +45,23 @@ class StatsCardWidget extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               title,
               style: TextStyle(
-                fontSize: titleFontSize,
+                fontSize: titleFontSize.sp,
                 fontWeight: FontWeight.bold,
                 color: titleColor,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4.h),
             Text(
               description,
               style: TextStyle(
-                fontSize: descriptionFontSize,
+                fontSize: descriptionFontSize.sp,
                 color: descriptionColor,
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class GreetingCardWidget extends StatelessWidget {
   final String greeting;
@@ -44,14 +45,14 @@ class GreetingCardWidget extends StatelessWidget {
             children: [
               Text(
                 greeting,
-                style: const TextStyle(
-                  fontSize: 12,
+                style: TextStyle(
+                  fontSize: 12.sp,
                 ),
               ),
               Text(
                 name,
-                style: const TextStyle(
-                  fontSize: 20,
+                style: TextStyle(
+                  fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),

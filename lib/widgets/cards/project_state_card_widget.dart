@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
@@ -66,23 +67,23 @@ class ProjectStateCardWidget extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                fontSize: titleFontSize,
+                fontSize: titleFontSize.sp,
                 fontWeight: FontWeight.w600,
                 color: titleColor,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               description,
               style: TextStyle(
-                fontSize: descriptionFontSize,
+                fontSize: descriptionFontSize.sp,
                 color: descriptionColor ?? Colors.grey[600],
               ),
               textAlign: TextAlign.center,
             ),
             if (buttonText != null &&
                 (onButtonPressed != null || projectId != null)) ...[
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               ElevatedButton(
                 onPressed:
                     onButtonPressed ??
@@ -95,20 +96,20 @@ class ProjectStateCardWidget extends StatelessWidget {
                   foregroundColor: buttonTextColor,
                   padding: buttonPadding,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(buttonBorderRadius),
+                    borderRadius: BorderRadius.circular(buttonBorderRadius.r),
                   ),
                 ),
                 child: Text(
                   buttonText!,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
             ],
             if (state == ProjectStateType.loading) ...[
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               const CircularProgressIndicator(),
             ],
           ],
