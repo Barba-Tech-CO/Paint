@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -44,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
             top: false,
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              padding: EdgeInsets.symmetric(horizontal: 32.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -55,35 +56,35 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const SizedBox(height: 32),
+                            SizedBox(height: 32.h),
                             Center(
                               child: SvgPicture.asset(
                                 'assets/logo/Logo.svg',
-                                width: 120,
-                                height: 120,
+                                width: 120.w,
+                                height: 120.h,
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            const Center(
+                            SizedBox(height: 16.h),
+                            Center(
                               child: Text(
                                 'Login',
                                 style: TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 20.sp,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.primaryDark,
                                 ),
                               ),
                             ),
-                            const Center(
+                            Center(
                               child: Text(
                                 'Access your paintin projects',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 16.sp,
                                   color: AppColors.gray100,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 48),
+                            SizedBox(height: 48.h),
                             PaintProTextField(
                               label: 'Email:',
                               controller: _emailController,
@@ -105,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 'Please enter your password',
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16.h),
                             PaintProButton(
                               text: 'Login',
                               onPressed: viewModel.isLoading
@@ -121,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     },
                               isLoading: viewModel.isLoading,
                               padding: EdgeInsets.zero,
-                              minimumSize: const Size(double.infinity, 48),
+                              minimumSize: Size(double.infinity, 48.h),
                             ),
                             Center(
                               child: TextButton(
@@ -141,22 +142,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                   context.go('/verify-otp', extra: email);
                                 },
-                                child: const Text(
+                                child: Text(
                                   'Forgot Password?',
                                   style: TextStyle(
                                     color: AppColors.primary,
-                                    fontSize: 14,
+                                    fontSize: 14.sp,
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            SizedBox(height: 24.h),
                             if (viewModel.errorMessage != null)
                               Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: EdgeInsets.all(12.w),
                                 decoration: BoxDecoration(
                                   color: Colors.red.shade50,
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(8.r),
                                   border: Border.all(
                                     color: Colors.red.shade200,
                                   ),
@@ -165,12 +166,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                   viewModel.errorMessage!,
                                   style: TextStyle(
                                     color: Colors.red.shade700,
-                                    fontSize: 14,
+                                    fontSize: 14.sp,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
-                            const SizedBox(height: 24),
+                            SizedBox(height: 24.h),
                           ],
                         ),
                       ),
@@ -178,17 +179,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   Padding(
                     padding: EdgeInsets.only(
-                      top: 24,
-                      bottom: bottomInset + 16,
+                      top: 24.h,
+                      bottom: bottomInset + 16.h,
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           "Don't have an account? ",
                           style: TextStyle(
                             color: Colors.black54,
-                            fontSize: 14,
+                            fontSize: 14.sp,
                           ),
                         ),
                         TextButton(
@@ -197,14 +198,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
-                            minimumSize: const Size(0, 0),
+                            minimumSize: Size(0, 0),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: const Text(
+                          child: Text(
                             'Create Account',
                             style: TextStyle(
                               color: AppColors.primary,
-                              fontSize: 14,
+                              fontSize: 14.sp,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

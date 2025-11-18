@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -52,7 +53,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             top: false,
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              padding: EdgeInsets.symmetric(horizontal: 32.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -63,35 +64,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const SizedBox(height: 32),
+                            SizedBox(height: 32.h),
                             Center(
                               child: SvgPicture.asset(
                                 'assets/logo/Logo.svg',
-                                width: 100,
-                                height: 100,
+                                width: 100.w,
+                                height: 100.h,
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            const Center(
+                            SizedBox(height: 16.h),
+                            Center(
                               child: Text(
                                 'Create Account',
                                 style: TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 20.sp,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.primaryDark,
                                 ),
                               ),
                             ),
-                            const Center(
+                            Center(
                               child: Text(
                                 'Create your painting projects',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 16.sp,
                                   color: AppColors.gray100,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 32),
+                            SizedBox(height: 32.h),
                             PaintProTextField(
                               label: 'Name:',
                               controller: _nameController,
@@ -119,7 +120,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               hintText: '**********',
                               validator: PasswordValidator.validate,
                             ),
-                            const SizedBox(height: 32),
+                            SizedBox(height: 32.h),
                             PaintProButton(
                               text: 'Create Account',
                               onPressed: viewModel.isLoading
@@ -136,15 +137,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     },
                               isLoading: viewModel.isLoading,
                               padding: EdgeInsets.zero,
-                              minimumSize: const Size(double.infinity, 48),
+                              minimumSize: Size(double.infinity, 48.h),
                             ),
-                            const SizedBox(height: 24),
+                            SizedBox(height: 24.h),
                             if (viewModel.errorMessage != null)
                               Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: EdgeInsets.all(12.w),
                                 decoration: BoxDecoration(
                                   color: Colors.red.shade50,
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(8.r),
                                   border: Border.all(
                                     color: Colors.red.shade200,
                                   ),
@@ -153,12 +154,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   viewModel.errorMessage!,
                                   style: TextStyle(
                                     color: Colors.red.shade700,
-                                    fontSize: 14,
+                                    fontSize: 14.sp,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
-                            const SizedBox(height: 24),
+                            SizedBox(height: 24.h),
                           ],
                         ),
                       ),
@@ -166,17 +167,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   Padding(
                     padding: EdgeInsets.only(
-                      top: 24,
-                      bottom: bottomInset + 16,
+                      top: 24.h,
+                      bottom: bottomInset + 16.h,
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           'Already have an account? ',
                           style: TextStyle(
                             color: Colors.black54,
-                            fontSize: 14,
+                            fontSize: 14.sp,
                           ),
                         ),
                         TextButton(
@@ -185,14 +186,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           },
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
-                            minimumSize: const Size(0, 0),
+                            minimumSize: Size(0, 0),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: const Text(
+                          child: Text(
                             'Login',
                             style: TextStyle(
                               color: AppColors.primary,
-                              fontSize: 14,
+                              fontSize: 14.sp,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
