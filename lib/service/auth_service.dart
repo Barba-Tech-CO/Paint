@@ -274,4 +274,44 @@ class AuthService {
     await _authPersistenceService.clearAuthState();
     _httpService.clearAuthToken();
   }
+
+  /// Deletes the user account permanently
+  Future<Result<void>> deleteAccount(String password) async {
+    try {
+      final response = await _httpService.delete(
+        '/auth/account',
+        data: {'password': password},
+      );
+
+      if (response.statusCode == 200) {
+        _logger.info('[AuthService] Account deleted successfully');
+        // Clear local authentication state
+        await logout();
+        return Result.ok(null);
+      }
+
+      if (response.statusCode == 401) {
+        return Result.error(
+          AuthServiceException(
+            message: 'Invalid password',
+            errorType: AuthServiceErrorType.invalidCredentials,
+            technicalDetails: 'DELETE /auth/account returned 401',
+          ),
+        );
+      }
+
+      return Result.error(
+        Exception('Failed to delete account'),
+      );
+    } catch (e, stack) {
+      _logger.error(
+        '[AuthService] Error deleting account: $e',
+        e,
+        stack,
+      );
+      return Result.error(
+        Exception('Error deleting account'),
+      );
+    }
+  }
 }
