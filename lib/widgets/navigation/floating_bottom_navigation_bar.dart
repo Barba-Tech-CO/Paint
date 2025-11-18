@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../config/app_colors.dart';
 import '../../model/navigation/navigation_item_model.dart';
@@ -19,30 +20,30 @@ class FloatingBottomNavigationBar extends StatelessWidget {
       animation: viewModel,
       builder: (context, child) {
         return SizedBox(
-          height: 120,
+          height: 120.h,
           child: Container(
-            margin: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
+            margin: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 16.h,
             ),
             decoration: BoxDecoration(
               color: AppColors.navigationBackground,
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(30.r),
               boxShadow: [
                 BoxShadow(
                   color: AppColors.primaryDark.withValues(alpha: 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
+                  blurRadius: 20.r,
+                  offset: Offset(0, 8.h),
                 ),
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(30.r),
               child: Container(
-                height: 88,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                height: 88.h,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                  vertical: 12.h,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
