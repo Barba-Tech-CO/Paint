@@ -13,47 +13,45 @@ class ProjectTypeRowWidgetCompact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Primeira linha: Interior e Exterior
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Radio(
-              value: 'Interior',
-              groupValue: selectedType,
-              onChanged: (value) {
-                onTypeChanged(value.toString());
-              },
-              activeColor: AppColors.primary,
-            ),
-            const Text('Interior'),
-            Radio(
-              value: 'Exterior',
-              groupValue: selectedType,
-              onChanged: (value) {
-                onTypeChanged(value.toString());
-              },
-              activeColor: AppColors.primary,
-            ),
-            const Text('Exterior'),
-          ],
-        ),
-        // Segunda linha: Both
-        Row(
-          children: [
-            Radio(
-              value: 'Both',
-              groupValue: selectedType,
-              onChanged: (value) {
-                onTypeChanged(value.toString());
-              },
-              activeColor: AppColors.primary,
-            ),
-            const Text('Both'),
-          ],
-        ),
-      ],
+    return RadioGroup<String>(
+      onChanged: (value) {
+        if (value != null) {
+          onTypeChanged(value);
+        }
+      },
+      child: Column(
+        children: [
+          // Primeira linha: Interior e Exterior
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Radio<String>(
+                value: 'Interior',
+                toggleable: selectedType == 'Interior',
+                activeColor: AppColors.primary,
+              ),
+              const Text('Interior'),
+              Radio<String>(
+                value: 'Exterior',
+                toggleable: selectedType == 'Exterior',
+                activeColor: AppColors.primary,
+              ),
+              const Text('Exterior'),
+            ],
+          ),
+          // Segunda linha: Both
+          Row(
+            children: [
+              Radio<String>(
+                value: 'Both',
+                toggleable: selectedType == 'Both',
+                activeColor: AppColors.primary,
+              ),
+              const Text('Both'),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
