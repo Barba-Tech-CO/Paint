@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PaintProPhoneField extends StatelessWidget {
   final String label;
@@ -30,7 +31,7 @@ class PaintProPhoneField extends StatelessWidget {
       children: [
         // Label
         Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
+          padding: EdgeInsets.only(bottom: 8.h),
           child: Text(
             label,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -57,24 +58,24 @@ class PaintProPhoneField extends StatelessWidget {
             hintStyle: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.grey,
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 16,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 12.w,
+              vertical: 16.h,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(4.r),
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(4.r),
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(4.r),
               borderSide: BorderSide(color: theme.primaryColor),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(4.r),
               borderSide: const BorderSide(color: Colors.red),
             ),
             filled: true,
@@ -84,7 +85,7 @@ class PaintProPhoneField extends StatelessWidget {
         ),
 
         // Add some bottom spacing
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
       ],
     );
   }

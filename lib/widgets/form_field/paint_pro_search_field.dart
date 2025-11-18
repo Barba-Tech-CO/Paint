@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../config/app_colors.dart';
 
@@ -79,22 +80,22 @@ class _PaintProSearchFieldState extends State<PaintProSearchField> {
         suffixIcon: _buildClearButton(),
         filled: true,
         fillColor: Colors.grey[50],
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 16.w,
+          vertical: 12.h,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(
+          borderRadius: BorderRadius.circular(16.r),
+          borderSide: BorderSide(
             color: Color(0xFFE0E0E0), // Cinza claro
-            width: 1.0,
+            width: 1.w,
           ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(
+          borderRadius: BorderRadius.circular(16.r),
+          borderSide: BorderSide(
             color: Color(0xFFE0E0E0), // Cinza claro
-            width: 1.0,
+            width: 1.w,
           ),
         ),
       ),
