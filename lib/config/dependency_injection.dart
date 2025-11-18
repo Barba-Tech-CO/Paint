@@ -79,6 +79,7 @@ import '../use_case/quotes/quote_upload_use_case.dart';
 // ViewModel Layer
 import '../viewmodel/select_colors_viewmodel.dart';
 import '../viewmodel/auth/auth_viewmodel.dart';
+import '../viewmodel/auth/delete_account_viewmodel.dart';
 import '../viewmodel/auth/login_viewmodel.dart';
 import '../viewmodel/auth/signup_viewmodel.dart';
 import '../viewmodel/auth/verify_otp_viewmodel.dart';
@@ -447,6 +448,14 @@ void setupDependencyInjection() {
       getIt<HttpService>(),
       getIt<AuthPersistenceService>(),
       getIt<UserLocalService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<DeleteAccountViewModel>(
+    () => DeleteAccountViewModel(
+      getIt<AuthService>(),
+      getIt<AuthStateManager>(),
       getIt<AppLogger>(),
     ),
   );
