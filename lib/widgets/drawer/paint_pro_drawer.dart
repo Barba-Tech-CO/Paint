@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../config/app_colors.dart';
 import '../../viewmodel/user/user_viewmodel.dart';
@@ -26,25 +27,25 @@ class PaintProDrawer extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 24),
+            SizedBox(height: 24.h),
             DrawerHeaderContentWidget(
               userViewModel: userViewModel,
               homeViewModel: homeViewModel,
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32.h),
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
-                children: const [
+                children: [
                   ConnectGhlMenuItemWidget(),
-                  SizedBox(height: 8),
+                  SizedBox(height: 8.h),
                   DeleteAccountMenuItemWidget(),
-                  SizedBox(height: 8),
+                  SizedBox(height: 8.h),
                   LogoutMenuItemWidget(),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24.h),
           ],
         ),
       ),
