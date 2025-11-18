@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -48,7 +49,7 @@ class ConfirmationDialogWidget extends StatelessWidget {
       title: Text(
         title,
         style: GoogleFonts.albertSans(
-          fontSize: 20,
+          fontSize: 20.sp,
           fontWeight: FontWeight.bold,
           color: isDestructive ? AppColors.error : AppColors.textPrimary,
         ),
@@ -56,7 +57,7 @@ class ConfirmationDialogWidget extends StatelessWidget {
       content: Text(
         message,
         style: GoogleFonts.albertSans(
-          fontSize: 14,
+          fontSize: 14.sp,
           color: AppColors.textSecondary,
         ),
       ),
@@ -66,6 +67,7 @@ class ConfirmationDialogWidget extends StatelessWidget {
           child: Text(
             cancelText,
             style: GoogleFonts.albertSans(
+              fontSize: 14.sp,
               color: AppColors.textSecondary,
             ),
           ),
@@ -80,6 +82,7 @@ class ConfirmationDialogWidget extends StatelessWidget {
           child: Text(
             confirmText,
             style: GoogleFonts.albertSans(
+              fontSize: 14.sp,
               color: AppColors.textOnPrimary,
             ),
           ),

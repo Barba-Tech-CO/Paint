@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/app_colors.dart';
@@ -15,12 +16,12 @@ class DeleteAccountItemsList extends StatelessWidget {
         Text(
           'What will be deleted:',
           style: GoogleFonts.albertSans(
-            fontSize: 16,
+            fontSize: 16.sp,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         const DeleteAccountItemWidget(
           text: 'All your projects and estimates',
         ),

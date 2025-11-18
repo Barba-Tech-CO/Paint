@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -79,25 +80,25 @@ class _DeleteAccountViewState extends State<DeleteAccountView> {
               ),
             ),
             body: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24.w),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const DeleteAccountWarningBanner(),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24.h),
                     const DeleteAccountItemsList(),
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32.h),
                     Text(
                       'Enter your password to confirm',
                       style: GoogleFonts.albertSans(
-                        fontSize: 14,
+                        fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12.h),
                     PaintProPasswordField(
                       label: 'Password:',
                       controller: _passwordController,
@@ -111,16 +112,16 @@ class _DeleteAccountViewState extends State<DeleteAccountView> {
                       },
                     ),
                     if (viewModel.errorMessage != null) ...[
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12.h),
                       Text(
                         viewModel.errorMessage!,
                         style: GoogleFonts.albertSans(
-                          fontSize: 12,
+                          fontSize: 12.sp,
                           color: AppColors.error,
                         ),
                       ),
                     ],
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32.h),
                     PaintProButton(
                       onPressed: viewModel.isLoading
                           ? null
@@ -134,13 +135,13 @@ class _DeleteAccountViewState extends State<DeleteAccountView> {
                       text: viewModel.isLoading
                           ? 'Deleting Account...'
                           : 'Delete My Account',
-                      minimumSize: const Size(double.infinity, 48),
+                      minimumSize: Size(double.infinity, 48.h),
                       backgroundColor: AppColors.error,
                       state: viewModel.isLoading
                           ? ButtonState.loading
                           : ButtonState.enabled,
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
                     Center(
                       child: TextButton(
                         onPressed: viewModel.isLoading
@@ -149,7 +150,7 @@ class _DeleteAccountViewState extends State<DeleteAccountView> {
                         child: Text(
                           'Cancel',
                           style: GoogleFonts.albertSans(
-                            fontSize: 14,
+                            fontSize: 14.sp,
                             color: AppColors.textSecondary,
                           ),
                         ),
