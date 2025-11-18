@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../model/contacts/contact_model.dart';
@@ -28,19 +29,19 @@ class ContactItemWidget extends StatelessWidget {
     final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
     return Padding(
-      padding: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: 12.h),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
         width: double.infinity,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(60),
-              blurRadius: 1,
-              spreadRadius: 1,
-              offset: const Offset(0, 2),
+              blurRadius: 1.r,
+              spreadRadius: 1.r,
+              offset: Offset(0, 2.h),
             ),
           ],
         ),
@@ -50,26 +51,26 @@ class ContactItemWidget extends StatelessWidget {
               context.push('/contact-details', extra: contactModel);
             }
           },
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
           child: Stack(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16.w),
                 child: Row(
                   children: [
                     CircleAvatar(
-                      radius: 30,
+                      radius: 30.r,
                       backgroundColor: _getAvatarColor(name),
                       child: Text(
                         initial,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 18,
+                          fontSize: 18.sp,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16.w),
                     Expanded(
                       // Faz o conteúdo ocupar todo espaço restante
                       child: Column(
@@ -78,48 +79,48 @@ class ContactItemWidget extends StatelessWidget {
                           Text(
                             phone,
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 14.sp,
                               color: Colors.grey[600],
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4.h),
                           Text(
                             name,
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: TextStyle(
+                              fontSize: 16.sp,
                               fontWeight: FontWeight.w600,
                               color: Colors.black87,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          SizedBox(height: 2.h),
                           Text(
                             address,
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 12.sp,
                               color: Colors.grey[500],
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(
-                      width: 32,
+                    SizedBox(
+                      width: 32.w,
                     ),
                   ],
                 ),
               ),
               // IconButton posicionado absoluto
               Positioned(
-                top: 8,
-                right: 8,
+                top: 8.h,
+                right: 8.w,
                 child: PopupMenuButton(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                   tooltip: '',
                   icon: Icon(
                     Icons.more_vert,
-                    size: 20,
+                    size: 20.sp,
                     color: Colors.grey[700],
                   ),
                   onSelected: (value) async {
@@ -139,22 +140,22 @@ class ContactItemWidget extends StatelessWidget {
                     }
                   },
                   itemBuilder: (context) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'edit',
                       child: Row(
                         children: [
                           Icon(Icons.edit_rounded),
-                          SizedBox(width: 8),
+                          SizedBox(width: 8.w),
                           Text('Editar'),
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'delete',
                       child: Row(
                         children: [
                           Icon(Icons.delete_rounded),
-                          SizedBox(width: 8),
+                          SizedBox(width: 8.w),
                           Text('Excluir'),
                         ],
                       ),
