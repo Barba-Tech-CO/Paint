@@ -4,6 +4,7 @@ import '../../config/app_colors.dart';
 import '../../viewmodel/user/user_viewmodel.dart';
 import '../../viewmodel/home/home_viewmodel.dart';
 import 'connect_ghl_menu_item_widget.dart';
+import 'delete_account_menu_item_widget.dart';
 import 'drawer_header_content_widget.dart';
 import 'logout_menu_item_widget.dart';
 
@@ -36,6 +37,8 @@ class PaintProDrawer extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 children: const [
                   ConnectGhlMenuItemWidget(),
+                  SizedBox(height: 8),
+                  DeleteAccountMenuItemWidget(),
                   SizedBox(height: 8),
                   LogoutMenuItemWidget(),
                 ],
