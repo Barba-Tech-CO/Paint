@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -75,7 +76,7 @@ class _HomeViewState extends State<HomeView> {
           backgroundColor: AppColors.background,
           appBar: PaintProAppBar(
             title: 'Home',
-            toolbarHeight: 80,
+            toolbarHeight: 80.h,
             leading: Builder(
               builder: (context) => IconButton(
                 icon: const Icon(
@@ -91,10 +92,10 @@ class _HomeViewState extends State<HomeView> {
           body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 32,
+              spacing: 32.h,
               children: [
                 SizedBox(
-                  height: 8,
+                  height: 8.h,
                 ),
                 Consumer<UserViewModel>(
                   builder: (context, userViewModel, child) {
@@ -115,9 +116,9 @@ class _HomeViewState extends State<HomeView> {
                   },
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  padding: EdgeInsets.symmetric(horizontal: 32.w),
                   child: Column(
-                    spacing: 8,
+                    spacing: 8.h,
                     children: [
                       Consumer<DashboardViewModel>(
                         builder: (context, dashboardViewModel, child) {
@@ -154,7 +155,7 @@ class _HomeViewState extends State<HomeView> {
                                       description: "total estimates",
                                     ),
                                   ),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: 8.w),
                                   Expanded(
                                     child: StatsCardWidget(
                                       title: dashboardViewModel
@@ -191,7 +192,7 @@ class _HomeViewState extends State<HomeView> {
                                       descriptionColor: AppColors.textPrimary,
                                     ),
                                   ),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: 8.w),
                                   Expanded(
                                     child: StatsCardWidget(
                                       title: dashboardViewModel
@@ -211,7 +212,7 @@ class _HomeViewState extends State<HomeView> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  padding: EdgeInsets.symmetric(horizontal: 32.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -221,7 +222,7 @@ class _HomeViewState extends State<HomeView> {
                           Text(
                             "Recent Projects",
                             style: GoogleFonts.albertSans(
-                              fontSize: 16,
+                              fontSize: 16.sp,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
                             ),
@@ -231,7 +232,7 @@ class _HomeViewState extends State<HomeView> {
                             child: Text(
                               "See all",
                               style: GoogleFonts.albertSans(
-                                fontSize: 16,
+                                fontSize: 16.sp,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.primary,
                               ),
@@ -239,7 +240,7 @@ class _HomeViewState extends State<HomeView> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: 16.h),
                       Consumer<HomeViewModel>(
                         builder: (context, homeViewModel, child) {
                           if (homeViewModel.isLoading) {
@@ -278,7 +279,7 @@ class _HomeViewState extends State<HomeView> {
                               project,
                             ) {
                               return Padding(
-                                padding: const EdgeInsets.only(bottom: 16.0),
+                                padding: EdgeInsets.only(bottom: 16.h),
                                 child: ProjectCardWidget(
                                   id: project.id,
                                   projectName: project.projectName,

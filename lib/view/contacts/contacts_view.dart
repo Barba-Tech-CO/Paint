@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -66,9 +67,9 @@ class _ContactsViewState extends State<ContactsView> {
           onTap: () => ContactsViewModel.dismissKeyboard(context),
           child: Scaffold(
             backgroundColor: AppColors.background,
-            appBar: const PaintProAppBar(
+            appBar: PaintProAppBar(
               title: 'Contacts',
-              toolbarHeight: 90,
+              toolbarHeight: 90.h,
             ),
             body: Consumer<ContactsViewModel>(
               builder: (context, viewModel, child) {

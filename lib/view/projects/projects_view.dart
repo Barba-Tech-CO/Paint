@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -61,30 +62,30 @@ class _ProjectsViewState extends State<ProjectsView> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.error_outline,
-                        size: 64,
+                        size: 64.sp,
                         color: AppColors.error,
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16.h),
                       Text(
                         'Error',
                         style: GoogleFonts.albertSans(
-                          fontSize: 24,
+                          fontSize: 24.sp,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8.h),
                       Text(
                         viewModel.errorMessage!,
                         style: GoogleFonts.albertSans(
-                          fontSize: 16,
+                          fontSize: 16.sp,
                           color: AppColors.textSecondary,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16.h),
                       ElevatedButton(
                         onPressed: () => viewModel.loadProjects(),
                         child: const Text('Try again'),
@@ -105,33 +106,33 @@ class _ProjectsViewState extends State<ProjectsView> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.folder_outlined,
-                              size: 64,
+                              size: 64.sp,
                               color: AppColors.textSecondary,
                             ),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16.h),
                             Text(
                               'No projects',
                               style: GoogleFonts.albertSans(
-                                fontSize: 24,
+                                fontSize: 24.sp,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8.h),
                             Text(
                               'Your projects will appear here',
                               style: GoogleFonts.albertSans(
-                                fontSize: 16,
+                                fontSize: 16.sp,
                                 color: AppColors.textSecondary,
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16.h),
                             Text(
                               'Pull down to refresh',
                               style: GoogleFonts.albertSans(
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 color: AppColors.textSecondary,
                               ),
                             ),
@@ -149,7 +150,7 @@ class _ProjectsViewState extends State<ProjectsView> {
                   // Search bar
                   if (viewModel.hasProjects)
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: EdgeInsets.all(16.w),
                       child: PaintProSearchField(
                         hintText: 'Search projects',
                         onChanged: (value) => viewModel.searchQuery = value,
@@ -164,8 +165,8 @@ class _ProjectsViewState extends State<ProjectsView> {
                         onRefresh: () => viewModel.loadProjects(),
                         child: viewModel.hasFilteredProjects
                             ? ListView.builder(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 16.w,
                                 ),
                                 itemCount: viewModel.filteredProjects.length,
                                 itemBuilder: (context, index) {
@@ -203,25 +204,25 @@ class _ProjectsViewState extends State<ProjectsView> {
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
                                         children: [
-                                          const Icon(
+                                          Icon(
                                             Icons.search_off,
-                                            size: 64,
+                                            size: 64.sp,
                                             color: AppColors.textSecondary,
                                           ),
-                                          const SizedBox(height: 16),
+                                          SizedBox(height: 16.h),
                                           Text(
                                             'No projects found',
                                             style: GoogleFonts.albertSans(
-                                              fontSize: 18,
+                                              fontSize: 18.sp,
                                               fontWeight: FontWeight.w600,
                                               color: AppColors.textPrimary,
                                             ),
                                           ),
-                                          const SizedBox(height: 8),
+                                          SizedBox(height: 8.h),
                                           Text(
                                             'Try a different search',
                                             style: GoogleFonts.albertSans(
-                                              fontSize: 14,
+                                              fontSize: 14.sp,
                                               color: AppColors.textSecondary,
                                             ),
                                           ),
