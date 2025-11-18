@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -88,14 +89,14 @@ class _LoadingWidgetState extends State<LoadingWidget>
           final yOffset = animValue * 4.0;
 
           return Container(
-            width: 8,
+            width: 8.w,
             alignment: Alignment.center,
             child: Transform.translate(
               offset: Offset(0, -yOffset),
               child: Text(
                 '.',
                 style: GoogleFonts.albertSans(
-                  fontSize: 28,
+                  fontSize: 28.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textOnPrimary,
                 ),
@@ -107,17 +108,17 @@ class _LoadingWidgetState extends State<LoadingWidget>
     });
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(90),
+        preferredSize: Size.fromHeight(90.h),
         child: AppBar(
           automaticallyImplyLeading: false,
           backgroundColor: AppColors.primary,
           elevation: 0,
           centerTitle: true,
-          toolbarHeight: 80,
-          shape: const RoundedRectangleBorder(
+          toolbarHeight: 80.h,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(64),
-              bottomRight: Radius.circular(64),
+              bottomLeft: Radius.circular(64.r),
+              bottomRight: Radius.circular(64.r),
             ),
           ),
           title: Row(
@@ -128,12 +129,12 @@ class _LoadingWidgetState extends State<LoadingWidget>
                 widget.title ?? 'Processing',
                 style: GoogleFonts.albertSans(
                   color: AppColors.textOnPrimary,
-                  fontSize: 22,
+                  fontSize: 22.sp,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
                 ),
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4.w),
               ...wormDots,
             ],
           ),
@@ -146,24 +147,24 @@ class _LoadingWidgetState extends State<LoadingWidget>
           children: [
             Text(
               widget.subtitle ?? 'Processing Photos',
-              style: const TextStyle(
-                fontSize: 20,
+              style: TextStyle(
+                fontSize: 20.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               widget.description ?? 'Calculating measurements...',
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: 14.sp,
                 color: Colors.grey,
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32.h),
             PaintProLoading(
               controller: _rotationController,
-              size: 120,
-              strokeWidth: 8,
+              size: 120.w,
+              strokeWidth: 8.w,
               primaryColor: AppColors.primary,
             ),
           ],
