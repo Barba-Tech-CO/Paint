@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/app_colors.dart';
 
@@ -11,16 +12,16 @@ class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double? leadingWidth;
   final List<Widget>? actions;
 
-  const PaintProAppBar({
+  PaintProAppBar({
     super.key,
     required this.title,
     this.leading,
     this.leadingWidth,
     this.backgroundColor = AppColors.primary,
     this.textColor = AppColors.textOnPrimary,
-    this.toolbarHeight = 80,
+    double? toolbarHeight,
     this.actions,
-  });
+  })  : toolbarHeight = toolbarHeight ?? 80.h;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +30,7 @@ class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
       paddedActions = actions!.asMap().entries.map((entry) {
         final isLast = entry.key == actions!.length - 1;
         return Padding(
-          padding: EdgeInsets.only(right: isLast ? 8.0 : 0.0),
+          padding: EdgeInsets.only(right: isLast ? 8.w : 0),
           child: entry.value,
         );
       }).toList();
@@ -41,7 +42,7 @@ class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Text(
         title,
         style: GoogleFonts.albertSans(
-          fontSize: 24,
+          fontSize: 24.sp,
           fontWeight: FontWeight.w600,
           color: textColor,
         ),
@@ -49,10 +50,10 @@ class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: true,
       backgroundColor: backgroundColor,
       toolbarHeight: toolbarHeight,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(64),
-          bottomRight: Radius.circular(64),
+          bottomLeft: Radius.circular(64.r),
+          bottomRight: Radius.circular(64.r),
         ),
       ),
       actions: paddedActions,
