@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ErrorOverlay extends StatelessWidget {
   final String error;
@@ -11,12 +12,12 @@ class ErrorOverlay extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.error_outline,
             color: Colors.red,
-            size: 64,
+            size: 64.sp,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Text(
             'Authentication Error',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -24,9 +25,9 @@ class ErrorOverlay extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
             child: Text(
               error,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -35,7 +36,7 @@ class ErrorOverlay extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
           ElevatedButton(
             onPressed: onRetry,
             child: const Text('Try Again'),

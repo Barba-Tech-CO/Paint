@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -24,12 +25,12 @@ class ConnectGhlFormFieldsWidget extends StatelessWidget {
         Text(
           'Configuration',
           style: GoogleFonts.albertSans(
-            fontSize: 18,
+            fontSize: 18.sp,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         Consumer<ConnectGhlViewModel>(
           builder: (context, viewModel, child) {
             return PaintProTextField(
@@ -40,7 +41,7 @@ class ConnectGhlFormFieldsWidget extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         Consumer<ConnectGhlViewModel>(
           builder: (context, viewModel, child) {
             return PaintProTextField(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../config/app_colors.dart';
 
 class SearchBarWidget extends StatelessWidget {
@@ -8,9 +9,9 @@ class SearchBarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(16.0.w),
       child: SizedBox(
-        height: 48,
+        height: 48.h,
         child: TextField(
           controller: controller,
           decoration: InputDecoration(
@@ -20,7 +21,7 @@ class SearchBarWidget extends StatelessWidget {
               color: AppColors.buttonPrimary,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(16.r),
               borderSide: BorderSide(
                 color: AppColors.textSecondary,
               ),
