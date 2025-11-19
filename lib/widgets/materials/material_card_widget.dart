@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../model/material_models/material_model.dart';
 import '../../config/app_colors.dart';
 import 'build_chip_widget.dart';
@@ -28,20 +29,20 @@ class MaterialCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: isSelected ? 8 : 2,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         side: BorderSide(
           color: isSelected ? AppColors.primary : Colors.transparent,
-          width: isSelected ? 2 : 0,
+          width: isSelected ? 2.w : 0,
         ),
       ),
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -53,35 +54,35 @@ class MaterialCardWidget extends StatelessWidget {
                   Text(
                     material.code,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w500,
                       color: AppColors.gray100,
                     ),
                   ),
                   Text(
                     '\$${material.price.toStringAsFixed(2)}/${material.priceUnit}',
-                    style: const TextStyle(
-                      fontSize: 18,
+                    style: TextStyle(
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
                       color: AppColors.primary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
 
               // Nome do material
               Text(
                 material.name.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 16,
+                style: TextStyle(
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
 
               // Informações do material
               Row(
