@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -83,17 +84,17 @@ class _ConnectGhlViewState extends State<ConnectGhlView> {
             ),
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const ConnectGhlInfoCardWidget(),
-                const SizedBox(height: 32),
+                SizedBox(height: 32.h),
                 ConnectGhlFormFieldsWidget(
                   apiKeyController: _apiKeyController,
                   locationIdController: _locationIdController,
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
                 ConnectGhlSaveButtonWidget(
                   apiKeyController: _apiKeyController,
                   locationIdController: _locationIdController,
@@ -102,7 +103,7 @@ class _ConnectGhlViewState extends State<ConnectGhlView> {
                   apiKeyController: _apiKeyController,
                   locationIdController: _locationIdController,
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: 32.h),
               ],
             ),
           ),
