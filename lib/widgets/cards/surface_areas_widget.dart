@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SurfaceAreasWidget extends StatelessWidget {
   final Map<String, String> surfaceData;
@@ -34,25 +35,25 @@ class SurfaceAreasWidget extends StatelessWidget {
         if (showTitle) ...[
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 18,
+            style: TextStyle(
+              fontSize: 18.sp,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
         ],
         Container(
           width: double.infinity,
           padding: padding,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
+                blurRadius: 16.r,
+                offset: Offset(0, 4.h),
               ),
             ],
           ),
@@ -65,23 +66,23 @@ class SurfaceAreasWidget extends StatelessWidget {
                   children: [
                     _buildSurfaceRow(entry.key, entry.value),
                     if (entry != surfaceData.entries.last)
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12.h),
                   ],
                 );
               }),
 
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               const Divider(),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
 
               // Total Paintable
               Row(
                 children: [
                   Text(
                     totalPaintableLabel,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 16.sp,
                     ),
                   ),
                   const Spacer(),
@@ -90,7 +91,7 @@ class SurfaceAreasWidget extends StatelessWidget {
                     style: TextStyle(
                       color: totalValueColor,
                       fontWeight: FontWeight.bold,
-                      fontSize: totalFontSize,
+                      fontSize: totalFontSize.sp,
                     ),
                   ),
                 ],
@@ -108,7 +109,7 @@ class SurfaceAreasWidget extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: fontSize,
+            fontSize: fontSize.sp,
             color: Colors.black87,
           ),
         ),
@@ -116,7 +117,7 @@ class SurfaceAreasWidget extends StatelessWidget {
         Text(
           value,
           style: TextStyle(
-            fontSize: fontSize,
+            fontSize: fontSize.sp,
             color: valueColor,
           ),
         ),

@@ -28,14 +28,14 @@ class GreetingCardWidget extends StatelessWidget {
     return Padding(
       padding: padding,
       child: Container(
-        height: height,
+        height: height.h,
         width: double.infinity,
         decoration: BoxDecoration(
           border: Border.all(
-            width: borderWidth,
+            width: borderWidth.w,
             color: borderColor,
           ),
-          borderRadius: BorderRadius.circular(borderRadius),
+          borderRadius: BorderRadius.circular(borderRadius.r),
         ),
         child: Padding(
           padding: innerPadding,
