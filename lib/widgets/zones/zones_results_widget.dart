@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/dependency_injection.dart';
@@ -115,7 +116,7 @@ class _ZonesResultsWidgetState extends State<ZonesResultsWidget> {
       child: Consumer2<ZonesListViewModel, ZonesSummaryViewModel>(
         builder: (context, listViewModel, summaryViewModel, child) {
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
             child: Column(
               children: [
                 ZonesLoadingWidget(listViewModel: listViewModel),

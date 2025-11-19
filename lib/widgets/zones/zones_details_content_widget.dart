@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
@@ -44,7 +45,7 @@ class ZonesDetailsContentWidget extends StatelessWidget {
           backgroundColor: AppColors.background,
           appBar: PaintProAppBar(
             title: zone.title,
-            leadingWidth: 120,
+            leadingWidth: 120.w,
             leading: GestureDetector(
               onTap: () {
                 if (context.mounted) {
@@ -52,19 +53,19 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                 }
               },
               child: Padding(
-                padding: const EdgeInsets.only(left: 16.0),
+                padding: EdgeInsets.only(left: 16.w),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.arrow_back_ios,
                       color: AppColors.textOnPrimary,
-                      size: 24,
+                      size: 24.sp,
                     ),
-                    const Text(
+                    Text(
                       'Back',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 18.sp,
                         color: AppColors.textOnPrimary,
                         fontWeight: FontWeight.bold,
                       ),
@@ -85,9 +86,9 @@ class ZonesDetailsContentWidget extends StatelessWidget {
               // Conteúdo rolável
               SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0,
-                    vertical: 16.0,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 24.w,
+                    vertical: 16.h,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,15 +96,15 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Room Metrics',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 18.sp,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12.h),
                           FloorDimensionWidget(
                             width: viewModel.hasRoomPlanData
                                 ? app_unit_converter.UnitConverter.metersToFeetConversion(
@@ -133,7 +134,7 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24.h),
                       SurfaceAreaDisplayWidget(
                         walls: viewModel.hasRoomPlanData
                             ? app_unit_converter.UnitConverter.sqMetersToSqFeetConversion(
@@ -170,7 +171,7 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                           viewModel.updateZoneSurfaceAreas(trim: trim);
                         },
                       ),
-                      const SizedBox(height: 64),
+                      SizedBox(height: 64.h),
                       ZonePhotosWidget(
                         photoUrls: photoUrls,
                         onAddPhoto: () => _addPhoto(context),
@@ -180,7 +181,7 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                         maxPhotos: 9,
                       ),
                       // Espaço adicional para não sobrepor os botões
-                      const SizedBox(height: 100),
+                      SizedBox(height: 100.h),
                     ],
                   ),
                 ),
@@ -188,14 +189,14 @@ class ZonesDetailsContentWidget extends StatelessWidget {
 
               // Botões fixos na parte inferior
               Positioned(
-                left: 24,
-                right: 24,
-                bottom: 24,
+                left: 24.w,
+                right: 24.w,
+                bottom: 24.h,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     SizedBox(
-                      width: 170,
+                      width: 170.w,
                       child: PaintProButton(
                         text: 'Edit',
                         backgroundColor: AppColors.gray16,
@@ -206,7 +207,7 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                       ),
                     ),
                     SizedBox(
-                      width: 170,
+                      width: 170.w,
                       child: PaintProButton(
                         text: 'OK',
                         onPressed: () => context.pop(),

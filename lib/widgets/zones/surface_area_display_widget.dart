@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../form_field/paint_pro_area_field.dart';
 
 class SurfaceAreaDisplayWidget extends StatefulWidget {
@@ -56,15 +57,15 @@ class _SurfaceAreaDisplayWidgetState extends State<SurfaceAreaDisplayWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Surface Areas',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 18.sp,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
 
         // Walls
         PaintProAreaField(
@@ -77,7 +78,7 @@ class _SurfaceAreaDisplayWidgetState extends State<SurfaceAreaDisplayWidget> {
             setState(() {}); // Atualiza o Total Paintable
           },
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
 
         // Ceiling
         PaintProAreaField(
@@ -90,7 +91,7 @@ class _SurfaceAreaDisplayWidgetState extends State<SurfaceAreaDisplayWidget> {
             setState(() {}); // Atualiza o Total Paintable
           },
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
 
         // Trim
         PaintProAreaField(
@@ -102,16 +103,16 @@ class _SurfaceAreaDisplayWidgetState extends State<SurfaceAreaDisplayWidget> {
             widget.onTrimChanged?.call(doubleValue);
           },
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
 
         // Total Paintable
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Total Paintable',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
@@ -119,7 +120,7 @@ class _SurfaceAreaDisplayWidgetState extends State<SurfaceAreaDisplayWidget> {
             Text(
               '${_calculateTotalPaintable().toStringAsFixed(0)} sq ft',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.blue[700],
               ),
