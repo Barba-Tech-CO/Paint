@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../config/app_colors.dart';
 
@@ -28,10 +29,10 @@ class CameraControlButton extends StatelessWidget {
       child: Center(
         child: Text(
           zoomText,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 16,
+            fontSize: 16.sp,
           ),
         ),
       ),
@@ -53,7 +54,7 @@ class CameraControlButton extends StatelessWidget {
         child: Icon(
           isFlashOn ? Icons.flash_on : Icons.flash_off,
           color: Colors.white,
-          size: 26,
+          size: 26.sp,
         ),
       ),
     );
@@ -64,8 +65,8 @@ class CameraControlButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: size,
-        height: size,
+        width: size.w,
+        height: size.h,
         decoration: BoxDecoration(
           color:
               backgroundColor ?? AppColors.textPrimary.withValues(alpha: 0.75),

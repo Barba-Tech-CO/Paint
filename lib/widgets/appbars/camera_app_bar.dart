@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/app_colors.dart';
@@ -22,7 +23,7 @@ class CameraAppBar extends StatelessWidget implements PreferredSizeWidget {
     return SizedBox(
       height: preferredSize.height,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 24, 8, 0),
+        padding: EdgeInsets.fromLTRB(8.w, 24.h, 8.w, 0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -37,21 +38,21 @@ class CameraAppBar extends StatelessWidget implements PreferredSizeWidget {
             // Center Instruction Text
             Expanded(
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                  vertical: 12.0,
+                margin: EdgeInsets.symmetric(horizontal: 8.0.w),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 8.0.w,
+                  vertical: 12.0.h,
                 ),
                 decoration: BoxDecoration(
                   color: AppColors.gray24,
-                  borderRadius: BorderRadius.circular(20.0),
+                  borderRadius: BorderRadius.circular(20.0.r),
                 ),
                 child: Center(
                   child: Text(
                     instructionText,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.albertSans(
-                      fontSize: 14,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
                     ),
@@ -86,10 +87,10 @@ class CameraAppBar extends StatelessWidget implements PreferredSizeWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
+        padding: EdgeInsets.symmetric(horizontal: 10.0.w, vertical: 12.0.h),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(20.0),
+          borderRadius: BorderRadius.circular(20.0.r),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -97,24 +98,24 @@ class CameraAppBar extends StatelessWidget implements PreferredSizeWidget {
             if (icon == Icons.arrow_back_ios) ...[
               Icon(
                 icon,
-                size: 18,
+                size: 18.sp,
                 color: textColor,
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4.w),
             ],
             Text(
               label,
               style: GoogleFonts.albertSans(
-                fontSize: 16,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.w400,
                 color: textColor,
               ),
             ),
             if (icon == Icons.arrow_forward_ios) ...[
-              const SizedBox(width: 4),
+              SizedBox(width: 4.w),
               Icon(
                 icon,
-                size: 18,
+                size: 18.sp,
                 color: textColor,
               ),
             ],
@@ -125,5 +126,5 @@ class CameraAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(70.0);
+  Size get preferredSize => Size.fromHeight(70.0.h);
 }
