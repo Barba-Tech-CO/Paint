@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import '../../config/app_colors.dart';
 import '../../model/contacts/contact_model.dart';
@@ -45,53 +46,53 @@ class _ContactDropdownWidgetState extends State<ContactDropdownWidget> {
           Text(
             widget.label!,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
         ],
         DropdownButtonFormField2<ContactModel?>(
           isExpanded: true,
           value: widget.selectedContact,
           decoration: InputDecoration(
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
               borderSide: const BorderSide(color: AppColors.primary),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
               borderSide: const BorderSide(color: Colors.red),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
               borderSide: const BorderSide(color: Colors.red),
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 16,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 12.w,
+              vertical: 16.h,
             ),
             errorText: widget.errorText,
           ),
           hint: widget.isLoading
-              ? const Row(
+              ? Row(
                   children: [
                     SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      width: 16.w,
+                      height: 16.h,
+                      child: CircularProgressIndicator(strokeWidth: 2.w),
                     ),
-                    SizedBox(width: 8),
-                    Text('Loading contacts...'),
+                    SizedBox(width: 8.w),
+                    const Text('Loading contacts...'),
                   ],
                 )
               : Text(
@@ -106,8 +107,8 @@ class _ContactDropdownWidgetState extends State<ContactDropdownWidget> {
                   value: contact,
                   child: Text(
                     contact.name,
-                    style: const TextStyle(
-                      fontSize: 14,
+                    style: TextStyle(
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w500,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -118,41 +119,41 @@ class _ContactDropdownWidgetState extends State<ContactDropdownWidget> {
               .toList(),
           onChanged: widget.isLoading ? null : widget.onChanged,
           dropdownStyleData: DropdownStyleData(
-            maxHeight: 300,
+            maxHeight: 300.h,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
             ),
-            offset: const Offset(0, -5),
+            offset: Offset(0, -5.h),
             direction: DropdownDirection.textDirection,
           ),
-          menuItemStyleData: const MenuItemStyleData(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+          menuItemStyleData: MenuItemStyleData(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
           ),
           dropdownSearchData: DropdownSearchData(
             searchController: _searchController,
-            searchInnerWidgetHeight: 50,
+            searchInnerWidgetHeight: 50.h,
             searchInnerWidget: Container(
-              height: 50,
-              padding: const EdgeInsets.only(
-                top: 8,
-                bottom: 4,
-                right: 8,
-                left: 8,
+              height: 50.h,
+              padding: EdgeInsets.only(
+                top: 8.h,
+                bottom: 4.h,
+                right: 8.w,
+                left: 8.w,
               ),
               child: TextFormField(
                 controller: _searchController,
                 decoration: InputDecoration(
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 8.h,
                   ),
                   hintText: 'Search contact...',
-                  hintStyle: const TextStyle(fontSize: 14),
+                  hintStyle: TextStyle(fontSize: 14.sp),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(8.r),
                   ),
-                  prefixIcon: const Icon(Icons.search, size: 20),
+                  prefixIcon: Icon(Icons.search, size: 20.sp),
                 ),
               ),
             ),
@@ -167,25 +168,25 @@ class _ContactDropdownWidgetState extends State<ContactDropdownWidget> {
         ),
         if (widget.errorText != null && widget.onRetry != null)
           Padding(
-            padding: const EdgeInsets.only(top: 8),
+            padding: EdgeInsets.only(top: 8.h),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     widget.errorText!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.red,
-                      fontSize: 12,
+                      fontSize: 12.sp,
                     ),
                   ),
                 ),
                 TextButton.icon(
                   onPressed: widget.onRetry,
-                  icon: const Icon(Icons.refresh, size: 16),
+                  icon: Icon(Icons.refresh, size: 16.sp),
                   label: const Text('Retry'),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    minimumSize: const Size(0, 32),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
+                    minimumSize: Size(0, 32.h),
                   ),
                 ),
               ],

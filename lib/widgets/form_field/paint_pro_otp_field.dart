@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Widget reutilizável para input de código OTP (6 dígitos)
 class PaintProOtpField extends StatefulWidget {
@@ -93,8 +94,8 @@ class _PaintProOtpFieldState extends State<PaintProOtpField> {
       children: List.generate(
         widget.length,
         (index) => SizedBox(
-          width: 45,
-          height: 56,
+          width: 45.w,
+          height: 56.h,
           child: KeyboardListener(
             focusNode: FocusNode(),
             onKeyEvent: (event) => _onKeyEvent(event, index),
@@ -104,32 +105,32 @@ class _PaintProOtpFieldState extends State<PaintProOtpField> {
               textAlign: TextAlign.center,
               keyboardType: TextInputType.number,
               maxLength: 1,
-              style: const TextStyle(
-                fontSize: 20,
+              style: TextStyle(
+                fontSize: 20.sp,
                 fontWeight: FontWeight.bold,
               ),
               decoration: InputDecoration(
                 counterText: '',
                 contentPadding: EdgeInsets.zero,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFE0E0E0),
-                    width: 1.5,
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(
+                    color: const Color(0xFFE0E0E0),
+                    width: 1.5.w,
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFE0E0E0),
-                    width: 1.5,
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(
+                    color: const Color(0xFFE0E0E0),
+                    width: 1.5.w,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                   borderSide: BorderSide(
                     color: Theme.of(context).primaryColor,
-                    width: 2.0,
+                    width: 2.0.w,
                   ),
                 ),
               ),

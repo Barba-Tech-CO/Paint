@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../config/app_colors.dart';
 
 class ProjectTypeRowWidget extends StatelessWidget {
@@ -27,14 +28,14 @@ class ProjectTypeRowWidget extends StatelessWidget {
             activeColor: AppColors.primary,
           ),
           const Text('Interior'),
-          const SizedBox(width: 16),
+          SizedBox(width: 16.w),
           Radio<String>(
             value: 'Exterior',
             toggleable: selectedType == 'Exterior',
             activeColor: AppColors.primary,
           ),
           const Text('Exterior'),
-          const SizedBox(width: 16),
+          SizedBox(width: 16.w),
           Radio<String>(
             value: 'Both',
             toggleable: selectedType == 'Both',
