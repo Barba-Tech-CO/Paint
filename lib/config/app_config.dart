@@ -5,10 +5,11 @@ import 'package:flutter/foundation.dart';
 
 class AppConfig {
   /// Alterne para `true` para usar o ambiente de produção.
-  static const bool isProduction = false;
+  static const bool isProduction = true;
 
   /// URL de desenvolvimento principal (usada para iOS, Web, Desktop).
-  static const String _devBaseUrl = 'http://localhost:8080/api';
+  static const String _devBaseUrl = 'http://192.168.0.211:8080/api';
+  // static const String _devBaseUrl = 'http://192.168.15.8:8080/api';
 
   /// URL de produção. Substitua pela URL real do seu backend.
   static const String _prodBaseUrl = 'https://paintpro.barbatech.company/api';

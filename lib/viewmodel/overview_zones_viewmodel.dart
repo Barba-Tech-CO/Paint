@@ -1,30 +1,31 @@
 import 'package:flutter/foundation.dart';
-import '../model/models.dart';
+
+import '../model/material_models/material_model.dart';
+import '../model/projects/project_card_model.dart';
+import '../use_case/estimates/project_calculation_use_case.dart';
 
 class OverviewZonesViewModel extends ChangeNotifier {
+  final ProjectCalculationUseCase _projectCalculationUseCase =
+      ProjectCalculationUseCase();
+
   List<MaterialModel> _selectedMaterials = [];
   List<ProjectCardModel> _selectedZones = [];
+  Map<MaterialModel, int> _materialQuantities = {};
 
   List<MaterialModel> get selectedMaterials => _selectedMaterials;
   List<ProjectCardModel> get selectedZones => _selectedZones;
+  Map<MaterialModel, int> get materialQuantities => _materialQuantities;
   int get materialsCount => _selectedMaterials.length;
   int get zonesCount => _selectedZones.length;
   double get totalMaterialsCost {
-    return _selectedMaterials.fold(
-      0.0,
-      (sum, material) => sum + material.price,
+    return _projectCalculationUseCase.calculateMaterialsCost(
+      _selectedMaterials,
+      _materialQuantities,
     );
   }
 
   String get totalArea {
-    if (_selectedZones.isNotEmpty) {
-      final totalAreaValue = _selectedZones.fold(0.0, (sum, zone) {
-        final areaStr = zone.floorAreaValue.replaceAll(' sq ft', '');
-        return sum + (double.tryParse(areaStr) ?? 0.0);
-      });
-      return '${totalAreaValue.toInt()} sq ft';
-    }
-    return '631 sq ft';
+    return _projectCalculationUseCase.calculateTotalArea(_selectedZones);
   }
 
   String get paintType => _selectedMaterials.isNotEmpty
@@ -36,9 +37,19 @@ class OverviewZonesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setMaterialQuantities(Map<MaterialModel, int> quantities) {
+    _materialQuantities = Map.from(quantities);
+    notifyListeners();
+  }
+
   void setSelectedZones(List<ProjectCardModel> zones) {
     _selectedZones = zones;
     notifyListeners();
+  }
+
+  /// Obtém a quantidade de um material
+  int getQuantity(MaterialModel material) {
+    return _materialQuantities[material] ?? 1;
   }
 
   void addZone(ProjectCardModel zone) {
@@ -58,27 +69,30 @@ class OverviewZonesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addMaterial(MaterialModel material) {
+  void addMaterial(MaterialModel material, {int quantity = 1}) {
     if (!_selectedMaterials.contains(material)) {
       _selectedMaterials.add(material);
+      _materialQuantities[material] = quantity;
       notifyListeners();
     }
   }
 
   void removeMaterial(MaterialModel material) {
     _selectedMaterials.remove(material);
+    _materialQuantities.remove(material);
     notifyListeners();
   }
 
   void clearMaterials() {
     _selectedMaterials.clear();
+    _materialQuantities.clear();
     notifyListeners();
   }
 
-  double get laborCost => 405.00;
-  double get suppliesCost => 45.00;
-
-  double get totalProjectCost => totalMaterialsCost + laborCost + suppliesCost;
+  double get totalProjectCost =>
+      _projectCalculationUseCase.calculateTotalProjectCost(
+        totalMaterialsCost,
+      );
 
   String get floorDimensions {
     if (_selectedZones.isNotEmpty) {
@@ -102,8 +116,6 @@ class OverviewZonesViewModel extends ChangeNotifier {
   }
 
   List<String> get formattedZones {
-    return _selectedZones
-        .map((zone) => '${zone.title} - ${zone.floorAreaValue}')
-        .toList();
+    return _projectCalculationUseCase.formatZonesForDisplay(_selectedZones);
   }
 }

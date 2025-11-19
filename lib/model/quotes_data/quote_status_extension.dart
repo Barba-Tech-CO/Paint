@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'quote_status.dart';
 
 extension QuoteStatusExtension on QuoteStatus {
@@ -16,10 +14,6 @@ extension QuoteStatusExtension on QuoteStatus {
       case 'error':
         return QuoteStatus.error;
       default:
-        // Log the unknown status and throw exception for better error handling
-        log(
-          'ERROR: Unknown QuoteStatus: $value',
-        );
         throw Exception('Unknown QuoteStatus: $value');
     }
   }
@@ -35,7 +29,7 @@ extension QuoteStatusExtension on QuoteStatus {
       case QuoteStatus.failed:
         return 'Failed';
       case QuoteStatus.error:
-        return 'Error'; // Adicionando display name para erro
+        return 'Error';
     }
   }
 }

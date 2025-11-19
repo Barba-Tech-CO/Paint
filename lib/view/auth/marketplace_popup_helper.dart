@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../viewmodel/auth/auth_viewmodel.dart';
-import '../widgets/webview_popup_screen.dart';
+import '../../widgets/webview_popup_screen.dart';
 
 class MarketplacePopupHelper {
-  
   static void show(BuildContext context, String url, AuthViewModel viewModel) {
     showModalBottomSheet(
       context: context,

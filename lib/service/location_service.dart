@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/foundation.dart';
 
 /// Service to manage the current location ID in memory
@@ -30,13 +28,6 @@ class LocationService extends ChangeNotifier {
     _currentLocationId = locationId;
     _currentLocationName = locationName;
     notifyListeners();
-
-    if (kDebugMode) {
-      log('LocationService: Location ID set to $locationId');
-      if (locationName != null) {
-        log('LocationService: Location Name set to $locationName');
-      }
-    }
   }
 
   /// Clears the current location ID and notifies listeners
@@ -44,20 +35,12 @@ class LocationService extends ChangeNotifier {
     _currentLocationId = null;
     _currentLocationName = null;
     notifyListeners();
-
-    if (kDebugMode) {
-      log('LocationService: Location ID cleared');
-    }
   }
 
   /// Updates the location name without changing the ID
   void updateLocationName(String locationName) {
     _currentLocationName = locationName;
     notifyListeners();
-
-    if (kDebugMode) {
-      log('LocationService: Location Name updated to $locationName');
-    }
   }
 
   /// Gets a formatted location string for display

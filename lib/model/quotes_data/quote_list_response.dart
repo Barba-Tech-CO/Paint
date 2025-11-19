@@ -1,6 +1,5 @@
-import 'dart:developer';
-import 'quote_model.dart';
 import 'pagination_info.dart';
+import 'quote_model.dart';
 
 class QuoteListResponse {
   final bool success;
@@ -14,20 +13,14 @@ class QuoteListResponse {
   });
 
   factory QuoteListResponse.fromJson(Map<String, dynamic> json) {
-    log('DEBUG: QuoteListResponse.fromJson - json: $json');
-
     // Validate required fields
     if (json['success'] == null) {
       throw Exception('Missing required field: success');
     }
 
     final data = json['data'] as Map<String, dynamic>?;
-    log('DEBUG: QuoteListResponse.fromJson - data: $data');
 
     if (data == null) {
-      log(
-        'DEBUG: QuoteListResponse.fromJson - data is null, returning empty response',
-      );
       return QuoteListResponse(
         success: json['success'] as bool,
         quotes: [],
@@ -41,14 +34,8 @@ class QuoteListResponse {
     }
 
     final uploadsData = data['uploads'];
-    log(
-      'DEBUG: PdfUploadListResponse.fromJson - uploadsData: $uploadsData (type: ${uploadsData.runtimeType})',
-    );
 
     if (uploadsData == null) {
-      log(
-        'DEBUG: PdfUploadListResponse.fromJson - uploadsData is null, returning empty response',
-      );
       return QuoteListResponse(
         success: json['success'] as bool,
         quotes: [],
@@ -63,10 +50,6 @@ class QuoteListResponse {
 
     // Handle the case where uploadsData is a Map (with pagination info)
     if (uploadsData is Map<String, dynamic>) {
-      log(
-        'DEBUG: PdfUploadListResponse.fromJson - uploadsData is a Map, extracting data and pagination',
-      );
-
       final uploadsList = uploadsData['data'] as List<dynamic>? ?? [];
       final currentPage = uploadsData['current_page'] as int? ?? 1;
       final perPage = uploadsData['per_page'] as int? ?? 10;
@@ -95,10 +78,6 @@ class QuoteListResponse {
 
     // Handle the case where uploadsData is a List (legacy format)
     if (uploadsData is List) {
-      log(
-        'DEBUG: PdfUploadListResponse.fromJson - uploadsData is a List, using legacy format',
-      );
-
       final paginationData = data['pagination'] as Map<String, dynamic>?;
       final pagination = paginationData != null
           ? PaginationInfo.fromJson(paginationData)
@@ -117,21 +96,6 @@ class QuoteListResponse {
             )
             .toList(),
         pagination: pagination,
-      );
-    }
-
-    // Fallback for unexpected data types
-    log(
-      'DEBUG: PdfUploadListResponse.fromJson - uploadsData is unexpected type: ${uploadsData.runtimeType}, returning empty response',
-    );
-
-    // Try to extract any useful information from the unexpected structure
-    if (uploadsData is Map<String, dynamic>) {
-      log(
-        'DEBUG: PdfUploadListResponse.fromJson - uploadsData keys: ${uploadsData.keys.toList()}',
-      );
-      log(
-        'DEBUG: PdfUploadListResponse.fromJson - uploadsData values: ${uploadsData.values.toList()}',
       );
     }
 

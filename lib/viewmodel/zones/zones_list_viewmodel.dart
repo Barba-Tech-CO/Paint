@@ -1,15 +1,17 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../helpers/zones/zone_data_classes.dart';
-import '../../model/models.dart';
+import '../../model/zones/zone_add_data_model.dart';
+import '../../model/projects/project_card_model.dart';
+import '../../service/i_zones_service.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
+import '../../utils/unit_converter.dart';
 
 enum ZonesListState { initial, loading, loaded, error }
 
 class ZonesListViewModel extends ChangeNotifier {
-  // Service seria injetado aqui quando estiver pronto
-  // final ZonesService _zonesService;
+  final IZonesService _zonesService;
 
   // State
   ZonesListState _state = ZonesListState.initial;
@@ -26,14 +28,14 @@ class ZonesListViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  ZonesListViewModel();
+  ZonesListViewModel(this._zonesService);
 
   // Commands
   Command0<void>? _loadZonesCommand;
-  Command1<void, ZoneAddData>? _addZoneCommand;
+  Command1<void, ZoneAddDataModel>? _addZoneCommand;
 
   Command0<void> get loadZonesCommand => _loadZonesCommand!;
-  Command1<void, ZoneAddData> get addZoneCommand => _addZoneCommand!;
+  Command1<void, ZoneAddDataModel> get addZoneCommand => _addZoneCommand!;
 
   // Computed properties
   bool get isLoading =>
@@ -59,7 +61,7 @@ class ZonesListViewModel extends ChangeNotifier {
       return await _loadZonesData();
     });
 
-    _addZoneCommand = Command1((ZoneAddData data) async {
+    _addZoneCommand = Command1((ZoneAddDataModel data) async {
       return await _addZoneData(data);
     });
   }
@@ -73,19 +75,25 @@ class ZonesListViewModel extends ChangeNotifier {
 
   Future<void> addZone({
     required String title,
-    String? image,
-    String? floorDimensionValue,
-    String? floorAreaValue,
-    String? areaPaintable,
+    required String image,
+    required String floorDimensionValue,
+    required String floorAreaValue,
+    required String areaPaintable,
+    String? ceilingArea,
+    String? trimLength,
+    Map<String, dynamic>? roomPlanData,
   }) async {
     if (_addZoneCommand != null) {
       await _addZoneCommand!.execute(
-        ZoneAddData(
+        ZoneAddDataModel(
           title: title,
-          image: image ?? "assets/images/kitchen.png",
-          floorDimensionValue: floorDimensionValue ?? "10' x 10'",
-          floorAreaValue: floorAreaValue ?? "100 sq ft",
-          areaPaintable: areaPaintable ?? "280 sq ft",
+          image: image,
+          floorDimensionValue: floorDimensionValue,
+          floorAreaValue: floorAreaValue,
+          areaPaintable: areaPaintable,
+          ceilingArea: ceilingArea,
+          trimLength: trimLength,
+          roomPlanData: roomPlanData,
         ),
       );
     }
@@ -148,21 +156,76 @@ class ZonesListViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Navigation methods
+  void navigateToZoneDetails(BuildContext context, ProjectCardModel zone) {
+    selectZone(zone);
+    context.push('/zones-details', extra: zone);
+  }
+
+  void navigateToEditZone(BuildContext context, ProjectCardModel zone) {
+    context.push('/edit-zone', extra: zone);
+  }
+
+  // Zone operations
+  Future<void> renameZone(
+    BuildContext context,
+    ProjectCardModel zone,
+    String newName,
+  ) async {
+    await _zonesService.renameZoneCommand.execute({
+      'zoneId': zone.id,
+      'newName': newName,
+    });
+    final result = _zonesService.renameZoneCommand.result;
+
+    if (result != null && result.isSuccess) {
+      updateZone(result.data);
+    } else if (result != null && result.isError) {
+      _errorMessage = 'Erro ao renomear zona: ${result.error}';
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteZone(BuildContext context, ProjectCardModel zone) async {
+    await _zonesService.deleteZoneCommand.execute(zone.id);
+    final result = _zonesService.deleteZoneCommand.result;
+
+    if (result != null && result.isSuccess) {
+      removeZone(zone.id);
+    } else if (result != null && result.isError) {
+      _errorMessage = 'Erro ao deletar zona: ${result.error}';
+      notifyListeners();
+    }
+  }
+
+  // Photo extraction utility
+  List<String> extractPhotoPaths(ProjectCardModel zone) {
+    return _zonesService.extractPhotoPaths(zone);
+  }
+
   // Private methods
   Future<Result<void>> _loadZonesData() async {
     try {
       _setState(ZonesListState.loading);
       _clearError();
 
-      // Simulando dados enquanto não temos o service - 1 segundo para mostrar loading
-      await Future.delayed(const Duration(seconds: 1));
+      // Carrega zonas usando o command do service
+      await _zonesService.loadZonesCommand.execute();
+      final result = _zonesService.loadZonesCommand.result;
 
-      final mockZones = _generateMockZones();
-
-      _zones = mockZones;
-      _setState(ZonesListState.loaded);
-
-      return Result.ok(null);
+      if (result != null && result.isSuccess) {
+        _zones = result.data;
+        _setState(ZonesListState.loaded);
+        return Result.ok(null);
+      } else if (result != null && result.isError) {
+        _errorMessage = 'Erro ao carregar zonas: ${result.error}';
+        _setState(ZonesListState.error);
+        return Result.error(result.error);
+      } else {
+        _errorMessage = 'Erro desconhecido ao carregar zonas';
+        _setState(ZonesListState.error);
+        return Result.error(Exception('Unknown error'));
+      }
     } catch (e) {
       _setError('Erro ao carregar zonas: $e');
       _setState(ZonesListState.error);
@@ -170,76 +233,42 @@ class ZonesListViewModel extends ChangeNotifier {
     }
   }
 
-  Future<Result<void>> _addZoneData(ZoneAddData data) async {
+  Future<Result<void>> _addZoneData(ZoneAddDataModel data) async {
     try {
-      // Aqui seria a chamada para o service
-      // final result = await _zonesService.addZone(data);
+      // Adiciona zona usando o command do service
+      await _zonesService.addZoneCommand.execute(data);
+      final result = _zonesService.addZoneCommand.result;
 
-      // Simulando adição
-      await Future.delayed(const Duration(milliseconds: 500));
+      if (result != null && result.isSuccess) {
+        // Check if zone already exists in local list to avoid duplicates - only by title
+        final existingZone = _zones
+            .where(
+              (zone) => zone.title == result.data.title,
+            )
+            .firstOrNull;
 
-      // Gerar novo ID (seria retornado pelo service)
-      final newId = _zones.isNotEmpty
-          ? _zones.map((z) => z.id).reduce((a, b) => a > b ? a : b) + 1
-          : 1;
+        if (existingZone == null) {
+          _zones.add(result.data);
+        }
 
-      final newZone = ProjectCardModel(
-        id: newId,
-        title: data.title,
-        image: data.image,
-        floorDimensionValue: data.floorDimensionValue,
-        floorAreaValue: data.floorAreaValue,
-        areaPaintable: data.areaPaintable,
-        ceilingArea:
-            data.floorAreaValue, // Use floor area as ceiling by default
-        trimLength: "44 linear ft", // Default trim length
-      );
-
-      _zones.add(newZone);
-      notifyListeners();
-
-      return Result.ok(null);
+        notifyListeners();
+        return Result.ok(null);
+      } else if (result != null && result.isError) {
+        _errorMessage = 'Erro ao adicionar zona: ${result.error}';
+        notifyListeners();
+        return Result.error(result.error);
+      } else {
+        _errorMessage = 'Erro desconhecido ao adicionar zona';
+        notifyListeners();
+        return Result.error(Exception('Unknown error'));
+      }
     } catch (e) {
       _setError('Erro ao adicionar zona: $e');
       return Result.error(Exception(e.toString()));
     }
   }
 
-  // Mock data generator (remover quando o service estiver pronto)
-  List<ProjectCardModel> _generateMockZones() {
-    return [
-      ProjectCardModel(
-        id: 1,
-        title: "Living Room",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "14' x 16'",
-        floorAreaValue: "224 sq ft",
-        areaPaintable: "485 sq ft",
-        ceilingArea: "224 sq ft",
-        trimLength: "60 linear ft",
-      ),
-      ProjectCardModel(
-        id: 2,
-        title: "Kitchen",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "10' x 12'",
-        floorAreaValue: "120 sq ft",
-        areaPaintable: "320 sq ft",
-        ceilingArea: "120 sq ft",
-        trimLength: "44 linear ft",
-      ),
-      ProjectCardModel(
-        id: 3,
-        title: "Bedroom",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "12' x 14'",
-        floorAreaValue: "168 sq ft",
-        areaPaintable: "420 sq ft",
-        ceilingArea: "168 sq ft",
-        trimLength: "52 linear ft",
-      ),
-    ];
-  }
+  // Mock generator removido: zonas serão criadas pelo usuário em runtime
 
   // State management methods
   void _setState(ZonesListState state) {
@@ -255,5 +284,75 @@ class ZonesListViewModel extends ChangeNotifier {
   void _clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  // Migrated from ProcessingHelper
+  /// Simulates processing time between 3s to 5s
+  static Future<void> simulateProcessing() async {
+    final processingTime = Duration(
+      milliseconds: 3000 + (DateTime.now().millisecondsSinceEpoch % 2000),
+    );
+
+    try {
+      await Future.delayed(processingTime);
+    } catch (e) {
+      // Continue even if there's an error
+    }
+  }
+
+  /// Creates zone data from room data - data is always available
+  static Map<String, dynamic> createZoneDataFromRoomData({
+    required List<String> capturedPhotos,
+    required Map<String, dynamic> roomData,
+    required Map<String, dynamic> projectData,
+  }) {
+    // Extract dimensions from RoomPlan data
+    final dimensions = roomData['dimensions'] as Map<String, dynamic>?;
+    final wallsData = roomData['walls'] as List<dynamic>?;
+
+    // Extract floor dimensions from RoomPlan dimensions
+    double? width = dimensions?['width']?.toDouble();
+    double? length = dimensions?['length']?.toDouble();
+    double? floorArea = dimensions?['floorArea']?.toDouble();
+
+    String floorDimensionValue = '';
+    String floorAreaValue = '';
+
+    if (width != null && length != null && width > 0 && length > 0) {
+      // Format dimensions showing only feet
+      floorDimensionValue = UnitConverter.formatDimensionsInFeet(width, length);
+      // Format area showing only square feet
+      floorAreaValue = UnitConverter.formatAreaInSqFeetOnly(width * length);
+    }
+
+    // Calculate surface areas from walls
+    double wallsArea = 0.0;
+    if (wallsData != null) {
+      for (final wall in wallsData) {
+        final wallMap = wall as Map<String, dynamic>;
+        final wallWidth = wallMap['width']?.toDouble() ?? 0.0;
+        final wallHeight = wallMap['height']?.toDouble() ?? 0.0;
+        final area = wallWidth * wallHeight;
+        wallsArea += area;
+      }
+    }
+
+    // Calculate ceiling area from dimensions
+    double ceilingArea = floorArea ?? 0.0;
+
+    return {
+      'title': projectData['zoneName'],
+      'image': capturedPhotos.isNotEmpty ? capturedPhotos.first : '',
+      'floorDimensionValue': floorDimensionValue,
+      'floorAreaValue': floorAreaValue,
+      'areaPaintable': UnitConverter.formatAreaInSqFeetOnly(wallsArea),
+      'ceilingArea': UnitConverter.formatAreaInSqFeetOnly(ceilingArea),
+      'trimLength': '0',
+      'roomPlanData': {
+        'photos': capturedPhotos,
+        'roomData': roomData,
+        'projectData': projectData,
+      },
+    };
   }
 }

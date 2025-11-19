@@ -34,4 +34,7 @@ class PaginationInfo {
       to: json['to'] as int?,
     );
   }
+
+  bool get hasNextPage => currentPage < lastPage;
+  bool get hasPreviousPage => currentPage > 1;
 }

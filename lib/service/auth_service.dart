@@ -1,11 +1,14 @@
 import '../config/app_config.dart';
 import '../config/app_urls.dart';
-import '../model/models.dart';
+import '../model/auth_model/auth_refresh_response.dart';
+import '../model/auth_model/auth_status_response.dart';
+import '../model/user_model.dart';
 import '../utils/auth/token_sanitizer.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/result/result.dart';
 import 'auth_service_exception.dart';
-import 'services.dart';
+import 'http_service.dart';
+import 'location_service.dart';
 
 class AuthService {
   final HttpService _httpService;
@@ -43,8 +46,6 @@ class AuthService {
       final String authUrl = AppConfig.isProduction
           ? AppUrls.goHighLevelAuthorizeUrl
           : AppUrls.goHighLevelAuthorizeUrlDev;
-
-      _logger.info('[AuthService] Authorization URL: $authUrl');
 
       return Result.ok(authUrl);
     } catch (e) {
@@ -86,13 +87,6 @@ class AuthService {
           final sanitizedToken = TokenSanitizer.sanitizeToken(authToken);
           if (sanitizedToken != null) {
             _httpService.setAuthToken(sanitizedToken);
-            _logger.info(
-              '[AuthService] Auth token sanitized and set in HTTP client for API requests',
-            );
-          } else {
-            _logger.warning(
-              '[AuthService] Invalid or missing auth token from OAuth callback - token: ${authToken?.length ?? 0} chars',
-            );
           }
 
           // Call the success endpoint
@@ -106,9 +100,6 @@ class AuthService {
 
       return Result.ok(callbackResponse);
     } on AuthServiceException catch (e) {
-      _logger.info(
-        '[AuthService] Authentication service unavailable: ${e.message}',
-      );
       _logger.error('[AuthService] Technical details: ${e.technicalDetails}');
       return Result.error(Exception(e.message));
     } catch (e) {
@@ -241,12 +232,8 @@ class AuthService {
     try {
       final response = await _httpService.get('/user');
       final user = UserModel.fromJson(response.data);
-      _logger.info('[AuthService] User data retrieved successfully');
       return Result.ok(user);
     } on AuthServiceException catch (e) {
-      _logger.info(
-        '[AuthService] Authentication service unavailable: ${e.message}',
-      );
       _logger.error('[AuthService] Technical details: ${e.technicalDetails}');
       return Result.error(Exception(e.message));
     } catch (e) {
@@ -259,11 +246,7 @@ class AuthService {
 
   /// Executa logout limpando tokens e estado de autenticação
   Future<void> logout() async {
-    _logger.info('[AuthService] Logout initiated');
-
     // Clear HTTP service token
     _httpService.clearAuthToken();
-
-    _logger.info('[AuthService] Logout completed - HTTP token cleared');
   }
 }

@@ -5,14 +5,17 @@ import 'package:provider/provider.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
-import '../../service/auth_persistence_service.dart';
+import '../../service/auth_initialization_service.dart';
 import '../../viewmodel/navigation_viewmodel.dart';
 import '../../viewmodel/user/user_viewmodel.dart';
+import '../../viewmodel/home/home_viewmodel.dart';
+import '../../viewmodel/dashboard/dashboard_viewmodel.dart';
+import '../../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/cards/greeting_card_widget.dart';
+import '../../widgets/cards/project_state_card_widget.dart';
+import '../../widgets/cards/project_card_widget.dart';
+import '../../widgets/cards/stats_card_widget.dart';
 import '../layout/main_layout.dart';
-import '../widgets/appbars/paint_pro_app_bar.dart';
-import '../widgets/cards/greeting_card_widget.dart';
-import '../widgets/cards/project_state_card_widget.dart';
-import '../widgets/cards/stats_card_widget.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -24,49 +27,48 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   late final NavigationViewModel _navigationViewModel;
   late final UserViewModel _userViewModel;
-  late final AuthPersistenceService _authPersistenceService;
+  late final HomeViewModel _homeViewModel;
+  late final DashboardViewModel _dashboardViewModel;
 
   @override
   void initState() {
     super.initState();
+
     _navigationViewModel = getIt<NavigationViewModel>();
     _userViewModel = getIt<UserViewModel>();
-    _authPersistenceService = getIt<AuthPersistenceService>();
+    _homeViewModel = getIt<HomeViewModel>();
+    _dashboardViewModel = getIt<DashboardViewModel>();
 
     // Update the current route to home
     _navigationViewModel.updateCurrentRoute('/home');
 
-    // Check for valid token before fetching user data
-    _checkAuthAndFetchUser();
+    // Initialize home data
+    _initializeHomeData();
   }
 
-  Future<void> _checkAuthAndFetchUser() async {
-    // Check if we have a valid token
-    final token = await _authPersistenceService.getSanctumToken();
-    if (token != null) {
-      // Token exists, fetch user data
-      _userViewModel.fetchUser();
-    } else {
-      // No token, wait a bit and try again (in case OAuth just completed)
-      await Future.delayed(const Duration(milliseconds: 1000));
-      final retryToken = await _authPersistenceService.getSanctumToken();
-      if (retryToken != null && mounted) {
-        _userViewModel.fetchUser();
-      }
-    }
+  Future<void> _initializeHomeData() async {
+    await getIt<AuthInitializationService>().checkAuthAndFetchUser();
+    // Load current month financial stats for better financial data display
+    await _dashboardViewModel.loadCurrentMonthFinancialStats();
+    // Load recent projects for home display
+    await _homeViewModel.loadRecentProjects();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _userViewModel,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: _userViewModel),
+        ChangeNotifierProvider.value(value: _homeViewModel),
+        ChangeNotifierProvider.value(value: _dashboardViewModel),
+      ],
       child: MainLayout(
         currentRoute: '/home',
         child: Scaffold(
           backgroundColor: AppColors.background,
           appBar: PaintProAppBar(
             title: 'Home',
-            toolbarHeight: 126,
+            toolbarHeight: 80,
           ),
           body: SingleChildScrollView(
             child: Column(
@@ -87,97 +89,194 @@ class _HomeViewState extends State<HomeView> {
                     } else {
                       displayName = 'User';
                     }
-                    
+
                     return GreetingCardWidget(
-                      greeting: "Good morning!",
+                      greeting: _homeViewModel.getDynamicGreeting(),
                       name: displayName,
                     );
                   },
                 ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
-                  spacing: 8,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: StatsCardWidget(
-                            title: "2",
-                            description: "active projects",
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: StatsCardWidget(
-                            title: "\$30,050",
-                            description: "this month",
-                            backgroundColor: AppColors.cardDark,
-                            titleColor: AppColors.success,
-                            descriptionColor: AppColors.textOnDark,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: StatsCardWidget(
-                            title: "6",
-                            description: "completed",
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: StatsCardWidget(
-                            title: "85%",
-                            description: "conversion",
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    spacing: 8,
+                    children: [
+                      Consumer<DashboardViewModel>(
+                        builder: (context, dashboardViewModel, child) {
+                          if (dashboardViewModel.isLoading) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(40.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+
+                          if (dashboardViewModel.hasError) {
+                            return StatsCardWidget(
+                              title: "Error",
+                              description: "Failed to load stats",
+                            );
+                          }
+
+                          final statistics = dashboardViewModel.statistics;
+                          final currentMonth = dashboardViewModel.currentMonth;
+                          final growth = dashboardViewModel.growth;
+
+                          return Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: StatsCardWidget(
+                                      title:
+                                          "${statistics?.totalEstimates ?? 0}",
+                                      description: "total estimates",
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: StatsCardWidget(
+                                      title: dashboardViewModel
+                                          .getFormattedRevenue(
+                                            currentMonth?.totalRevenue,
+                                          ),
+                                      description: "this month",
+                                      backgroundColor: AppColors.primary
+                                          .withValues(
+                                            alpha: 0.15,
+                                          ),
+                                      titleColor: AppColors.textPrimary,
+                                      descriptionColor: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: StatsCardWidget(
+                                      title: dashboardViewModel
+                                          .getFormattedRevenue(
+                                            currentMonth?.averageEstimateValue,
+                                          ),
+                                      description: "avg estimate",
+                                      backgroundColor: AppColors.primary
+                                          .withValues(
+                                            alpha: 0.15,
+                                          ),
+                                      titleColor: AppColors.textPrimary,
+                                      descriptionColor: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: StatsCardWidget(
+                                      title: dashboardViewModel
+                                          .getFormattedPercentage(
+                                            growth?.revenuePercentage,
+                                          ),
+                                      description: "growth value",
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Recent Projects",
-                          style: GoogleFonts.albertSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Recent Projects",
+                            style: GoogleFonts.albertSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
-                        ),
-                        Text(
-                          "See all",
-                          style: GoogleFonts.albertSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
+                          TextButton(
+                            onPressed: () => context.go('/projects'),
+                            child: Text(
+                              "See all",
+                              style: GoogleFonts.albertSans(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 32),
-                    ProjectStateCardWidget(
-                      title: "No projects yet",
-                      description: "Create your first project to get started",
-                      buttonText: "Create project",
-                      state: ProjectStateType.empty,
-                      onButtonPressed: () => context.push('/create-project'),
-                    ),
-                  ],
+                        ],
+                      ),
+                      SizedBox(height: 16),
+                      Consumer<HomeViewModel>(
+                        builder: (context, homeViewModel, child) {
+                          if (homeViewModel.isLoading) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(40.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+
+                          if (homeViewModel.hasError) {
+                            return ProjectStateCardWidget(
+                              title: "Error loading projects",
+                              description: "Unable to load recent projects",
+                              buttonText: "Retry",
+                              state: ProjectStateType.error,
+                              onButtonPressed: () => homeViewModel.refresh(),
+                            );
+                          }
+
+                          if (!homeViewModel.hasProjects) {
+                            return ProjectStateCardWidget(
+                              title: "No projects yet",
+                              description:
+                                  "Create your first project to get started",
+                              buttonText: "Create project",
+                              state: ProjectStateType.empty,
+                              onButtonPressed: () =>
+                                  context.push('/create-project'),
+                            );
+                          }
+
+                          return Column(
+                            children: homeViewModel.recentProjects.map((
+                              project,
+                            ) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16.0),
+                                child: ProjectCardWidget(
+                                  id: project.id,
+                                  projectName: project.projectName,
+                                  personName: project.personName,
+                                  zonesCount: project.zonesCount,
+                                  createdDate: project.createdDate,
+                                  image: project.image,
+                                ),
+                              );
+                            }).toList(),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               ],
             ),
           ),

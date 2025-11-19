@@ -5,19 +5,19 @@ class ContactModel {
   final String? id;
   final String? ghlId;
   final String? locationId;
-  final String? name;
-  final String? email;
-  final String? phone;
+  final String name;
+  final String email;
+  final String phone;
   final String? phoneLabel;
   final List<String>? additionalEmails;
   final List<String>? additionalPhones;
   final String? companyName;
   final String? businessName;
-  final String? address;
-  final String? city;
-  final String? state;
-  final String? postalCode;
-  final String? country;
+  final String address;
+  final String city;
+  final String state;
+  final String postalCode;
+  final String country;
   final List<Map<String, dynamic>>? customFields;
   final List<String>? tags;
   final String? type;
@@ -37,19 +37,19 @@ class ContactModel {
     this.id,
     this.ghlId,
     this.locationId,
-    this.name,
-    this.email,
-    this.phone,
+    required this.name,
+    required this.email,
+    required this.phone,
     this.phoneLabel,
     this.additionalEmails,
     this.additionalPhones,
     this.companyName,
     this.businessName,
-    this.address,
-    this.city,
-    this.state,
-    this.postalCode,
-    this.country,
+    required this.address,
+    required this.city,
+    required this.state,
+    required this.postalCode,
+    required this.country,
     this.customFields,
     this.tags,
     this.type,
@@ -66,13 +66,26 @@ class ContactModel {
   });
 
   factory ContactModel.fromJson(Map<String, dynamic> json) {
+    // Handle name field - combine firstName and lastName from API response
+    String fullName = '';
+    if (json['firstName'] != null || json['lastName'] != null) {
+      final firstName = json['firstName'] ?? '';
+      final lastName = json['lastName'] ?? '';
+      fullName = [
+        firstName,
+        lastName,
+      ].where((part) => part.isNotEmpty).join(' ');
+    } else if (json['name'] != null) {
+      fullName = json['name']; // Fallback to legacy name field
+    }
+
     return ContactModel(
       id: json['id'],
       ghlId: json['ghlId'] ?? json['id'],
-      locationId: json['locationId'],
-      name: json['name'],
-      email: json['email'],
-      phone: json['phoneNo'] ?? json['phone'],
+      locationId: json['locationId'] ?? json['location_id'],
+      name: fullName,
+      email: json['email'] ?? '',
+      phone: json['phoneNo'] ?? json['phone'] ?? '',
       phoneLabel: json['phoneLabel'],
       additionalEmails: json['additionalEmails'] != null
           ? List<String>.from(json['additionalEmails'])
@@ -80,13 +93,13 @@ class ContactModel {
       additionalPhones: json['additionalPhones'] != null
           ? List<String>.from(json['additionalPhones'])
           : null,
-      companyName: json['companyName'],
+      companyName: json['companyName'] ?? '',
       businessName: json['businessName'],
-      address: json['address'],
-      city: json['city'],
-      state: json['state'],
-      postalCode: json['postalCode'],
-      country: json['country'],
+      address: json['address'] ?? '',
+      city: json['city'] ?? '',
+      state: json['state'] ?? '',
+      postalCode: json['postalCode'] ?? '',
+      country: json['country'] ?? '',
       customFields: json['customFields'] != null
           ? List<Map<String, dynamic>>.from(json['customFields'])
           : null,
@@ -113,11 +126,18 @@ class ContactModel {
   }
 
   Map<String, dynamic> toJson() {
+    // Split name into firstName and lastName for API compatibility
+    final nameParts = name.trim().split(' ');
+    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+    final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
     return {
       'id': id,
       'ghlId': ghlId,
       'locationId': locationId,
       'name': name,
+      'firstName': firstName.isNotEmpty ? firstName : null,
+      'lastName': lastName.isNotEmpty ? lastName : null,
       'email': email,
       'phoneNo': phone,
       'phoneLabel': phoneLabel,
@@ -146,11 +166,21 @@ class ContactModel {
   factory ContactModel.fromMap(Map<String, dynamic> map) {
     return ContactModel(
       localId: map['id'],
+      id: map['ghl_id'],
       ghlId: map['ghl_id'],
       locationId: map['location_id'],
-      name: map['name'],
-      email: map['email'],
-      phone: map['phone'],
+      name:
+          [
+            map['first_name'] ?? '',
+            map['last_name'] ?? '',
+          ].where((e) => e.isNotEmpty).join(' ').isNotEmpty
+          ? [
+              map['first_name'] ?? '',
+              map['last_name'] ?? '',
+            ].where((e) => e.isNotEmpty).join(' ')
+          : (map['name'] ?? ''),
+      email: map['email'] ?? '',
+      phone: map['phone'] ?? '',
       phoneLabel: map['phone_label'],
       additionalEmails: map['additional_emails'] != null
           ? List<String>.from(
@@ -166,13 +196,13 @@ class ContactModel {
                   .where((e) => e.isNotEmpty),
             )
           : null,
-      companyName: map['company_name'],
+      companyName: map['company_name'] ?? '',
       businessName: map['business_name'],
-      address: map['address'],
-      city: map['city'],
-      state: map['state'],
-      postalCode: map['postal_code'],
-      country: map['country'],
+      address: map['address'] ?? '',
+      city: map['city'] ?? '',
+      state: map['state'] ?? '',
+      postalCode: map['postal_code'] ?? '',
+      country: map['country'] ?? '',
       customFields: map['custom_fields'] != null
           ? List<Map<String, dynamic>>.from(
               (map['custom_fields'] as String)
@@ -219,10 +249,15 @@ class ContactModel {
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    final nameParts = name.trim().split(' ');
+    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+    final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
+    final map = <String, dynamic>{
       'ghl_id': ghlId,
       'location_id': locationId,
-      'name': name,
+      'first_name': firstName,
+      'last_name': lastName,
       'email': email,
       'phone': phone,
       'phone_label': phoneLabel,
@@ -250,10 +285,24 @@ class ContactModel {
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
+
+    // Ensure non-null location_id by inferring from GHL data when missing
+    if (map['location_id'] == null || (map['location_id'] as String).isEmpty) {
+      // Try to extract from custom_fields or tags if available
+      // If still null, set to a placeholder to avoid NOT NULL violation
+      map['location_id'] = map['location_id'] ?? '';
+    }
+
+    // Only include user_id if it's not null
+    if (localId != null) {
+      map['user_id'] = localId;
+    }
+
+    return map;
   }
 
   String get fullName {
-    if (name?.isNotEmpty == true) return name!;
+    if (name.isNotEmpty) return name;
     return 'Sem nome';
   }
 

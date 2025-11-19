@@ -19,11 +19,12 @@ class AuthRefreshResponse {
 
   factory AuthRefreshResponse.fromJson(Map<String, dynamic> json) {
     // Try different possible token field names
-    final String? extractedAuthToken = json['auth_token'] as String? ?? 
-                                      json['token'] as String? ?? 
-                                      json['access_token'] as String? ?? 
-                                      json['bearer_token'] as String?;
-    
+    final String? extractedAuthToken =
+        json['auth_token'] as String? ??
+        json['token'] as String? ??
+        json['access_token'] as String? ??
+        json['bearer_token'] as String?;
+
     return AuthRefreshResponse(
       success: json['success'] ?? false,
       expiresAt: json['expires_at'] != null && json['expires_at'] is String

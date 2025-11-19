@@ -1,7 +1,12 @@
 import 'dart:io';
 
-import '../../model/models.dart';
+import '../../model/quotes_data/extracted_material_list_response_model.dart';
 import '../../model/quotes_data/extracted_material_model.dart';
+import '../../model/quotes_data/material_filters_model.dart';
+import '../../model/quotes_data/material_filters_options_model.dart';
+import '../../model/quotes_data/quote_list_response.dart';
+import '../../model/quotes_data/quote_model.dart';
+import '../../model/quotes_data/quote_response.dart';
 import '../../utils/result/result.dart';
 
 abstract class IQuoteRepository {

@@ -45,4 +45,12 @@ extension ResultCasting<T> on Result<T> {
   Ok<T> get asOk => this as Ok<T>;
 
   Error<T> get asError => this as Error<T>;
+
+  bool get isSuccess => this is Ok<T>;
+
+  bool get isError => this is Error<T>;
+
+  T get data => (this as Ok<T>).value;
+
+  Exception get error => (this as Error<T>).error;
 }

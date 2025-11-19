@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 
-import '../../helpers/zones/zone_data_classes.dart';
-import '../../model/models.dart';
+import '../../model/zones/zone_add_data_model.dart';
+import '../../model/zones/zone_rename_data_model.dart';
+import '../../model/projects/project_card_model.dart';
+import '../../model/projects/projects_summary_model.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
 
@@ -36,14 +38,15 @@ class ZonesCardViewmodel extends ChangeNotifier {
   // Commands
   late final Command0<void> _loadZonesCommand;
   late final Command1<void, int> _deleteZoneCommand;
-  late final Command1<void, ZoneRenameData> _renameZoneCommand;
-  late final Command1<void, ZoneAddData> _addZoneCommand;
+  late final Command1<void, ZoneRenameDataModel> _renameZoneCommand;
+  late final Command1<void, ZoneAddDataModel> _addZoneCommand;
   late final Command0<void> _loadSummaryCommand;
 
   Command0<void> get loadZonesCommand => _loadZonesCommand;
   Command1<void, int> get deleteZoneCommand => _deleteZoneCommand;
-  Command1<void, ZoneRenameData> get renameZoneCommand => _renameZoneCommand;
-  Command1<void, ZoneAddData> get addZoneCommand => _addZoneCommand;
+  Command1<void, ZoneRenameDataModel> get renameZoneCommand =>
+      _renameZoneCommand;
+  Command1<void, ZoneAddDataModel> get addZoneCommand => _addZoneCommand;
   Command0<void> get loadSummaryCommand => _loadSummaryCommand;
 
   // Computed properties
@@ -72,11 +75,11 @@ class ZonesCardViewmodel extends ChangeNotifier {
       return await _deleteZoneData(zoneId);
     });
 
-    _renameZoneCommand = Command1((ZoneRenameData data) async {
+    _renameZoneCommand = Command1((ZoneRenameDataModel data) async {
       return await _renameZoneData(data.zoneId, data.newName);
     });
 
-    _addZoneCommand = Command1((ZoneAddData data) async {
+    _addZoneCommand = Command1((ZoneAddDataModel data) async {
       return await _addZoneData(data);
     });
 
@@ -96,24 +99,30 @@ class ZonesCardViewmodel extends ChangeNotifier {
 
   Future<void> renameZone(int zoneId, String newName) async {
     await _renameZoneCommand.execute(
-      ZoneRenameData(zoneId: zoneId, newName: newName),
+      ZoneRenameDataModel(zoneId: zoneId, newName: newName),
     );
   }
 
   Future<void> addZone({
     required String title,
-    String? image,
-    String? floorDimensionValue,
-    String? floorAreaValue,
-    String? areaPaintable,
+    required String image,
+    required String floorDimensionValue,
+    required String floorAreaValue,
+    required String areaPaintable,
+    String? ceilingArea,
+    String? trimLength,
+    Map<String, dynamic>? roomPlanData,
   }) async {
     await _addZoneCommand.execute(
-      ZoneAddData(
+      ZoneAddDataModel(
         title: title,
-        image: image ?? "assets/images/kitchen.png", // Imagem padrão
-        floorDimensionValue: floorDimensionValue ?? "10' x 10'",
-        floorAreaValue: floorAreaValue ?? "100 sq ft",
-        areaPaintable: areaPaintable ?? "280 sq ft",
+        image: image,
+        floorDimensionValue: floorDimensionValue,
+        floorAreaValue: floorAreaValue,
+        areaPaintable: areaPaintable,
+        ceilingArea: ceilingArea,
+        trimLength: trimLength,
+        roomPlanData: roomPlanData,
       ),
     );
   }
@@ -144,12 +153,8 @@ class ZonesCardViewmodel extends ChangeNotifier {
       _setState(ZonesState.loading);
       _clearError();
 
-      // Simulando dados enquanto não temos o service - 1 segundos para mostrar loading
-      await Future.delayed(const Duration(seconds: 1));
-
-      final mockZones = _generateMockZones();
-
-      _zones = mockZones;
+      // Não há API de zonas: iniciar vazio e aguardar adições do usuário
+      _zones = [];
       _setState(ZonesState.loaded);
 
       return Result.ok(null);
@@ -209,7 +214,7 @@ class ZonesCardViewmodel extends ChangeNotifier {
     }
   }
 
-  Future<Result<void>> _addZoneData(ZoneAddData data) async {
+  Future<Result<void>> _addZoneData(ZoneAddDataModel data) async {
     try {
       // Aqui seria a chamada para o service
       // final result = await _zonesService.addZone(data);
@@ -229,9 +234,9 @@ class ZonesCardViewmodel extends ChangeNotifier {
         floorDimensionValue: data.floorDimensionValue,
         floorAreaValue: data.floorAreaValue,
         areaPaintable: data.areaPaintable,
-        ceilingArea:
-            data.floorAreaValue, // Use floor area as ceiling by default
-        trimLength: "44 linear ft", // Default trim length
+        ceilingArea: data.ceilingArea,
+        trimLength: data.trimLength,
+        roomPlanData: data.roomPlanData,
       );
 
       _zones.add(newZone);
@@ -249,16 +254,29 @@ class ZonesCardViewmodel extends ChangeNotifier {
 
   Future<Result<void>> _loadSummaryData() async {
     try {
-      // Aqui seria a chamada para o service
-      // final result = await _zonesService.getSummary();
+      int count = _zones.length;
+      double sumArea = 0;
+      double sumPaintable = 0;
+      double sumWidth = 0;
+      double sumLength = 0;
 
-      // Simulando dados de resumo - delay para mostrar loading junto com zones
-      await Future.delayed(const Duration(seconds: 2));
+      for (final z in _zones) {
+        sumArea += _parseSqFt(z.floorAreaValue);
+        sumPaintable += _parseSqFt(z.areaPaintable);
+        final dims = _parseDimensions(z.floorDimensionValue);
+        sumWidth += dims.$1;
+        sumLength += dims.$2;
+      }
+
+      final avgWidth = count > 0 ? (sumWidth / count).round() : 0;
+      final avgLength = count > 0 ? (sumLength / count).round() : 0;
+      final totalAreaStr = '${sumArea.round()} sq ft';
+      final totalPaintableStr = '${sumPaintable.round()} sq ft';
 
       _summary = ProjectsSummaryModel(
-        avgDimensions: "12' x 14'",
-        totalArea: "${_zones.length * 168} sq ft",
-        totalPaintable: "${_zones.length * 420} sq ft",
+        avgDimensions: "$avgWidth' x $avgLength'",
+        totalArea: totalAreaStr,
+        totalPaintable: totalPaintableStr,
       );
 
       notifyListeners();
@@ -284,40 +302,21 @@ class ZonesCardViewmodel extends ChangeNotifier {
         .toList();
   }
 
-  // Mock data generator (remover quando o service estiver pronto)
-  List<ProjectCardModel> _generateMockZones() {
-    return [
-      ProjectCardModel(
-        id: 1,
-        title: "Living Room",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "14' x 16'",
-        floorAreaValue: "224 sq ft",
-        areaPaintable: "485 sq ft",
-        ceilingArea: "224 sq ft",
-        trimLength: "60 linear ft",
-      ),
-      ProjectCardModel(
-        id: 2,
-        title: "Kitchen",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "10' x 12'",
-        floorAreaValue: "120 sq ft",
-        areaPaintable: "320 sq ft",
-        ceilingArea: "120 sq ft",
-        trimLength: "44 linear ft",
-      ),
-      ProjectCardModel(
-        id: 3,
-        title: "Bedroom",
-        image: "assets/images/kitchen.png",
-        floorDimensionValue: "12' x 14'",
-        floorAreaValue: "168 sq ft",
-        areaPaintable: "420 sq ft",
-        ceilingArea: "168 sq ft",
-        trimLength: "52 linear ft",
-      ),
-    ];
+  // Helpers de parse
+  double _parseSqFt(String value) {
+    final numStr = value.replaceAll(RegExp(r'[^0-9\.]'), '');
+    return double.tryParse(numStr) ?? 0;
+  }
+
+  (double, double) _parseDimensions(String value) {
+    final cleaned = value.replaceAll("'", '');
+    final parts = cleaned.split('x');
+    if (parts.length >= 2) {
+      final w = double.tryParse(parts[0].trim()) ?? 0;
+      final l = double.tryParse(parts[1].trim()) ?? 0;
+      return (w, l);
+    }
+    return (0, 0);
   }
 
   // State management methods

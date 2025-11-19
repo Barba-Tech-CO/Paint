@@ -6,7 +6,7 @@ import '../../config/app_colors.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/logger/logger_app_logger_impl.dart';
 import '../../viewmodel/auth/auth_viewmodel.dart';
-import '../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/appbars/paint_pro_app_bar.dart';
 import 'auth_content.dart';
 import 'marketplace_popup_helper.dart';
 
@@ -43,7 +43,6 @@ class AuthView extends StatelessWidget {
       }
 
       if (viewModel.shouldShowPopup && viewModel.popupUrl != null) {
-        _logger.info('[AuthView] Showing marketplace popup');
         MarketplacePopupHelper.show(context, viewModel.popupUrl!, viewModel);
       }
     });

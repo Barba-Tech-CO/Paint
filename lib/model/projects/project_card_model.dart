@@ -7,6 +7,7 @@ class ProjectCardModel {
   final String areaPaintable;
   final String? ceilingArea;
   final String? trimLength;
+  final Map<String, dynamic>? roomPlanData;
 
   ProjectCardModel({
     required this.id,
@@ -17,6 +18,7 @@ class ProjectCardModel {
     required this.areaPaintable,
     this.ceilingArea,
     this.trimLength,
+    this.roomPlanData,
   });
 
   factory ProjectCardModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class ProjectCardModel {
       areaPaintable: json['area_paintable'] ?? '',
       ceilingArea: json['ceiling_area'],
       trimLength: json['trim_length'],
+      roomPlanData: json['room_plan_data'],
     );
   }
 
@@ -42,6 +45,7 @@ class ProjectCardModel {
       'area_paintable': areaPaintable,
       'ceiling_area': ceilingArea,
       'trim_length': trimLength,
+      'room_plan_data': roomPlanData,
     };
   }
 
@@ -55,6 +59,7 @@ class ProjectCardModel {
     String? areaPaintable,
     String? ceilingArea,
     String? trimLength,
+    Map<String, dynamic>? roomPlanData,
   }) {
     return ProjectCardModel(
       id: id ?? this.id,
@@ -65,6 +70,7 @@ class ProjectCardModel {
       areaPaintable: areaPaintable ?? this.areaPaintable,
       ceilingArea: ceilingArea ?? this.ceilingArea,
       trimLength: trimLength ?? this.trimLength,
+      roomPlanData: roomPlanData ?? this.roomPlanData,
     );
   }
 
@@ -76,78 +82,4 @@ class ProjectCardModel {
 
   @override
   int get hashCode => id.hashCode;
-}
-
-class ProjectListResponse {
-  final bool success;
-  final List<ProjectCardModel> data;
-  final String? message;
-
-  ProjectListResponse({
-    required this.success,
-    required this.data,
-    this.message,
-  });
-
-  factory ProjectListResponse.fromJson(Map<String, dynamic> json) {
-    return ProjectListResponse(
-      success: json['success'] ?? false,
-      data:
-          (json['data'] as List<dynamic>?)
-              ?.map((item) => ProjectCardModel.fromJson(item))
-              .toList() ??
-          [],
-      message: json['message'],
-    );
-  }
-}
-
-class ProjectsSummaryModel {
-  final String avgDimensions;
-  final String totalArea;
-  final String totalPaintable;
-
-  ProjectsSummaryModel({
-    required this.avgDimensions,
-    required this.totalArea,
-    required this.totalPaintable,
-  });
-
-  factory ProjectsSummaryModel.fromJson(Map<String, dynamic> json) {
-    return ProjectsSummaryModel(
-      avgDimensions: json['avg_dimensions'] ?? '',
-      totalArea: json['total_area'] ?? '',
-      totalPaintable: json['total_paintable'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'avg_dimensions': avgDimensions,
-      'total_area': totalArea,
-      'total_paintable': totalPaintable,
-    };
-  }
-}
-
-class ZonesOperationResponse {
-  final bool success;
-  final String message;
-  final ProjectCardModel? data;
-
-  ZonesOperationResponse({
-    required this.success,
-    required this.message,
-    this.data,
-  });
-
-  factory ZonesOperationResponse.fromJson(Map<String, dynamic> json) {
-    return ZonesOperationResponse(
-      success: json['success'] ?? false,
-      message: json['message'] ?? '',
-      data: json['data'] != null
-          ? ProjectCardModel.fromJson(json['data'])
-          : null,
-    );
-  }
 }

@@ -1,6 +1,7 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+import 'package:flutter/material.dart';
 
-import '../../model/models.dart';
+import '../../model/contacts/contact_model.dart';
 import '../../use_case/contacts/contact_operations_use_case.dart';
 import '../../utils/command/command.dart';
 import '../../utils/result/result.dart';
@@ -56,10 +57,14 @@ class ContactsViewModel extends ChangeNotifier {
   set searchQuery(String value) {
     if (_searchQuery != value) {
       _searchQuery = value;
-      // Use Future.microtask to defer the filtering and notification
+      // Use Future.microtask to defer the search and notification
       Future.microtask(() {
-        _filterContactsByQuery(value);
-        notifyListeners();
+        if (value.isEmpty) {
+          _filteredContacts = List.from(_contacts);
+          notifyListeners();
+        } else {
+          _searchContactsData(value);
+        }
       });
     }
   }
@@ -142,6 +147,24 @@ class ContactsViewModel extends ChangeNotifier {
     }
   }
 
+  /// Refresh contacts from API in background
+  Future<void> refreshContacts() async {
+    try {
+      // First sync pending contacts with API
+      await _contactUseCase.syncPendingContacts();
+
+      // Then reload contacts from local database
+      if (_loadContactsCommand != null) {
+        await _loadContactsCommand!.execute();
+      }
+    } catch (e) {
+      // If sync fails, still try to reload local data
+      if (_loadContactsCommand != null) {
+        await _loadContactsCommand!.execute();
+      }
+    }
+  }
+
   Future<void> addContact(ContactModel contact) async {
     if (_addContactCommand != null) {
       await _addContactCommand!.execute(contact);
@@ -191,9 +214,9 @@ class ContactsViewModel extends ChangeNotifier {
     } else {
       final searchLower = query.toLowerCase();
       _filteredContacts = _contacts.where((contact) {
-        final fullName = contact.name?.toLowerCase() ?? '';
-        final phone = contact.phone?.toLowerCase() ?? '';
-        final email = contact.email?.toLowerCase() ?? '';
+        final fullName = contact.name.toLowerCase();
+        final phone = contact.phone.toLowerCase();
+        final email = contact.email.toLowerCase();
 
         return fullName.contains(searchLower) ||
             phone.contains(searchLower) ||
@@ -386,6 +409,21 @@ class ContactsViewModel extends ChangeNotifier {
       if (result is Ok) {
         final response = result.asOk.value;
         _filteredContacts = response.contacts;
+
+        // Update the main contacts list with new contacts from API search
+        for (final contact in response.contacts) {
+          final existingIndex = _contacts.indexWhere(
+            (c) => c.id == contact.id || c.ghlId == contact.ghlId,
+          );
+          if (existingIndex == -1) {
+            // Add new contact to main list
+            _contacts.add(contact);
+          } else {
+            // Update existing contact with fresh data from API
+            _contacts[existingIndex] = contact;
+          }
+        }
+
         notifyListeners();
         return Result.ok(null);
       } else {
@@ -398,5 +436,86 @@ class ContactsViewModel extends ChangeNotifier {
       notifyListeners();
       return Result.error(Exception(_errorMessage));
     }
+  }
+
+  // Migrated from ContactsHelper
+  /// Converts ContactModel to Map for display purposes
+  Map<String, String> convertContactModelToMap(ContactModel contact) {
+    return {
+      'name': contact.name,
+      'phone': formatPhoneForDisplay(contact.phone),
+      'address': '${contact.address}, ${contact.city}, ${contact.country}'
+          .replaceAll(RegExp(r',\s*,'), ',')
+          .replaceAll(RegExp(r'^,\s*|,\s*$'), ''),
+    };
+  }
+
+  /// Formats phone number for display
+  static String formatPhoneForDisplay(String? phone) {
+    if (phone == null || phone.isEmpty) return '';
+
+    // Remove all non-digit characters
+    final digits = phone.replaceAll(RegExp(r'[^\d]'), '');
+
+    // Format as (XXX) XXX-XXXX for 10 digits
+    if (digits.length == 10) {
+      return '(${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6)}';
+    }
+
+    // Return original if not 10 digits
+    return phone;
+  }
+
+  /// Creates a debounced search function
+  void createDebouncedSearch({
+    required TextEditingController searchController,
+    Duration delay = const Duration(milliseconds: 300),
+  }) {
+    Timer? debounceTimer;
+
+    searchController.addListener(() {
+      debounceTimer?.cancel();
+      debounceTimer = Timer(delay, () {
+        final query = searchController.text.trim();
+        if (query.isEmpty) {
+          filteredContacts = contacts;
+        } else {
+          searchContacts(query);
+        }
+      });
+    });
+  }
+
+  /// Dismisses keyboard
+  static void dismissKeyboard(BuildContext context) {
+    FocusScope.of(context).unfocus();
+  }
+
+  /// Gets loading widget for contacts
+  static Widget getLoadingWidget() {
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  /// Gets error widget for contacts
+  static Widget getErrorWidget(String message, VoidCallback onRetry) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.red),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: onRetry,
+            child: const Text('Try Again'),
+          ),
+        ],
+      ),
+    );
   }
 }
