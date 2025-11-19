@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/app_colors.dart';
@@ -29,7 +30,7 @@ class NavigationItemWidget extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -43,7 +44,7 @@ class NavigationItemWidget extends StatelessWidget {
                 child: Text(
                   item.label,
                   style: GoogleFonts.albertSans(
-                    fontSize: 14,
+                    fontSize: 14.sp,
                     color: isActive
                         ? AppColors.navigationActive
                         : AppColors.navigationInactive,

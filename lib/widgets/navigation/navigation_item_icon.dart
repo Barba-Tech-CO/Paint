@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../config/app_colors.dart';
 import '../../model/navigation/navigation_item_model.dart';
@@ -26,8 +27,8 @@ class NavigationItemIcon extends StatelessWidget {
     if (assetPath != null) {
       return Image.asset(
         assetPath,
-        height: 26,
-        width: 26,
+        height: 26.h,
+        width: 26.w,
         color: color,
       );
     }
@@ -39,7 +40,7 @@ class NavigationItemIcon extends StatelessWidget {
     return Icon(
       iconData,
       color: color,
-      size: 26,
+      size: 26.sp,
     );
   }
 }
