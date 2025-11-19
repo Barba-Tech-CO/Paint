@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
@@ -92,19 +93,19 @@ class _NewContactViewState extends State<NewContactView> {
       isLoading: _viewModel.isLoading,
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: const PaintProAppBar(title: 'New Contact'),
+        appBar: PaintProAppBar(title: 'New Contact'),
         body: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
 
                   const SectionTitleWidget(title: 'Client Information'),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
 
                   PaintProTextField(
                     label: 'Name: *',
@@ -112,11 +113,11 @@ class _NewContactViewState extends State<NewContactView> {
                     controller: _nameController,
                     validator: NewContactViewModel.nameValidator,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
 
                   // Contact Section
                   const SectionTitleWidget(title: 'Contact'),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
 
                   PaintProNumberField(
                     label: 'Phone: *',
@@ -125,7 +126,7 @@ class _NewContactViewState extends State<NewContactView> {
                     kind: NumberFieldKind.phone,
                     validator: NewContactViewModel.validatePhone,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   PaintProNumberField(
                     label: 'Additional Phones:',
                     hintText: '+1 (555) 123-4567, +1 (555) 123-4589',
@@ -140,55 +141,55 @@ class _NewContactViewState extends State<NewContactView> {
                     controller: _emailController,
                     validator: NewContactViewModel.emailValidator,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   PaintProTextField(
                     label: 'Adtional Emails:',
                     hintText: 'example@mail.com, example2@mail.com',
                     controller: _adtionalEmailsController,
                     validator: NewContactViewModel.validateAdditionalEmails,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
 
                   const SectionTitleWidget(
                     title: 'Business Information',
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   PaintProTextField(
                     label: 'Company Name:',
                     hintText: 'Painter Estimator LTDA',
                     controller: _companyNameController,
                     validator: NewContactViewModel.companyNameValidator,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   PaintProTextField(
                     label: 'Address: *',
                     hintText: '123 Main Street',
                     controller: _addressController,
                     validator: NewContactViewModel.addressValidator,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   PaintProTextField(
                     label: 'City: *',
                     hintText: 'Any City',
                     controller: _cityController,
                     validator: NewContactViewModel.cityValidator,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   PaintProTextField(
                     label: 'State: *',
                     hintText: 'Any State',
                     controller: _stateController,
                     validator: NewContactViewModel.stateValidator,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   PaintProTextField(
                     label: 'Postal Code: *',
                     hintText: '12345',
                     controller: _zipCodeController,
                     validator: NewContactViewModel.postalCodeValidator,
                   ),
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   PaintProTextField(
                     label: 'Country: *',
@@ -197,14 +198,14 @@ class _NewContactViewState extends State<NewContactView> {
                     validator: NewContactViewModel.countryValidator,
                   ),
                   // Add some bottom padding to ensure content is not hidden by bottomNavigationBar
-                  const SizedBox(height: 100),
+                  SizedBox(height: 100.h),
                 ],
               ),
             ),
           ),
         ),
         bottomNavigationBar: Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.w),
           child: PaintProButton(
             text: _viewModel.isLoading ? 'Saving...' : 'Save',
             onPressed: _viewModel.isLoading ? null : _saveContact,

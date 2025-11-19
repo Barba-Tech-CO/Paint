@@ -111,11 +111,11 @@ class _ContactsViewState extends State<ContactsView> {
                         : Column(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 32,
-                                  right: 32,
-                                  top: 24,
-                                  bottom: 16,
+                                padding: EdgeInsets.only(
+                                  left: 32.w,
+                                  right: 32.w,
+                                  top: 24.h,
+                                  bottom: 16.h,
                                 ),
                                 child: TextField(
                                   controller: _searchController,
@@ -126,14 +126,14 @@ class _ContactsViewState extends State<ContactsView> {
                                       color: Colors.grey,
                                     ),
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(16.r),
                                       borderSide: const BorderSide(
                                         color: AppColors.primary,
                                       ),
                                     ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16.w,
+                                      vertical: 12.h,
                                     ),
                                   ),
                                 ),
@@ -147,10 +147,10 @@ class _ContactsViewState extends State<ContactsView> {
                                   child: ListView.builder(
                                     itemCount:
                                         viewModel.filteredContacts.length,
-                                    padding: const EdgeInsets.only(
-                                      bottom: 140,
-                                      left: 16,
-                                      right: 16,
+                                    padding: EdgeInsets.only(
+                                      bottom: 140.h,
+                                      left: 16.w,
+                                      right: 16.w,
                                     ),
                                     itemBuilder: (context, index) {
                                       final contact =
@@ -195,8 +195,8 @@ class _ContactsViewState extends State<ContactsView> {
                     // FAB posicionado manualmente
                     if (viewModel.hasContacts)
                       Positioned(
-                        bottom: 120,
-                        right: 16,
+                        bottom: 120.h,
+                        right: 16.w,
                         child: PaintProFAB(
                           onPressed: () => context.push('/new-contact'),
                           icon: Icons.add,

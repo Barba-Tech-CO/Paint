@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/dependency_injection.dart';
@@ -135,23 +136,23 @@ class _EditContactViewState extends State<EditContactView> {
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: const PaintProAppBar(title: 'Edit Contact'),
+        appBar: PaintProAppBar(title: 'Edit Contact'),
         body: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   const SectionTitleWidget(
                     title: 'Client Information',
                   ),
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   PaintProTextField(
                     label: 'Name: *',
@@ -159,13 +160,13 @@ class _EditContactViewState extends State<EditContactView> {
                     controller: _nameController,
                     validator: ContactDetailViewModel.nameValidator,
                   ),
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   // Contact Section
                   const SectionTitleWidget(title: 'Contact'),
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   PaintProNumberField(
                     label: 'Phone: *',
@@ -174,8 +175,8 @@ class _EditContactViewState extends State<EditContactView> {
                     kind: NumberFieldKind.phone,
                     validator: ContactDetailViewModel.validatePhone,
                   ),
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   PaintProNumberField(
                     label: 'Additional Phones:',
@@ -190,8 +191,8 @@ class _EditContactViewState extends State<EditContactView> {
                     controller: _emailController,
                     validator: ContactDetailViewModel.emailValidator,
                   ),
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   PaintProTextField(
                     label: 'Adtional Emails:',
@@ -199,14 +200,14 @@ class _EditContactViewState extends State<EditContactView> {
                     controller: _adtionalEmailsController,
                     validator: ContactDetailViewModel.validateAdditionalEmails,
                   ),
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   const SectionTitleWidget(
                     title: 'Business Information',
                   ),
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   PaintProTextField(
                     label: 'Company Name:',
@@ -214,8 +215,8 @@ class _EditContactViewState extends State<EditContactView> {
                     controller: _companyNameController,
                     validator: ContactDetailViewModel.companyNameValidator,
                   ),
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   PaintProTextField(
                     label: 'Address: *',
@@ -223,8 +224,8 @@ class _EditContactViewState extends State<EditContactView> {
                     controller: _addressController,
                     validator: ContactDetailViewModel.addressValidator,
                   ),
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   PaintProTextField(
                     label: 'City: *',
@@ -232,8 +233,8 @@ class _EditContactViewState extends State<EditContactView> {
                     controller: _cityController,
                     validator: ContactDetailViewModel.cityValidator,
                   ),
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   PaintProTextField(
                     label: 'State: *',
@@ -241,8 +242,8 @@ class _EditContactViewState extends State<EditContactView> {
                     controller: _stateController,
                     validator: ContactDetailViewModel.stateValidator,
                   ),
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   PaintProNumberField(
                     label: 'Postal Code: *',
@@ -252,8 +253,8 @@ class _EditContactViewState extends State<EditContactView> {
                     textInputAction: TextInputAction.done,
                     validator: ContactDetailViewModel.postalCodeValidator,
                   ),
-                  const SizedBox(
-                    height: 16,
+                  SizedBox(
+                    height: 16.h,
                   ),
                   PaintProTextField(
                     label: 'Country: *',
@@ -262,15 +263,15 @@ class _EditContactViewState extends State<EditContactView> {
                     validator: ContactDetailViewModel.countryValidator,
                   ),
                   // Add some bottom padding to ensure content is not hidden by bottomNavigationBar
-                  const SizedBox(height: 100),
+                  SizedBox(height: 100.h),
                 ],
               ),
             ),
           ),
         ),
         bottomNavigationBar: Container(
-          padding: const EdgeInsets.all(
-            16,
+          padding: EdgeInsets.all(
+            16.w,
           ),
           child: PaintProButton(
             text: _viewModel.isLoading ? 'Updating...' : 'Update',

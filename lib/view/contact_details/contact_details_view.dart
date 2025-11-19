@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
@@ -85,7 +86,7 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -102,7 +103,7 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              SizedBox(height: 32.h),
 
               SectionHeaderWidget(
                 icon:
@@ -123,7 +124,7 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
                     .toList(),
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               SectionHeaderWidget(
                 icon:
                     ContactDetailViewModel.getAddressSectionData()['icon']
@@ -144,7 +145,7 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
               ),
 
               if (showAdditionalInfo) ...[
-                const SizedBox(height: 16),
+                SizedBox(height: 16.h),
 
                 SectionHeaderWidget(
                   icon:
