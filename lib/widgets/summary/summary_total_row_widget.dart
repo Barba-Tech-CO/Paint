@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SummaryTotalRowWidget extends StatelessWidget {
   final String label;
@@ -26,9 +27,9 @@ class SummaryTotalRowWidget extends StatelessWidget {
       children: [
         if (showDivider)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: EdgeInsets.symmetric(vertical: 12.h),
             child: Divider(
-              height: 1,
+              height: 1.h,
               color: Colors.grey.shade300,
             ),
           ),
