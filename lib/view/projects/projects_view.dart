@@ -44,7 +44,7 @@ class _ProjectsViewState extends State<ProjectsView> {
         currentRoute: '/projects',
         child: Scaffold(
           backgroundColor: AppColors.background,
-          appBar: const PaintProAppBar(title: 'Projects'),
+          appBar: PaintProAppBar(title: 'Projects'),
           body: Consumer<ProjectsViewModel>(
             builder: (context, viewModel, _) {
               if (viewModel.isLoading) {

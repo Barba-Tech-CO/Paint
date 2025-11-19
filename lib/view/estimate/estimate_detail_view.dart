@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
@@ -49,8 +50,8 @@ class _EstimateDetailViewState extends State<EstimateDetailView> {
             }
           },
           child: Container(
-            width: 48,
-            height: 48,
+            width: 48.w,
+            height: 48.h,
             alignment: Alignment.center,
             child: const Icon(Icons.arrow_back_ios),
           ),
@@ -70,24 +71,24 @@ class _EstimateDetailViewState extends State<EstimateDetailView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.error_outline,
-                    size: 64,
+                    size: 64.sp,
                     color: Colors.red,
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
+                  SizedBox(height: 16.h),
+                  Text(
                     'Error',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 24.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     _viewModel.error ?? 'Failed to load project details',
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: 16.sp,
                       color: Colors.grey,
                     ),
                     textAlign: TextAlign.center,
@@ -103,7 +104,7 @@ class _EstimateDetailViewState extends State<EstimateDetailView> {
           }
 
           if (!_viewModel.hasData) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -116,7 +117,7 @@ class _EstimateDetailViewState extends State<EstimateDetailView> {
                   Text(
                     'No data',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 24.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -124,7 +125,7 @@ class _EstimateDetailViewState extends State<EstimateDetailView> {
                   Text(
                     'No project details available',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 16.sp,
                       color: Colors.grey,
                     ),
                   ),
@@ -148,40 +149,40 @@ class _EstimateDetailViewState extends State<EstimateDetailView> {
                       ),
                       // Widget customizado para exibir as zonas
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: EdgeInsets.symmetric(vertical: 8.h),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'Zones:',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 color: Colors.grey[600],
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4.h),
                             ..._viewModel.getFormattedZones().map(
                               (zone) => Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 8,
-                                  top: 2,
+                                padding: EdgeInsets.only(
+                                  left: 8.w,
+                                  top: 2.h,
                                 ),
                                 child: Row(
                                   children: [
                                     Container(
-                                      width: 4,
-                                      height: 4,
+                                      width: 4.w,
+                                      height: 4.h,
                                       decoration: const BoxDecoration(
                                         color: Colors.grey,
                                         shape: BoxShape.circle,
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
+                                    SizedBox(width: 8.w),
                                     Text(
                                       zone,
-                                      style: const TextStyle(
-                                        fontSize: 14,
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
                                         color: Colors.black87,
                                       ),
                                     ),
@@ -212,8 +213,12 @@ class _EstimateDetailViewState extends State<EstimateDetailView> {
                                 material.id,
                               ),
                               builder: (context, snapshot) {
-                                final isDone = snapshot.connectionState == ConnectionState.done;
-                                final materialName = snapshot.data ?? (isDone ? 'Unknown Material' : 'Loading…');
+                                final isDone =
+                                    snapshot.connectionState ==
+                                    ConnectionState.done;
+                                final materialName =
+                                    snapshot.data ??
+                                    (isDone ? 'Unknown Material' : 'Loading…');
                                 return MaterialItemRowWidget(
                                   title: materialName,
                                   subtitle:
@@ -226,12 +231,12 @@ class _EstimateDetailViewState extends State<EstimateDetailView> {
                           },
                         )
                       else
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
                           child: Text(
                             'No materials selected',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 14.sp,
                               color: Colors.grey,
                               fontStyle: FontStyle.italic,
                             ),
@@ -251,17 +256,17 @@ class _EstimateDetailViewState extends State<EstimateDetailView> {
                       if (_viewModel.estimateDetail!.zones.isNotEmpty)
                         ..._viewModel.estimateDetail!.zones.map(
                           (zone) => Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
+                            padding: EdgeInsets.only(bottom: 16.h),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // Título da zona
                                 Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
+                                  padding: EdgeInsets.only(bottom: 8.h),
                                   child: Text(
                                     zone.name,
-                                    style: const TextStyle(
-                                      fontSize: 16,
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.black87,
                                     ),
@@ -282,12 +287,12 @@ class _EstimateDetailViewState extends State<EstimateDetailView> {
                           ),
                         )
                       else
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
                           child: Text(
                             'No zones selected',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 14.sp,
                               color: Colors.grey,
                               fontStyle: FontStyle.italic,
                             ),
@@ -306,7 +311,7 @@ class _EstimateDetailViewState extends State<EstimateDetailView> {
                     ],
                   ),
 
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                 ],
               ),
             ),
