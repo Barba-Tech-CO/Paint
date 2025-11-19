@@ -1,20 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
-import '../../helpers/loading_helper.dart';
-import '../../model/models.dart';
-import '../../viewmodel/viewmodels.dart';
-import '../widgets/widgets.dart';
+import '../../domain/project_entity.dart';
+import '../../model/estimates/estimate_status.dart';
+import '../../model/material_models/material_model.dart';
+import '../../model/projects/project_card_model.dart';
+import '../../viewmodel/estimate/estimate_calculation_viewmodel.dart';
+import '../../viewmodel/estimate/estimate_upload_viewmodel.dart';
+import '../../viewmodel/overview_zones_viewmodel.dart';
+import '../../viewmodel/zones/zones_list_viewmodel.dart';
+import '../../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/buttons/paint_pro_button.dart';
+import '../../widgets/cards/project_summary_card_widget.dart';
+import '../../widgets/loading/loading_navigation_widget.dart';
+import '../../widgets/summary/material_item_row_widget.dart';
+import '../../widgets/summary/project_cost_summary_widget.dart';
+import '../../widgets/summary/room_overview_row_widget.dart';
+import '../../widgets/summary/summary_info_row_widget.dart';
+import '../../widgets/summary/summary_total_row_widget.dart';
 
 class OverviewZonesView extends StatefulWidget {
   final List<MaterialModel>? selectedMaterials;
+  final Map<MaterialModel, int>? materialQuantities;
   final List<ProjectCardModel>? selectedZones;
+  final Map<String, dynamic>? projectData;
 
   const OverviewZonesView({
     super.key,
     this.selectedMaterials,
+    this.materialQuantities,
     this.selectedZones,
+    this.projectData,
   });
 
   @override
@@ -24,20 +42,40 @@ class OverviewZonesView extends StatefulWidget {
 class _OverviewZonesViewState extends State<OverviewZonesView> {
   late OverviewZonesViewModel _viewModel;
   late ZonesListViewModel _zonesListViewModel;
+  late EstimateUploadViewModel _estimateUploadViewModel;
+  late EstimateCalculationViewModel _estimateCalculationViewModel;
+
+  // Project data from create_project_view
+  ProjectEntity? _projectEntity;
 
   @override
   void initState() {
     super.initState();
     _viewModel = OverviewZonesViewModel();
     _zonesListViewModel = getIt<ZonesListViewModel>();
+    _estimateUploadViewModel = getIt<EstimateUploadViewModel>();
+    _estimateCalculationViewModel = getIt<EstimateCalculationViewModel>();
 
     // Inicializar o ZonesListViewModel
     _zonesListViewModel.initialize();
+
+    // Adicionar listener para o EstimateUploadViewModel
+    _estimateUploadViewModel.addListener(_onEstimateUploadStateChanged);
+
+    // Extrair dados do projeto se fornecidos
+    if (widget.projectData != null) {
+      _projectEntity = ProjectEntity.fromMap(widget.projectData!);
+    }
 
     // Se materiais foram passados, configurá-los no ViewModel
     if (widget.selectedMaterials != null &&
         widget.selectedMaterials!.isNotEmpty) {
       _viewModel.setSelectedMaterials(widget.selectedMaterials!);
+
+      // Se quantidades foram passadas, configurá-las também
+      if (widget.materialQuantities != null) {
+        _viewModel.setMaterialQuantities(widget.materialQuantities!);
+      }
     }
 
     // Se zonas foram passadas, configurá-las no ViewModel
@@ -76,8 +114,43 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
   @override
   void dispose() {
     _zonesListViewModel.removeListener(_onZonesLoaded);
+    _estimateUploadViewModel.removeListener(_onEstimateUploadStateChanged);
     _viewModel.dispose();
     super.dispose();
+  }
+
+  void _onEstimateUploadStateChanged() {
+    if (mounted) {
+      setState(() {});
+
+      // Handle success state
+      if (_estimateUploadViewModel.state == EstimateUploadState.success) {
+        LoadingNavigationWidget.navigateToQuoteLoading(context);
+      }
+
+      // Handle error state
+      if (_estimateUploadViewModel.state == EstimateUploadState.error) {
+        _showErrorDialog(
+          _estimateUploadViewModel.errorMessage ?? 'Unknown error occurred',
+        );
+      }
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Upload Failed'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => context.pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -85,9 +158,18 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
     return Scaffold(
       appBar: PaintProAppBar(
         title: 'Measurements',
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => context.pop(),
+        leading: GestureDetector(
+          onTap: () {
+            if (context.mounted) {
+              context.pop();
+            }
+          },
+          child: Container(
+            width: 48.w,
+            height: 48.h,
+            alignment: Alignment.center,
+            child: const Icon(Icons.arrow_back_ios),
+          ),
         ),
       ),
       body: AnimatedBuilder(
@@ -95,7 +177,7 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
         builder: (context, child) {
           return SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: Column(
                 children: [
                   // Project Summary Card
@@ -108,77 +190,47 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                       ),
                       // Widget customizado para exibir as zonas
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: EdgeInsets.symmetric(vertical: 8.h),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'Zones:',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 color: Colors.grey[600],
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            // Debug: Verificar se há zonas
-                            if (_viewModel.selectedZones.isEmpty)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'No zones selected',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[500],
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                  Text(
-                                    'ViewModel zones: ${_viewModel.zonesCount}',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.red[400],
-                                    ),
-                                  ),
-                                  Text(
-                                    'Real zones available: ${_zonesListViewModel.zones.length}',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.blue[400],
-                                    ),
-                                  ),
-                                ],
-                              )
-                            else
-                              ..._viewModel.formattedZones.map(
-                                (zone) => Padding(
-                                  padding: const EdgeInsets.only(
-                                    left: 8,
-                                    top: 2,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 4,
-                                        height: 4,
-                                        decoration: const BoxDecoration(
-                                          color: Colors.grey,
-                                          shape: BoxShape.circle,
-                                        ),
+                            SizedBox(height: 4.h),
+                            ..._viewModel.formattedZones.map(
+                              (zone) => Padding(
+                                padding: EdgeInsets.only(
+                                  left: 8.w,
+                                  top: 2.h,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 4.w,
+                                      height: 4.h,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.grey,
+                                        shape: BoxShape.circle,
                                       ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        zone,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.black87,
-                                        ),
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    Text(
+                                      zone,
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        color: Colors.black87,
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
+                            ),
                           ],
                         ),
                       ),
@@ -194,26 +246,31 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                     title: 'Materials',
                     children: [
                       // Listar os materiais selecionados
-                      ..._viewModel.selectedMaterials.map(
-                        (material) => MaterialItemRowWidget(
-                          title: material.name,
-                          subtitle: '${material.code} - ${material.priceUnit}',
-                          price: '\$${material.price.toStringAsFixed(2)}',
+                      if (_viewModel.selectedMaterials.isNotEmpty)
+                        ..._viewModel.selectedMaterials.map(
+                          (material) {
+                            final quantity = _viewModel.getQuantity(material);
+                            final totalPrice = material.price * quantity;
+                            return MaterialItemRowWidget(
+                              title: material.name,
+                              subtitle:
+                                  '${material.code} - ${material.priceUnit} (Qty: ${quantity.toInt()})',
+                              price: '\$${totalPrice.toStringAsFixed(2)}',
+                            );
+                          },
+                        )
+                      else
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          child: Text(
+                            'No materials selected',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: Colors.grey,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                         ),
-                      ),
-
-                      // Custos adicionais (mão de obra, suprimentos)
-                      const MaterialItemRowWidget(
-                        title: 'Labor Cost',
-                        subtitle: '9 hours x \$45/hr',
-                        price: '\$405.00',
-                      ),
-                      const MaterialItemRowWidget(
-                        title: 'Supplies',
-                        subtitle: 'Brushes, rollers, drop cloths',
-                        price: '\$45.00',
-                      ),
-
                       SummaryTotalRowWidget(
                         label: 'Materials Total:',
                         value:
@@ -226,12 +283,48 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                   ProjectSummaryCardWidget(
                     title: 'Metrics Overview',
                     children: [
-                      RoomOverviewRowWidget(
-                        leftTitle: _viewModel.floorDimensions,
-                        leftSubtitle: 'Floor Dimensions',
-                        rightTitle: _viewModel.floorArea,
-                        rightSubtitle: 'Floor Area',
-                      ),
+                      if (_viewModel.selectedZones.isNotEmpty)
+                        ..._viewModel.selectedZones.map(
+                          (zone) => Padding(
+                            padding: EdgeInsets.only(bottom: 16.h),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Título da zona
+                                Padding(
+                                  padding: EdgeInsets.only(bottom: 8.h),
+                                  child: Text(
+                                    zone.title,
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                                // Medidas da zona
+                                RoomOverviewRowWidget(
+                                  leftTitle: zone.floorDimensionValue,
+                                  leftSubtitle: 'Floor Dimensions',
+                                  rightTitle: zone.floorAreaValue,
+                                  rightSubtitle: 'Floor Area',
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          child: Text(
+                            'No zones selected',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: Colors.grey,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
 
@@ -242,42 +335,77 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                         title: 'Total Project Cost',
                         cost:
                             '\$${_viewModel.totalProjectCost.toStringAsFixed(2)}',
-                        timeline: 'Timeline: 2-3 days',
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
 
                   Padding(
-                    padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
+                    padding: EdgeInsets.only(top: 8.h, left: 8.w, right: 8.w),
                     child: Row(
                       children: [
                         Flexible(
                           child: PaintProButton(
+                            backgroundColor: Colors.black,
                             text: 'Adjust',
-                            borderRadius: 16,
+                            borderRadius: 16.r,
                             padding: EdgeInsets.zero,
                           ),
                         ),
-                        const SizedBox(width: 32),
+                        SizedBox(width: 32.w),
                         Flexible(
                           child: PaintProButton(
-                            text: 'Send Quote',
-                            borderRadius: 16,
+                            text: _estimateUploadViewModel.isUploading
+                                ? 'Sending...'
+                                : 'Send Estimate',
+                            borderRadius: 16.r,
                             padding: EdgeInsets.zero,
-                            backgroundColor: Colors.blue,
+                            backgroundColor:
+                                _estimateUploadViewModel.isUploading
+                                ? Colors.grey
+                                : Colors.blue,
                             foregroundColor: Colors.white,
-                            onPressed: () {
-                              // Usar o helper para navegar para loading de quote
-                              LoadingHelper.navigateToQuoteLoading(context);
-                            },
+                            onPressed: _estimateUploadViewModel.isUploading
+                                ? null
+                                : () async {
+                                    try {
+                                      // Build EstimateModel from collected data
+                                      final estimateModel =
+                                          await _estimateCalculationViewModel
+                                              .buildEstimateModel(
+                                                viewModel: _viewModel,
+                                                projectName:
+                                                    _projectEntity
+                                                        ?.projectName ??
+                                                    '',
+                                                contactId:
+                                                    _projectEntity?.contactId ??
+                                                    '',
+                                                additionalNotes:
+                                                    _projectEntity
+                                                        ?.additionalNotes ??
+                                                    '',
+                                                status: EstimateStatus.draft,
+                                                zoneType:
+                                                    _projectEntity?.zoneType ??
+                                                    'interior',
+                                              );
+
+                                      // Upload estimate using the ViewModel
+                                      await _estimateUploadViewModel.upload(
+                                        estimateModel,
+                                      );
+                                    } catch (e) {
+                                      // Handle error silently or show user-friendly message
+                                    }
+                                  },
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                 ],
               ),
             ),

@@ -1,238 +1,230 @@
-import '../config/app_config.dart';
-import '../config/app_urls.dart';
-import '../model/models.dart';
-import '../utils/auth/token_sanitizer.dart';
+import '../model/auth_model/auth_model.dart';
+import '../model/auth_model/auth_status_response.dart';
+import '../model/auth_model/auth_refresh_response.dart';
+import '../model/user_model.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/result/result.dart';
+import 'auth_persistence_service.dart';
 import 'auth_service_exception.dart';
-import 'services.dart';
+import 'http_service.dart';
+import 'local/user_local_service.dart';
 
 class AuthService {
   final HttpService _httpService;
-  final LocationService _locationService;
+  final AuthPersistenceService _authPersistenceService;
+  final UserLocalService _userLocalService;
   final AppLogger _logger;
 
-  AuthService(this._httpService, this._locationService, this._logger);
+  AuthService(
+    this._httpService,
+    this._authPersistenceService,
+    this._userLocalService,
+    this._logger,
+  );
+
+  /// Build AuthModel snapshot from current state
+  AuthModel _buildAuthModel({
+    required bool authenticated,
+    required bool needsLogin,
+    String? locationId,
+    String? token,
+    DateTime? expiresAt,
+  }) {
+    final now = DateTime.now();
+    final remaining = expiresAt?.difference(now);
+
+    return AuthModel(
+      authenticated: authenticated,
+      needsLogin: needsLogin,
+      locationId: locationId,
+      sanctumToken: token,
+      expiresAt: expiresAt,
+      expiresInMinutes: remaining?.inMinutes,
+      expiresIn: remaining?.inSeconds,
+      isExpiringSoon: remaining != null ? remaining.inMinutes < 60 : null,
+      tokenValid: authenticated && !needsLogin,
+    );
+  }
+
+  /// Helper to produce a `Result<AuthStatusResponse>`
+  Result<AuthStatusResponse> _authStatusResult(AuthModel model) {
+    return Result.ok(
+      AuthStatusResponse(
+        success: true,
+        data: model,
+      ),
+    );
+  }
+
+  /// Resolve stored authentication state before hitting the network
+  Future<Map<String, dynamic>> _loadStoredAuthState() async {
+    try {
+      return await _authPersistenceService.loadAuthState();
+    } catch (e) {
+      _logger.error('[AuthService] Failed to load stored auth state: $e');
+      return {
+        'authenticated': false,
+        'needsLogin': true,
+        'locationId': null,
+        'expiresAt': null,
+        'sanctumToken': null,
+      };
+    }
+  }
 
   /// Verifica o status de autenticação
   Future<Result<AuthStatusResponse>> getStatus() async {
     try {
-      // Make the actual HTTP request to check authentication status
-      final response = await _httpService.get('/auth/status');
-      final authStatus = AuthStatusResponse.fromJson(response.data);
+      final storedState = await _loadStoredAuthState();
+      final storedToken = storedState['sanctumToken'] as String?;
+      final locationFromStore = storedState['locationId'] as String?;
+      final expiresAt = storedState['expiresAt'] as DateTime?;
 
-      // Update location service if we have a location ID from the status
-      if (authStatus.data.locationId != null &&
-          authStatus.data.locationId!.isNotEmpty) {
-        _locationService.setLocationId(authStatus.data.locationId!);
+      final token = storedToken?.isNotEmpty == true
+          ? storedToken
+          : _httpService.ghlToken;
+
+      if (token == null || token.isEmpty) {
+        _httpService.clearAuthToken();
+        return _authStatusResult(
+          _buildAuthModel(
+            authenticated: false,
+            needsLogin: true,
+            locationId: null,
+            token: null,
+            expiresAt: null,
+          ),
+        );
       }
 
-      return Result.ok(authStatus);
-    } catch (e) {
-      _logger.error('Error checking authentication status: $e');
+      // Ensure HttpService carries the latest token
+      _httpService.setAuthToken(token);
+
+      final response = await _httpService.get('/user');
+
+      if (response.statusCode == 401) {
+        await logout();
+        return _authStatusResult(
+          _buildAuthModel(
+            authenticated: false,
+            needsLogin: true,
+            locationId: null,
+            token: null,
+            expiresAt: null,
+          ),
+        );
+      }
+
+      if (response.statusCode != 200) {
+        _logger.error(
+          '[AuthService] Unexpected status from /user: ${response.statusCode}',
+        );
+        return Result.error(
+          Exception('Failed to verify authentication status'),
+        );
+      }
+
+      final user = UserModel.fromJson(response.data as Map<String, dynamic>);
+      final resolvedLocation = user.ghlLocationId?.isNotEmpty == true
+          ? user.ghlLocationId
+          : locationFromStore;
+
+      // Save user to local database for foreign key relationships
+      try {
+        await _userLocalService.saveUser(user);
+        _logger.info('[AuthService] User saved to local database: ${user.id}');
+      } catch (e) {
+        _logger.error('[AuthService] Failed to save user to local DB: $e');
+      }
+
+      return _authStatusResult(
+        _buildAuthModel(
+          authenticated: true,
+          needsLogin: false,
+          locationId: resolvedLocation,
+          token: token,
+          expiresAt: expiresAt,
+        ),
+      );
+    } catch (e, stack) {
+      _logger.error(
+        '[AuthService] Error checking authentication status: $e',
+        e,
+        stack,
+      );
       return Result.error(
         Exception('Error checking authentication status: $e'),
       );
     }
   }
 
-  /// Obtém a URL de autorização
+  /// Obtém a URL de autorização (mantido para compatibilidade futura)
   Future<Result<String>> getAuthorizeUrl() async {
-    try {
-      // Use the pre-configured URLs from AppUrls
-      final String authUrl = AppConfig.isProduction
-          ? AppUrls.goHighLevelAuthorizeUrl
-          : AppUrls.goHighLevelAuthorizeUrlDev;
-
-      _logger.info('[AuthService] Authorization URL: $authUrl');
-
-      return Result.ok(authUrl);
-    } catch (e) {
-      _logger.error('Error getting authorization URL: $e');
-      return Result.error(
-        Exception('Error getting authorization URL: $e'),
-      );
-    }
+    return Result.error(
+      Exception(
+        'Marketplace authorization flow is not supported for credential login.',
+      ),
+    );
   }
 
-  /// Processa o callback de autorização
+  /// Fluxo de callback não é suportado no login por credenciais
   Future<Result<AuthRefreshResponse>> processCallback(String code) async {
-    try {
-      final callbackUrl = '/auth/callback?code=$code';
-
-      // Exchange the authorization code for tokens with the backend
-      final response = await _httpService.get(callbackUrl);
-
-      final callbackResponse = AuthRefreshResponse.fromJson(response.data);
-
-      // After successful token exchange, call the /success endpoint with location_id
-      // The location_id should come from the OAuth response or user selection
-      if (callbackResponse.success) {
-        // Extract auth_token and location_id from the response
-        final authToken =
-            response.data['auth_token'] ??
-            response.data['sanctum_token'] ??
-            callbackResponse.authToken;
-        final locationId =
-            response.data['location_id'] ??
-            response.data['locationId'] ??
-            callbackResponse.locationId;
-
-        if (locationId != null && locationId.isNotEmpty) {
-          // Store the location ID in the LocationService
-          _locationService.setLocationId(locationId);
-
-          // CRITICAL FIX: Sanitize and set the auth token in the HTTP service for all future requests
-          final sanitizedToken = TokenSanitizer.sanitizeToken(authToken);
-          if (sanitizedToken != null) {
-            _httpService.setAuthToken(sanitizedToken);
-            _logger.info(
-              '[AuthService] Auth token sanitized and set in HTTP client for API requests',
-            );
-          } else {
-            _logger.warning(
-              '[AuthService] Invalid or missing auth token from OAuth callback - token: ${authToken?.length ?? 0} chars',
-            );
-          }
-
-          // Call the success endpoint
-          await _callSuccessEndpoint(locationId);
-        } else {
-          return Result.error(
-            Exception('Location ID not found in OAuth response'),
-          );
-        }
-      }
-
-      return Result.ok(callbackResponse);
-    } on AuthServiceException catch (e) {
-      _logger.info(
-        '[AuthService] Authentication service unavailable: ${e.message}',
-      );
-      _logger.error('[AuthService] Technical details: ${e.technicalDetails}');
-      return Result.error(Exception(e.message));
-    } catch (e) {
-      _logger.error('[AuthService] Error processing OAuth callback: $e');
-      return Result.error(Exception('Erro no callback: $e'));
-    }
+    return Result.error(
+      Exception(
+        'OAuth callback not supported for credential-based authentication',
+      ),
+    );
   }
 
-  /// Chama o endpoint de sucesso com o location_id
-  Future<Result> _callSuccessEndpoint(String locationId) async {
-    try {
-      // Use the status endpoint instead of the non-existent success endpoint
-      final response = await _httpService.get(
-        '/auth/status?location_id=$locationId',
-      );
-
-      return Result.ok(response.data);
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  /// Chama o endpoint de sucesso com o location_id (método público)
-  Future<Result<void>> callSuccessEndpoint(String locationId) async {
-    try {
-      await _callSuccessEndpoint(locationId);
-      return Result.ok(null);
-    } catch (e) {
-      return Result.error(Exception('Erro ao chamar endpoint de sucesso: $e'));
-    }
-  }
-
-  /// Renova o token de acesso
+  /// Refresh de token não implementado no fluxo atual
   Future<Result<AuthRefreshResponse>> refreshToken() async {
-    try {
-      // Make the actual HTTP request to refresh the token
-      final response = await _httpService.post(
-        AppUrls.authRefreshUrl,
-        data: {},
-      );
-      final refreshResponse = AuthRefreshResponse.fromJson(response.data);
-      return Result.ok(refreshResponse);
-    } catch (e) {
-      _logger.error('Error refreshing token: $e');
-      return Result.error(
-        Exception('Error refreshing token: $e'),
-      );
-    }
+    return Result.error(
+      Exception(
+        'Token refresh not available for credential-based authentication',
+      ),
+    );
   }
 
   /// Verifica se está autenticado
   Future<Result<bool>> isAuthenticated() async {
-    try {
-      final statusResult = await getStatus();
-      if (statusResult is Ok) {
-        final status = statusResult.asOk.value;
-        return Result.ok(status.data.authenticated && !status.data.needsLogin);
-      } else {
-        return Result.error(
-          Exception('Error checking authentication'),
-        );
-      }
-    } catch (e) {
-      return Result.error(
-        Exception('Error checking authentication: $e'),
-      );
-    }
+    final statusResult = await getStatus();
+    return statusResult.when(
+      ok: (status) =>
+          Result.ok(status.data.authenticated && !status.data.needsLogin),
+      error: (error) => Result.error(error),
+    );
   }
 
   /// Verifica se o token está próximo de expirar
   Future<Result<bool>> isTokenExpiringSoon() async {
-    try {
-      final statusResult = await getStatus();
-      if (statusResult is Ok) {
-        final status = statusResult.asOk.value;
-        if (!status.data.authenticated || status.data.expiresAt == null) {
-          return Result.ok(true);
-        }
+    final storedState = await _loadStoredAuthState();
+    final expiresAt = storedState['expiresAt'] as DateTime?;
 
-        // Use the isExpiringSoon field from the API response if available
-        if (status.data.isExpiringSoon != null) {
-          return Result.ok(status.data.isExpiringSoon!);
-        }
-
-        // Fallback to manual calculation
-        final now = DateTime.now();
-        final expiresAt = status.data.expiresAt!;
-        final difference = expiresAt.difference(now);
-
-        return Result.ok(difference.inMinutes < 60);
-      } else {
-        return Result.error(
-          Exception('Error checking token expiration'),
-        );
-      }
-    } catch (e) {
-      return Result.error(
-        Exception('Error checking token expiration: $e'),
-      );
+    if (expiresAt == null) {
+      // Without expiration data, assume token is valid
+      return Result.ok(false);
     }
+
+    final difference = expiresAt.difference(DateTime.now());
+    return Result.ok(difference.inMinutes < 60);
   }
 
   /// Obtém o location_id atual
   Future<Result<String?>> getCurrentLocationId() async {
     try {
-      // First check if we have it in memory
-      if (_locationService.hasLocationId) {
-        return Result.ok(_locationService.currentLocationId);
+      final storedState = await _loadStoredAuthState();
+      final storedLocation = storedState['locationId'] as String?;
+      if (storedLocation != null && storedLocation.isNotEmpty) {
+        return Result.ok(storedLocation);
       }
 
-      // If not in memory, try to get it from the API status
       final statusResult = await getStatus();
-      if (statusResult is Ok) {
-        final status = statusResult.asOk.value;
-        return Result.ok(status.data.locationId);
-      } else {
-        return Result.error(
-          Exception('Error getting location_id'),
-        );
-      }
-    } catch (e) {
-      return Result.error(
-        Exception('Error getting location_id: $e'),
+      return statusResult.when(
+        ok: (status) => Result.ok(status.data.locationId),
+        error: (error) => Result.error(error),
       );
+    } catch (e) {
+      return Result.error(Exception('Error getting location_id: $e'));
     }
   }
 
@@ -240,17 +232,37 @@ class AuthService {
   Future<Result<UserModel>> getUser() async {
     try {
       final response = await _httpService.get('/user');
-      final user = UserModel.fromJson(response.data);
-      _logger.info('[AuthService] User data retrieved successfully');
+
+      if (response.statusCode == 401) {
+        return Result.error(
+          AuthServiceException(
+            message: 'Authentication required',
+            errorType: AuthServiceErrorType.invalidCredentials,
+            technicalDetails: 'GET /user returned 401',
+          ),
+        );
+      }
+
+      if (response.statusCode != 200) {
+        return Result.error(
+          Exception('Failed to load user data: ${response.statusCode}'),
+        );
+      }
+
+      final data = response.data;
+      if (data is! Map<String, dynamic>) {
+        return Result.error(
+          Exception('Unexpected user payload format'),
+        );
+      }
+
+      final user = UserModel.fromJson(data);
       return Result.ok(user);
     } on AuthServiceException catch (e) {
-      _logger.info(
-        '[AuthService] Authentication service unavailable: ${e.message}',
-      );
       _logger.error('[AuthService] Technical details: ${e.technicalDetails}');
       return Result.error(Exception(e.message));
-    } catch (e) {
-      _logger.error('[AuthService] Error getting user data: $e');
+    } catch (e, stack) {
+      _logger.error('[AuthService] Error getting user data: $e', e, stack);
       return Result.error(
         Exception('Error getting user data: $e'),
       );
@@ -259,11 +271,47 @@ class AuthService {
 
   /// Executa logout limpando tokens e estado de autenticação
   Future<void> logout() async {
-    _logger.info('[AuthService] Logout initiated');
-
-    // Clear HTTP service token
+    await _authPersistenceService.clearAuthState();
     _httpService.clearAuthToken();
+  }
 
-    _logger.info('[AuthService] Logout completed - HTTP token cleared');
+  /// Deletes the user account permanently
+  Future<Result<void>> deleteAccount(String password) async {
+    try {
+      final response = await _httpService.delete(
+        '/auth/account',
+        data: {'password': password},
+      );
+
+      if (response.statusCode == 200) {
+        _logger.info('[AuthService] Account deleted successfully');
+        // Clear local authentication state
+        await logout();
+        return Result.ok(null);
+      }
+
+      if (response.statusCode == 401) {
+        return Result.error(
+          AuthServiceException(
+            message: 'Invalid password',
+            errorType: AuthServiceErrorType.invalidCredentials,
+            technicalDetails: 'DELETE /auth/account returned 401',
+          ),
+        );
+      }
+
+      return Result.error(
+        Exception('Failed to delete account'),
+      );
+    } catch (e, stack) {
+      _logger.error(
+        '[AuthService] Error deleting account: $e',
+        e,
+        stack,
+      );
+      return Result.error(
+        Exception('Error deleting account'),
+      );
+    }
   }
 }

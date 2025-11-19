@@ -1,333 +1,321 @@
-import '../model/models.dart';
+import '../config/dependency_injection.dart';
+import '../model/material_models/material_model.dart';
+import '../model/material_models/material_filter.dart';
+import '../model/material_models/material_price_range_model.dart';
+import '../model/material_models/material_stats_model.dart';
+import '../model/quotes_data/extracted_material_model.dart';
+import '../utils/logger/app_logger.dart';
 import '../utils/material/material_mapper.dart';
 import '../utils/result/result.dart';
+import 'material_database_service.dart';
 import 'quote_service.dart';
 
 class MaterialService {
   final QuoteService _quoteService;
+  final MaterialDatabaseService _databaseService;
+  late final AppLogger _logger;
 
-  MaterialService(this._quoteService);
+  MaterialService(this._quoteService, this._databaseService) {
+    _logger = getIt<AppLogger>();
+  }
 
-  // // Mock data para simular a API (fallback quando não há materiais extraídos)
-  // static final List<MaterialModel> _mockMaterials = [
-  //   MaterialModel(
-  //     id: '001',
-  //     name: 'PM 200 ZERO EG-SHEL',
-  //     code: 'Quote #003',
-  //     price: 52.99,
-  //     priceUnit: 'Gal',
-  //     type: MaterialType.interior,
-  //     quality: MaterialQuality.economic,
-  //     description: 'High-quality interior paint with zero VOC',
-  //     isAvailable: true,
-  //   ),
-  //   MaterialModel(
-  //     id: '002',
-  //     name: 'SW ProClassic Interior',
-  //     code: 'Quote #004',
-  //     price: 58.99,
-  //     priceUnit: 'Gal',
-  //     type: MaterialType.interior,
-  //     quality: MaterialQuality.standard,
-  //     description: 'Premium interior paint with excellent coverage',
-  //     isAvailable: true,
-  //   ),
-  //   MaterialModel(
-  //     id: '003',
-  //     name: 'Behr Premium Plus Ultra',
-  //     code: 'Quote #005',
-  //     price: 45.99,
-  //     priceUnit: 'Gal',
-  //     type: MaterialType.interior,
-  //     quality: MaterialQuality.economic,
-  //     description: 'One-coat coverage interior paint',
-  //     isAvailable: true,
-  //   ),
-  //   MaterialModel(
-  //     id: '004',
-  //     name: 'BM Advance Interior',
-  //     code: 'Quote #006',
-  //     price: 72.99,
-  //     priceUnit: 'Gal',
-  //     type: MaterialType.interior,
-  //     quality: MaterialQuality.premium,
-  //     description: 'Alkyd paint with latex cleanup',
-  //     isAvailable: true,
-  //   ),
-  //   MaterialModel(
-  //     id: '005',
-  //     name: 'SW SuperPaint Exterior',
-  //     code: 'Quote #007',
-  //     price: 62.99,
-  //     priceUnit: 'Gal',
-  //     type: MaterialType.exterior,
-  //     quality: MaterialQuality.standard,
-
-  //     description: 'All-weather exterior paint',
-  //     isAvailable: true,
-  //   ),
-  //   MaterialModel(
-  //     id: '006',
-  //     name: 'Behr Marquee Exterior',
-  //     code: 'Quote #008',
-  //     price: 55.99,
-  //     priceUnit: 'Gal',
-  //     type: MaterialType.exterior,
-  //     quality: MaterialQuality.high,
-  //     description: 'One-coat hide guaranteed exterior paint',
-  //     isAvailable: true,
-  //   ),
-  //   MaterialModel(
-  //     id: '007',
-  //     name: 'BM Aura Interior',
-  //     code: 'Quote #009',
-  //     price: 89.99,
-  //     priceUnit: 'Gal',
-  //     type: MaterialType.interior,
-  //     quality: MaterialQuality.premium,
-  //     description: 'The ultimate luxury interior paint',
-  //     isAvailable: true,
-  //   ),
-  //   MaterialModel(
-  //     id: '008',
-  //     name: 'SW Emerald Interior',
-  //     code: 'Quote #010',
-  //     price: 82.99,
-  //     priceUnit: 'Gal',
-  //     type: MaterialType.interior,
-  //     quality: MaterialQuality.premium,
-
-  //     description: 'Advanced stain-blocking technology',
-  //     isAvailable: true,
-  //   ),
-  // ];
-
-  /// Busca todos os materiais disponíveis
-  Future<Result<List<MaterialModel>>> getAllMaterials() async {
+  /// Busca materiais do cache local
+  Future<Result<List<MaterialModel>>> getMaterialsFromCache({
+    int? limit,
+    int? offset,
+  }) async {
     try {
-      // Busca materiais extraídos da API
+      final localMaterials = await _databaseService.getAllMaterials(
+        limit: limit,
+        offset: offset,
+      );
+      return Result.ok(localMaterials);
+    } catch (e) {
+      _logger.error('[MaterialService] Error getting materials from cache: $e');
+      return Result.error(Exception('Failed to load materials from cache'));
+    }
+  }
+
+  /// Busca todos os materiais da API
+  Future<Result<List<MaterialModel>>> getAllMaterialsFromApi() async {
+    try {
       final extractedResult = await _quoteService.getExtractedMaterials();
 
       return extractedResult.when(
-        ok: (extractedResponse) {
-          if (extractedResponse.materials.isNotEmpty) {
-            // Converte ExtractedMaterialModel para MaterialModel
-            final materials = extractedResponse.materials.map((extracted) {
-              return MaterialModel(
-                id: extracted.id.toString(),
-                name: extracted.description,
-                code: 'PDF #${extracted.pdfUploadId}',
-                price: extracted.unitPrice,
-                priceUnit: extracted.unit,
-                type: MaterialMapper.mapCategoryToType(extracted.category),
-                quality: MaterialMapper.mapQualityGradeToQuality(
-                  extracted.qualityGrade,
-                ),
-                description: '${extracted.brand} - ${extracted.description}',
-                isAvailable: true,
-              );
-            }).toList();
-
-            return Result.ok(materials);
-          } else {
-            // Se não há materiais extraídos, retorna lista vazia
-            return Result.ok(<MaterialModel>[]);
-          }
-        },
-        error: (error) {
-          // Em caso de erro, retorna lista vazia
-          return Result.ok(<MaterialModel>[]);
-        },
-      );
-    } catch (e) {
-      return Result.error(
-        Exception('Error loading materials: $e'),
-      );
-    }
-  }
-
-  /// Busca materiais com filtros aplicados
-  Future<Result<List<MaterialModel>>> getMaterialsWithFilter(
-    MaterialFilter filter,
-  ) async {
-    try {
-      // Primeiro busca todos os materiais (extraídos ou mock)
-      final allMaterialsResult = await getAllMaterials();
-
-      return allMaterialsResult.when(
-        ok: (allMaterials) {
-          List<MaterialModel> filteredMaterials = allMaterials;
-
-          // Aplica filtros
-          if (filter.type != null) {
-            filteredMaterials = filteredMaterials
-                .where(
-                  (material) => material.type == filter.type,
-                )
-                .toList();
+        ok: (extractedResponse) async {
+          if (extractedResponse.materials.isEmpty) {
+            return Result.ok([]);
           }
 
-          if (filter.quality != null) {
-            filteredMaterials = filteredMaterials
-                .where(
-                  (material) => material.quality == filter.quality,
-                )
-                .toList();
-          }
-
-          if (filter.minPrice != null) {
-            filteredMaterials = filteredMaterials
-                .where(
-                  (material) => material.price >= filter.minPrice!,
-                )
-                .toList();
-          }
-
-          if (filter.maxPrice != null) {
-            filteredMaterials = filteredMaterials
-                .where(
-                  (material) => material.price <= filter.maxPrice!,
-                )
-                .toList();
-          }
-
-          if (filter.searchTerm != null && filter.searchTerm!.isNotEmpty) {
-            final searchLower = filter.searchTerm!.toLowerCase();
-            filteredMaterials = filteredMaterials
-                .where(
-                  (material) =>
-                      material.name.toLowerCase().contains(searchLower) ||
-                      material.code.toLowerCase().contains(searchLower),
-                )
-                .toList();
-          }
-
-          return Result.ok(filteredMaterials);
-        },
-        error: (error) {
-          return Result.error(error);
-        },
-      );
-    } catch (e) {
-      return Result.error(
-        Exception('Error filtering materials: $e'),
-      );
-    }
-  }
-
-  /// Busca material por ID
-  Future<Result<MaterialModel?>> getMaterialById(String id) async {
-    try {
-      // Busca todos os materiais e filtra por ID
-      final allMaterialsResult = await getAllMaterials();
-
-      return allMaterialsResult.when(
-        ok: (materials) {
-          try {
-            final material = materials.firstWhere(
-              (material) => material.id == id,
-              orElse: () => throw Exception('Material not found'),
-            );
-            return Result.ok(material);
-          } catch (e) {
-            return Result.ok(null);
-          }
-        },
-        error: (error) {
-          return Result.error(error);
-        },
-      );
-    } catch (e) {
-      return Result.error(
-        Exception('Error searching material: $e'),
-      );
-    }
-  }
-
-  /// Busca marcas disponíveis
-  Future<Result<List<String>>> getAvailableBrands() async {
-    try {
-      // Busca todos os materiais para extrair marcas únicas
-      final allMaterialsResult = await getAllMaterials();
-
-      return allMaterialsResult.when(
-        ok: (materials) {
-          // Extrai marcas únicas dos materiais
-          final brands = materials
-              .map((material) => material.name.split(' - ').first)
-              .where((brand) => brand.isNotEmpty)
-              .toSet()
-              .toList();
-
-          return Result.ok(brands);
-        },
-        error: (error) {
-          return Result.error(error);
-        },
-      );
-    } catch (e) {
-      return Result.error(
-        Exception('Error loading available brands: $e'),
-      );
-    }
-  }
-
-  /// Busca estatísticas dos materiais
-  Future<Result<MaterialStatsModel>> getMaterialStats() async {
-    try {
-      // Busca todos os materiais para calcular estatísticas
-      final allMaterialsResult = await getAllMaterials();
-
-      return allMaterialsResult.when(
-        ok: (materials) {
-          if (materials.isEmpty) {
-            // Se não há materiais, retorna estatísticas vazias
-            return Result.ok(
-              MaterialStatsModel(
-                totalMaterials: 0,
-                availableMaterials: 0,
-                averagePrice: 0.0,
-                priceRange: MaterialPriceRangeModel(
-                  min: 0.0,
-                  max: 0.0,
-                ),
-              ),
-            );
-          }
-
-          final availableMaterials = materials
-              .where((m) => m.isAvailable)
-              .length;
-          final totalPrice = materials.fold<double>(
-            0,
-            (sum, material) => sum + material.price,
+          final materials = _convertExtractedToMaterials(
+            extractedResponse.materials,
           );
-          final averagePrice = totalPrice / materials.length;
+          await _databaseService.upsertMaterials(materials);
+          return Result.ok(materials);
+        },
+        error: (error) => Result.error(error),
+      );
+    } catch (e) {
+      _logger.error('[MaterialService] Error fetching materials from API: $e');
+      return Result.error(Exception('Failed to fetch materials'));
+    }
+  }
 
-          final prices = materials.map((m) => m.price).toList();
-          final minPrice = prices.reduce((a, b) => a < b ? a : b);
-          final maxPrice = prices.reduce((a, b) => a > b ? a : b);
+  /// Busca um material específico da API por ID (usando endpoint direto)
+  Future<Result<MaterialModel?>> getMaterialByIdFromApi(String id) async {
+    try {
+      final intId = int.tryParse(id);
+      if (intId == null) {
+        return Result.error(Exception('Invalid material id: $id'));
+      }
 
-          final stats = MaterialStatsModel(
-            totalMaterials: materials.length,
-            availableMaterials: availableMaterials,
-            averagePrice: averagePrice,
+      final result = await _quoteService.getExtractedMaterial(intId);
+      return result.when(
+        ok: (extracted) async {
+          final material = _convertExtractedToMaterials([extracted]).first;
+          // Cache it for future offline access
+          await _databaseService.upsertMaterial(material);
+          return Result.ok(material);
+        },
+        error: (error) => Result.error(error),
+      );
+    } catch (e) {
+      _logger.error('[MaterialService] Error fetching material by ID from API: $e');
+      return Result.error(Exception('Failed to fetch material by ID'));
+    }
+  }
+
+  /// Verifica se há materiais no cache
+  Future<bool> hasMaterialsInCache() async {
+    return await _databaseService.hasMaterials();
+  }
+
+  /// Obtém contagem de materiais no cache
+  Future<int> getMaterialsCount() async {
+    return await _databaseService.getMaterialsCount();
+  }
+
+  /// Converte ExtractedMaterialModel para MaterialModel
+  List<MaterialModel> _convertExtractedToMaterials(
+    List<ExtractedMaterialModel> extractedMaterials,
+  ) {
+    return extractedMaterials.map((extracted) {
+      // Gera código da quote no formato padrão
+      final quoteCode =
+          'Quote #${extracted.pdfUploadId.toString().padLeft(3, '0')}';
+
+      // Prioriza description, fallback para nome extraído do PDF ou gerado
+      final materialName = extracted.description.isNotEmpty
+          ? extracted.description
+          : _extractMaterialNameFromPdf(extracted.pdfUpload?.originalName) ??
+                _generateMaterialName(extracted);
+
+      return MaterialModel(
+        id: extracted.id.toString(),
+        name: materialName,
+        code: quoteCode,
+        price: extracted.unitPrice,
+        priceUnit: _convertUnitToDisplay(extracted.unit),
+        type: MaterialMapper.mapCategoryToType(extracted.category),
+        quality: MaterialMapper.mapQualityGradeToQuality(
+          extracted.qualityGrade,
+        ),
+        description: '${extracted.brand} - ${extracted.description}',
+        isAvailable: true,
+      );
+    }).toList();
+  }
+
+  /// Busca materiais com filtros do cache
+  Future<Result<List<MaterialModel>>> getMaterialsWithFilterFromCache(
+    MaterialFilter filter, {
+    int? limit,
+    int? offset,
+  }) async {
+    try {
+      final filteredMaterials = await _databaseService.getMaterialsWithFilter(
+        searchTerm: filter.searchTerm,
+        type: filter.type?.name,
+        quality: filter.quality?.name,
+        minPrice: filter.minPrice,
+        maxPrice: filter.maxPrice,
+        limit: limit,
+        offset: offset,
+      );
+      return Result.ok(filteredMaterials);
+    } catch (e) {
+      _logger.error(
+        '[MaterialService] Error filtering materials from cache: $e',
+      );
+      return Result.error(Exception('Failed to filter materials from cache'));
+    }
+  }
+
+  /// Busca material por ID do cache
+  Future<Result<MaterialModel?>> getMaterialByIdFromCache(String id) async {
+    try {
+      final material = await _databaseService.getMaterialById(id);
+      return Result.ok(material);
+    } catch (e) {
+      _logger.error('[MaterialService] Error searching material by ID: $e');
+      return Result.error(Exception('Failed to search material'));
+    }
+  }
+
+  /// Busca marcas disponíveis do cache
+  Future<Result<List<String>>> getAvailableBrandsFromCache() async {
+    try {
+      final materials = await _databaseService.getAllMaterials();
+      final brands = materials
+          .map((material) => material.name.split(' - ').first)
+          .where((brand) => brand.isNotEmpty)
+          .toSet()
+          .toList();
+
+      return Result.ok(brands);
+    } catch (e) {
+      _logger.error('[MaterialService] Error loading available brands: $e');
+      return Result.error(Exception('Failed to load brands'));
+    }
+  }
+
+  /// Busca estatísticas dos materiais do cache
+  Future<Result<MaterialStatsModel>> getMaterialStatsFromCache() async {
+    try {
+      final materials = await _databaseService.getAllMaterials();
+
+      if (materials.isEmpty) {
+        return Result.ok(
+          MaterialStatsModel(
+            totalMaterials: 0,
+            availableMaterials: 0,
+            averagePrice: 0.0,
             priceRange: MaterialPriceRangeModel(
-              min: minPrice,
-              max: maxPrice,
+              min: 0.0,
+              max: 0.0,
             ),
-          );
+          ),
+        );
+      }
 
-          return Result.ok(stats);
-        },
-        error: (error) {
-          return Result.error(error);
-        },
+      final availableMaterials = materials.where((m) => m.isAvailable).length;
+      final totalPrice = materials.fold<double>(
+        0,
+        (sum, material) => sum + material.price,
       );
+      final averagePrice = totalPrice / materials.length;
+
+      final prices = materials.map((m) => m.price).toList();
+      final minPrice = prices.reduce((a, b) => a < b ? a : b);
+      final maxPrice = prices.reduce((a, b) => a > b ? a : b);
+
+      final stats = MaterialStatsModel(
+        totalMaterials: materials.length,
+        availableMaterials: availableMaterials,
+        averagePrice: averagePrice,
+        priceRange: MaterialPriceRangeModel(
+          min: minPrice,
+          max: maxPrice,
+        ),
+      );
+
+      return Result.ok(stats);
     } catch (e) {
-      return Result.error(
-        Exception('Error loading material statistics: $e'),
-      );
+      _logger.error('[MaterialService] Error loading material statistics: $e');
+      return Result.error(Exception('Failed to load statistics'));
     }
+  }
+
+  /// Converte unidades do backend para formato de exibição
+  String _convertUnitToDisplay(String unit) {
+    final convertedUnit = switch (unit.toLowerCase()) {
+      'gallon' => 'Gal',
+      'liter' || 'litre' => 'L',
+      'quart' => 'Qt',
+      'pint' => 'Pt',
+      'ounce' || 'oz' => 'Oz',
+      'pound' || 'lb' => 'Lb',
+      'kilogram' || 'kg' => 'Kg',
+      'gram' || 'g' => 'G',
+      'square foot' || 'sqft' || 'sq ft' => 'Sq Ft',
+      'square meter' || 'sqm' || 'sq m' => 'Sq M',
+      'linear foot' || 'lnft' || 'ln ft' => 'Ln Ft',
+      'linear meter' || 'lnm' || 'ln m' => 'Ln M',
+      'piece' || 'each' || 'ea' => 'Ea',
+      'box' => 'Box',
+      'case' => 'Case',
+      'roll' => 'Roll',
+      'sheet' => 'Sheet',
+      'tube' => 'Tube',
+      'can' => 'Can',
+      'bottle' => 'Bottle',
+      'bag' => 'Bag',
+      'pack' => 'Pack',
+      _ =>
+        unit.toUpperCase(), // Se não encontrar correspondência, retorna a unidade original em maiúscula
+    };
+
+    return convertedUnit;
+  }
+
+  /// Tenta extrair o nome do material do nome do arquivo PDF
+  String? _extractMaterialNameFromPdf(String? originalName) {
+    if (originalName == null || originalName.isEmpty) return null;
+
+    // Remove extensão .pdf
+    String nameWithoutExt = originalName.replaceAll(RegExp(r'\.pdf$'), '');
+
+    // Tenta extrair nome do produto de padrões comuns
+    // Ex: "Price Quote - Quote # 7885104.pdf" -> pode conter nome do produto
+    // Ex: "PM 200 ZERO EG-SHEL Quote.pdf" -> "PM 200 ZERO EG-SHEL"
+
+    // Remove prefixos comuns
+    String cleaned = nameWithoutExt
+        .replaceAll(RegExp(r'^Price Quote\s*-\s*'), '')
+        .replaceAll(RegExp(r'Quote\s*#\s*\d+'), '')
+        .replaceAll(RegExp(r'Quote$'), '')
+        .trim();
+
+    // Se sobrou algo significativo (mais que 3 caracteres), usa
+    if (cleaned.length > 3) {
+      return cleaned;
+    }
+
+    return null;
+  }
+
+  /// Gera um nome de material baseado nos campos disponíveis
+  String _generateMaterialName(ExtractedMaterialModel extracted) {
+    // Tenta criar um nome mais descritivo baseado nos campos disponíveis
+    List<String> nameParts = [];
+
+    // Adiciona brand se disponível
+    if (extracted.brand.isNotEmpty) {
+      nameParts.add(extracted.brand);
+    }
+
+    // Adiciona finish se disponível
+    if (extracted.finish != null && extracted.finish!.isNotEmpty) {
+      nameParts.add(extracted.finish!);
+    }
+
+    // Adiciona quality grade se disponível
+    if (extracted.qualityGrade != null && extracted.qualityGrade!.isNotEmpty) {
+      nameParts.add(extracted.qualityGrade!);
+    }
+
+    // Adiciona category se disponível
+    if (extracted.category != null && extracted.category!.isNotEmpty) {
+      nameParts.add(extracted.category!);
+    }
+
+    // Se conseguiu montar algo, retorna
+    if (nameParts.isNotEmpty) {
+      final generatedName = nameParts.join(' ');
+      return generatedName;
+    }
+
+    // Fallback para brand apenas
+    return extracted.brand;
   }
 }

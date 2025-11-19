@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
-import '../../model/models.dart';
+import '../../model/projects/project_card_model.dart';
 import '../../utils/logger/app_logger.dart';
-import '../../viewmodel/zones/zones_viewmodels.dart';
-import '../widgets/buttons/paint_pro_delete_button.dart';
-import '../widgets/widgets.dart';
-import 'widgets/floor_dimension_widget.dart';
-import 'widgets/photos_gallery_widget.dart';
-import 'widgets/surface_area_display_widget.dart';
+import '../../viewmodel/zones/zone_detail_viewmodel.dart';
+import '../../viewmodel/zones/zones_list_viewmodel.dart';
+import '../../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/buttons/paint_pro_button.dart';
+import '../../widgets/buttons/paint_pro_delete_button.dart';
+import '../../widgets/zones/floor_dimension_widget.dart';
+import '../../widgets/zones/photos_gallery_widget.dart';
+import '../../widgets/zones/surface_area_display_widget.dart';
 
 class EditZoneView extends StatefulWidget {
   final ProjectCardModel? zone;
@@ -90,41 +93,39 @@ class _EditZoneViewState extends State<EditZoneView> {
   void _initializeData() {
     if (widget.zone != null) {
       final zone = widget.zone!;
-
-      // Parse title
       _zoneTitle = zone.title;
 
       // Parse floor dimensions from "14' x 16'" format
       final dimensions = zone.floorDimensionValue
           .replaceAll("'", "")
           .split(" x ");
-      _width = double.tryParse(dimensions.first) ?? 14.0;
+      _width = double.tryParse(dimensions.first) ?? 0.0;
       _length = dimensions.length > 1
-          ? (double.tryParse(dimensions.last) ?? 16.0)
-          : 16.0;
+          ? (double.tryParse(dimensions.last) ?? 0.0)
+          : 0.0;
 
       // Parse surface areas from zone fields
       _walls =
-          double.tryParse(zone.areaPaintable.replaceAll(" sq ft", "")) ?? 485.0;
+          double.tryParse(zone.areaPaintable.replaceAll(" sq ft", "")) ?? 0.0;
       _ceiling = zone.ceilingArea != null
-          ? double.tryParse(zone.ceilingArea!.replaceAll(" sq ft", "")) ?? 224.0
+          ? double.tryParse(zone.ceilingArea!.replaceAll(" sq ft", "")) ?? 0.0
           : double.tryParse(zone.floorAreaValue.replaceAll(" sq ft", "")) ??
-                224.0;
+                0.0;
       _trim = zone.trimLength != null
           ? double.tryParse(zone.trimLength!.replaceAll(" linear ft", "")) ??
-                60.0
-          : 60.0;
+                0.0
+          : 0.0;
 
-      // Initialize photos with zone image
-      _photos = [zone.image];
+      // Initialize photos with zone image (se disponível)
+      _photos = zone.image.isNotEmpty ? [zone.image] : [];
     } else {
-      // Default values
-      _zoneTitle = "New Zone";
-      _width = 14.0;
-      _length = 16.0;
-      _walls = 485.0;
-      _ceiling = 224.0;
-      _trim = 60.0;
+      // Sem mocks: valores vazios/iniciais
+      _zoneTitle = '';
+      _width = 0.0;
+      _length = 0.0;
+      _walls = 0.0;
+      _ceiling = 0.0;
+      _trim = 0.0;
       _photos = [];
     }
   }
@@ -151,9 +152,18 @@ class _EditZoneViewState extends State<EditZoneView> {
     return Scaffold(
       appBar: PaintProAppBar(
         title: _zoneTitle,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => context.pop(),
+        leading: GestureDetector(
+          onTap: () {
+            if (context.mounted) {
+              context.pop();
+            }
+          },
+          child: Container(
+            width: 48.w,
+            height: 48.h,
+            alignment: Alignment.center,
+            child: const Icon(Icons.arrow_back_ios),
+          ),
         ),
         actions: [
           PaintProDeleteButton(
@@ -163,42 +173,42 @@ class _EditZoneViewState extends State<EditZoneView> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32.0),
+        padding: EdgeInsets.symmetric(horizontal: 32.w),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 32),
+              SizedBox(height: 32.h),
               Text(
                 'Room Metrics',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 24),
+              SizedBox(height: 24.h),
               FloorDimensionWidget(
                 width: _width,
                 length: _length,
                 onDimensionChanged: _onDimensionChanged,
               ),
-              SizedBox(height: 48),
+              SizedBox(height: 48.h),
               SurfaceAreaDisplayWidget(
                 walls: _walls,
                 ceiling: _ceiling,
                 trim: _trim,
               ),
-              SizedBox(height: 32),
+              SizedBox(height: 32.h),
               PhotosGalleryWidget(
                 photos: _photos,
               ),
-              SizedBox(height: 32),
+              SizedBox(height: 32.h),
               // Save button
               PaintProButton(
                 text: 'Save',
                 onPressed: () => context.pop(context),
               ),
-              SizedBox(height: 32),
+              SizedBox(height: 32.h),
             ],
           ),
         ),

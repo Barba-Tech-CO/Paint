@@ -1,20 +1,30 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
 
 import '../config/app_urls.dart';
-import '../model/models.dart';
+import '../config/dependency_injection.dart';
+import '../model/quotes_data/extracted_material_list_response_model.dart';
 import '../model/quotes_data/extracted_material_model.dart';
+import '../model/quotes_data/material_filters_model.dart';
+import '../model/quotes_data/material_filters_options_model.dart';
+import '../model/quotes_data/pagination_info.dart';
+import '../model/quotes_data/quote_list_response.dart';
+import '../model/quotes_data/quote_model.dart';
+import '../model/quotes_data/quote_response.dart';
+import '../utils/logger/app_logger.dart';
 import '../utils/result/result.dart';
 import 'http_service.dart';
 
 class QuoteService {
   final HttpService _httpService;
+  late final AppLogger _logger;
 
   QuoteService({
     required HttpService httpService,
-  }) : _httpService = httpService;
+  }) : _httpService = httpService {
+    _logger = getIt<AppLogger>();
+  }
 
   /// Upload a quote PDF file for material extraction
   Future<Result<QuoteResponse>> uploadQuote(
@@ -27,29 +37,33 @@ class QuoteService {
 
       // Validate file before creating FormData
       if (!await quoteFile.exists()) {
-        return Result.error(Exception('File does not exist'));
+        return Result.error(
+          Exception('File does not exist'),
+        );
       }
 
       final fileSize = await quoteFile.length();
       if (fileSize == 0) {
-        return Result.error(Exception('File is empty'));
+        return Result.error(
+          Exception('File is empty'),
+        );
       }
 
-      if (fileSize > 25 * 1024 * 1024) {
-        // 25MB
-        return Result.error(Exception('File size exceeds 25MB limit'));
+      if (fileSize > 200 * 1024 * 1024) {
+        // 200MB
+        return Result.error(
+          Exception('File size exceeds 200MB limit'),
+        );
       }
 
       // Create FormData for multipart upload
       final formData = FormData.fromMap({
+        // Backend expects field name `quote` (docs reference `pdf`), keep aligned with API request class
         'quote': await MultipartFile.fromFile(
           quoteFile.path,
           filename: finalFilename,
         ),
       });
-
-      // Log essential info for debugging
-      log('DEBUG: uploadQuote - File: $finalFilename, Size: $fileSize bytes');
 
       final response = await _httpService.post(
         AppUrls.materialsUploadUrl,
@@ -65,9 +79,7 @@ class QuoteService {
         );
       }
     } on DioException catch (e) {
-      // Handle Dio-specific errors with essential detail
-      log('DEBUG: uploadQuote - Error ${e.response?.statusCode}: ${e.message}');
-
+      _logger.error('QuoteService: DioException during quote upload', e);
       // Handle specific HTTP status codes
       switch (e.response?.statusCode) {
         case 400:
@@ -88,12 +100,11 @@ class QuoteService {
           );
         case 413:
           return Result.error(
-            Exception('File too large: Maximum size is 25MB'),
+            Exception('File too large: Maximum size is 200MB'),
           );
         case 422:
           // Handle validation errors specifically
           final responseData = e.response?.data;
-          log('DEBUG: uploadQuote - Validation error details: $responseData');
 
           if (responseData is Map<String, dynamic>) {
             final errors =
@@ -150,9 +161,9 @@ class QuoteService {
           );
       }
     } catch (e) {
-      log('DEBUG: uploadQuote - Unexpected error: $e');
+      _logger.error('QuoteService: Unexpected error during quote upload', e);
       return Result.error(
-        Exception('Unexpected error uploading PDF: $e'),
+        Exception('Unexpected error uploading PDF'),
       );
     }
   }
@@ -173,52 +184,19 @@ class QuoteService {
         queryParams['status'] = status;
       }
 
-      log('DEBUG: getQuotes - queryParams: $queryParams');
-      log('DEBUG: getQuotes - endpoint: ${AppUrls.materialsUploadsUrl}');
-
       final response = await _httpService.get(
         AppUrls.materialsUploadsUrl,
         queryParameters: queryParams,
       );
 
-      log('DEBUG: getQuotes - response.statusCode: ${response.statusCode}');
-      log('DEBUG: getQuotes - response.data: ${response.data}');
-      log(
-        'DEBUG: getQuotes - response.data type: ${response.data.runtimeType}',
-      );
-
       if (response.statusCode == 200) {
         try {
-          // Log the structure of the response data
-          if (response.data is Map<String, dynamic>) {
-            final data = response.data as Map<String, dynamic>;
-            log('DEBUG: getQuotes - data keys: ${data.keys.toList()}');
-            if (data['data'] is Map<String, dynamic>) {
-              final innerData = data['data'] as Map<String, dynamic>;
-              log(
-                'DEBUG: getQuotes - inner data keys: ${innerData.keys.toList()}',
-              );
-              if (innerData['uploads'] != null) {
-                log(
-                  'DEBUG: getQuotes - uploads type: ${innerData['uploads'].runtimeType}',
-                );
-                if (innerData['uploads'] is Map<String, dynamic>) {
-                  final uploads = innerData['uploads'] as Map<String, dynamic>;
-                  log(
-                    'DEBUG: getQuotes - uploads keys: ${uploads.keys.toList()}',
-                  );
-                }
-              }
-            }
-          }
-
           final listResponse = QuoteListResponse.fromJson(response.data);
           return Result.ok(listResponse);
         } catch (e) {
-          log('DEBUG: getQuotes - Error parsing response: $e');
-          log('DEBUG: getQuotes - Response data: ${response.data}');
+          _logger.error('QuoteService: Failed to parse getQuotes response', e);
           return Result.error(
-            Exception('Failed to parse response: $e'),
+            Exception('Failed to parse response'),
           );
         }
       } else {
@@ -227,9 +205,9 @@ class QuoteService {
         );
       }
     } catch (e) {
-      log('DEBUG: getQuotes - error: $e');
+      _logger.error('QuoteService: Error getting quotes', e);
       return Result.error(
-        Exception('Error getting uploads: $e'),
+        Exception('Error getting uploads'),
       );
     }
   }
@@ -251,8 +229,12 @@ class QuoteService {
         );
       }
     } catch (e) {
+      _logger.error(
+        'QuoteService: Error getting quote status for ID $quoteId',
+        e,
+      );
       return Result.error(
-        Exception('Error getting upload status: $e'),
+        Exception('Error getting upload status'),
       );
     }
   }
@@ -278,8 +260,9 @@ class QuoteService {
         );
       }
     } catch (e) {
+      _logger.error('QuoteService: Error updating quote ID $quoteId', e);
       return Result.error(
-        Exception('Error updating upload: $e'),
+        Exception('Error updating upload'),
       );
     }
   }
@@ -299,8 +282,9 @@ class QuoteService {
         );
       }
     } catch (e) {
+      _logger.error('QuoteService: Error deleting quote ID $quoteId', e);
       return Result.error(
-        Exception('Error deleting upload: $e'),
+        Exception('Error deleting upload'),
       );
     }
   }
@@ -312,24 +296,57 @@ class QuoteService {
     try {
       final queryParams = filters?.toQueryParams() ?? <String, dynamic>{};
 
-      final response = await _httpService.get(
-        AppUrls.materialsExtractedUrl,
-        queryParameters: queryParams,
+      // Busca todos os materiais fazendo múltiplas chamadas
+      final allMaterials = <ExtractedMaterialModel>[];
+      int currentPage = 1;
+      bool hasMorePages = true;
+
+      while (hasMorePages) {
+        queryParams['page'] = currentPage;
+
+        final response = await _httpService.get(
+          AppUrls.materialsExtractedUrl,
+          queryParameters: queryParams,
+        );
+
+        if (response.statusCode == 200) {
+          final listResponse = ExtractedMaterialListResponse.fromJson(
+            response.data,
+          );
+
+          allMaterials.addAll(listResponse.materials);
+
+          // Verifica se há mais páginas
+          final pagination = listResponse.pagination;
+          hasMorePages = currentPage < pagination.lastPage;
+          currentPage++;
+        } else {
+          return Result.error(
+            Exception('Failed to get materials: ${response.statusCode}'),
+          );
+        }
+      }
+
+      // Cria uma resposta com todos os materiais
+      final allMaterialsResponse = ExtractedMaterialListResponse(
+        success: true,
+        materials: allMaterials,
+        pagination: PaginationInfo(
+          total: allMaterials.length,
+          perPage: 20,
+          currentPage: 1,
+          lastPage: 1,
+          from: 1,
+          to: allMaterials.length,
+        ),
+        filtersApplied: queryParams,
       );
 
-      if (response.statusCode == 200) {
-        final listResponse = ExtractedMaterialListResponse.fromJson(
-          response.data,
-        );
-        return Result.ok(listResponse);
-      } else {
-        return Result.error(
-          Exception('Failed to get materials: ${response.statusCode}'),
-        );
-      }
+      return Result.ok(allMaterialsResponse);
     } catch (e) {
+      _logger.error('QuoteService: Error getting extracted materials', e);
       return Result.error(
-        Exception('Error getting extracted materials: $e'),
+        Exception('Error getting extracted materials'),
       );
     }
   }
@@ -353,8 +370,12 @@ class QuoteService {
         );
       }
     } catch (e) {
+      _logger.error(
+        'QuoteService: Error getting extracted material ID $materialId',
+        e,
+      );
       return Result.error(
-        Exception('Error getting extracted material: $e'),
+        Exception('Error getting extracted material'),
       );
     }
   }
@@ -373,8 +394,9 @@ class QuoteService {
         );
       }
     } catch (e) {
+      _logger.error('QuoteService: Error getting filter options', e);
       return Result.error(
-        Exception('Error getting filter options: $e'),
+        Exception('Error getting filter options'),
       );
     }
   }
@@ -400,10 +422,9 @@ class QuoteService {
     ); // Give backend 30 seconds to start processing
 
     // Add initial delay to allow backend processing to start
-    log(
-      'DEBUG: Waiting 3 seconds before starting status polling for quote: $quoteId',
+    await Future.delayed(
+      const Duration(seconds: 3),
     );
-    await Future.delayed(const Duration(seconds: 3));
 
     while (DateTime.now().difference(startTime) < timeout &&
         attemptCount < maxAttempts) {
@@ -420,23 +441,10 @@ class QuoteService {
           if (lastStatus != currentStatus) {
             lastStatus = currentStatus;
             lastStatusChangeTime = DateTime.now();
-            log(
-              'DEBUG: Quote $quoteId status changed to: $currentStatus',
-            );
-          }
-
-          // Log progress every 5 attempts to avoid spam
-          if (attemptCount % 5 == 0) {
-            log(
-              'DEBUG: Quote $quoteId status check attempt $attemptCount - Status: $currentStatus',
-            );
           }
 
           // Check if processing is complete
           if (quote.isCompleted || quote.isFailed || quote.isError) {
-            log(
-              'DEBUG: Quote $quoteId processing completed with status: $currentStatus',
-            );
             return Result.ok(quote);
           }
 
@@ -444,9 +452,6 @@ class QuoteService {
           if (lastStatusChangeTime != null &&
               DateTime.now().difference(lastStatusChangeTime) >
                   maxStatusStuckTime) {
-            log(
-              'DEBUG: Quote $quoteId status stuck on "$currentStatus" for ${maxStatusStuckTime.inMinutes} minutes, stopping polling',
-            );
             return Result.error(
               Exception(
                 'Quote processing appears to be stuck on status: $currentStatus',
@@ -457,45 +462,6 @@ class QuoteService {
           // Check if initial processing timeout has been reached (status still pending after 30 seconds)
           if (currentStatus == 'pending' &&
               DateTime.now().difference(startTime) > initialProcessingTimeout) {
-            log(
-              'DEBUG: Quote $quoteId still pending after ${initialProcessingTimeout.inSeconds} seconds, backend may not be processing',
-            );
-            log(
-              'DEBUG: Total time elapsed: ${DateTime.now().difference(startTime).inSeconds} seconds',
-            );
-
-            // Check if this is a systemic issue by looking at other quotes
-            try {
-              final otherQuotesResponse = await _httpService.get(
-                '${AppUrls.materialsUploadsUrl}?limit=10',
-              );
-              if (otherQuotesResponse.statusCode == 200) {
-                final data = otherQuotesResponse.data;
-                if (data is Map<String, dynamic> && data['data'] != null) {
-                  final quotes = data['data']['uploads'] as List?;
-                  if (quotes != null) {
-                    int pendingCount = 0;
-                    int totalCount = quotes.length;
-                    for (final quote in quotes) {
-                      if (quote['status'] == 'pending') {
-                        pendingCount++;
-                      }
-                    }
-                    log(
-                      'DEBUG: Found $pendingCount pending quotes out of $totalCount total quotes',
-                    );
-                    if (pendingCount > totalCount * 0.5) {
-                      log(
-                        'DEBUG: High percentage of pending quotes suggests backend processing issue',
-                      );
-                    }
-                  }
-                }
-              }
-            } catch (e) {
-              log('DEBUG: Could not check other quotes status: $e');
-            }
-
             return Result.error(
               Exception(
                 'Quote upload accepted but backend processing appears to be delayed or stuck. Please try again later.',
@@ -503,40 +469,16 @@ class QuoteService {
             );
           }
 
-          // Warning when approaching timeout
-          if (currentStatus == 'pending' &&
-              DateTime.now().difference(startTime) > Duration(seconds: 20)) {
-            log(
-              'DEBUG: WARNING: Quote $quoteId approaching timeout (${initialProcessingTimeout.inSeconds}s) - Status: $currentStatus',
-            );
-          }
-
           // If still pending/processing, continue polling
           if (quote.isPending || quote.isProcessing) {
-            // Log the current polling state for debugging
-            if (attemptCount % 3 == 0) {
-              // Log every 3rd attempt to avoid spam
-              log(
-                'DEBUG: Quote $quoteId attempt $attemptCount - Status: $currentStatus, Time elapsed: ${DateTime.now().difference(startTime).inSeconds}s',
-              );
-            }
-
             // Wait before next check
             await Future.delayed(interval);
             continue;
           }
-
-          // If we reach here, status is unknown, log and continue
-          log(
-            'DEBUG: Quote $quoteId has unknown status: $currentStatus',
-          );
         } else {
-          // If we get an error, log it but don't fail immediately
+          // If we get an error, don't fail immediately
           // This prevents the loop from breaking on temporary network issues
           final error = statusResult.asError.error;
-          log(
-            'DEBUG: Quote $quoteId status check attempt $attemptCount failed: $error',
-          );
 
           // Only fail immediately on critical errors (401, 403, 404)
           if (error.toString().contains('401') ||
@@ -550,15 +492,15 @@ class QuoteService {
           continue;
         }
       } catch (e) {
-        log(
-          'DEBUG: Quote $quoteId status check attempt $attemptCount threw exception: $e',
+        _logger.error(
+          'QuoteService: Exception during status polling for quote ID $quoteId',
+          e,
         );
-
         // Only fail on critical exceptions
         if (e.toString().contains('SocketException') ||
             e.toString().contains('TimeoutException')) {
           return Result.error(
-            Exception('Network error during status polling: $e'),
+            Exception('Network error during status polling'),
           );
         }
 
@@ -575,12 +517,12 @@ class QuoteService {
           'Quote processing exceeded maximum attempts ($maxAttempts) after ${timeout.inMinutes} minutes',
         ),
       );
-    } else {
-      return Result.error(
-        Exception(
-          'Quote processing timeout after ${timeout.inMinutes} minutes',
-        ),
-      );
     }
+
+    return Result.error(
+      Exception(
+        'Quote processing timeout after ${timeout.inMinutes} minutes',
+      ),
+    );
   }
 }

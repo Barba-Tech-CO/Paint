@@ -1,25 +1,16 @@
 import 'package:flutter/foundation.dart';
 
 import '../../model/projects/project_model.dart';
+import '../../model/projects/projects_state.dart';
+import '../../model/projects/rename_project_data.dart';
+import '../../use_case/projects/project_operations_use_case.dart';
 import '../../utils/command/command.dart';
+import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
 
-enum ProjectsState { initial, loading, loaded, error }
-
-// Data classes for operations
-class RenameProjectData {
-  final String projectId;
-  final String newName;
-
-  RenameProjectData({
-    required this.projectId,
-    required this.newName,
-  });
-}
-
 class ProjectsViewModel extends ChangeNotifier {
-  // TODO: ProjectOperationsUseCase será injetado aqui quando estiver pronto
-  // final ProjectOperationsUseCase _projectUseCase;
+  final ProjectOperationsUseCase _projectOperationsUseCase;
+  final AppLogger _logger;
 
   // State
   ProjectsState _state = ProjectsState.initial;
@@ -87,8 +78,7 @@ class ProjectsViewModel extends ChangeNotifier {
     });
   }
 
-  ProjectsViewModel();
-  // ProjectsViewModel(this._projectUseCase); // Uncomment quando o use case estiver pronto
+  ProjectsViewModel(this._projectOperationsUseCase, this._logger);
 
   // Commands
   Command0<void>? _loadProjectsCommand;
@@ -266,123 +256,133 @@ class ProjectsViewModel extends ChangeNotifier {
     }
   }
 
-  // Private methods - Mock data até o Repository ser implementado
+  // Private methods - Load via UseCase
   Future<Result<void>> _loadProjectsData() async {
     try {
       _state = ProjectsState.loading;
       _errorMessage = null;
       notifyListeners();
 
-      // Simular chamada de API - substituir pela implementação real do use case
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Mock data - substituir pela resposta real do repository
-      final mockProjects = _generateMockProjects();
-      _projects = mockProjects;
-      _filteredProjects = List.from(_projects);
-      _state = ProjectsState.loaded;
-      notifyListeners();
-      return Result.ok(null);
-
-      // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
-      // final result = await _projectUseCase.getProjects();
-      // if (result is Ok) {
-      //   final response = result.asOk.value;
-      //   _projects = response.projects;
-      //   _filteredProjects = List.from(_projects);
-      //   _state = ProjectsState.loaded;
-      //   notifyListeners();
-      //   return Result.ok(null);
-      // } else {
-      //   _state = ProjectsState.error;
-      //   _errorMessage = 'Erro ao carregar projetos: ${result.asError.error}';
-      //   notifyListeners();
-      //   return Result.error(Exception(_errorMessage));
-      // }
+      final result = await _projectOperationsUseCase.loadProjects();
+      if (result is Ok<List<ProjectModel>>) {
+        _projects = result.asOk.value;
+        _filteredProjects = List.from(_projects);
+        _state = ProjectsState.loaded;
+        
+        notifyListeners();
+        return Result.ok(null);
+      } else {
+        _state = ProjectsState.error;
+        _errorMessage = 'Unable to load projects. Please try again.';
+        _logger.error(
+          'ProjectsViewModel: Error loading projects: ${result.asError.error}',
+          result.asError.error,
+        );
+        notifyListeners();
+        return Result.error(
+          Exception(_errorMessage),
+        );
+      }
     } catch (e) {
       _state = ProjectsState.error;
-      _errorMessage = 'Erro ao carregar projetos: ${e.toString()}';
+      _errorMessage = 'Unable to load projects. Please try again.';
+      _logger.error('ProjectsViewModel: Exception loading projects: $e', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception(_errorMessage),
+      );
     }
   }
 
   Future<Result<void>> _addProjectData(ProjectModel project) async {
     try {
-      // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
-      // final result = await _projectUseCase.createProject(
-      //   projectName: project.projectName,
-      //   personName: project.personName,
-      //   zonesCount: project.zonesCount,
-      //   createdDate: project.createdDate,
-      //   image: project.image,
-      // );
-
-      // Mock implementation
-      await Future.delayed(const Duration(milliseconds: 300));
-      final newProject = ProjectModel(
-        id: DateTime.now().millisecondsSinceEpoch,
-        projectName: project.projectName,
-        personName: project.personName,
-        zonesCount: project.zonesCount,
-        createdDate: project.createdDate,
-        image: project.image,
-      );
-
-      _projects.add(newProject);
-      _filteredProjects = List.from(_projects);
-      notifyListeners();
-      return Result.ok(null);
+      final result = await _projectOperationsUseCase.createProject(project);
+      if (result is Ok<ProjectModel>) {
+        final newProject = result.asOk.value;
+        _projects.add(newProject);
+        _filteredProjects = List.from(_projects);
+        notifyListeners();
+        return Result.ok(null);
+      } else {
+        _errorMessage = 'Unable to create project. Please try again.';
+        _logger.error(
+          'Error creating project: ${result.asError.error}',
+          result.asError.error,
+        );
+        notifyListeners();
+        return Result.error(
+          Exception(_errorMessage),
+        );
+      }
     } catch (e) {
-      _errorMessage = 'Erro ao adicionar projeto: ${e.toString()}';
+      _errorMessage = 'Unable to create project. Please try again.';
+      _logger.error('Error creating project: $e', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception(_errorMessage),
+      );
     }
   }
 
   Future<Result<void>> _updateProjectData(ProjectModel project) async {
     try {
-      // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
-      // final result = await _projectUseCase.updateProject(
-      //   project.id.toString(),
-      //   projectName: project.projectName,
-      //   personName: project.personName,
-      //   zonesCount: project.zonesCount,
-      //   createdDate: project.createdDate,
-      //   image: project.image,
-      // );
-
-      // Mock implementation
-      await Future.delayed(const Duration(milliseconds: 300));
-      final index = _projects.indexWhere((p) => p.id == project.id);
-      if (index != -1) {
-        _projects[index] = project;
-        _filteredProjects = List.from(_projects);
+      final result = await _projectOperationsUseCase.updateProject(project);
+      if (result is Ok<ProjectModel>) {
+        final updatedProject = result.asOk.value;
+        final index = _projects.indexWhere((p) => p.id == project.id);
+        if (index != -1) {
+          _projects[index] = updatedProject;
+          _filteredProjects = List.from(_projects);
+          notifyListeners();
+        }
+        return Result.ok(null);
+      } else {
+        _errorMessage = 'Unable to update project. Please try again.';
+        _logger.error(
+          'Error updating project: ${result.asError.error}',
+          result.asError.error,
+        );
         notifyListeners();
+        return Result.error(
+          Exception(_errorMessage),
+        );
       }
-      return Result.ok(null);
     } catch (e) {
-      _errorMessage = 'Erro ao atualizar projeto: ${e.toString()}';
+      _errorMessage = 'Unable to update project. Please try again.';
+      _logger.error('Error updating project: $e', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception(_errorMessage),
+      );
     }
   }
 
   Future<Result<void>> _deleteProjectData(String projectId) async {
     try {
-      // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
-      // final result = await _projectUseCase.deleteProject(projectId);
-
-      // Mock implementation
-      await Future.delayed(const Duration(milliseconds: 300));
-      _projects.removeWhere((p) => p.id.toString() == projectId);
-      _filteredProjects = List.from(_projects);
-      notifyListeners();
-      return Result.ok(null);
+      final result = await _projectOperationsUseCase.deleteProject(projectId);
+      if (result is Ok<bool>) {
+        _projects.removeWhere((p) => p.id.toString() == projectId);
+        _filteredProjects = List.from(_projects);
+        notifyListeners();
+        return Result.ok(null);
+      } else {
+        _errorMessage = 'Unable to delete project. Please try again.';
+        _logger.error(
+          'Error deleting project: ${result.asError.error}',
+          result.asError.error,
+        );
+        notifyListeners();
+        return Result.error(
+          Exception(_errorMessage),
+        );
+      }
     } catch (e) {
-      _errorMessage = 'Erro ao deletar projeto: ${e.toString()}';
+      _errorMessage = 'Unable to delete project. Please try again.';
+      _logger.error('Error deleting project: $e', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception(_errorMessage),
+      );
     }
   }
 
@@ -391,23 +391,37 @@ class ProjectsViewModel extends ChangeNotifier {
     String newName,
   ) async {
     try {
-      // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
-      // final result = await _projectUseCase.renameProject(projectId, newName);
-
-      // Mock implementation
-      await Future.delayed(const Duration(milliseconds: 300));
-      final index = _projects.indexWhere((p) => p.id.toString() == projectId);
-      if (index != -1) {
-        final updatedProject = _projects[index].copyWith(projectName: newName);
-        _projects[index] = updatedProject;
-        _filteredProjects = List.from(_projects);
+      final result = await _projectOperationsUseCase.renameProject(
+        projectId,
+        newName,
+      );
+      if (result is Ok<ProjectModel>) {
+        final updatedProject = result.asOk.value;
+        final index = _projects.indexWhere((p) => p.id.toString() == projectId);
+        if (index != -1) {
+          _projects[index] = updatedProject;
+          _filteredProjects = List.from(_projects);
+          notifyListeners();
+        }
+        return Result.ok(null);
+      } else {
+        _errorMessage = 'Unable to rename project. Please try again.';
+        _logger.error(
+          'Error renaming project: ${result.asError.error}',
+          result.asError.error,
+        );
         notifyListeners();
+        return Result.error(
+          Exception(_errorMessage),
+        );
       }
-      return Result.ok(null);
     } catch (e) {
-      _errorMessage = 'Erro ao renomear projeto: ${e.toString()}';
+      _errorMessage = 'Unable to rename project. Please try again.';
+      _logger.error('Error renaming project: $e', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception(_errorMessage),
+      );
     }
   }
 
@@ -419,56 +433,18 @@ class ProjectsViewModel extends ChangeNotifier {
         return Result.ok(null);
       }
 
-      // TODO: Implementar quando o ProjectOperationsUseCase estiver pronto
-      // final result = await _projectUseCase.searchProjects(query);
-
-      // Mock implementation - filtrar localmente
+      // Filter projects locally since the API doesn't have search functionality
+      // This is more efficient than making API calls for each search
       _filterProjectsByQuery(query);
       notifyListeners();
       return Result.ok(null);
     } catch (e) {
-      _errorMessage = 'Erro ao buscar projetos: ${e.toString()}';
+      _errorMessage = 'Unable to search projects. Please try again.';
+      _logger.error('Error searching projects: $e', e);
       notifyListeners();
-      return Result.error(Exception(_errorMessage));
+      return Result.error(
+        Exception(_errorMessage),
+      );
     }
-  }
-
-  // TODO(gabriel): Implementar quando o repository estiver pronto
-  // Mock data generator - remover quando o repository estiver pronto
-  List<ProjectModel> _generateMockProjects() {
-    return [
-      ProjectModel(
-        id: 1,
-        projectName: "Project Casa Silva",
-        personName: "Beatriz Nogueira",
-        zonesCount: 3,
-        createdDate: "14/07/25",
-        image: "assets/images/kitchen.png",
-      ),
-      ProjectModel(
-        id: 2,
-        projectName: "Apartamento Santos",
-        personName: "João Santos",
-        zonesCount: 2,
-        createdDate: "15/07/25",
-        image: "assets/images/kitchen.png",
-      ),
-      ProjectModel(
-        id: 3,
-        projectName: "Escritório Tech",
-        personName: "Maria Tech",
-        zonesCount: 4,
-        createdDate: "16/07/25",
-        image: "assets/images/kitchen.png",
-      ),
-      ProjectModel(
-        id: 4,
-        projectName: "Loja Comercial",
-        personName: "Carlos Lopes",
-        zonesCount: 1,
-        createdDate: "17/07/25",
-        image: "assets/images/kitchen.png",
-      ),
-    ];
   }
 }

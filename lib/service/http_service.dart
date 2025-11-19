@@ -12,6 +12,9 @@ class HttpService implements IHttpService {
   String? _authToken;
   late final AuthPersistenceService _authPersistenceService;
 
+  // Callback for handling authentication failures
+  void Function()? _onAuthFailure;
+
   factory HttpService() {
     return _instance;
   }
@@ -37,6 +40,7 @@ class HttpService implements IHttpService {
         onRequest: (options, handler) async {
           // Get token from memory first, then from storage if not available
           String? token = _authToken;
+
           if (token == null) {
             token = await _authPersistenceService.getSanctumToken();
             if (token != null) {
@@ -46,17 +50,10 @@ class HttpService implements IHttpService {
 
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
-            // Only log presence of token, never the actual token
-            if (options.path.contains('/user')) {
-              _logger.info(
-                '[HttpService] Adding Authorization header to /user request',
-              );
-            } else if (options.path.contains('/materials')) {
-              _logger.info(
-                '[HttpService] Adding Authorization header to /materials request',
-              );
-            }
           } else {
+            _logger.warning(
+              '[HttpService] No auth token available for ${options.path}',
+            );
             // Log missing token for critical endpoints
             if (options.path.contains('/user')) {
               _logger.warning(
@@ -66,9 +63,44 @@ class HttpService implements IHttpService {
               _logger.warning(
                 '[HttpService] No auth token available for /materials request',
               );
+            } else if (options.path.contains('/contacts')) {
+              _logger.warning(
+                '[HttpService] No auth token available for /contacts request',
+              );
+            } else if (options.path.contains('/estimates')) {
+              _logger.warning(
+                '[HttpService] No auth token available for /estimates request',
+              );
             }
           }
+
           handler.next(options);
+        },
+        onError: (error, handler) async {
+          // Handle 401 errors - token expired
+          if (error.response?.statusCode == 401) {
+            _logger.warning(
+              '[HttpService] 401 Unauthorized - Token expired for ${error.requestOptions.path}',
+            );
+
+            // Clear expired token
+            _authToken = null;
+            await _authPersistenceService.clearAuthState();
+
+            // Trigger auth failure callback
+            try {
+              if (_onAuthFailure != null) {
+                _onAuthFailure!();
+              } else {
+                _logger.warning('[HttpService] Auth failure callback is null');
+              }
+            } catch (e) {
+              _logger.warning(
+                '[HttpService] Error in auth failure callback: $e',
+              );
+            }
+          }
+          handler.next(error);
         },
       ),
     );
@@ -104,6 +136,26 @@ class HttpService implements IHttpService {
     _authToken = null;
   }
 
+  /// Initialize auth token from persistence during app startup
+  Future<void> initializeAuthToken() async {
+    try {
+      final token = await _authPersistenceService.getSanctumToken();
+
+      if (token != null && token.isNotEmpty) {
+        _authToken = token;
+      } else {
+        _logger.warning('[HttpService] No auth token found in persistence');
+      }
+    } catch (e) {
+      _logger.error('[HttpService] Error initializing auth token: $e');
+    }
+  }
+
+  /// Set callback to handle authentication failures
+  void setAuthFailureCallback(void Function() callback) {
+    _onAuthFailure = callback;
+  }
+
   @override
   Future<Response> get(
     String path, {
@@ -117,9 +169,7 @@ class HttpService implements IHttpService {
         options: options,
       );
       // Only log errors and important status codes
-      if (response.statusCode != 200) {
-        _logger.info('API Call: GET $path - Status: ${response.statusCode}');
-      }
+      if (response.statusCode != 200) {}
 
       return response;
     } on DioException catch (e) {
@@ -154,9 +204,7 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      if (response.statusCode != 200) {
-        _logger.info('POST $path - Status: ${response.statusCode}');
-      }
+      if (response.statusCode != 200) {}
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: POST $path', e, e.stackTrace);
@@ -179,9 +227,7 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      if (response.statusCode != 200) {
-        _logger.info('PUT $path - Status: ${response.statusCode}');
-      }
+      if (response.statusCode != 200) {}
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: PUT $path', e, e.stackTrace);
@@ -204,9 +250,7 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      if (response.statusCode != 200) {
-        _logger.info('PATCH $path - Status: ${response.statusCode}');
-      }
+      if (response.statusCode != 200) {}
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: PATCH $path', e, e.stackTrace);
@@ -229,9 +273,7 @@ class HttpService implements IHttpService {
         options: options,
       );
 
-      if (response.statusCode != 200) {
-        _logger.info('DELETE $path - Status: ${response.statusCode}');
-      }
+      if (response.statusCode != 200) {}
       return response;
     } on DioException catch (e) {
       _logger.error('HttpService Error: DELETE $path', e, e.stackTrace);

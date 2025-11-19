@@ -1,10 +1,22 @@
 import 'package:flutter/foundation.dart';
-import '../../utils/result/result.dart';
-import '../../model/models.dart';
+
 import '../../domain/repository/estimate_repository.dart';
+import '../../model/estimates/estimate_model.dart';
+import '../../model/estimates/estimate_status.dart';
+import '../../model/estimates/estimate_totals_model.dart';
+import '../../model/estimates/floor_dimensions_model.dart';
+import '../../model/estimates/material_item_model.dart';
+import '../../model/estimates/surface_areas_model.dart';
+import '../../model/estimates/zone_data_model.dart';
+import '../../model/estimates/zone_model.dart';
+import '../../model/projects/project_card_model.dart';
+import '../../service/photo_service.dart';
+import '../../utils/result/result.dart';
+import '../../viewmodel/overview_zones_viewmodel.dart';
 
 class EstimateCalculationViewModel extends ChangeNotifier {
   final IEstimateRepository _estimateRepository;
+  final PhotoService _photoService;
 
   EstimateModel? _currentEstimate;
   bool _isCalculating = false;
@@ -12,7 +24,7 @@ class EstimateCalculationViewModel extends ChangeNotifier {
   double _totalCost = 0.0;
   double _totalArea = 0.0;
 
-  EstimateCalculationViewModel(this._estimateRepository);
+  EstimateCalculationViewModel(this._estimateRepository, this._photoService);
 
   // Getters
   EstimateModel? get currentEstimate => _currentEstimate;
@@ -74,31 +86,38 @@ class EstimateCalculationViewModel extends ChangeNotifier {
     _currentEstimate = null;
     _totalCost = 0.0;
     _totalArea = 0.0;
+    // Clear photos when clearing estimate
+    _photoService.clearPhotos();
     notifyListeners();
-  }
-
-  /// Obtém o custo por metro quadrado
-  double get costPerSquareMeter {
-    if (_totalArea > 0) {
-      return _totalCost / _totalArea;
-    }
-    return 0.0;
   }
 
   /// Obtém o custo formatado
   String get formattedTotalCost {
-    return 'R\$ ${_totalCost.toStringAsFixed(2)}';
+    return '\$${_totalCost.toStringAsFixed(2)}';
   }
 
   /// Obtém a área formatada
   String get formattedTotalArea {
-    return '${_totalArea.toStringAsFixed(2)} m²';
+    return '${_totalArea.toStringAsFixed(2)} sqft';
   }
 
-  /// Obtém o custo por m² formatado
-  String get formattedCostPerSquareMeter {
-    return 'R\$ ${costPerSquareMeter.toStringAsFixed(2)}/m²';
+  /// Adiciona uma foto ao serviço
+  Future<void> addPhoto(String photoPath) async {
+    await _photoService.addPhoto(photoPath);
+    notifyListeners();
   }
+
+  /// Remove uma foto do serviço
+  void removePhoto(String photoPath) {
+    _photoService.removePhoto(photoPath);
+    notifyListeners();
+  }
+
+  /// Obtém as fotos capturadas
+  List<String> get capturedPhotos => _photoService.capturedPhotos;
+
+  /// Verifica se há fotos disponíveis
+  bool get hasPhotos => _photoService.hasPhotos;
 
   // Métodos privados para gerenciar estado
   void _setCalculating(bool calculating) {
@@ -114,5 +133,175 @@ class EstimateCalculationViewModel extends ChangeNotifier {
   void _clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  /// Builds an EstimateModel from the collected UI data
+  Future<EstimateModel> buildEstimateModel({
+    required OverviewZonesViewModel viewModel,
+    required String projectName,
+    required String contactId,
+    required String additionalNotes,
+    required EstimateStatus status,
+    required String zoneType,
+  }) async {
+    // Convert ProjectCardModel zones to ZoneModel
+    final zones = viewModel.selectedZones.map((projectZone) {
+      return _buildZoneModel(projectZone, zoneType: zoneType);
+    }).toList();
+
+    // Convert MaterialModel to MaterialItemModel with user-provided quantities
+    final materials = viewModel.selectedMaterials.map((material) {
+      final quantity = viewModel.getQuantity(material);
+      return MaterialItemModel(
+        id: material.id,
+        unit: material.priceUnit,
+        quantity: quantity.toDouble(),
+        unitPrice: material.price,
+      );
+    }).toList();
+
+    // Create totals
+    final totals = EstimateTotalsModel(
+      materialsCost: viewModel.totalMaterialsCost,
+      grandTotal: viewModel.totalProjectCost,
+    );
+
+    return EstimateModel(
+      projectName: projectName,
+      contactId: contactId,
+      additionalNotes: additionalNotes,
+      status: status,
+      paintableArea: _extractTotalArea(viewModel),
+      zones: zones,
+      materials: materials,
+      totals: totals,
+    );
+  }
+
+  /// Builds a ZoneModel from a ProjectCardModel
+  ZoneModel _buildZoneModel(
+    ProjectCardModel projectZone, {
+    required String zoneType,
+  }) {
+    // Extract dimensions from roomPlanData
+    double width = 0.0;
+    double length = 0.0;
+
+    if (projectZone.roomPlanData != null) {
+      final roomPlanData = projectZone.roomPlanData!;
+      final dimensions = roomPlanData['dimensions'] as Map<String, dynamic>?;
+
+      if (dimensions != null) {
+        width = (dimensions['width'] as num?)?.toDouble() ?? 0.0;
+        length = (dimensions['length'] as num?)?.toDouble() ?? 0.0;
+      }
+    }
+
+    // Validate that we have valid dimensions from RoomPlan
+    if (width <= 0.0 || length <= 0.0) {
+      throw Exception(
+        'Invalid dimensions from RoomPlan: width=$width, length=$length. RoomPlan data must provide valid dimensions.',
+      );
+    }
+
+    final floorDimensions = FloorDimensionsModel(
+      width: width,
+      length: length,
+    );
+
+    // Extract areas from roomPlanData
+    double paintableArea = 0.0;
+    double ceilingArea = 0.0;
+
+    if (projectZone.roomPlanData != null) {
+      final roomPlanData = projectZone.roomPlanData!;
+      final dimensions = roomPlanData['dimensions'] as Map<String, dynamic>?;
+
+      if (dimensions != null) {
+        // Extract calculated areas from RoomPlan
+        paintableArea =
+            (dimensions['paintableArea'] as num?)?.toDouble() ?? 0.0;
+        ceilingArea = (dimensions['ceilingArea'] as num?)?.toDouble() ?? 0.0;
+
+        // If not available in dimensions, calculate from walls data
+        if (paintableArea == 0.0) {
+          final walls = roomPlanData['walls'] as List<dynamic>? ?? [];
+          double totalWallArea = 0.0;
+
+          for (final wall in walls) {
+            final wallWidth = (wall['width'] as num?)?.toDouble() ?? 0.0;
+            final wallHeight = (wall['height'] as num?)?.toDouble() ?? 0.0;
+            totalWallArea += wallWidth * wallHeight;
+          }
+
+          // Add ceiling area to paintable area
+          final floorArea = width * length;
+          paintableArea = totalWallArea + floorArea;
+        }
+
+        if (ceilingArea == 0.0) {
+          ceilingArea = width * length;
+        }
+      }
+    }
+
+    // Validate that we have valid areas from RoomPlan
+    if (paintableArea <= 0.0 || ceilingArea <= 0.0) {
+      throw Exception(
+        'Invalid areas from RoomPlan: paintableArea=$paintableArea, ceilingArea=$ceilingArea. RoomPlan data must provide valid areas.',
+      );
+    }
+
+    final surfaceAreas = SurfaceAreasModel(
+      values: {
+        'walls': paintableArea,
+        'ceiling': ceilingArea,
+      },
+    );
+
+    // Extract photos using PhotoService
+    final photoPaths =
+        projectZone.roomPlanData?['photos'] as List<dynamic>? ?? [];
+    final photos = photoPaths.map((photo) => photo.toString()).toList();
+
+    // Add photos from PhotoService if available
+    final servicePhotos = _photoService.getPhotosForZone(
+      projectZone.id.toString(),
+    );
+    photos.addAll(servicePhotos);
+
+    final zoneData = ZoneDataModel(
+      floorDimensions: floorDimensions,
+      surfaceAreas: surfaceAreas,
+      photoPaths: photos,
+    );
+
+    return ZoneModel(
+      id: projectZone.id.toString(),
+      name: projectZone.title,
+      zoneType: zoneType,
+      data: [zoneData],
+    );
+  }
+
+  /// Extracts total area from view model
+  double _extractTotalArea(OverviewZonesViewModel viewModel) {
+    double totalArea = 0.0;
+
+    for (final zone in viewModel.selectedZones) {
+      // Extract area from roomPlanData if available
+      if (zone.roomPlanData != null) {
+        final roomPlanData = zone.roomPlanData!;
+        final dimensions = roomPlanData['dimensions'] as Map<String, dynamic>?;
+
+        if (dimensions != null) {
+          final paintableArea =
+              (dimensions['paintableArea'] as num?)?.toDouble() ?? 0.0;
+          totalArea += paintableArea;
+        }
+      }
+    }
+
+    return totalArea;
   }
 }

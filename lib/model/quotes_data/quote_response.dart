@@ -21,6 +21,10 @@ class QuoteResponse {
       throw Exception('Missing required field: success');
     }
 
+    if (json['message'] == null) {
+      throw Exception('Missing required field: message');
+    }
+
     final data = json['data'] as Map<String, dynamic>?;
     if (data == null) {
       throw Exception('Missing required field: data');
@@ -30,16 +34,12 @@ class QuoteResponse {
       throw Exception('Missing required field: data.upload');
     }
 
-    if (data['message'] == null) {
-      throw Exception('Missing required field: data.message');
-    }
-
     return QuoteResponse(
       success: json['success'] as bool,
       quote: QuoteModel.fromJson(
         data['upload'] as Map<String, dynamic>,
       ),
-      message: data['message'] as String,
+      message: json['message'] as String,
       url: data['url'] as String?,
       size: data['size'] as int?,
     );
@@ -48,9 +48,9 @@ class QuoteResponse {
   Map<String, dynamic> toJson() {
     return {
       'success': success,
+      'message': message,
       'data': {
         'upload': quote.toJson(),
-        'message': message,
         'url': url,
         'size': size,
       },

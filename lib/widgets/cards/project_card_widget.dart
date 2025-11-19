@@ -1,0 +1,207 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../config/app_colors.dart';
+import '../../utils/responsive/responsive_helper.dart';
+import '../dialogs/delete_quote_dialog.dart';
+import '../dialogs/rename_quote_dialog.dart';
+
+class ProjectCardWidget extends StatelessWidget {
+  final int id;
+  final String projectName;
+  final String personName;
+  final int zonesCount;
+  final String createdDate;
+  final String image;
+  final double? height;
+  final double? width;
+  final double? imageHeight;
+  final double? imageWidth;
+  final VoidCallback? onTap;
+  final void Function(String newName)? onRename;
+  final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
+
+  const ProjectCardWidget({
+    super.key,
+    required this.id,
+    required this.projectName,
+    required this.personName,
+    required this.zonesCount,
+    required this.createdDate,
+    required this.image,
+    this.height = 104,
+    this.width = 326,
+    this.imageHeight = 80,
+    this.imageWidth = 120,
+    this.onTap,
+    this.onRename,
+    this.onDelete,
+    this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Get responsive dimensions
+    final dimensions = ResponsiveHelper.getProjectCardDimensions(context);
+    final textStyles = ResponsiveHelper.getProjectCardTextStyles(context);
+
+    return InkWell(
+      onTap: onTap ?? () => context.push('/estimate-detail', extra: id),
+      borderRadius: BorderRadius.circular(16.r),
+      child: Container(
+        width: double.maxFinite,
+        constraints: BoxConstraints(
+          minHeight: 104.h,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: .05),
+              blurRadius: 4.r,
+              offset: Offset(0, 2.h),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Conteúdo principal
+            Padding(
+              padding: EdgeInsets.all(8.w),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 120.w,
+                    height: 80.h,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12.r),
+                      child: _buildImage(),
+                    ),
+                  ),
+                  SizedBox(width: dimensions.spacing * 3),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          personName,
+                          style: textStyles.bodyStyle,
+                        ),
+                        Text(
+                          projectName,
+                          style: textStyles.titleStyle,
+                        ),
+                        SizedBox(height: dimensions.spacing),
+                        Text(
+                          '$zonesCount Zones',
+                          style: textStyles.bodyStyle,
+                        ),
+                        SizedBox(height: dimensions.spacing * 0.5),
+                        Text(
+                          'Created $createdDate',
+                          style: textStyles.bodyStyle?.copyWith(
+                            color: Colors.grey[500],
+                            fontSize: textStyles.bodyStyle?.fontSize != null
+                                ? textStyles.bodyStyle!.fontSize! - 1
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // IconButton no canto superior direito
+            Positioned(
+              top: 0,
+              right: 0,
+              child: PopupMenuButton(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(12.r),
+                tooltip: '',
+                icon: Icon(Icons.more_vert, color: Colors.grey[700]),
+                onSelected: (value) async {
+                  if (value == 'rename') {
+                    final newName = await RenameQuoteDialog.show(
+                      context,
+                      initialName: projectName,
+                    );
+                    if (newName != null && newName.trim().isNotEmpty) {
+                      onRename?.call(newName.trim());
+                    }
+                  } else if (value == 'delete') {
+                    final confirm = await DeleteQuoteDialog.show(
+                      context,
+                      quoteName: projectName,
+                    );
+                    if (confirm == true) {
+                      onDelete?.call();
+                    }
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'rename',
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/icons/rename.png',
+                          width: 20.w,
+                          height: 20.h,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text('Rename Project'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/icons/delete_black.png',
+                          width: 20.w,
+                          height: 20.h,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text('Delete Project'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImage() {
+    final hasNetwork = image.isNotEmpty &&
+        (image.startsWith('http://') || image.startsWith('https://'));
+    if (hasNetwork) {
+      return Image.network(
+        image,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.asset(
+            'assets/images/kitchen.png',
+            fit: BoxFit.cover,
+          );
+        },
+      );
+    }
+    return Image.asset(
+      'assets/images/kitchen.png',
+      fit: BoxFit.cover,
+    );
+  }
+}

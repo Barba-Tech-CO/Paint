@@ -1,23 +1,23 @@
 enum SyncStatus { synced, pending, error }
 
 class ContactModel {
-  final int? localId;
-  final String? id;
+  final int? id;
+  final int? userId;
   final String? ghlId;
   final String? locationId;
-  final String? name;
-  final String? email;
-  final String? phone;
+  final String name;
+  final String email;
+  final String phone;
   final String? phoneLabel;
   final List<String>? additionalEmails;
   final List<String>? additionalPhones;
   final String? companyName;
   final String? businessName;
-  final String? address;
-  final String? city;
-  final String? state;
-  final String? postalCode;
-  final String? country;
+  final String address;
+  final String city;
+  final String state;
+  final String postalCode;
+  final String country;
   final List<Map<String, dynamic>>? customFields;
   final List<String>? tags;
   final String? type;
@@ -33,23 +33,23 @@ class ContactModel {
   final DateTime? updatedAt;
 
   ContactModel({
-    this.localId,
     this.id,
+    this.userId,
     this.ghlId,
     this.locationId,
-    this.name,
-    this.email,
-    this.phone,
+    required this.name,
+    required this.email,
+    required this.phone,
     this.phoneLabel,
     this.additionalEmails,
     this.additionalPhones,
     this.companyName,
     this.businessName,
-    this.address,
-    this.city,
-    this.state,
-    this.postalCode,
-    this.country,
+    required this.address,
+    required this.city,
+    required this.state,
+    required this.postalCode,
+    required this.country,
     this.customFields,
     this.tags,
     this.type,
@@ -66,58 +66,91 @@ class ContactModel {
   });
 
   factory ContactModel.fromJson(Map<String, dynamic> json) {
+    // Handle name field - combine firstName and lastName from API response
+    String fullName = '';
+    if (json['firstName'] != null || json['lastName'] != null) {
+      final firstName = json['firstName']?.toString() ?? '';
+      final lastName = json['lastName']?.toString() ?? '';
+      fullName =
+          [
+                firstName,
+                lastName,
+              ]
+              .where(
+                (part) =>
+                    part.isNotEmpty &&
+                    part.toLowerCase() != 'null' &&
+                    part.toLowerCase() != 'undefined',
+              )
+              .join(' ');
+    } else if (json['name'] != null) {
+      fullName = json['name'].toString(); // Fallback to legacy name field
+    }
+
     return ContactModel(
-      id: json['id'],
-      ghlId: json['ghlId'] ?? json['id'],
-      locationId: json['locationId'],
-      name: json['name'],
-      email: json['email'],
-      phone: json['phoneNo'] ?? json['phone'],
-      phoneLabel: json['phoneLabel'],
+      id: json['id'] is int
+          ? json['id']
+          : (json['id'] != null ? int.tryParse(json['id'].toString()) : null),
+      ghlId: json['ghlId']?.toString() ?? json['id']?.toString(),
+      locationId:
+          json['locationId']?.toString() ?? json['location_id']?.toString(),
+      name: fullName,
+      email: json['email']?.toString() ?? '',
+      phone: json['phoneNo']?.toString() ?? json['phone']?.toString() ?? '',
+      phoneLabel: json['phoneLabel']?.toString(),
       additionalEmails: json['additionalEmails'] != null
-          ? List<String>.from(json['additionalEmails'])
+          ? List<String>.from(json['additionalEmails'].map((e) => e.toString()))
           : null,
       additionalPhones: json['additionalPhones'] != null
-          ? List<String>.from(json['additionalPhones'])
+          ? List<String>.from(json['additionalPhones'].map((e) => e.toString()))
           : null,
-      companyName: json['companyName'],
-      businessName: json['businessName'],
-      address: json['address'],
-      city: json['city'],
-      state: json['state'],
-      postalCode: json['postalCode'],
-      country: json['country'],
+      companyName: json['companyName']?.toString() ?? '',
+      businessName: json['businessName']?.toString(),
+      address: json['address']?.toString() ?? '',
+      city: json['city']?.toString() ?? '',
+      state: json['state']?.toString() ?? '',
+      postalCode: json['postalCode']?.toString() ?? '',
+      country: json['country']?.toString() ?? '',
       customFields: json['customFields'] != null
           ? List<Map<String, dynamic>>.from(json['customFields'])
           : null,
-      tags: json['tags'] != null ? List<String>.from(json['tags']) : null,
-      type: json['type'],
-      source: json['source'],
+      tags: json['tags'] != null
+          ? List<String>.from(json['tags'].map((e) => e.toString()))
+          : null,
+      type: json['type']?.toString(),
+      source: json['source']?.toString(),
       dnd: json['dnd'],
       dndSettings: json['dndSettings'] != null
           ? List<Map<String, dynamic>>.from(json['dndSettings'])
           : null,
       ghlCreatedAt: json['dateAdded'] != null
-          ? DateTime.parse(json['dateAdded'])
+          ? DateTime.parse(json['dateAdded'].toString())
           : null,
       ghlUpdatedAt: json['dateUpdated'] != null
-          ? DateTime.parse(json['dateUpdated'])
+          ? DateTime.parse(json['dateUpdated'].toString())
           : null,
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
+          ? DateTime.parse(json['createdAt'].toString())
           : null,
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
+          ? DateTime.parse(json['updatedAt'].toString())
           : null,
     );
   }
 
   Map<String, dynamic> toJson() {
+    // Split name into firstName and lastName for API compatibility
+    final nameParts = name.trim().split(' ');
+    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+    final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
     return {
       'id': id,
       'ghlId': ghlId,
       'locationId': locationId,
       'name': name,
+      'firstName': firstName.isNotEmpty ? firstName : null,
+      'lastName': lastName.isNotEmpty ? lastName : null,
       'email': email,
       'phoneNo': phone,
       'phoneLabel': phoneLabel,
@@ -144,13 +177,30 @@ class ContactModel {
   }
 
   factory ContactModel.fromMap(Map<String, dynamic> map) {
+    // Build full name from first_name and last_name
+    final nameParts =
+        [
+              map['first_name']?.toString() ?? '',
+              map['last_name']?.toString() ?? '',
+            ]
+            .where(
+              (part) =>
+                  part.isNotEmpty &&
+                  part.toLowerCase() != 'null' &&
+                  part.toLowerCase() != 'undefined',
+            )
+            .join(' ');
+
+    final finalName = nameParts.isNotEmpty ? nameParts : (map['name'] ?? '');
+
     return ContactModel(
-      localId: map['id'],
+      id: map['id'],
+      userId: map['user_id'],
       ghlId: map['ghl_id'],
       locationId: map['location_id'],
-      name: map['name'],
-      email: map['email'],
-      phone: map['phone'],
+      name: finalName,
+      email: map['email'] ?? '',
+      phone: map['phone'] ?? '',
       phoneLabel: map['phone_label'],
       additionalEmails: map['additional_emails'] != null
           ? List<String>.from(
@@ -166,13 +216,13 @@ class ContactModel {
                   .where((e) => e.isNotEmpty),
             )
           : null,
-      companyName: map['company_name'],
+      companyName: map['company_name'] ?? '',
       businessName: map['business_name'],
-      address: map['address'],
-      city: map['city'],
-      state: map['state'],
-      postalCode: map['postal_code'],
-      country: map['country'],
+      address: map['address'] ?? '',
+      city: map['city'] ?? '',
+      state: map['state'] ?? '',
+      postalCode: map['postal_code'] ?? '',
+      country: map['country'] ?? '',
       customFields: map['custom_fields'] != null
           ? List<Map<String, dynamic>>.from(
               (map['custom_fields'] as String)
@@ -219,10 +269,16 @@ class ContactModel {
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    final nameParts = name.trim().split(' ');
+    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+    final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
+    return <String, dynamic>{
+      'user_id': userId,
       'ghl_id': ghlId,
       'location_id': locationId,
-      'name': name,
+      'first_name': firstName,
+      'last_name': lastName,
       'email': email,
       'phone': phone,
       'phone_label': phoneLabel,
@@ -253,13 +309,13 @@ class ContactModel {
   }
 
   String get fullName {
-    if (name?.isNotEmpty == true) return name!;
+    if (name.isNotEmpty) return name;
     return 'Sem nome';
   }
 
   ContactModel copyWith({
-    int? localId,
-    String? id,
+    int? id,
+    int? userId,
     String? ghlId,
     String? locationId,
     String? name,
@@ -290,8 +346,8 @@ class ContactModel {
     DateTime? updatedAt,
   }) {
     return ContactModel(
-      localId: localId ?? this.localId,
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       ghlId: ghlId ?? this.ghlId,
       locationId: locationId ?? this.locationId,
       name: name ?? this.name,

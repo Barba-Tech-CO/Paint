@@ -1,7 +1,8 @@
-import '../../model/models.dart';
+import '../../model/auth_model/auth_state.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
-import 'auth_use_cases.dart';
+import 'auth_operations_use_case.dart';
+import 'manage_auth_state_use_case.dart';
 
 /// UseCase unificado para lidar com Deep Links de autenticação
 class HandleDeepLinkUseCase {
@@ -17,10 +18,6 @@ class HandleDeepLinkUseCase {
 
   /// Lida com sucesso na autenticação via Deep Link
   Future<Result<void>> handleSuccess() async {
-    _logger.info(
-      '[HandleDeepLinkUseCase] Autenticação bem-sucedida via Deep Link!',
-    );
-
     await _manageAuthStateUseCase.clearError(() {});
     await _authOperationsUseCase.checkAuthStatus();
 

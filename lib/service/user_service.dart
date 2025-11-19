@@ -2,7 +2,7 @@ import '../model/user_model.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/result/result.dart';
 import 'auth_service_exception.dart';
-import 'services.dart';
+import 'http_service.dart';
 
 class UserService {
   final HttpService _httpService;
@@ -14,22 +14,32 @@ class UserService {
   Future<Result<UserModel>> getUser() async {
     try {
       final response = await _httpService.get('/user');
-      final user = UserModel.fromJson(response.data);
-      
-      // Log user status for debugging
-      if (user.ghlDataIncomplete == true) {
-        _logger.warning('[UserService] User has incomplete GHL data');
+      if (response.statusCode == 401) {
+        return Result.error(
+          AuthServiceException(
+            message: 'Authentication required',
+            errorType: AuthServiceErrorType.invalidCredentials,
+            technicalDetails: 'GET /user returned 401',
+          ),
+        );
       }
-      if (user.ghlError == true) {
-        _logger.warning('[UserService] User has GHL error');
+
+      if (response.statusCode != 200) {
+        return Result.error(
+          Exception('Failed to load user data: ${response.statusCode}'),
+        );
       }
-      
-      _logger.info('[UserService] User data retrieved: ${user.name}, GHL User: ${user.isGhlUser}');
+
+      final data = response.data;
+      if (data is! Map<String, dynamic>) {
+        return Result.error(
+          Exception('Unexpected user payload format'),
+        );
+      }
+
+      final user = UserModel.fromJson(data);
       return Result.ok(user);
     } on AuthServiceException catch (e) {
-      _logger.info(
-        '[UserService] Authentication service unavailable: ${e.message}',
-      );
       _logger.error('[UserService] Technical details: ${e.technicalDetails}');
       return Result.error(
         Exception(e.message),

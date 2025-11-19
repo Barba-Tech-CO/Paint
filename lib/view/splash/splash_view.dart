@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../config/dependency_injection.dart';
 import '../../service/app_initialization_service.dart';
-import '../../service/navigation_service.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -78,8 +80,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
     } catch (e) {
       // Em caso de erro, vai para autenticação
       if (mounted) {
-        final navigationService = getIt<NavigationService>();
-        navigationService.navigateToAuth(context);
+        context.go('/auth');
       }
     }
   }
@@ -101,7 +102,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
           children: [
             // Marca d'água no topo
             Positioned(
-              top: 60,
+              top: 60.h,
               left: 0,
               right: 0,
               child: Center(
@@ -111,7 +112,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
                     'Developed By',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 14,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w400,
                     ),
                   ),
@@ -119,7 +120,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
               ),
             ),
             Positioned(
-              top: 80,
+              top: 80.h,
               left: 0,
               right: 0,
               child: Center(
@@ -129,11 +130,12 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
                       opacity: 0.8,
                       child: Text(
                         'Barba Tech',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                     ),
                     Opacity(
@@ -143,7 +145,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
                               color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 18,
+                              fontSize: 18.sp,
                               fontWeight: FontWeight.w600,
                             ),
                       ),
@@ -163,15 +165,15 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
                     scale: _logoAnimation,
                     child: SvgPicture.asset(
                       'assets/logo/paint.svg',
-                      width: 120,
-                      height: 120,
+                      width: 120.w,
+                      height: 120.h,
                       colorFilter: const ColorFilter.mode(
                         Colors.white,
                         BlendMode.srcIn,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
 
                   // Nome do app
                   AnimatedBuilder(
@@ -179,10 +181,10 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
                     builder: (context, child) {
                       return Opacity(
                         opacity: _logoAnimation.value,
-                        child: const Text(
+                        child: Text(
                           'Paint Estimator',
                           style: TextStyle(
-                            fontSize: 32,
+                            fontSize: 32.sp,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -191,7 +193,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
                     },
                   ),
 
-                  const SizedBox(height: 48),
+                  SizedBox(height: 48.h),
 
                   // Indicador de carregamento
                   AnimatedBuilder(
@@ -199,11 +201,11 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
                     builder: (context, child) {
                       return Opacity(
                         opacity: _logoAnimation.value,
-                        child: const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
+                        child: CircularProgressIndicator(
+                          valueColor: const AlwaysStoppedAnimation<Color>(
                             Colors.white,
                           ),
-                          strokeWidth: 3,
+                          strokeWidth: 3.w,
                         ),
                       );
                     },
@@ -214,7 +216,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
 
             // Marca d'água no rodapé
             Positioned(
-              bottom: 40,
+              bottom: 40.h,
               left: 0,
               right: 0,
               child: Center(
@@ -222,7 +224,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
                   opacity: 0.8,
                   child: Image.asset(
                     'assets/images/barba_tech_logopng.png',
-                    height: 100,
+                    height: 100.h,
                     fit: BoxFit.contain,
                   ),
                 ),

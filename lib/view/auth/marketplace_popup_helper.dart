@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../viewmodel/auth/auth_viewmodel.dart';
-import '../widgets/webview_popup_screen.dart';
+import '../../widgets/webview_popup_screen.dart';
 
 class MarketplacePopupHelper {
-  
   static void show(BuildContext context, String url, AuthViewModel viewModel) {
     showModalBottomSheet(
       context: context,
@@ -13,8 +13,8 @@ class MarketplacePopupHelper {
       builder: (context) => FractionallySizedBox(
         heightFactor: 0.95,
         child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(24),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(24.r),
           ),
           child: WebViewPopupScreen(popupUrl: url),
         ),

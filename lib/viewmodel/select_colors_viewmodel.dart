@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../utils/logger/app_logger.dart';
 import '../domain/repository/paint_catalog_repository.dart';
+import '../utils/result/result.dart';
 
 /// ViewModel para a tela de seleção de cores
 /// Implementa o padrão MVVM com logging integrado
@@ -65,6 +66,49 @@ class SelectColorsViewModel extends ChangeNotifier {
     _initializeData();
   }
 
+  // Helper methods for common operations
+  Future<void> _handleRepositoryCall<T>(
+    Future<Result<T>> Function() repositoryCall,
+    String operation,
+    void Function(T data) onSuccess,
+  ) async {
+    setLoading(true);
+    clearError();
+
+    try {
+      final result = await repositoryCall();
+      result.when(
+        ok: (data) {
+          onSuccess(data);
+          notifyListeners();
+        },
+        error: (error) {
+          _setError('Error loading $operation: $error');
+          _logger.error('Error loading $operation', error);
+        },
+      );
+    } catch (e) {
+      _setError('Unexpected error loading $operation');
+      _logger.error('Unexpected error loading $operation', e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  void _setError(String message) {
+    _errorMessage = message;
+    notifyListeners();
+  }
+
+  Map<String, dynamic> _convertColorToMap(dynamic color) {
+    return {
+      'name': color.name,
+      'code': color.key,
+      'price': '\$${color.price?.toStringAsFixed(2) ?? "N/A"}/Gal',
+      'color': Colors.grey[200],
+    };
+  }
+
   /// Inicializa os dados carregando marcas
   Future<void> _initializeData() async {
     await loadBrands();
@@ -73,30 +117,15 @@ class SelectColorsViewModel extends ChangeNotifier {
   /// Carrega as marcas disponíveis
   Future<void> loadBrands() async {
     _logger.info('Loading brands...');
-    setLoading(true);
-    clearError();
 
-    try {
-      final result = await _paintCatalogRepository.getBrands();
-      result.when(
-        ok: (brands) {
-          _brands = brands; // Brands are now strings directly
-          notifyListeners();
-          _logger.info('Brands loaded: ${_brands.length}');
-        },
-        error: (error) {
-          setError('Erro ao carregar marcas: $error');
-          _logger.error('Erro ao carregar marcas', error);
-          _brands = []; // Will fall back to fallback brands
-        },
-      );
-    } catch (e) {
-      setError('Erro inesperado ao carregar marcas: $e');
-      _logger.error('Erro inesperado ao carregar marcas', e);
-      _brands = [];
-    } finally {
-      setLoading(false);
-    }
+    await _handleRepositoryCall(
+      () => _paintCatalogRepository.getBrands(),
+      'brands',
+      (brands) {
+        _brands = brands;
+        _logger.info('Brands loaded: ${_brands.length}');
+      },
+    );
   }
 
   /// Lista de marcas disponíveis
@@ -127,60 +156,24 @@ class SelectColorsViewModel extends ChangeNotifier {
   /// Carrega as cores para uma marca específica
   Future<void> loadColorsForBrand(String brand) async {
     _logger.info('Loading colors for brand: $brand');
-    setLoading(true);
-    clearError();
 
-    try {
-      final result = await _paintCatalogRepository.getBrandColors(brand);
-      result.when(
-        ok: (colors) {
-          // Convert PaintColor to Map for compatibility
-          _colors = colors
-              .map(
-                (color) => {
-                  'name': color.name,
-                  'code': color.key,
-                  'price': '\$${color.price?.toStringAsFixed(2) ?? "N/A"}/Gal',
-                  'color': Colors.grey[200], // Default color representation
-                },
-              )
-              .toList();
-          _colors = colors
-              .map(
-                (color) => {
-                  'name': color.name,
-                  'code': color.key,
-                  'price': '\$${color.price?.toStringAsFixed(2) ?? "N/A"}/Gal',
-                  'color': Colors.grey[200], // Default color representation
-                },
-              )
-              .toList();
-          notifyListeners();
-          _logger.info(
-            'Colors Loaded - Brand: $brand - Color Count: ${_colors.length}',
-          );
-        },
-        error: (error) {
-          setError('Erro ao carregar cores: $error');
-          _logger.error('Erro ao carregar cores para $brand', error);
-          // Fall back to using fallback colors
-          _colors = [];
-        },
-      );
-    } catch (e) {
-      setError('Erro inesperado ao carregar cores: $e');
-      _logger.error('Erro inesperado ao carregar cores para $brand', e);
-      _colors = [];
-    } finally {
-      setLoading(false);
-    }
+    await _handleRepositoryCall(
+      () => _paintCatalogRepository.getBrandColors(brand),
+      'colors',
+      (colors) {
+        _colors = colors.map(_convertColorToMap).toList();
+        _logger.info(
+          'Colors Loaded - Brand: $brand - Color Count: ${_colors.length}',
+        );
+      },
+    );
   }
 
   /// Gera o orçamento com as cores selecionadas
   Future<void> generateEstimate() async {
-    if (_selectedColor == null || _selectedBrand == null) {
-      setError('Por favor, selecione uma cor antes de gerar o orçamento');
-      _logger.warning('Tentativa de gerar orçamento sem cor selecionada');
+    if (!canGenerateEstimate) {
+      _setError('Please select a color before generating estimate');
+      _logger.warning('Attempt to generate estimate without selected color');
       return;
     }
 
@@ -199,8 +192,8 @@ class SelectColorsViewModel extends ChangeNotifier {
         'Estimate Generated - Color: ${_selectedColor!['name']} - Brand: $_selectedBrand - Price: ${_selectedColor!['price']}',
       );
     } catch (error) {
-      setError('Erro ao gerar orçamento: $error');
-      _logger.error('Erro ao gerar orçamento', error);
+      _setError('Error generating estimate');
+      _logger.error('Error generating estimate', error);
     } finally {
       setLoading(false);
     }
@@ -230,12 +223,6 @@ class SelectColorsViewModel extends ChangeNotifier {
   /// Define o estado de carregamento
   void setLoading(bool loading) {
     _isLoading = loading;
-    notifyListeners();
-  }
-
-  /// Define uma mensagem de erro
-  void setError(String? error) {
-    _errorMessage = error;
     notifyListeners();
   }
 

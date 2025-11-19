@@ -1,0 +1,44 @@
+# .github/workflows/deploy_firebase.yml
+
+name: Deploy to Firebase App Distribution
+
+# Gatilhos: Este workflow roda quando há um push na branch 'develop'
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch: # Permite iniciar manualmente pela interface do GitHub
+
+jobs:
+  build-and-deploy:
+    runs-on: macos-latest # Essencial usar um runner macOS para builds iOS
+
+    steps:
+      # 1. Clona o repositório do seu projeto
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Instala Flutter (necessário para build do IPA)
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # 3. Configura o cache do Bundler para acelerar a instalação das gems
+      - name: Setup Ruby and Bundler Cache
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+
+      # 4. Executa a lane do Fastlane
+      - name: Run Fastlane Deploy Lane
+        # Passa os secrets do GitHub como variáveis de ambiente para o Fastlane
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: |
+          bundle exec fastlane ios deploy_firebase

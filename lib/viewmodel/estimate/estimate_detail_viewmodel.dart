@@ -1,213 +1,257 @@
 import 'package:flutter/foundation.dart';
+
+import '../../model/estimates/estimate_detail_model.dart';
+import '../../use_case/estimate/estimate_detail_use_case.dart';
+import '../../domain/repository/material_repository.dart';
 import '../../utils/result/result.dart';
-import '../../model/models.dart';
-import '../../domain/repository/estimate_repository.dart';
 
 class EstimateDetailViewModel extends ChangeNotifier {
-  final IEstimateRepository _estimateRepository;
+  final EstimateDetailUseCase _estimateDetailUseCase;
+  final IMaterialRepository _materialRepository;
 
-  EstimateModel? _selectedEstimate;
+  EstimateDetailViewModel(
+    this._estimateDetailUseCase,
+    this._materialRepository,
+  );
+
+  // State
+  EstimateDetailModel? _estimateDetail;
   bool _isLoading = false;
   String? _error;
-
-  EstimateDetailViewModel(this._estimateRepository);
+  bool _isInitialized = false;
 
   // Getters
-  EstimateModel? get selectedEstimate => _selectedEstimate;
+  EstimateDetailModel? get estimateDetail => _estimateDetail;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  bool get isInitialized => _isInitialized;
+  bool get hasError => _error != null;
+  bool get hasData => _estimateDetail != null;
 
-  /// Obtém detalhes de um orçamento
-  Future<void> getEstimateDetails(String estimateId) async {
+  /// Load estimate details by estimate ID
+  Future<void> loadEstimateDetail(int estimateId) async {
     _setLoading(true);
     _clearError();
 
     try {
-      final result = await _estimateRepository.getEstimate(estimateId);
+      final result = await _estimateDetailUseCase.getEstimateDetail(estimateId);
       if (result is Ok) {
-        _selectedEstimate = result.asOk.value;
+        _estimateDetail = result.asOk.value;
+        _isInitialized = true;
         notifyListeners();
       } else {
         _setError(result.asError.error.toString());
       }
     } catch (e) {
-      _setError('Error getting estimate details: $e');
+      _setError('Error loading estimate details: $e');
     } finally {
       _setLoading(false);
     }
   }
 
-  /// Cria um novo orçamento
-  Future<EstimateModel?> createEstimate(Map<String, dynamic> data) async {
+  /// Load estimate details by project ID
+  Future<void> loadEstimateDetailByProjectId(int projectId) async {
     _setLoading(true);
     _clearError();
 
     try {
-      final result = await _estimateRepository.createEstimate(data);
-
-      if (result is Ok) {
-        _selectedEstimate = result.asOk.value;
-        notifyListeners();
-        return result.asOk.value;
-      } else if (result is Error) {
-        _setError(result.asError.error.toString());
-      }
-      return null;
-    } catch (e) {
-      _setError('Error creating estimate: $e');
-      return null;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  /// Atualiza um orçamento
-  Future<bool> updateEstimate(
-    String estimateId,
-    Map<String, dynamic> data,
-  ) async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      final result = await _estimateRepository.updateEstimate(
-        estimateId,
-        data,
+      final result = await _estimateDetailUseCase.getEstimateDetailByProjectId(
+        projectId,
       );
-
       if (result is Ok) {
-        _selectedEstimate = result.asOk.value;
+        _estimateDetail = result.asOk.value;
+        _isInitialized = true;
         notifyListeners();
-        return true;
-      } else if (result is Error) {
+      } else {
         _setError(result.asError.error.toString());
       }
-      return false;
     } catch (e) {
-      _setError('Error updating estimate: $e');
-      return false;
+      _setError('Error loading estimate details: $e');
     } finally {
       _setLoading(false);
     }
   }
 
-  /// Remove um orçamento
-  Future<bool> deleteEstimate(String estimateId) async {
+  /// Load estimate for overview (convenience method)
+  Future<void> loadEstimateForOverview(int projectId) async {
     _setLoading(true);
     _clearError();
 
     try {
-      final result = await _estimateRepository.deleteEstimate(estimateId);
-
-      if (result is Ok && result.asOk.value) {
-        if (_selectedEstimate?.id == estimateId) {
-          _selectedEstimate = null;
-        }
-        notifyListeners();
-        return true;
-      } else if (result is Error) {
-        _setError(result.asError.error.toString());
-      }
-      return false;
-    } catch (e) {
-      _setError('Erro ao remover orçamento: $e');
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  /// Atualiza o status de um orçamento
-  Future<bool> updateEstimateStatus(
-    String estimateId,
-    String status,
-  ) async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      final result = await _estimateRepository.updateEstimateStatus(
-        estimateId,
-        status,
+      final result = await _estimateDetailUseCase.getEstimateForOverview(
+        projectId,
       );
-
       if (result is Ok) {
-        _selectedEstimate = result.asOk.value;
+        _estimateDetail = result.asOk.value;
+        _isInitialized = true;
         notifyListeners();
-        return true;
-      } else if (result is Error) {
+      } else {
         _setError(result.asError.error.toString());
       }
-      return false;
     } catch (e) {
-      _setError('Error updating estimate status: $e');
-      return false;
+      _setError('Error loading estimate for overview: $e');
     } finally {
       _setLoading(false);
     }
   }
 
-  /// Finaliza o orçamento
-  Future<bool> completeEstimate(String estimateId) async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      final result = await _estimateRepository.finalizeEstimate(estimateId);
-
-      if (result is Ok) {
-        _selectedEstimate = result.asOk.value;
-        notifyListeners();
-        return true;
-      } else if (result is Error) {
-        _setError(result.asError.error.toString());
-      }
-      return false;
-    } catch (e) {
-      _setError('Error finalizing estimate: $e');
-      return false;
-    } finally {
-      _setLoading(false);
+  /// Refresh estimate details
+  Future<void> refresh() async {
+    if (_estimateDetail != null) {
+      final estimateId = _estimateDetail!.id;
+      await loadEstimateDetail(estimateId);
     }
   }
 
-  /// Envia o orçamento para o GHL
-  Future<bool> sendToGHL(String estimateId) async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      final result = await _estimateRepository.sendToGHL(estimateId);
-
-      if (result is Ok && result.asOk.value) {
-        // Atualiza o status para enviado
-        await updateEstimateStatus(estimateId, 'sent');
-        return true;
-      } else if (result is Error) {
-        _setError(result.asError.error.toString());
-      }
-      return false;
-    } catch (e) {
-      _setError('Error sending estimate to GHL: $e');
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  /// Seleciona um orçamento
-  void selectEstimate(EstimateModel estimate) {
-    _selectedEstimate = estimate;
+  /// Clear all data
+  void clear() {
+    _estimateDetail = null;
+    _isLoading = false;
+    _error = null;
+    _isInitialized = false;
     notifyListeners();
   }
 
-  /// Limpa a seleção de orçamento
-  void clearSelection() {
-    _selectedEstimate = null;
-    notifyListeners();
+  /// Get formatted total cost
+  String getFormattedTotalCost() {
+    if (_estimateDetail == null) return '\$0.00';
+
+    // If total_cost is 0, use materials cost instead
+    if (_estimateDetail!.totalCost == 0.0) {
+      return getFormattedMaterialsCost();
+    }
+
+    return '\$${_estimateDetail!.totalCost.toStringAsFixed(2)}';
   }
 
-  // Métodos privados para gerenciar estado
+  /// Get formatted materials cost
+  String getFormattedMaterialsCost() {
+    if (_estimateDetail == null) return '\$0.00';
+    return '\$${_estimateDetail!.totals.materialsCost.toStringAsFixed(2)}';
+  }
+
+  /// Get formatted labor cost
+  String getFormattedLaborCost() {
+    if (_estimateDetail == null) return '\$0.00';
+    return '\$${_estimateDetail!.totals.laborCost.toStringAsFixed(2)}';
+  }
+
+  /// Get total area
+  double getTotalArea() {
+    if (_estimateDetail == null) return 0.0;
+
+    // Calculate total area from zones
+    double totalArea = 0.0;
+    for (final zone in _estimateDetail!.zones) {
+      totalArea += zone.area;
+    }
+
+    // If no zones, try to get from materials calculation
+    if (totalArea == 0.0) {
+      totalArea = _estimateDetail!.materialsCalculation.totalArea;
+    }
+
+    return totalArea;
+  }
+
+  /// Get formatted total area
+  String getFormattedTotalArea() {
+    final area = getTotalArea();
+    return '${area.toStringAsFixed(1)} sq ft';
+  }
+
+  /// Get zones count
+  int getZonesCount() {
+    if (_estimateDetail == null) return 0;
+    return _estimateDetail!.zones.length;
+  }
+
+  /// Get materials count
+  int getMaterialsCount() {
+    if (_estimateDetail == null) return 0;
+    return _estimateDetail!.materials.length;
+  }
+
+  /// Get project name
+  String getProjectName() {
+    if (_estimateDetail == null) return '';
+    return _estimateDetail!.projectName;
+  }
+
+  /// Get client name
+  String getClientName() {
+    if (_estimateDetail == null) return '';
+    return _estimateDetail!.clientName;
+  }
+
+  /// Get project type
+  String getProjectType() {
+    if (_estimateDetail == null) return '';
+    return _estimateDetail!.projectType.name;
+  }
+
+  /// Get status
+  String getStatus() {
+    if (_estimateDetail == null) return '';
+    return _estimateDetail!.status.name;
+  }
+
+  /// Get additional notes
+  String getAdditionalNotes() {
+    if (_estimateDetail == null) return '';
+    return _estimateDetail!.additionalNotes;
+  }
+
+  /// Get wall condition
+  String getWallCondition() {
+    if (_estimateDetail == null) return '';
+    return _estimateDetail!.wallCondition;
+  }
+
+  /// Check if has accent wall
+  bool getHasAccentWall() {
+    if (_estimateDetail == null) return false;
+    return _estimateDetail!.hasAccentWall;
+  }
+
+  /// Get paint type (derived from materials)
+  String getPaintType() {
+    if (_estimateDetail == null || _estimateDetail!.materials.isEmpty) {
+      return 'Not specified';
+    }
+
+    // Get the first paint material type
+    final paintMaterials = _estimateDetail!.materials
+        .where((material) => material.type == 'paint')
+        .toList();
+
+    if (paintMaterials.isNotEmpty) {
+      return paintMaterials.first.product;
+    }
+
+    return 'Not specified';
+  }
+
+  /// Get formatted zones list
+  List<String> getFormattedZones() {
+    if (_estimateDetail == null) return [];
+    return _estimateDetail!.zones.map((zone) => zone.name).toList();
+  }
+
+  /// Get material name by ID
+  Future<String> getMaterialNameById(String materialId) async {
+    try {
+      final result = await _materialRepository.getMaterialById(materialId);
+      if (result is Ok && result.asOk.value != null) {
+        return result.asOk.value!.name;
+      }
+    } catch (e) {
+      // Swallow error and return default below
+    }
+    return 'Unknown Material';
+  }
+
+  // Private methods
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();

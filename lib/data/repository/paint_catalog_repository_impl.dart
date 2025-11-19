@@ -36,12 +36,12 @@ class PaintCatalogRepository implements IPaintCatalogRepository {
 
   @override
   Future<Result<Map<String, dynamic>>> calculatePaintNeeds({
-    required double areaInSquareMeters,
+    required double areaInSquareFeet,
     required String colorId,
     required int coats,
   }) {
     return _paintCatalogService.calculatePaintNeeds(
-      areaInSquareMeters: areaInSquareMeters,
+      areaInSquareFeet: areaInSquareFeet,
       colorId: colorId,
       coats: coats,
     );

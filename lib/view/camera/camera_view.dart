@@ -1,61 +1,151 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../config/app_colors.dart';
-import '../widgets/appbars/paint_pro_app_bar.dart';
+import '../../service/camera_manager.dart';
+import '../../service/camera_navigation_handler.dart';
+import '../../service/camera_photo_service.dart';
+import '../../viewmodel/camera/camera_viewmodel.dart';
+import '../../widgets/camera/camera_app_bar_overlay.dart';
+import '../../widgets/camera/camera_controls_bar.dart';
+import '../../widgets/camera/camera_focus_overlay.dart';
+import '../../widgets/camera/camera_preview_widget.dart';
+import '../../widgets/camera/photo_thumbnails_row.dart';
 
-class CameraView extends StatelessWidget {
-  const CameraView({super.key});
+class CameraView extends StatefulWidget {
+  final Map<String, dynamic>? projectData;
+
+  const CameraView({super.key, this.projectData});
+
+  @override
+  State<CameraView> createState() => _CameraViewState();
+}
+
+class _CameraViewState extends State<CameraView> {
+  late CameraViewModel _viewModel;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Create a single shared instance of CameraPhotoService
+    final photoService = CameraPhotoService(
+      existingPhotos: [],
+      maxPhotos: 9,
+    );
+
+    _viewModel = CameraViewModel(
+      cameraManager: CameraManager(),
+      photoService: photoService,
+      navigationHandler: CameraNavigationHandler(
+        context: context,
+        photoService: photoService, // Use the same instance
+        projectData: widget.projectData,
+        previousRoute: _getPreviousRoute(),
+      ),
+      projectData: widget.projectData,
+    );
+    _initializeCamera();
+  }
+
+  /// Get the previous route based on projectData
+  String? _getPreviousRoute() {
+    if (widget.projectData != null) {
+      // If coming from zone details (editing existing zone), return to zones
+      if (widget.projectData!['zoneId'] != null) {
+        return '/zones';
+      }
+      // If coming from create project, return to create project view
+      if (widget.projectData!['isFromCreateProject'] == true) {
+        return '/create-project';
+      }
+      // If coming from zones view (adding new zone), return to zones
+      if (widget.projectData!['zoneName'] != null &&
+          widget.projectData!['zoneType'] != null) {
+        return '/zones';
+      }
+    }
+    // No fallback - return null if no specific route is identified
+    return null;
+  }
+
+  Future<void> _initializeCamera() async {
+    await _viewModel.initialize();
+
+    if (!mounted) return;
+
+    _viewModel.setNavigationContext(context);
+
+    if (_viewModel.needsCameraUnavailableDialog) {
+      await _viewModel.showCameraUnavailableDialog(context);
+    }
+    setState(() {});
+  }
+
+  Future<void> _toggleFlash() async {
+    await _viewModel.toggleFlash();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _takePhoto() async {
+    final success = await _viewModel.takePhoto();
+
+    if (mounted) {
+      if (!success && _viewModel.needsPhotoLimitDialog) {
+        await _viewModel.showPhotoLimitDialog(context);
+      }
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _viewModel.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: const PaintProAppBar(title: 'Camera'),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            InkWell(
-              onTap: () => context.push('/zones'),
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppColors.divider,
-                    width: 2,
-                  ),
-                ),
-                child: Icon(
-                  Icons.add_a_photo_outlined,
-                  size: 48,
-                  color: AppColors.textSecondary,
-                ),
-              ),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Camera Preview
+          CameraPreviewWidget(
+            cameraController: _viewModel.cameraManager.cameraController,
+            isInitialized: _viewModel.isInitialized,
+          ),
+
+          // App Bar Overlay
+          CameraAppBarOverlay(
+            onBackPressed: () => _viewModel.onBackPressed(),
+            onDonePressed: () => _viewModel.onDonePressed(),
+            instructionText: _viewModel.photoService.getInstructionText(),
+            isDoneEnabled: _viewModel.photoService.isDoneEnabled,
+          ),
+
+          // Focus Field Overlay
+          const CameraFocusOverlay(),
+
+          // Photo Thumbnails Row
+          Positioned(
+            bottom: 140.h,
+            left: 0,
+            right: 0,
+            child: PhotoThumbnailsRow(
+              photos: _viewModel.photoService.allPhotos,
             ),
-            const SizedBox(height: 24),
-            Text(
-              'Camera',
-              style: GoogleFonts.albertSans(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Capture your photos here',
-              style: GoogleFonts.albertSans(
-                fontSize: 16,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
+          ),
+
+          // Camera Controls
+          CameraControlsBar(
+            onTakePhoto: _takePhoto,
+            onToggleFlash: _toggleFlash,
+            flashMode: _viewModel.cameraManager.flashMode,
+            isShutterDisabled: !_viewModel.photoService.canTakeMorePhotos,
+          ),
+        ],
       ),
     );
   }

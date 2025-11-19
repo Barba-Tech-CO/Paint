@@ -1,50 +1,112 @@
 import 'package:get_it/get_it.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 // Data Layer
 import '../data/repository/auth_repository_impl.dart';
 import '../data/repository/contact_repository_impl.dart';
+import '../data/repository/dashboard_repository_impl.dart';
 import '../data/repository/estimate_repository_impl.dart';
+import '../data/repository/estimate_detail_repository_impl.dart';
 import '../data/repository/material_repository_impl.dart';
+import '../data/repository/offline_repository_impl.dart';
 import '../data/repository/paint_catalog_repository_impl.dart';
 import '../data/repository/quote_repository_impl.dart';
+import '../data/repository/user_repository_impl.dart';
+import '../service/ghl/ghl_repository_impl.dart';
+import '../service/ghl/ghl_service.dart';
 
 // Domain Layer
 import '../domain/repository/auth_repository.dart';
 import '../domain/repository/contact_repository.dart';
+import '../domain/repository/dashboard_repository.dart';
+import '../domain/repository/ghl_repository.dart';
 import '../domain/repository/estimate_repository.dart';
+import '../domain/repository/estimate_detail_repository.dart';
 import '../domain/repository/material_repository.dart';
+import '../domain/repository/offline_repository.dart';
 import '../domain/repository/paint_catalog_repository.dart';
 import '../domain/repository/quote_repository.dart';
+import '../domain/repository/user_repository.dart';
 
 // Service Layer
 import '../service/app_initialization_service.dart';
 import '../service/auth_service.dart';
+import '../service/auth_initialization_service.dart';
 import '../service/auth_persistence_service.dart';
+import '../service/auth_state_manager.dart';
+import '../service/camera_service.dart';
 import '../service/contact_service.dart';
 import '../service/contact_database_service.dart';
+import '../service/contact_loading_service.dart';
+import '../service/dashboard_service.dart';
 import '../service/deep_link_service.dart';
 import '../service/estimate_service.dart';
 import '../service/http_service.dart';
 import '../service/location_service.dart';
-import '../service/navigation_service.dart';
 import '../service/material_service.dart';
+import '../service/material_database_service.dart';
 import '../service/paint_catalog_service.dart';
+import '../service/photo_service.dart';
 import '../service/quote_service.dart';
+import '../service/sync_service.dart';
+import '../service/database_service.dart';
+import '../service/local/estimates_local_service.dart';
+import '../service/local/pending_operations_local_service.dart';
+import '../service/local/dashboard_cache_local_service.dart';
+import '../service/local/quotes_local_service.dart';
+import '../service/local/user_local_service.dart';
 import '../service/user_service.dart';
+import '../service/zones_service.dart';
+import '../service/i_zones_service.dart';
 
 // Logger Layer
 import '../utils/logger/app_logger.dart';
 import '../utils/logger/logger_app_logger_impl.dart';
 
 // Use Case Layer
-import '../use_case/auth/auth_use_cases.dart';
+import '../use_case/auth/auth_operations_use_case.dart';
+import '../use_case/auth/manage_auth_state_use_case.dart';
+import '../use_case/auth/handle_deep_link_use_case.dart';
+import '../use_case/auth/handle_webview_navigation_use_case.dart';
 import '../use_case/contacts/contact_operations_use_case.dart';
 import '../use_case/contacts/contact_sync_use_case.dart';
+import '../use_case/dashboard/dashboard_financial_use_case.dart';
+import '../use_case/estimates/estimate_upload_use_case.dart';
+import '../use_case/estimate/estimate_detail_use_case.dart';
+import '../use_case/projects/project_operations_use_case.dart';
 import '../use_case/quotes/quote_upload_use_case.dart';
 
 // ViewModel Layer
 import '../viewmodel/select_colors_viewmodel.dart';
-import '../viewmodel/viewmodels.dart';
+import '../viewmodel/auth/auth_viewmodel.dart';
+import '../viewmodel/auth/delete_account_viewmodel.dart';
+import '../viewmodel/auth/login_viewmodel.dart';
+import '../viewmodel/auth/signup_viewmodel.dart';
+import '../viewmodel/auth/verify_otp_viewmodel.dart';
+import '../viewmodel/auth/reset_password_viewmodel.dart';
+import '../viewmodel/contact/contact_list_viewmodel.dart';
+import '../viewmodel/contact/contact_detail_viewmodel.dart';
+import '../viewmodel/contact/new_contact_viewmodel.dart';
+import '../viewmodel/contacts/contacts_viewmodel.dart';
+import '../viewmodel/edit_zone/edit_zone_viewmodel.dart';
+import '../viewmodel/estimate/estimate_list_viewmodel.dart';
+import '../viewmodel/estimate/estimate_detail_viewmodel.dart';
+import '../viewmodel/estimate/estimate_upload_viewmodel.dart';
+import '../viewmodel/estimate/estimate_calculation_viewmodel.dart';
+import '../viewmodel/material/material_list_viewmodel.dart';
+import '../viewmodel/measurements/measurements_viewmodel.dart';
+import '../viewmodel/dashboard/dashboard_viewmodel.dart';
+import '../viewmodel/navigation_viewmodel.dart';
+import '../viewmodel/projects/projects_viewmodel.dart';
+import '../viewmodel/home/home_viewmodel.dart';
+import '../viewmodel/quotes/quotes_viewmodel.dart';
+import '../viewmodel/roomplan/roomplan_viewmodel.dart';
+import '../viewmodel/user/user_viewmodel.dart';
+import '../viewmodel/zones/zones_list_viewmodel.dart';
+import '../viewmodel/zones/zone_detail_viewmodel.dart';
+import '../viewmodel/zones/zones_summary_viewmodel.dart';
+import '../viewmodel/zones/zones_card_viewmodel.dart';
+import '../viewmodel/connect_ghl/connect_ghl_viewmodel.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -65,10 +127,19 @@ void setupDependencyInjection() {
     },
   );
 
+  getIt.registerLazySingleton<AuthStateManager>(
+    () => AuthStateManager(),
+  );
+
+  getIt.registerLazySingleton<AuthPersistenceService>(
+    () => AuthPersistenceService(),
+  );
+
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(
       getIt<HttpService>(),
-      getIt<LocationService>(),
+      getIt<AuthPersistenceService>(),
+      getIt<UserLocalService>(),
       getIt<AppLogger>(),
     ),
   );
@@ -78,7 +149,7 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<ContactService>(
     () => ContactService(
       getIt<HttpService>(),
-      getIt<LocationService>(),
+      getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<ContactDatabaseService>(
@@ -89,9 +160,19 @@ void setupDependencyInjection() {
       getIt<HttpService>(),
     ),
   );
+  getIt.registerLazySingleton<DashboardService>(
+    () => DashboardService(
+      getIt<HttpService>(),
+    ),
+  );
+  getIt.registerLazySingleton<MaterialDatabaseService>(
+    () => MaterialDatabaseService(),
+  );
+
   getIt.registerLazySingleton<MaterialService>(
     () => MaterialService(
       getIt<QuoteService>(),
+      getIt<MaterialDatabaseService>(),
     ),
   );
   getIt.registerLazySingleton<PaintCatalogService>(
@@ -99,14 +180,16 @@ void setupDependencyInjection() {
       getIt<HttpService>(),
     ),
   );
-  getIt.registerLazySingleton<NavigationService>(
-    () => NavigationService(),
-  );
   getIt.registerLazySingleton<DeepLinkService>(
     () => DeepLinkService(),
   );
-  getIt.registerLazySingleton<AuthPersistenceService>(
-    () => AuthPersistenceService(),
+  getIt.registerLazySingleton<ContactLoadingService>(
+    () => ContactLoadingService(
+      contactRepository: getIt<IContactRepository>(),
+      httpService: getIt<HttpService>(),
+      authPersistenceService: getIt<AuthPersistenceService>(),
+      logger: getIt<AppLogger>(),
+    ),
   );
   getIt.registerLazySingleton<UserService>(
     () => UserService(
@@ -116,6 +199,75 @@ void setupDependencyInjection() {
   );
   getIt.registerLazySingleton<QuoteService>(
     () => QuoteService(
+      httpService: getIt<HttpService>(),
+    ),
+  );
+  getIt.registerLazySingleton<PhotoService>(
+    () => PhotoService(),
+  );
+  getIt.registerLazySingleton<CameraService>(
+    () => CameraService(),
+  );
+  getIt.registerLazySingleton<IZonesService>(
+    () => ZonesService(),
+  );
+  getIt.registerLazySingleton<GhlService>(
+    () => GhlService(
+      getIt<HttpService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  // Database + Local Services
+  getIt.registerLazySingleton<DatabaseService>(() => DatabaseService());
+  getIt.registerLazySingleton<EstimatesLocalService>(
+    () => EstimatesLocalService(
+      getIt<DatabaseService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+  getIt.registerLazySingleton<PendingOperationsLocalService>(
+    () => PendingOperationsLocalService(
+      getIt<DatabaseService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+  getIt.registerLazySingleton<DashboardCacheLocalService>(
+    () => DashboardCacheLocalService(
+      getIt<DatabaseService>(),
+    ),
+  );
+  getIt.registerLazySingleton<QuotesLocalService>(
+    () => QuotesLocalService(
+      getIt<DatabaseService>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<UserLocalService>(
+    () => UserLocalService(
+      getIt<DatabaseService>(),
+    ),
+  );
+
+  // User Service and Repository (needed early for AuthInitializationService)
+  getIt.registerLazySingleton<IUserRepository>(
+    () => UserRepositoryImpl(
+      getIt<UserService>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<UserViewModel>(
+    () => UserViewModel(
+      getIt<IUserRepository>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  // Auth Initialization Service (after UserViewModel)
+  getIt.registerLazySingleton<AuthInitializationService>(
+    () => AuthInitializationService(
+      authPersistenceService: getIt<AuthPersistenceService>(),
+      userViewModel: getIt<UserViewModel>(),
       httpService: getIt<HttpService>(),
     ),
   );
@@ -132,25 +284,67 @@ void setupDependencyInjection() {
       databaseService: getIt<ContactDatabaseService>(),
       authService: getIt<AuthService>(),
       logger: getIt<AppLogger>(),
-      locationService: getIt<LocationService>(),
     ),
   );
   getIt.registerLazySingleton<IEstimateRepository>(
     () => EstimateRepository(
       estimateService: getIt<EstimateService>(),
+      offlineRepository: getIt<IOfflineRepository>(),
+      logger: getIt<AppLogger>(),
+    ),
+  );
+  getIt.registerLazySingleton<IEstimateDetailRepository>(
+    () => EstimateDetailRepositoryImpl(
+      getIt<HttpService>(),
+    ),
+  );
+  getIt.registerLazySingleton<IDashboardRepository>(
+    () => DashboardRepositoryImpl(
+      getIt<DashboardService>(),
+      getIt<DashboardCacheLocalService>(),
+      getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<IMaterialRepository>(
-    () => MaterialRepository(materialService: getIt<MaterialService>()),
+    () => MaterialRepository(
+      materialService: getIt<MaterialService>(),
+      logger: getIt<AppLogger>(),
+    ),
   );
   getIt.registerLazySingleton<IPaintCatalogRepository>(
     () => PaintCatalogRepository(
       paintCatalogService: getIt<PaintCatalogService>(),
     ),
   );
+  getIt.registerLazySingleton<IGhlRepository>(
+    () => GhlRepositoryImpl(
+      getIt<GhlService>(),
+      getIt<AppLogger>(),
+    ),
+  );
   getIt.registerLazySingleton<IQuoteRepository>(
     () => QuoteRepository(
       quoteService: getIt<QuoteService>(),
+      localStorageService: getIt<QuotesLocalService>(),
+      logger: getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<IOfflineRepository>(
+    () => OfflineRepository(
+      getIt<EstimatesLocalService>(),
+      getIt<PendingOperationsLocalService>(),
+      getIt<DatabaseService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<SyncService>(
+    () => SyncService(
+      getIt<IEstimateRepository>(),
+      getIt<IOfflineRepository>(),
+      Connectivity(),
+      getIt<AppLogger>(),
     ),
   );
 
@@ -197,12 +391,42 @@ void setupDependencyInjection() {
     ),
   );
 
+  // Use Cases - Estimates
+  getIt.registerLazySingleton<EstimateUploadUseCase>(
+    () => EstimateUploadUseCase(
+      getIt<IEstimateRepository>(),
+      getIt<AppLogger>(),
+    ),
+  );
+  getIt.registerLazySingleton<EstimateDetailUseCase>(
+    () => EstimateDetailUseCase(
+      getIt<IEstimateDetailRepository>(),
+    ),
+  );
+
+  // Use Cases - Projects
+  getIt.registerLazySingleton<ProjectOperationsUseCase>(
+    () => ProjectOperationsUseCase(
+      getIt<IEstimateRepository>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  // Use Cases - Dashboard Financial
+  getIt.registerLazySingleton<DashboardFinancialUseCase>(
+    () => DashboardFinancialUseCase(
+      getIt<IDashboardRepository>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
   getIt.registerLazySingleton<AppInitializationService>(
     () => AppInitializationService(
       getIt<AuthService>(),
       getIt<AuthPersistenceService>(),
-      getIt<NavigationService>(),
+      getIt<AuthStateManager>(),
       getIt<DeepLinkService>(),
+      getIt<HttpService>(),
     ),
   );
 
@@ -214,6 +438,46 @@ void setupDependencyInjection() {
       getIt<HandleWebViewNavigationUseCase>(),
       getIt<DeepLinkService>(),
       getIt<AuthPersistenceService>(),
+      getIt<HttpService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<LoginViewModel>(
+    () => LoginViewModel(
+      getIt<HttpService>(),
+      getIt<AuthPersistenceService>(),
+      getIt<UserLocalService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<DeleteAccountViewModel>(
+    () => DeleteAccountViewModel(
+      getIt<AuthService>(),
+      getIt<AuthStateManager>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<SignUpViewModel>(
+    () => SignUpViewModel(
+      getIt<HttpService>(),
+      getIt<AuthPersistenceService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<VerifyOtpViewModel>(
+    () => VerifyOtpViewModel(
+      getIt<HttpService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<ResetPasswordViewModel>(
+    () => ResetPasswordViewModel(
+      getIt<HttpService>(),
       getIt<AppLogger>(),
     ),
   );
@@ -221,14 +485,17 @@ void setupDependencyInjection() {
   // ViewModels - Contact
   getIt.registerFactory<ContactListViewModel>(
     () => ContactListViewModel(
-      getIt<ContactOperationsUseCase>(),
+      getIt<IContactRepository>(),
     ),
   );
   getIt.registerFactory<ContactDetailViewModel>(
     () => ContactDetailViewModel(
-      getIt<ContactOperationsUseCase>(),
-      getIt<LocationService>(),
-      getIt<AppLogger>(),
+      getIt<IContactRepository>(),
+    ),
+  );
+  getIt.registerFactory<NewContactViewModel>(
+    () => NewContactViewModel(
+      getIt<ContactDetailViewModel>(),
     ),
   );
 
@@ -240,29 +507,19 @@ void setupDependencyInjection() {
   );
   getIt.registerFactory<EstimateDetailViewModel>(
     () => EstimateDetailViewModel(
-      getIt<IEstimateRepository>(),
+      getIt<EstimateDetailUseCase>(),
+      getIt<IMaterialRepository>(),
     ),
   );
   getIt.registerFactory<EstimateUploadViewModel>(
     () => EstimateUploadViewModel(
-      getIt<IEstimateRepository>(),
+      getIt<EstimateUploadUseCase>(),
     ),
   );
   getIt.registerFactory<EstimateCalculationViewModel>(
     () => EstimateCalculationViewModel(
       getIt<IEstimateRepository>(),
-    ),
-  );
-
-  // ViewModels - Paint Catalog
-  getIt.registerFactory<PaintCatalogListViewModel>(
-    () => PaintCatalogListViewModel(
-      getIt<IPaintCatalogRepository>(),
-    ),
-  );
-  getIt.registerFactory<PaintCatalogDetailViewModel>(
-    () => PaintCatalogDetailViewModel(
-      getIt<IPaintCatalogRepository>(),
+      getIt<PhotoService>(),
     ),
   );
 
@@ -271,18 +528,35 @@ void setupDependencyInjection() {
     () => NavigationViewModel(),
   );
 
+  // ViewModels - GHL
+  getIt.registerFactory<ConnectGhlViewModel>(
+    () => ConnectGhlViewModel(
+      getIt<IGhlRepository>(),
+      getIt<AuthService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
   // ViewModels - Measurements
   getIt.registerFactory<MeasurementsViewModel>(
-    () => MeasurementsViewModel(),
+    () => MeasurementsViewModel(
+      getIt<IOfflineRepository>(),
+      getIt<SyncService>(),
+      getIt<AppLogger>(),
+    ),
   );
 
   // ViewModels - Zones (Refactored)
   getIt.registerLazySingleton<ZonesListViewModel>(
-    () => ZonesListViewModel(),
+    () => ZonesListViewModel(
+      getIt<IZonesService>(),
+    ),
   );
 
   getIt.registerLazySingleton<ZoneDetailViewModel>(
-    () => ZoneDetailViewModel(),
+    () => ZoneDetailViewModel(
+      getIt<IZonesService>(),
+    ),
   );
 
   getIt.registerLazySingleton<ZonesSummaryViewModel>(
@@ -296,21 +570,15 @@ void setupDependencyInjection() {
 
   // ViewModels - Material
   getIt.registerFactory<MaterialListViewModel>(
-    () => MaterialListViewModel(getIt<IMaterialRepository>()),
+    () => MaterialListViewModel(
+      getIt<IMaterialRepository>(),
+    ),
   );
 
   // ViewModels - Select Colors
   getIt.registerFactory<SelectColorsViewModel>(
     () => SelectColorsViewModel(
       getIt<IPaintCatalogRepository>(),
-      getIt<AppLogger>(),
-    ),
-  );
-
-  // ViewModels - User
-  getIt.registerFactory<UserViewModel>(
-    () => UserViewModel(
-      getIt<UserService>(),
       getIt<AppLogger>(),
     ),
   );
@@ -327,11 +595,41 @@ void setupDependencyInjection() {
   getIt.registerFactory<ContactsViewModel>(
     () => ContactsViewModel(
       getIt<ContactOperationsUseCase>(),
+      getIt<IContactRepository>(),
+      getIt<AppLogger>(),
     ),
   );
 
   // ViewModel - Projects
   getIt.registerFactory<ProjectsViewModel>(
-    () => ProjectsViewModel(),
+    () => ProjectsViewModel(
+      getIt<ProjectOperationsUseCase>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  // ViewModel - Home
+  getIt.registerFactory<HomeViewModel>(
+    () => HomeViewModel(
+      getIt<IEstimateRepository>(),
+    ),
+  );
+
+  // ViewModel - Dashboard
+  getIt.registerFactory<DashboardViewModel>(
+    () => DashboardViewModel(
+      getIt<IDashboardRepository>(),
+      getIt<DashboardFinancialUseCase>(),
+    ),
+  );
+
+  // ViewModel - RoomPlan
+  getIt.registerFactory<RoomPlanViewModel>(
+    () => RoomPlanViewModel(),
+  );
+
+  // ViewModel - EditZone
+  getIt.registerFactory<EditZoneViewModel>(
+    () => EditZoneViewModel(),
   );
 }

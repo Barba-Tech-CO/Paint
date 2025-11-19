@@ -1,4 +1,6 @@
-import '../../model/models.dart';
+import '../../model/auth_model/auth_model.dart';
+import '../../model/auth_model/auth_refresh_response.dart';
+import '../../model/user_model.dart';
 import '../../service/auth_service.dart';
 import '../../utils/logger/app_logger.dart';
 import '../../utils/result/result.dart';
@@ -12,15 +14,10 @@ class AuthOperationsUseCase {
 
   /// Verifica o status de autenticação
   Future<Result<AuthModel>> checkAuthStatus() async {
-    _logger.info('checkAuthStatus');
-
     try {
       final result = await _authService.getStatus();
       return result.when(
         ok: (status) {
-          _logger.info(
-            'checkAuthStatus_success - status: ${status.data.toString()}',
-          );
           return Result.ok(status.data);
         },
         error: (error) {
@@ -78,14 +75,10 @@ class AuthOperationsUseCase {
 
   /// Obtém dados completos do usuário autenticado
   Future<Result<UserModel>> getUser() async {
-    _logger.info('[AuthOperationsUseCase] Getting user data');
     try {
       final result = await _authService.getUser();
       return result.when(
         ok: (user) {
-          _logger.info(
-            '[AuthOperationsUseCase] User data retrieved successfully',
-          );
           return Result.ok(user);
         },
         error: (error) {
@@ -108,10 +101,8 @@ class AuthOperationsUseCase {
 
   /// Executa logout limpando tokens e estado de autenticação
   Future<Result<void>> logout() async {
-    _logger.info('[AuthOperationsUseCase] Logout initiated');
     try {
       await _authService.logout();
-      _logger.info('[AuthOperationsUseCase] Logout completed successfully');
       return Result.ok(null);
     } catch (error, stackTrace) {
       _logger.error(

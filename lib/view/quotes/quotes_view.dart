@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodel/viewmodels.dart';
+import '../../viewmodel/quotes/quotes_viewmodel.dart';
 import '../layout/main_layout.dart';
-import '../widgets/widgets.dart';
-import 'widgets/widgets.dart';
+import '../../widgets/appbars/paint_pro_app_bar.dart';
+import '../../widgets/buttons/paint_pro_fab.dart';
+import '../../widgets/states/empty_state_widget.dart';
+import '../../widgets/states/loading_widget.dart';
+import '../../widgets/quotes/quote_card_widget.dart';
+import '../../widgets/quotes/search_bar_widget.dart';
+import '../../widgets/quotes/try_again_widget.dart';
 
 class QuotesView extends StatefulWidget {
   const QuotesView({super.key});
@@ -45,35 +51,35 @@ class _QuotesViewState extends State<QuotesView> {
       child: Scaffold(
         appBar: PaintProAppBar(title: 'Quotes'),
         body: Padding(
-          padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
+          padding: EdgeInsets.only(top: 16.h, left: 16.w, right: 16.w),
           child: Column(
             children: [
               quotesViewModel.currentState == QuotesState.loaded
                   ? SearchBarWidget(controller: _searchController)
-                  : SizedBox.shrink(),
+                  : const SizedBox.shrink(),
               if (quotesViewModel.isUploading)
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.all(16),
-                  margin: EdgeInsets.only(bottom: 16),
+                  padding: EdgeInsets.all(16.w),
+                  margin: EdgeInsets.only(bottom: 16.h),
                   decoration: BoxDecoration(
                     color: Colors.blue[50],
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(color: Colors.blue[200]!),
                   ),
                   child: Row(
                     children: [
                       SizedBox(
-                        width: 20,
-                        height: 20,
+                        width: 20.w,
+                        height: 20.h,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2,
+                          strokeWidth: 2.w,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             Colors.blue[600]!,
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: 12.w),
                       Expanded(
                         child: Text(
                           'Uploading PDF... Please wait',
@@ -90,7 +96,9 @@ class _QuotesViewState extends State<QuotesView> {
                 child: Stack(
                   children: [
                     quotesViewModel.currentState == QuotesState.loading
-                        ? const LoadingWidget(message: 'Loading quotes...')
+                        ? const LoadingWidget(
+                            message: 'Loading quotes...',
+                          )
                         : quotesViewModel.currentState == QuotesState.empty
                         ? EmptyStateWidget(
                             title: 'No Quotes yet',
@@ -99,39 +107,44 @@ class _QuotesViewState extends State<QuotesView> {
                             onButtonPressed: () => quotesViewModel.pickFile(),
                           )
                         : quotesViewModel.currentState == QuotesState.loaded
-                        ? ListView.builder(
-                            padding: const EdgeInsets.only(
-                              bottom: 140,
-                              left: 16,
-                              right: 16,
-                            ),
-                            itemCount: quotesViewModel.quotes.length,
-                            itemBuilder: (context, index) {
-                              final quote = quotesViewModel.quotes[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 12.0),
-                                child: QuoteCardWidget(
-                                  id: quote.id,
-                                  titulo: quote.titulo,
-                                  dateUpload: quote.dateUpload,
-                                  status: quote.status?.value,
-                                  errorMessage: quote.errorMessage,
-                                  isDeleting: quotesViewModel
-                                      .isQuoteBeingDeleted(
-                                        quote.id,
-                                      ), // Use specific quote state
-                                  onRename: (newName) {
-                                    quotesViewModel.renameQuote(
-                                      quote.id,
-                                      newName,
-                                    );
-                                  },
-                                  onDelete: () {
-                                    quotesViewModel.removeQuote(quote.id);
-                                  },
-                                ),
-                              );
+                        ? RefreshIndicator(
+                            onRefresh: () async {
+                              await quotesViewModel.refresh();
                             },
+                            child: ListView.builder(
+                              padding: EdgeInsets.only(
+                                bottom: 140.h,
+                                left: 16.w,
+                                right: 16.w,
+                              ),
+                              itemCount: quotesViewModel.quotes.length,
+                              itemBuilder: (context, index) {
+                                final quote = quotesViewModel.quotes[index];
+                                return Padding(
+                                  padding: EdgeInsets.only(bottom: 12.h),
+                                  child: QuoteCardWidget(
+                                    id: quote.id,
+                                    titulo: quote.titulo,
+                                    dateUpload: quote.dateUpload,
+                                    status: quote.status?.value,
+                                    errorMessage: quote.errorMessage,
+                                    isDeleting: quotesViewModel
+                                        .isQuoteBeingDeleted(
+                                          quote.id,
+                                        ), // Use specific quote state
+                                    onRename: (newName) {
+                                      quotesViewModel.renameQuote(
+                                        quote.id,
+                                        newName,
+                                      );
+                                    },
+                                    onDelete: () {
+                                      quotesViewModel.removeQuote(quote.id);
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
                           )
                         : TryAgainWidget(
                             onPressed: () => quotesViewModel.clearError(),
@@ -139,8 +152,8 @@ class _QuotesViewState extends State<QuotesView> {
                     // FAB posicionado manualmente
                     if (quotesViewModel.currentState == QuotesState.loaded)
                       Positioned(
-                        bottom: 120,
-                        right: 16,
+                        bottom: 120.h,
+                        right: 16.w,
                         child: PaintProFAB(
                           onPressed: () => quotesViewModel.pickFile(),
                         ),

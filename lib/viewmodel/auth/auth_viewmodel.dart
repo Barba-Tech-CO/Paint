@@ -5,10 +5,15 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../config/app_config.dart';
 import '../../config/app_urls.dart';
-import '../../model/models.dart';
+import '../../model/auth_model/auth_model.dart';
+import '../../model/auth_model/auth_state.dart';
+import '../../model/user_model.dart';
 import '../../service/auth_persistence_service.dart';
 import '../../service/deep_link_service.dart';
-import '../../use_case/auth/auth_use_cases.dart';
+import '../../service/http_service.dart';
+import '../../use_case/auth/auth_operations_use_case.dart';
+import '../../use_case/auth/handle_deep_link_use_case.dart';
+import '../../use_case/auth/handle_webview_navigation_use_case.dart';
 import '../../utils/command/command.dart';
 import '../../utils/handlers/deep_link_handler.dart';
 import '../../utils/logger/app_logger.dart';
@@ -21,6 +26,7 @@ class AuthViewModel extends ChangeNotifier {
   final HandleWebViewNavigationUseCase _handleWebViewNavigationUseCase;
   final DeepLinkService _deepLinkService;
   final AuthPersistenceService _authPersistenceService;
+  final HttpService _httpService;
   final AppLogger _logger;
   late final DeepLinkHandler _deepLinkHandler;
 
@@ -35,7 +41,7 @@ class AuthViewModel extends ChangeNotifier {
   String? get popupUrl => _state.popupUrl;
 
   // Comandos do Command Builder
-  late final Command0<AuthModel> checkAuthStatusCommand = Command0(
+  late final Command0<void> checkAuthStatusCommand = Command0(
     _checkAuthStatus,
   );
   late final Command1<void, String> processCallbackCommand = Command1(
@@ -49,6 +55,7 @@ class AuthViewModel extends ChangeNotifier {
     this._handleWebViewNavigationUseCase,
     this._deepLinkService,
     this._authPersistenceService,
+    this._httpService,
     this._logger,
   ) {
     _deepLinkHandler = DeepLinkHandler(
@@ -56,8 +63,8 @@ class AuthViewModel extends ChangeNotifier {
       _onDeepLinkReceived,
     );
     _deepLinkHandler.initialize();
-    // Use microtask to handle async initialization
-    Future.microtask(() => _initializeAuth());
+    // Initialize auth state synchronously during construction
+    _initializeAuthSync();
   }
 
   void _updateState(AuthViewState newState) {
@@ -65,7 +72,8 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _initializeAuth() async {
+  void _initializeAuthSync() {
+    // Set initial state with authorize URL
     _updateState(
       _state.copyWith(
         authorizeUrl: AppConfig.isProduction
@@ -74,44 +82,74 @@ class AuthViewModel extends ChangeNotifier {
       ),
     );
 
-    // First check if user is already authenticated from persisted state
-    final isAuthenticated = await _authPersistenceService.isUserAuthenticated();
+    // Load persisted authentication state synchronously
+    _loadPersistedAuthState();
+  }
 
-    if (isAuthenticated) {
-      final persistedState = await _authPersistenceService.loadAuthState();
+  void _loadPersistedAuthState() async {
+    try {
+      // Check if user is already authenticated from persisted state
+      final isAuthenticated = await _authPersistenceService
+          .isUserAuthenticated();
 
-      _updateState(
-        _state.copyWith(
-          authStatus: AuthModel(
-            authenticated: persistedState['authenticated'] as bool,
-            needsLogin: persistedState['needsLogin'] as bool,
-            expiresAt: persistedState['expiresAt'] as DateTime?,
-            sanctumToken: persistedState['sanctumToken'] as String?,
-            locationId: persistedState['locationId'] as String?,
-          ),
-          state: AuthState.authenticated,
-          isLoading: false,
-        ),
-      );
-    } else {
-      // Check if token was expired and cleared
-      final wasTokenExpired = await _authPersistenceService.isTokenExpired();
-      if (wasTokenExpired) {
-        _logger.warning(
-          '[AuthViewModel] Token was expired, forcing re-authentication',
-        );
+      if (isAuthenticated) {
+        final persistedState = await _authPersistenceService.loadAuthState();
+
         _updateState(
           _state.copyWith(
-            state: AuthState.unauthenticated,
+            authStatus: AuthModel(
+              authenticated: persistedState['authenticated'] as bool,
+              needsLogin: persistedState['needsLogin'] as bool,
+              expiresAt: persistedState['expiresAt'] as DateTime?,
+              sanctumToken: persistedState['sanctumToken'] as String?,
+              locationId: persistedState['locationId'] as String?,
+            ),
+            state: AuthState.authenticated,
             isLoading: false,
-            errorMessage: 'Your session has expired. Please log in again.',
           ),
         );
-        return;
-      }
+      } else {
+        // Check if token was expired and cleared
+        final wasTokenExpired = await _authPersistenceService.isTokenExpired();
+        if (wasTokenExpired) {
+          _updateState(
+            _state.copyWith(
+              state: AuthState.unauthenticated,
+              isLoading: false,
+              errorMessage: 'Your session has expired. Please log in again.',
+            ),
+          );
+          return;
+        }
 
-      // Check backend status if no persisted authentication
-      checkAuthStatusCommand.execute();
+        // Check backend status if no persisted authentication
+        // Only check backend status if we have a token, otherwise show login directly
+        final hasToken = await _authPersistenceService.getSanctumToken();
+        if (hasToken != null) {
+          checkAuthStatusCommand.execute();
+        } else {
+          _updateState(
+            _state.copyWith(
+              state: AuthState.unauthenticated,
+              isLoading: false,
+              errorMessage: null,
+              authorizeUrl: AppConfig.isProduction
+                  ? AppUrls.goHighLevelAuthorizeUrl
+                  : AppUrls.goHighLevelAuthorizeUrlDev,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      _logger.error('[AuthViewModel] Error loading persisted auth state: $e');
+      // Fallback to unauthenticated state
+      _updateState(
+        _state.copyWith(
+          state: AuthState.unauthenticated,
+          isLoading: false,
+          errorMessage: 'Failed to load authentication state',
+        ),
+      );
     }
   }
 
@@ -133,7 +171,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   // Métodos privados para os comandos
-  Future<Result<AuthModel>> _checkAuthStatus() async {
+  Future<Result<void>> _checkAuthStatus() async {
     _updateState(
       _state.copyWith(
         isLoading: true,
@@ -148,9 +186,6 @@ class AuthViewModel extends ChangeNotifier {
           final hasLocalToken = await _authPersistenceService.getSanctumToken();
 
           if (hasLocalToken == null) {
-            _logger.warning(
-              '[AuthViewModel] User authenticated on backend but no local token - requiring re-authentication',
-            );
             // Force re-authentication to get fresh token
             final unauthenticatedModel = authModel.copyWith(needsLogin: true);
             _updateState(
@@ -161,7 +196,7 @@ class AuthViewModel extends ChangeNotifier {
                 errorMessage: 'Please log in again to access your account',
               ),
             );
-            return Result.ok(unauthenticatedModel);
+            return Result.ok(null);
           }
         }
 
@@ -179,11 +214,28 @@ class AuthViewModel extends ChangeNotifier {
               errorMessage: null,
             ),
           );
+
+          // If backend confirms authentication, save it to persistence
+          if (authModel.authenticated && !authModel.needsLogin) {
+            final hasLocalToken = await _authPersistenceService
+                .getSanctumToken();
+            if (hasLocalToken != null) {
+              await _authPersistenceService.saveAuthState(
+                authenticated: true,
+                needsLogin: false,
+                expiresAt: authModel.expiresAt,
+                sanctumToken: hasLocalToken,
+              );
+              _logger.info(
+                '[AuthViewModel] Saved authentication state from backend confirmation',
+              );
+            }
+          }
         } else {
           _updateState(_state.copyWith(isLoading: false));
         }
 
-        return Result.ok(authModel);
+        return Result.ok(null);
       },
       error: (error) {
         _logger.error(
@@ -196,6 +248,12 @@ class AuthViewModel extends ChangeNotifier {
           'Authentication service is temporarily unavailable',
         );
 
+        // Check if it's a "no auth token" error (expected on first launch)
+        final isNoAuthTokenError =
+            errorMessage.contains('No auth token') ||
+            errorMessage.contains('401') ||
+            errorMessage.contains('Unauthorized');
+
         if (isServiceUnavailable) {
           // Service unavailable - show error state and propagate error to CommandBuilder
           _updateState(
@@ -206,10 +264,10 @@ class AuthViewModel extends ChangeNotifier {
             ),
           );
           return Result.error(error);
-        } else {
-          // Other errors (network, etc.) - treat as unauthenticated and show login
-          _logger.warning(
-            '[AuthViewModel] Network or connection error, treating as unauthenticated: $errorMessage',
+        } else if (isNoAuthTokenError) {
+          // No auth token error - treat as unauthenticated and show login (expected on first launch)
+          _logger.info(
+            '[AuthViewModel] No auth token found - treating as unauthenticated (expected on first launch)',
           );
 
           // Create a dummy unauthenticated model
@@ -230,7 +288,29 @@ class AuthViewModel extends ChangeNotifier {
           );
 
           // Return success to CommandBuilder so it doesn't show error overlay
-          return Result.ok(unauthenticatedModel);
+          return Result.ok(null);
+        } else {
+          // Other errors (network, etc.) - treat as unauthenticated and show login
+
+          // Create a dummy unauthenticated model
+          final unauthenticatedModel = AuthModel(
+            authenticated: false,
+            needsLogin: true,
+            expiresAt: null,
+            locationId: null,
+          );
+
+          _updateState(
+            _state.copyWith(
+              authStatus: unauthenticatedModel,
+              state: AuthState.unauthenticated,
+              isLoading: false,
+              errorMessage: null, // Clear error to show webview
+            ),
+          );
+
+          // Return success to CommandBuilder so it doesn't show error overlay
+          return Result.ok(null);
         }
       },
     );
@@ -253,12 +333,6 @@ class AuthViewModel extends ChangeNotifier {
             final authToken = response.authToken ?? response.sanctumToken;
 
             if (authToken == null) {
-              _logger.warning(
-                '[AuthViewModel] No authentication token received from backend. '
-                'This indicates the OAuth flow is incomplete on the backend side. '
-                'The user will need to complete authentication through the backend.',
-              );
-
               // Redirect to error state since authentication is incomplete
               final errorMessage = kDebugMode
                   ? 'OAuth authentication incomplete. No token received from backend.'
@@ -275,14 +349,19 @@ class AuthViewModel extends ChangeNotifier {
             }
 
             // Use the backend response data to create the auth status
+            // If backend doesn't provide expiresAt or it's in the past, use a future date
+            DateTime expiresAt;
+            if (response.expiresAt != null &&
+                response.expiresAt!.isAfter(DateTime.now())) {
+              expiresAt = response.expiresAt!;
+            } else {
+              expiresAt = DateTime.now().add(const Duration(days: 30));
+            }
+
             final newAuthStatus = AuthModel(
               authenticated: true,
               needsLogin: false,
-              expiresAt:
-                  response.expiresAt ??
-                  DateTime.now().add(
-                    const Duration(days: 30),
-                  ),
+              expiresAt: expiresAt,
               locationId: response.locationId,
             );
 
@@ -300,14 +379,11 @@ class AuthViewModel extends ChangeNotifier {
               authenticated: true,
               needsLogin: false,
               expiresAt: newAuthStatus.expiresAt,
-              locationId: newAuthStatus.locationId,
               sanctumToken: authToken,
             );
 
-            // Ensure HTTP client is ready with auth token before navigation
-            _logger.info(
-              '[AuthViewModel] Authentication complete - token saved and HTTP client configured',
-            );
+            // Set the token in HTTP service immediately
+            _httpService.setAuthToken(authToken);
           } else {
             _logger.error(
               '[AuthViewModel] OAuth callback failed or missing location_id',
@@ -462,10 +538,6 @@ class AuthViewModel extends ChangeNotifier {
 
   /// Retries the authentication flow by completely restarting the auth process
   Future<void> retryAuthentication() async {
-    _logger.info(
-      '[AuthViewModel] Retrying authentication - restarting complete flow',
-    );
-
     // Clear any existing authentication state
     await _authPersistenceService.forceLogout();
 
@@ -510,17 +582,8 @@ class AuthViewModel extends ChangeNotifier {
     final result = await _authOperationsUseCase.getUser();
     return result.when(
       ok: (user) {
-        _logger.info('[AuthViewModel] User data retrieved: ${user.name}');
-
-        // Log special states for debugging
-        if (user.ghlDataIncomplete == true) {
-          _logger.warning('[AuthViewModel] User has incomplete GHL data');
-        }
-        if (user.ghlError == true) {
-          _logger.warning('[AuthViewModel] User has GHL error');
-        }
-
-        return Result.ok(user);
+        final userModel = user;
+        return Result.ok(userModel);
       },
       error: (error) {
         _logger.error('[AuthViewModel] Error getting user data: $error');
@@ -531,8 +594,6 @@ class AuthViewModel extends ChangeNotifier {
 
   /// Force logout by clearing all authentication data
   Future<void> logout() async {
-    _logger.info('[AuthViewModel] Logout initiated');
-
     // Use AuthOperationsUseCase to handle logout (clears HTTP tokens)
     final result = await _authOperationsUseCase.logout();
 
@@ -556,7 +617,7 @@ class AuthViewModel extends ChangeNotifier {
     );
 
     result.when(
-      ok: (_) => _logger.info('[AuthViewModel] Logout completed successfully'),
+      ok: (_) {},
       error: (error) => _logger.error(
         '[AuthViewModel] Error during logout: $error',
       ),

@@ -1,0 +1,36 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build IPA and upload to Firebase App Distribution"
+  lane :deploy_firebase do
+    # Ensure Flutter is ready
+    sh "flutter --version"
+    sh "flutter pub get"
+    sh "flutter clean"
+
+    # Fetch signing from match (read-only, using encrypted repo)
+    match(
+      type: "adhoc",
+      readonly: true,
+      git_basic_authorization: ENV['MATCH_GIT_BASIC_AUTHORIZATION'],
+      git_url: ENV['MATCH_GIT_URL']
+    )
+
+    # Build IPA using Flutter (ad-hoc for Firebase distribution)
+    sh "flutter build ipa --release --export-method ad-hoc"
+
+    ipa_candidates = Dir['build/ios/ipa/*.ipa']
+    UI.user_error!("IPA not found in build/ios/ipa") if ipa_candidates.empty?
+    ipa_path = ipa_candidates.last
+
+    # Upload to Firebase App Distribution (requires plugin)
+    firebase_app_distribution(
+      app: ENV['FIREBASE_APP_ID'],
+      ipa_path: ipa_path,
+      firebase_cli_token: ENV['FIREBASE_TOKEN'],
+      release_notes: ENV['RELEASE_NOTES'] || 'CI iOS build',
+      testers: ENV['FIREBASE_TESTERS'],
+      groups: ENV['FIREBASE_GROUPS']
+    )
+  end
+end
