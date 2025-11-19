@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PhotosGalleryWidget extends StatelessWidget {
   final List<String>? photos;
@@ -20,23 +21,23 @@ class PhotosGalleryWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Photos',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 18.sp,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
 
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
+            crossAxisSpacing: 8.w,
+            mainAxisSpacing: 8.h,
             childAspectRatio: 1,
           ),
           itemCount: photoList.length + 1, // +1 for add button
@@ -48,16 +49,16 @@ class PhotosGalleryWidget extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
                       color: Colors.grey[300]!,
-                      width: 2,
+                      width: 2.w,
                       style: BorderStyle.solid,
                     ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.add,
-                    size: 40,
+                    size: 40.sp,
                     color: Colors.grey,
                   ),
                 ),
@@ -69,7 +70,7 @@ class PhotosGalleryWidget extends StatelessWidget {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                     image: DecorationImage(
                       image: FileImage(
                         File(photoList[index]),
@@ -81,20 +82,20 @@ class PhotosGalleryWidget extends StatelessWidget {
 
                 // Delete button
                 Positioned(
-                  top: 8,
-                  right: 8,
+                  top: 8.h,
+                  right: 8.w,
                   child: GestureDetector(
                     onTap: () => onRemovePhoto?.call(index),
                     child: Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: EdgeInsets.all(4.w),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.delete_outline,
                         color: Colors.white,
-                        size: 16,
+                        size: 16.sp,
                       ),
                     ),
                   ),

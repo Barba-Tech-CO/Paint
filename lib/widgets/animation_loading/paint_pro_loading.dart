@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PaintProLoading extends StatelessWidget {
   final AnimationController controller;
@@ -18,8 +19,8 @@ class PaintProLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: size,
-      height: size,
+      width: size.w,
+      height: size.w,
       child: AnimatedBuilder(
         animation: controller,
         builder: (context, child) {
@@ -35,8 +36,8 @@ class PaintProLoading extends StatelessWidget {
 
   Widget _buildGradientCircle() {
     return Container(
-      width: size,
-      height: size,
+      width: size.w,
+      height: size.w,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         // Gradiente circular que cria o efeito de "arco"
@@ -60,7 +61,7 @@ class PaintProLoading extends StatelessWidget {
       ),
       // Círculo branco interno
       child: Padding(
-        padding: EdgeInsets.all(strokeWidth),
+        padding: EdgeInsets.all(strokeWidth.w),
         child: Container(
           decoration: const BoxDecoration(
             shape: BoxShape.circle,

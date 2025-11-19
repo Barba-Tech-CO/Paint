@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../viewmodel/zones/zones_list_viewmodel.dart';
@@ -30,12 +31,12 @@ class ZonesActionsWidget extends StatelessWidget {
             totalPaintable: summaryViewModel.summary!.totalPaintable,
             onAdd: () => _showAddZoneDialog(context),
           ),
-        const SizedBox(height: 32),
+        SizedBox(height: 32.h),
         PaintProButton(
           text: "Next",
           onPressed: () => context.push('/select-material', extra: projectData),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
       ],
     );
   }

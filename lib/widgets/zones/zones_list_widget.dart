@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../viewmodel/zones/zones_list_viewmodel.dart';
 import '../cards/zones_card.dart';
@@ -17,7 +18,7 @@ class ZonesListWidget extends StatelessWidget {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             ...listViewModel.zones.asMap().entries.map(
               (entry) {
                 final zone = entry.value;
@@ -43,12 +44,12 @@ class ZonesListWidget extends StatelessWidget {
                         zone,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
                   ],
                 );
               },
             ),
-            const SizedBox(height: 80),
+            SizedBox(height: 80.h),
           ],
         ),
       ),
