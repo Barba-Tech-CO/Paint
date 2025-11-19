@@ -89,7 +89,7 @@ class PhotosGalleryWidget extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.all(4.w),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
+                        color: Colors.black.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: Icon(
