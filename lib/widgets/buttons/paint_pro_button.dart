@@ -31,9 +31,10 @@ class PaintProButton extends StatelessWidget {
     this.isLoading = false,
     this.icon,
     this.textStyle,
-  })  : padding = padding ?? EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.h),
-        minimumSize = minimumSize ?? Size(double.infinity, 48.h),
-        borderRadius = borderRadius ?? 12.r;
+  }) : padding =
+           padding ?? EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.h),
+       minimumSize = minimumSize ?? Size(double.infinity, 48.h),
+       borderRadius = borderRadius ?? 12.r;
 
   bool get _isEnabled => state == ButtonState.enabled;
   bool get _isLoading => state == ButtonState.loading;

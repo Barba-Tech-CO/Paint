@@ -185,7 +185,8 @@ class ProjectCardWidget extends StatelessWidget {
   }
 
   Widget _buildImage() {
-    final hasNetwork = image.isNotEmpty &&
+    final hasNetwork =
+        image.isNotEmpty &&
         (image.startsWith('http://') || image.startsWith('https://'));
     if (hasNetwork) {
       return Image.network(

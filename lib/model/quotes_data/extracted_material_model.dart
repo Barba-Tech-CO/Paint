@@ -87,8 +87,9 @@ class ExtractedMaterialModel {
       unit: parseString(json['unit']),
       unitPrice: parseDouble(json['unit_price']),
       finish: json['finish'] == null ? null : parseString(json['finish']),
-      qualityGrade:
-          json['quality_grade'] == null ? null : parseString(json['quality_grade']),
+      qualityGrade: json['quality_grade'] == null
+          ? null
+          : parseString(json['quality_grade']),
       category: json['category'] == null ? null : parseString(json['category']),
       specifications: specifications,
       lineNumber: parseInt(json['line_number']),

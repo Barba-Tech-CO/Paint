@@ -107,7 +107,8 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                           SizedBox(height: 12.h),
                           FloorDimensionWidget(
                             width: viewModel.hasRoomPlanData
-                                ? app_unit_converter.UnitConverter.metersToFeetConversion(
+                                ? app_unit_converter
+                                      .UnitConverter.metersToFeetConversion(
                                     (viewModel.getRoomPlanDimensions()?['width']
                                             as double?) ??
                                         0.0,
@@ -118,7 +119,8 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                                       ) ??
                                       0.0,
                             length: viewModel.hasRoomPlanData
-                                ? app_unit_converter.UnitConverter.metersToFeetConversion(
+                                ? app_unit_converter
+                                      .UnitConverter.metersToFeetConversion(
                                     (viewModel.getRoomPlanDimensions()?['length']
                                             as double?) ??
                                         0.0,
@@ -137,14 +139,16 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                       SizedBox(height: 24.h),
                       SurfaceAreaDisplayWidget(
                         walls: viewModel.hasRoomPlanData
-                            ? app_unit_converter.UnitConverter.sqMetersToSqFeetConversion(
+                            ? app_unit_converter
+                                  .UnitConverter.sqMetersToSqFeetConversion(
                                 _calculateTotalWallArea(
                                   viewModel.getRoomPlanWalls(),
                                 ),
                               )
                             : double.tryParse(zone.areaPaintable) ?? 0.0,
                         ceiling: viewModel.hasRoomPlanData
-                            ? app_unit_converter.UnitConverter.sqMetersToSqFeetConversion(
+                            ? app_unit_converter
+                                  .UnitConverter.sqMetersToSqFeetConversion(
                                 (viewModel.getRoomPlanDimensions()?['floorArea']
                                         as double?) ??
                                     0.0,
@@ -153,7 +157,8 @@ class ZonesDetailsContentWidget extends StatelessWidget {
                             ? double.tryParse(zone.ceilingArea!) ?? 0.0
                             : null,
                         trim: viewModel.hasRoomPlanData
-                            ? app_unit_converter.UnitConverter.metersToFeetConversion(
+                            ? app_unit_converter
+                                  .UnitConverter.metersToFeetConversion(
                                 _calculateTrimLength(
                                   viewModel.getRoomPlanWalls(),
                                 ),

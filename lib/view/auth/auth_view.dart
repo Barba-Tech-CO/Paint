@@ -51,7 +51,10 @@ class AuthView extends StatelessWidget {
     });
   }
 
-  void _handleLoginSideEffects(BuildContext context, LoginViewModel loginViewModel) {
+  void _handleLoginSideEffects(
+    BuildContext context,
+    LoginViewModel loginViewModel,
+  ) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Se o login foi bem-sucedido, navegar para o dashboard
       if (loginViewModel.loginSuccess) {

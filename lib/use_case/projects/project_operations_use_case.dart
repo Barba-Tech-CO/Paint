@@ -63,7 +63,8 @@ class ProjectOperationsUseCase {
     final baseHost = AppConfig.baseUrl.replaceAll(RegExp(r"/api/?$"), '');
 
     // Already absolute URL
-    if (originalUrl.startsWith('http://') || originalUrl.startsWith('https://')) {
+    if (originalUrl.startsWith('http://') ||
+        originalUrl.startsWith('https://')) {
       if (!AppConfig.isProduction) {
         return originalUrl.replaceAll(
           'https://paintpro.barbatech.company',
@@ -86,9 +87,13 @@ class ProjectOperationsUseCase {
           : '';
 
       // Debug: log what photos are available (use debug level to avoid noise)
-      _logger.debug('Estimate ${estimate.id} - photos: ${estimate.photos}, photosData: ${estimate.photosData}');
+      _logger.debug(
+        'Estimate ${estimate.id} - photos: ${estimate.photos}, photosData: ${estimate.photosData}',
+      );
       if (estimate.zones != null) {
-        _logger.debug('Estimate ${estimate.id} - zones count: ${estimate.zones!.length}');
+        _logger.debug(
+          'Estimate ${estimate.id} - zones count: ${estimate.zones!.length}',
+        );
       }
 
       // Get first available photo; if none, keep empty to let UI show placeholder

@@ -41,10 +41,12 @@ class ZoneDataModel {
     }
 
     return ZoneDataModel(
-      floorDimensions:
-          FloorDimensionsModel.fromMap((fd as Map?)?.cast<String, dynamic>() ?? const {}),
-      surfaceAreas:
-          SurfaceAreasModel.fromMap((sa as Map?)?.cast<String, dynamic>() ?? const {}),
+      floorDimensions: FloorDimensionsModel.fromMap(
+        (fd as Map?)?.cast<String, dynamic>() ?? const {},
+      ),
+      surfaceAreas: SurfaceAreasModel.fromMap(
+        (sa as Map?)?.cast<String, dynamic>() ?? const {},
+      ),
       photoPaths: _stringListFromDynamic(map['photos']) ?? const <String>[],
     );
   }

@@ -34,7 +34,8 @@ class HomeViewModel extends ChangeNotifier {
     final baseHost = AppConfig.baseUrl.replaceAll(RegExp(r"/api/?$"), '');
 
     // If it's already absolute
-    if (originalUrl.startsWith('http://') || originalUrl.startsWith('https://')) {
+    if (originalUrl.startsWith('http://') ||
+        originalUrl.startsWith('https://')) {
       if (!AppConfig.isProduction) {
         // Map prod domain to local when running in dev
         return originalUrl.replaceAll(
@@ -79,9 +80,7 @@ class HomeViewModel extends ChangeNotifier {
           }
 
           // Map estimates to projects and sort by creation date (most recent first)
-          final projects = estimates
-              .map(_mapEstimateToProject)
-              .toList();
+          final projects = estimates.map(_mapEstimateToProject).toList();
 
           projects.sort(
             (a, b) =>

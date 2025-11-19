@@ -268,7 +268,7 @@ class ProjectsViewModel extends ChangeNotifier {
         _projects = result.asOk.value;
         _filteredProjects = List.from(_projects);
         _state = ProjectsState.loaded;
-        
+
         notifyListeners();
         return Result.ok(null);
       } else {

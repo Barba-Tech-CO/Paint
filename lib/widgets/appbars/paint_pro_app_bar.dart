@@ -21,7 +21,7 @@ class PaintProAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.textColor = AppColors.textOnPrimary,
     double? toolbarHeight,
     this.actions,
-  })  : toolbarHeight = toolbarHeight ?? 80.h;
+  }) : toolbarHeight = toolbarHeight ?? 80.h;
 
   @override
   Widget build(BuildContext context) {
