@@ -112,7 +112,8 @@ class AuthWebViewService {
         // Only navigate if processing was successful and state is authenticated
         if (onMountedCheck() &&
             !isDisposedCheck() &&
-            authViewModel.state.state == AuthState.authenticated) {
+            authViewModel.state.state == AuthState.authenticated &&
+            context.mounted) {
           GoRouter.of(context).go('/home');
         } else if (authViewModel.state.isError) {
           // Error state will be handled by the Consumer widget in build method

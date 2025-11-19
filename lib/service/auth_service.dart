@@ -46,7 +46,7 @@ class AuthService {
     );
   }
 
-  /// Helper to produce a Result<AuthStatusResponse>
+  /// Helper to produce a `Result<AuthStatusResponse>`
   Result<AuthStatusResponse> _authStatusResult(AuthModel model) {
     return Result.ok(
       AuthStatusResponse(
