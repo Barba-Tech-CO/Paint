@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
@@ -158,8 +159,8 @@ class _EditZoneViewState extends State<EditZoneView> {
             }
           },
           child: Container(
-            width: 48,
-            height: 48,
+            width: 48.w,
+            height: 48.h,
             alignment: Alignment.center,
             child: const Icon(Icons.arrow_back_ios),
           ),
@@ -172,42 +173,42 @@ class _EditZoneViewState extends State<EditZoneView> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32.0),
+        padding: EdgeInsets.symmetric(horizontal: 32.w),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 32),
+              SizedBox(height: 32.h),
               Text(
                 'Room Metrics',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 24),
+              SizedBox(height: 24.h),
               FloorDimensionWidget(
                 width: _width,
                 length: _length,
                 onDimensionChanged: _onDimensionChanged,
               ),
-              SizedBox(height: 48),
+              SizedBox(height: 48.h),
               SurfaceAreaDisplayWidget(
                 walls: _walls,
                 ceiling: _ceiling,
                 trim: _trim,
               ),
-              SizedBox(height: 32),
+              SizedBox(height: 32.h),
               PhotosGalleryWidget(
                 photos: _photos,
               ),
-              SizedBox(height: 32),
+              SizedBox(height: 32.h),
               // Save button
               PaintProButton(
                 text: 'Save',
                 onPressed: () => context.pop(context),
               ),
-              SizedBox(height: 32),
+              SizedBox(height: 32.h),
             ],
           ),
         ),

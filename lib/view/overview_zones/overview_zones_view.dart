@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
@@ -164,8 +165,8 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
             }
           },
           child: Container(
-            width: 48,
-            height: 48,
+            width: 48.w,
+            height: 48.h,
             alignment: Alignment.center,
             child: const Icon(Icons.arrow_back_ios),
           ),
@@ -176,7 +177,7 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
         builder: (context, child) {
           return SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: Column(
                 children: [
                   // Project Summary Card
@@ -189,40 +190,40 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                       ),
                       // Widget customizado para exibir as zonas
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: EdgeInsets.symmetric(vertical: 8.h),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'Zones:',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 color: Colors.grey[600],
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4.h),
                             ..._viewModel.formattedZones.map(
                               (zone) => Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 8,
-                                  top: 2,
+                                padding: EdgeInsets.only(
+                                  left: 8.w,
+                                  top: 2.h,
                                 ),
                                 child: Row(
                                   children: [
                                     Container(
-                                      width: 4,
-                                      height: 4,
+                                      width: 4.w,
+                                      height: 4.h,
                                       decoration: const BoxDecoration(
                                         color: Colors.grey,
                                         shape: BoxShape.circle,
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
+                                    SizedBox(width: 8.w),
                                     Text(
                                       zone,
-                                      style: const TextStyle(
-                                        fontSize: 14,
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
                                         color: Colors.black87,
                                       ),
                                     ),
@@ -259,12 +260,12 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                           },
                         )
                       else
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
                           child: Text(
                             'No materials selected',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 14.sp,
                               color: Colors.grey,
                               fontStyle: FontStyle.italic,
                             ),
@@ -285,17 +286,17 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                       if (_viewModel.selectedZones.isNotEmpty)
                         ..._viewModel.selectedZones.map(
                           (zone) => Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
+                            padding: EdgeInsets.only(bottom: 16.h),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // Título da zona
                                 Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
+                                  padding: EdgeInsets.only(bottom: 8.h),
                                   child: Text(
                                     zone.title,
-                                    style: const TextStyle(
-                                      fontSize: 16,
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.black87,
                                     ),
@@ -313,12 +314,12 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                           ),
                         )
                       else
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
                           child: Text(
                             'No zones selected',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 14.sp,
                               color: Colors.grey,
                               fontStyle: FontStyle.italic,
                             ),
@@ -338,27 +339,27 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                     ],
                   ),
 
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
 
                   Padding(
-                    padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
+                    padding: EdgeInsets.only(top: 8.h, left: 8.w, right: 8.w),
                     child: Row(
                       children: [
                         Flexible(
                           child: PaintProButton(
                             backgroundColor: Colors.black,
                             text: 'Adjust',
-                            borderRadius: 16,
+                            borderRadius: 16.r,
                             padding: EdgeInsets.zero,
                           ),
                         ),
-                        const SizedBox(width: 32),
+                        SizedBox(width: 32.w),
                         Flexible(
                           child: PaintProButton(
                             text: _estimateUploadViewModel.isUploading
                                 ? 'Sending...'
                                 : 'Send Estimate',
-                            borderRadius: 16,
+                            borderRadius: 16.r,
                             padding: EdgeInsets.zero,
                             backgroundColor:
                                 _estimateUploadViewModel.isUploading
@@ -404,7 +405,7 @@ class _OverviewZonesViewState extends State<OverviewZonesView> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                 ],
               ),
             ),

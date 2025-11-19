@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
@@ -75,12 +76,19 @@ class _ZonesDetailsViewState extends State<ZonesDetailsView> {
       animation: _detailViewModel,
       builder: (context, _) {
         if (_detailViewModel.currentZone == null) {
-          return const Scaffold(
+          return Scaffold(
             backgroundColor: AppColors.background,
-            body: Center(child: Text('Zone was not found.')),
+            body: Center(
+              child: Text(
+                'Zone was not found.',
+                style: TextStyle(fontSize: 16.sp),
+              ),
+            ),
           );
         }
-        return ZonesDetailsContentWidget(viewModel: _detailViewModel);
+        return ZonesDetailsContentWidget(
+          viewModel: _detailViewModel,
+        );
       },
     );
   }

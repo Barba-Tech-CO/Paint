@@ -123,9 +123,9 @@ class _HomeViewState extends State<HomeView> {
                       Consumer<DashboardViewModel>(
                         builder: (context, dashboardViewModel, child) {
                           if (dashboardViewModel.isLoading) {
-                            return const Center(
+                            return Center(
                               child: Padding(
-                                padding: EdgeInsets.all(40.0),
+                                padding: EdgeInsets.all(40.w),
                                 child: CircularProgressIndicator(),
                               ),
                             );
@@ -244,9 +244,9 @@ class _HomeViewState extends State<HomeView> {
                       Consumer<HomeViewModel>(
                         builder: (context, homeViewModel, child) {
                           if (homeViewModel.isLoading) {
-                            return const Center(
+                            return Center(
                               child: Padding(
-                                padding: EdgeInsets.all(40.0),
+                                padding: EdgeInsets.all(40.w),
                                 child: CircularProgressIndicator(),
                               ),
                             );
