@@ -48,7 +48,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
         return Scaffold(
           backgroundColor: Colors.white,
-          appBar: const PaintProAppBar(title: 'Create Account'),
+          appBar: PaintProAppBar(title: 'Create Account'),
           body: SafeArea(
             top: false,
             bottom: false,

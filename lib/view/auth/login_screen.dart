@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (context, viewModel, child) {
         return Scaffold(
           backgroundColor: Colors.white,
-          appBar: const PaintProAppBar(title: 'Login'),
+          appBar: PaintProAppBar(title: 'Login'),
           body: SafeArea(
             top: false,
             bottom: false,

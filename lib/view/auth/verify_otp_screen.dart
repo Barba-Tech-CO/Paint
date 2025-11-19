@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -55,7 +56,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
             top: false,
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -66,29 +67,29 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const SizedBox(height: 32),
-                            const Center(
+                            SizedBox(height: 32.h),
+                            Center(
                               child: Text(
                                 'Verify Your Email',
                                 style: TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 20.sp,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.black87,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            const Center(
+                            SizedBox(height: 8.h),
+                            Center(
                               child: Text(
                                 'Enter the 6-digit verification code',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 14.sp,
                                   color: Colors.black54,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 12),
+                            SizedBox(height: 12.h),
                             Center(
                               child: TextButton(
                                 onPressed: viewModel.isLoading
@@ -113,17 +114,17 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                           },
                                         );
                                       },
-                                child: const Text(
+                                child: Text(
                                   'Resend Code',
                                   style: TextStyle(
                                     color: AppColors.primary,
-                                    fontSize: 14,
+                                    fontSize: 14.sp,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 32),
+                            SizedBox(height: 32.h),
                             PaintProOtpField(
                               onCompleted: (code) {
                                 setState(() {
@@ -136,7 +137,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                 });
                               },
                             ),
-                            const SizedBox(height: 32),
+                            SizedBox(height: 32.h),
                             PaintProButton(
                               text: 'Continue',
                               onPressed:
@@ -160,14 +161,14 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                   : null,
                               isLoading: viewModel.isLoading,
                               padding: EdgeInsets.zero,
-                              minimumSize: const Size(double.infinity, 48),
+                              minimumSize: Size(double.infinity, 48.h),
                             ),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  SizedBox(height: bottomInset + 16),
+                  SizedBox(height: bottomInset + 16.h),
                 ],
               ),
             ),
