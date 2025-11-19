@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../model/material_models/material_filter.dart';
@@ -44,11 +45,11 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(20),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20.r),
         ),
         boxShadow: [
           BoxShadow(
@@ -66,10 +67,10 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Filter by:',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -94,7 +95,7 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
 
           // Brand Filter
           DropDownFilterWidget<String>(
@@ -108,7 +109,7 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
             },
             itemBuilder: (brand) => Text(brand),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
 
           // Ambient Filter (Type)
           DropDownFilterWidget<enums.MaterialType>(
@@ -122,7 +123,7 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
             },
             itemBuilder: (type) => Text(type.displayName),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
 
           // Finish Filter
           DropDownFilterWidget<enums.MaterialFinish>(
@@ -136,19 +137,19 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
             },
             itemBuilder: (finish) => Text(finish.displayName),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
 
           // Quality Filter
-          const Text(
+          Text(
             'Quality',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Wrap(
-            spacing: 8,
+            spacing: 8.w,
             children: enums.MaterialQuality.values.map((quality) {
               final isSelected = _currentFilter.quality == quality;
               return FilterChip(
@@ -166,7 +167,7 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
               );
             }).toList(),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
 
           // Apply Filters Button
           SizedBox(
@@ -179,15 +180,15 @@ class _MaterialFilterWidgetState extends State<MaterialFilterWidget> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: 16.h),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
               ),
-              child: const Text(
+              child: Text(
                 'Apply Filters',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                 ),
               ),
