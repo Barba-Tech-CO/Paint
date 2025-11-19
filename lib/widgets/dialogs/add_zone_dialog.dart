@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
@@ -87,7 +88,7 @@ class _AddZoneDialogState extends State<AddZoneDialog> {
               },
               onFieldSubmitted: (_) => _handleSubmit(),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             ProjectTypeRowWidgetCompact(
               selectedType: _selectedZoneType,
               onTypeChanged: (value) {
@@ -106,7 +107,7 @@ class _AddZoneDialogState extends State<AddZoneDialog> {
             'Add Zone',
             style: TextStyle(
               color: AppColors.gray100,
-              fontSize: 16,
+              fontSize: 16.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -117,7 +118,7 @@ class _AddZoneDialogState extends State<AddZoneDialog> {
             'Cancel',
             style: TextStyle(
               color: AppColors.primary,
-              fontSize: 16,
+              fontSize: 16.sp,
             ),
           ),
         ),

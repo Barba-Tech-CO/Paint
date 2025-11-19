@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
@@ -30,7 +31,7 @@ class ExitZonesDialog extends StatelessWidget {
             'Yes, go back',
             style: TextStyle(
               color: AppColors.gray100,
-              fontSize: 16,
+              fontSize: 16.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -41,7 +42,7 @@ class ExitZonesDialog extends StatelessWidget {
             'Cancel',
             style: TextStyle(
               color: AppColors.primary,
-              fontSize: 16,
+              fontSize: 16.sp,
             ),
           ),
         ),

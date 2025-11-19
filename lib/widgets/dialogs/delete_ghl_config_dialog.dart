@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
@@ -19,18 +20,18 @@ class DeleteGhlConfigDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text(
+      title: Text(
         'Delete Configuration',
         style: TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: 20,
+          fontSize: 20.sp,
           color: AppColors.textPrimary,
         ),
       ),
       content: Text(
         'Are you sure you want to delete your Go High Level configuration?',
         style: TextStyle(
-          fontSize: 14,
+          fontSize: 14.sp,
           color: AppColors.gray100,
         ),
       ),
@@ -41,7 +42,7 @@ class DeleteGhlConfigDialog extends StatelessWidget {
             'Yes, delete',
             style: TextStyle(
               color: AppColors.error,
-              fontSize: 14,
+              fontSize: 14.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -52,7 +53,7 @@ class DeleteGhlConfigDialog extends StatelessWidget {
             'Cancel',
             style: TextStyle(
               color: AppColors.primary,
-              fontSize: 14,
+              fontSize: 14.sp,
             ),
           ),
         ),
