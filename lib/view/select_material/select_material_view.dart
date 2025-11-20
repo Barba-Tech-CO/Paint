@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
@@ -157,11 +158,11 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
                     // Search Header que rola junto
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.only(
-                          left: 32,
-                          right: 32,
-                          top: 24,
-                          bottom: 16,
+                        padding: EdgeInsets.only(
+                          left: 32.w,
+                          right: 32.w,
+                          top: 24.h,
+                          bottom: 16.h,
                         ),
                         child: TextField(
                           controller: _searchController,
@@ -181,22 +182,22 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
                               onPressed: () => _showFilterBottomSheet(context),
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(8.r),
                               borderSide: BorderSide(color: Colors.grey[300]!),
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(8.r),
                               borderSide: BorderSide(color: Colors.grey[300]!),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(8.r),
                               borderSide: const BorderSide(
                                 color: AppColors.primary,
                               ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 12.h,
                             ),
                           ),
                         ),
@@ -214,19 +215,19 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
                                 children: [
                                   Icon(
                                     Icons.inventory_2_outlined,
-                                    size: 64,
+                                    size: 64.sp,
                                     color: Colors.grey[400],
                                   ),
-                                  const SizedBox(height: 16),
+                                  SizedBox(height: 16.h),
                                   Text(
                                     'No materials found',
                                     style: TextStyle(
-                                      fontSize: 18,
+                                      fontSize: 18.sp,
                                       color: Colors.grey[600],
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  SizedBox(height: 8.h),
                                   Text(
                                     'Try adjusting your search or filters',
                                     style: TextStyle(
@@ -234,7 +235,7 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
                                     ),
                                   ),
                                   if (_viewModel.hasFilters) ...[
-                                    const SizedBox(height: 16),
+                                    SizedBox(height: 16.h),
                                     TextButton(
                                       onPressed: _viewModel.clearFilters,
                                       child: const Text('Clear Filters'),
@@ -254,9 +255,9 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
                               (context, index) {
                                 final material = _viewModel.materials[index];
                                 return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 4,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 16.w,
+                                    vertical: 4.h,
                                   ),
                                   child: MaterialCardWidget(
                                     material: material,
@@ -292,7 +293,7 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
                     if (_viewModel.isLoadingMore)
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.all(16.0),
+                          padding: EdgeInsets.all(16.w),
                           child: Center(
                             child: CircularProgressIndicator(),
                           ),
@@ -304,13 +305,13 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
                         _viewModel.materials.isNotEmpty)
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.all(16.0),
+                          padding: EdgeInsets.all(16.w),
                           child: Center(
                             child: Text(
                               'No more materials to load',
                               style: TextStyle(
                                 color: Colors.grey[600],
-                                fontSize: 14,
+                                fontSize: 14.sp,
                               ),
                             ),
                           ),
@@ -324,7 +325,7 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
 
           // Bottom Section
           Container(
-            padding: const EdgeInsets.only(left: 32, right: 32, bottom: 16),
+            padding: EdgeInsets.only(left: 32.w, right: 32.w, bottom: 16.h),
             child: AnimatedBuilder(
               animation: _viewModel,
               builder: (context, _) {
@@ -335,7 +336,7 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
                     Text(
                       '${_viewModel.selectedCount} Materials Selected',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 16.sp,
                         color: Colors.grey[600],
                       ),
                     ),
@@ -343,8 +344,8 @@ class _SelectMaterialViewState extends State<SelectMaterialView>
                     PaintProButton(
                       text: "Next",
                       padding: EdgeInsets.zero,
-                      minimumSize: const Size(100, 40),
-                      borderRadius: 8,
+                      minimumSize: Size(100.w, 40.h),
+                      borderRadius: 8.r,
                       onPressed: _viewModel.selectedCount == 0
                           ? null
                           : () {

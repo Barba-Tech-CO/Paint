@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ProjectSummaryCardWidget extends StatelessWidget {
   final String? title;
@@ -27,16 +28,16 @@ class ProjectSummaryCardWidget extends StatelessWidget {
       children: [
         if (title != null)
           Padding(
-            padding: const EdgeInsets.only(
-              left: 16,
-              right: 16,
-              bottom: 12,
-              top: 16,
+            padding: EdgeInsets.only(
+              left: 16.w,
+              right: 16.w,
+              bottom: 12.h,
+              top: 16.h,
             ),
             child: Text(
               title!,
-              style: const TextStyle(
-                fontSize: 18,
+              style: TextStyle(
+                fontSize: 18.sp,
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
               ),
@@ -44,18 +45,18 @@ class ProjectSummaryCardWidget extends StatelessWidget {
           ),
         Container(
           margin:
-              margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          padding: padding ?? const EdgeInsets.all(20),
+              margin ?? EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+          padding: padding ?? EdgeInsets.all(20.w),
           decoration: BoxDecoration(
             color: backgroundColor,
-            borderRadius: BorderRadius.circular(borderRadius),
+            borderRadius: BorderRadius.circular(borderRadius.r),
             boxShadow: showShadow
                 ? [
                     BoxShadow(
                       color: Colors.grey.withValues(alpha: 0.15),
-                      spreadRadius: 2,
-                      blurRadius: 8,
-                      offset: const Offset(0, 6),
+                      spreadRadius: 2.r,
+                      blurRadius: 8.r,
+                      offset: Offset(0, 6.h),
                     ),
                   ]
                 : null,

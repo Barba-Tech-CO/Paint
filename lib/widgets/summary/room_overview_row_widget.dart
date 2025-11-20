@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class RoomOverviewRowWidget extends StatelessWidget {
   final String leftTitle;
@@ -41,7 +42,7 @@ class RoomOverviewRowWidget extends StatelessWidget {
                     color: titleColor,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
                 Text(
                   leftSubtitle,
                   style: TextStyle(
@@ -64,7 +65,7 @@ class RoomOverviewRowWidget extends StatelessWidget {
                     color: titleColor,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
                 Text(
                   rightSubtitle,
                   style: TextStyle(

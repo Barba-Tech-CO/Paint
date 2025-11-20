@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import 'config/dependency_injection.dart';
@@ -9,8 +10,10 @@ import 'config/theme.dart';
 import 'firebase_options.dart';
 import 'service/app_services_initializer.dart';
 import 'service/location_service.dart';
-import 'service/navigation_service.dart';
 import 'viewmodel/auth/auth_viewmodel.dart';
+import 'viewmodel/auth/login_viewmodel.dart';
+import 'viewmodel/auth/signup_viewmodel.dart';
+import 'viewmodel/auth/verify_otp_viewmodel.dart';
 import 'viewmodel/contact/contact_list_viewmodel.dart';
 import 'viewmodel/contacts/contacts_viewmodel.dart';
 import 'viewmodel/estimate/estimate_calculation_viewmodel.dart';
@@ -55,6 +58,15 @@ class PaintProApp extends StatelessWidget {
         ChangeNotifierProvider<AuthViewModel>(
           create: (_) => getIt<AuthViewModel>(),
         ),
+        ChangeNotifierProvider<LoginViewModel>(
+          create: (_) => getIt<LoginViewModel>(),
+        ),
+        ChangeNotifierProvider<SignUpViewModel>(
+          create: (_) => getIt<SignUpViewModel>(),
+        ),
+        ChangeNotifierProvider<VerifyOtpViewModel>(
+          create: (_) => getIt<VerifyOtpViewModel>(),
+        ),
         // Contact ViewModels
         ChangeNotifierProvider<ContactListViewModel>(
           create: (_) => getIt<ContactListViewModel>(),
@@ -75,9 +87,6 @@ class PaintProApp extends StatelessWidget {
         // Navigation
         ChangeNotifierProvider<NavigationViewModel>(
           create: (_) => getIt<NavigationViewModel>(),
-        ),
-        Provider<NavigationService>(
-          create: (_) => getIt<NavigationService>(),
         ),
         // Measurements ViewModel
         ChangeNotifierProvider<MeasurementsViewModel>(
@@ -105,11 +114,18 @@ class PaintProApp extends StatelessWidget {
           create: (_) => getIt<ProjectsViewModel>(),
         ),
       ],
-      child: MaterialApp.router(
-        title: 'Paint Estimator',
-        theme: AppTheme.themeData,
-        routerConfig: router,
-        debugShowCheckedModeBanner: false,
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (context, child) {
+          return MaterialApp.router(
+            title: 'Paint Estimator',
+            theme: AppTheme.themeData,
+            routerConfig: router,
+            debugShowCheckedModeBanner: false,
+          );
+        },
       ),
     );
   }

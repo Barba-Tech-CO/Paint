@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../config/app_colors.dart';
 import '../../model/projects/project_card_model.dart';
@@ -286,10 +287,10 @@ class ZoneDetailViewModel extends ChangeNotifier {
     return GestureDetector(
       onTap: onAddPhoto,
       child: Container(
-        width: 104,
-        height: 128,
+        width: 104.w,
+        height: 128.h,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8.r),
           gradient: const LinearGradient(
             colors: [
               Colors.white,
@@ -299,11 +300,11 @@ class ZoneDetailViewModel extends ChangeNotifier {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: const Center(
+        child: Center(
           child: Icon(
             Icons.add,
             color: Colors.white,
-            size: 32,
+            size: 32.sp,
           ),
         ),
       ),
@@ -319,26 +320,26 @@ class ZoneDetailViewModel extends ChangeNotifier {
     return Stack(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8.r),
           child: Image.asset(
             photoUrl,
             fit: BoxFit.cover,
-            width: 104,
-            height: 128,
+            width: 104.w,
+            height: 128.h,
           ),
         ),
         if (canDelete)
           Positioned(
-            top: 4,
-            right: 8,
+            top: 4.h,
+            right: 8.w,
             child: GestureDetector(
               onTap: onDelete,
               child: Padding(
-                padding: const EdgeInsets.all(4.0),
+                padding: EdgeInsets.all(4.0.w),
                 child: Image.asset(
                   'assets/icons/delete.png',
-                  width: 14,
-                  height: 16,
+                  width: 14.w,
+                  height: 16.h,
                 ),
               ),
             ),

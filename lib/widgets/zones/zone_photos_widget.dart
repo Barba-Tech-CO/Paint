@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../viewmodel/zones/zone_detail_viewmodel.dart';
 
@@ -23,20 +24,20 @@ class ZonePhotosWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Photos',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 18.sp,
             fontWeight: FontWeight.bold,
             color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
+            mainAxisSpacing: 8.w,
+            crossAxisSpacing: 8.w,
           ),
           itemCount: ZoneDetailViewModel.getTotalItemCount(
             photoUrls,

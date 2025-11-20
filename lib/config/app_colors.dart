@@ -51,7 +51,7 @@ class AppColors {
   static const Color cardError = Color(0xFFFF7260);
 
   // Gray Colors with alpha
-  static const Color gray100 = Color.fromRGBO(111, 111, 111, 1);
+  static const Color gray100 = Color(0xFF6F6F6F);
   static const Color gray50 = Color.fromRGBO(111, 111, 111, 0.5);
   static const Color gray24 = Color(0x5C6F6F6F);
   static const Color gray16 = Color.fromRGBO(26, 26, 26, 0.16);

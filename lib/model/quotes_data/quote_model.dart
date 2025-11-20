@@ -6,9 +6,10 @@ class QuoteModel {
   final int? userId;
   final String originalName;
   final String? displayName;
-  final String filePath;
+  final String? filePath;
   final String? r2Url;
   final String? fileHash;
+  final String? brand;
   final QuoteStatus status;
   final int materialsExtracted;
   final Map<String, dynamic>? extractionMetadata;
@@ -21,9 +22,10 @@ class QuoteModel {
     this.userId,
     required this.originalName,
     this.displayName,
-    required this.filePath,
+    this.filePath,
     this.r2Url,
     this.fileHash,
+    this.brand,
     required this.status,
     required this.materialsExtracted,
     this.extractionMetadata,
@@ -70,19 +72,15 @@ class QuoteModel {
       throw Exception('Missing required field: updated_at');
     }
 
-    // Validate required fields
-    if (json['file_path'] == null) {
-      throw Exception('Missing required field: file_path');
-    }
-
     return QuoteModel(
       id: json['id'] as int,
       userId: json['user_id'] as int?,
       originalName: json['original_name'] as String,
       displayName: json['display_name'] as String?,
-      filePath: json['file_path'] as String,
+      filePath: json['file_path'] as String?,
       r2Url: json['r2_url'] as String?,
       fileHash: json['file_hash'] as String?,
+      brand: json['brand'] as String?,
       status: QuoteStatusExtension.fromString(json['status'] as String),
       materialsExtracted: json['materials_extracted'] as int? ?? 0,
       extractionMetadata: json['extraction_metadata'] as Map<String, dynamic>?,
@@ -101,6 +99,7 @@ class QuoteModel {
       'file_path': filePath,
       'r2_url': r2Url,
       'file_hash': fileHash,
+      'brand': brand,
       'status': status.value,
       'materials_extracted': materialsExtracted,
       'extraction_metadata': extractionMetadata,
@@ -118,6 +117,7 @@ class QuoteModel {
     String? filePath,
     String? r2Url,
     String? fileHash,
+    String? brand,
     QuoteStatus? status,
     int? materialsExtracted,
     Map<String, dynamic>? extractionMetadata,
@@ -133,6 +133,7 @@ class QuoteModel {
       filePath: filePath ?? this.filePath,
       r2Url: r2Url ?? this.r2Url,
       fileHash: fileHash ?? this.fileHash,
+      brand: brand ?? this.brand,
       status: status ?? this.status,
       materialsExtracted: materialsExtracted ?? this.materialsExtracted,
       extractionMetadata: extractionMetadata ?? this.extractionMetadata,

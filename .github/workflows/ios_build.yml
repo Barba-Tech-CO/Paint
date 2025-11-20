@@ -1,0 +1,63 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_ios:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Clean Flutter cache
+        run: |
+          flutter clean
+          rm -f pubspec.lock
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Install FlutterFire CLI
+        run: dart pub global activate flutterfire_cli
+
+      - name: Run Flutter analyze
+        run: flutter analyze
+
+      - name: Run Flutter tests
+        run: flutter test
+
+      - name: Generate iOS configuration
+        run: flutter build ios --config-only --no-codesign
+
+      - name: Install CocoaPods dependencies
+        working-directory: ios
+        run: pod install
+
+      - name: Build iOS app (Debug)
+        run: |
+          flutter build ios --debug --no-codesign
+
+      - name: Archive build artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-${{ github.sha }}
+          path: |
+            build/ios/iphoneos/*.app
+          retention-days: 7

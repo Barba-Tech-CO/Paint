@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:camera/camera.dart';
 
 import 'photo_thumbnail.dart';
@@ -41,7 +42,7 @@ class PhotoThumbnailsBuilder extends StatelessWidget {
       // Add spacing between thumbnails
       if (i < visibleCount - 1) {
         thumbnails.add(
-          const SizedBox(width: 8),
+          SizedBox(width: 8.w),
         );
       }
     }

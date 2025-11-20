@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/dependency_injection.dart';
@@ -54,7 +55,11 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
   }
 
   Future<void> _loadContactDetails() async {
-    final result = await _viewModel.getContactDetails(widget.contact.id!);
+    final contactId =
+        widget.contact.ghlId ?? widget.contact.id?.toString() ?? '';
+    if (contactId.isEmpty) return;
+
+    final result = await _viewModel.getContactDetails(contactId);
     if (result is Ok && mounted) {
       setState(() {
         _currentContact = result.asOk.value;
@@ -81,7 +86,7 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -98,7 +103,7 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              SizedBox(height: 32.h),
 
               SectionHeaderWidget(
                 icon:
@@ -119,7 +124,7 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
                     .toList(),
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               SectionHeaderWidget(
                 icon:
                     ContactDetailViewModel.getAddressSectionData()['icon']
@@ -140,7 +145,7 @@ class _ContactDetailsViewState extends State<ContactDetailsView> {
               ),
 
               if (showAdditionalInfo) ...[
-                const SizedBox(height: 16),
+                SizedBox(height: 16.h),
 
                 SectionHeaderWidget(
                   icon:

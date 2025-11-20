@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../config/app_colors.dart';
 
@@ -66,36 +67,36 @@ class _FloorDimensionWidgetState extends State<FloorDimensionWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Floor Dimensions:',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.w500,
               ),
             ),
             Text(
               '${totalArea.toStringAsFixed(0)} sq ft',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
                 color: AppColors.primary,
               ),
             ),
           ],
         ),
-        const SizedBox(
-          height: 16,
+        SizedBox(
+          height: 16.h,
         ),
 
         // Dimension input fields
         Row(
-          spacing: 16,
+          spacing: 16.w,
           children: [
             Expanded(
               child: Container(
-                height: 44,
+                height: 44.h,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8.r),
                   border: Border.all(
                     color: AppColors.gray24,
                   ),
@@ -111,15 +112,15 @@ class _FloorDimensionWidgetState extends State<FloorDimensionWidget> {
                       FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                     ],
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.w500,
                     ),
                     decoration: InputDecoration(
                       hintText: 'Width (ft)',
                       hintStyle: TextStyle(
                         color: Colors.grey[500],
-                        fontSize: 14,
+                        fontSize: 14.sp,
                       ),
                       border: InputBorder.none,
                       isDense: true,
@@ -132,18 +133,18 @@ class _FloorDimensionWidgetState extends State<FloorDimensionWidget> {
             // X separator
             Expanded(
               child: Container(
-                height: 44,
+                height: 44.h,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8.r),
                   border: Border.all(
                     color: AppColors.gray24,
                   ),
                 ),
                 child: Center(
-                  child: const Text(
+                  child: Text(
                     'X',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.bold,
                       color: AppColors.primary,
                     ),
@@ -154,9 +155,9 @@ class _FloorDimensionWidgetState extends State<FloorDimensionWidget> {
             // Length field
             Expanded(
               child: Container(
-                height: 44,
+                height: 44.h,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8.r),
                   border: Border.all(
                     color: AppColors.gray24,
                   ),
@@ -172,15 +173,15 @@ class _FloorDimensionWidgetState extends State<FloorDimensionWidget> {
                       FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                     ],
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.w500,
                     ),
                     decoration: InputDecoration(
                       hintText: 'Length (ft)',
                       hintStyle: TextStyle(
                         color: Colors.grey[500],
-                        fontSize: 14,
+                        fontSize: 14.sp,
                       ),
                       border: InputBorder.none,
                       isDense: true,

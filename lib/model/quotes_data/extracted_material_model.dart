@@ -38,23 +38,23 @@ class ExtractedMaterialModel {
   });
 
   factory ExtractedMaterialModel.fromJson(Map<String, dynamic> json) {
-    int _parseInt(dynamic v) {
+    int parseInt(dynamic v) {
       if (v == null) return 0;
       if (v is int) return v;
       final s = v.toString();
       return int.tryParse(s) ?? 0;
     }
 
-    double _parseDouble(dynamic v) {
+    double parseDouble(dynamic v) {
       if (v == null) return 0.0;
       if (v is num) return v.toDouble();
       final s = v.toString();
       return double.tryParse(s) ?? 0.0;
     }
 
-    String _parseString(dynamic v) => v == null ? '' : v.toString();
+    String parseString(dynamic v) => v == null ? '' : v.toString();
 
-    DateTime _parseDate(dynamic v) {
+    DateTime parseDate(dynamic v) {
       if (v == null) return DateTime.fromMillisecondsSinceEpoch(0);
       if (v is DateTime) return v;
       if (v is String) {
@@ -78,22 +78,23 @@ class ExtractedMaterialModel {
         : (specsRaw is List ? null : specsRaw as Map<String, dynamic>?);
 
     return ExtractedMaterialModel(
-      id: _parseInt(json['id']),
-      pdfUploadId: _parseInt(json['pdf_upload_id']),
-      userId: _parseInt(json['user_id']),
-      brand: _parseString(json['brand']),
-      description: _parseString(json['description']),
-      type: _parseString(json['type']),
-      unit: _parseString(json['unit']),
-      unitPrice: _parseDouble(json['unit_price']),
-      finish: json['finish'] == null ? null : _parseString(json['finish']),
-      qualityGrade:
-          json['quality_grade'] == null ? null : _parseString(json['quality_grade']),
-      category: json['category'] == null ? null : _parseString(json['category']),
+      id: parseInt(json['id']),
+      pdfUploadId: parseInt(json['pdf_upload_id']),
+      userId: parseInt(json['user_id']),
+      brand: parseString(json['brand']),
+      description: parseString(json['description']),
+      type: parseString(json['type']),
+      unit: parseString(json['unit']),
+      unitPrice: parseDouble(json['unit_price']),
+      finish: json['finish'] == null ? null : parseString(json['finish']),
+      qualityGrade: json['quality_grade'] == null
+          ? null
+          : parseString(json['quality_grade']),
+      category: json['category'] == null ? null : parseString(json['category']),
       specifications: specifications,
-      lineNumber: _parseInt(json['line_number']),
-      createdAt: _parseDate(json['created_at']),
-      updatedAt: _parseDate(json['updated_at']),
+      lineNumber: parseInt(json['line_number']),
+      createdAt: parseDate(json['created_at']),
+      updatedAt: parseDate(json['updated_at']),
       pdfUpload: pdfUpload,
     );
   }

@@ -7,11 +7,15 @@ import '../../widgets/navigation/floating_bottom_navigation_bar.dart';
 class MainLayout extends StatefulWidget {
   final Widget child;
   final String currentRoute;
+  final Widget? drawer;
+  final GlobalKey<ScaffoldState>? scaffoldKey;
 
   const MainLayout({
     super.key,
     required this.child,
     required this.currentRoute,
+    this.drawer,
+    this.scaffoldKey,
   });
 
   @override
@@ -47,6 +51,8 @@ class _MainLayoutState extends State<MainLayout> {
     return ChangeNotifierProvider<NavigationViewModel>.value(
       value: _navigationViewModel,
       child: Scaffold(
+        key: widget.scaffoldKey,
+        drawer: widget.drawer,
         body: widget.child,
         extendBody: true,
         bottomNavigationBar: Consumer<NavigationViewModel>(

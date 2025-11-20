@@ -12,11 +12,14 @@ import '../data/repository/offline_repository_impl.dart';
 import '../data/repository/paint_catalog_repository_impl.dart';
 import '../data/repository/quote_repository_impl.dart';
 import '../data/repository/user_repository_impl.dart';
+import '../service/ghl/ghl_repository_impl.dart';
+import '../service/ghl/ghl_service.dart';
 
 // Domain Layer
 import '../domain/repository/auth_repository.dart';
 import '../domain/repository/contact_repository.dart';
 import '../domain/repository/dashboard_repository.dart';
+import '../domain/repository/ghl_repository.dart';
 import '../domain/repository/estimate_repository.dart';
 import '../domain/repository/estimate_detail_repository.dart';
 import '../domain/repository/material_repository.dart';
@@ -42,7 +45,6 @@ import '../service/http_service.dart';
 import '../service/location_service.dart';
 import '../service/material_service.dart';
 import '../service/material_database_service.dart';
-import '../service/navigation_service.dart';
 import '../service/paint_catalog_service.dart';
 import '../service/photo_service.dart';
 import '../service/quote_service.dart';
@@ -52,6 +54,7 @@ import '../service/local/estimates_local_service.dart';
 import '../service/local/pending_operations_local_service.dart';
 import '../service/local/dashboard_cache_local_service.dart';
 import '../service/local/quotes_local_service.dart';
+import '../service/local/user_local_service.dart';
 import '../service/user_service.dart';
 import '../service/zones_service.dart';
 import '../service/i_zones_service.dart';
@@ -76,6 +79,11 @@ import '../use_case/quotes/quote_upload_use_case.dart';
 // ViewModel Layer
 import '../viewmodel/select_colors_viewmodel.dart';
 import '../viewmodel/auth/auth_viewmodel.dart';
+import '../viewmodel/auth/delete_account_viewmodel.dart';
+import '../viewmodel/auth/login_viewmodel.dart';
+import '../viewmodel/auth/signup_viewmodel.dart';
+import '../viewmodel/auth/verify_otp_viewmodel.dart';
+import '../viewmodel/auth/reset_password_viewmodel.dart';
 import '../viewmodel/contact/contact_list_viewmodel.dart';
 import '../viewmodel/contact/contact_detail_viewmodel.dart';
 import '../viewmodel/contact/new_contact_viewmodel.dart';
@@ -98,6 +106,7 @@ import '../viewmodel/zones/zones_list_viewmodel.dart';
 import '../viewmodel/zones/zone_detail_viewmodel.dart';
 import '../viewmodel/zones/zones_summary_viewmodel.dart';
 import '../viewmodel/zones/zones_card_viewmodel.dart';
+import '../viewmodel/connect_ghl/connect_ghl_viewmodel.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -122,10 +131,15 @@ void setupDependencyInjection() {
     () => AuthStateManager(),
   );
 
+  getIt.registerLazySingleton<AuthPersistenceService>(
+    () => AuthPersistenceService(),
+  );
+
   getIt.registerLazySingleton<AuthService>(
     () => AuthService(
       getIt<HttpService>(),
-      getIt<LocationService>(),
+      getIt<AuthPersistenceService>(),
+      getIt<UserLocalService>(),
       getIt<AppLogger>(),
     ),
   );
@@ -135,7 +149,6 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<ContactService>(
     () => ContactService(
       getIt<HttpService>(),
-      getIt<LocationService>(),
       getIt<AppLogger>(),
     ),
   );
@@ -167,14 +180,8 @@ void setupDependencyInjection() {
       getIt<HttpService>(),
     ),
   );
-  getIt.registerLazySingleton<NavigationService>(
-    () => NavigationService(),
-  );
   getIt.registerLazySingleton<DeepLinkService>(
     () => DeepLinkService(),
-  );
-  getIt.registerLazySingleton<AuthPersistenceService>(
-    () => AuthPersistenceService(),
   );
   getIt.registerLazySingleton<ContactLoadingService>(
     () => ContactLoadingService(
@@ -204,6 +211,12 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IZonesService>(
     () => ZonesService(),
   );
+  getIt.registerLazySingleton<GhlService>(
+    () => GhlService(
+      getIt<HttpService>(),
+      getIt<AppLogger>(),
+    ),
+  );
 
   // Database + Local Services
   getIt.registerLazySingleton<DatabaseService>(() => DatabaseService());
@@ -230,6 +243,12 @@ void setupDependencyInjection() {
     ),
   );
 
+  getIt.registerLazySingleton<UserLocalService>(
+    () => UserLocalService(
+      getIt<DatabaseService>(),
+    ),
+  );
+
   // User Service and Repository (needed early for AuthInitializationService)
   getIt.registerLazySingleton<IUserRepository>(
     () => UserRepositoryImpl(
@@ -248,7 +267,6 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<AuthInitializationService>(
     () => AuthInitializationService(
       authPersistenceService: getIt<AuthPersistenceService>(),
-      locationService: getIt<LocationService>(),
       userViewModel: getIt<UserViewModel>(),
       httpService: getIt<HttpService>(),
     ),
@@ -264,8 +282,7 @@ void setupDependencyInjection() {
     () => ContactRepository(
       contactService: getIt<ContactService>(),
       databaseService: getIt<ContactDatabaseService>(),
-      locationService: getIt<LocationService>(),
-      userService: getIt<UserService>(),
+      authService: getIt<AuthService>(),
       logger: getIt<AppLogger>(),
     ),
   );
@@ -297,6 +314,12 @@ void setupDependencyInjection() {
   getIt.registerLazySingleton<IPaintCatalogRepository>(
     () => PaintCatalogRepository(
       paintCatalogService: getIt<PaintCatalogService>(),
+    ),
+  );
+  getIt.registerLazySingleton<IGhlRepository>(
+    () => GhlRepositoryImpl(
+      getIt<GhlService>(),
+      getIt<AppLogger>(),
     ),
   );
   getIt.registerLazySingleton<IQuoteRepository>(
@@ -402,7 +425,6 @@ void setupDependencyInjection() {
       getIt<AuthService>(),
       getIt<AuthPersistenceService>(),
       getIt<AuthStateManager>(),
-      getIt<NavigationService>(),
       getIt<DeepLinkService>(),
       getIt<HttpService>(),
     ),
@@ -416,6 +438,45 @@ void setupDependencyInjection() {
       getIt<HandleWebViewNavigationUseCase>(),
       getIt<DeepLinkService>(),
       getIt<AuthPersistenceService>(),
+      getIt<HttpService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<LoginViewModel>(
+    () => LoginViewModel(
+      getIt<HttpService>(),
+      getIt<AuthPersistenceService>(),
+      getIt<UserLocalService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<DeleteAccountViewModel>(
+    () => DeleteAccountViewModel(
+      getIt<AuthService>(),
+      getIt<AuthStateManager>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<SignUpViewModel>(
+    () => SignUpViewModel(
+      getIt<HttpService>(),
+      getIt<AuthPersistenceService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<VerifyOtpViewModel>(
+    () => VerifyOtpViewModel(
+      getIt<HttpService>(),
+      getIt<AppLogger>(),
+    ),
+  );
+
+  getIt.registerFactory<ResetPasswordViewModel>(
+    () => ResetPasswordViewModel(
       getIt<HttpService>(),
       getIt<AppLogger>(),
     ),
@@ -465,6 +526,15 @@ void setupDependencyInjection() {
   // ViewModels - Navigation
   getIt.registerFactory<NavigationViewModel>(
     () => NavigationViewModel(),
+  );
+
+  // ViewModels - GHL
+  getIt.registerFactory<ConnectGhlViewModel>(
+    () => ConnectGhlViewModel(
+      getIt<IGhlRepository>(),
+      getIt<AuthService>(),
+      getIt<AppLogger>(),
+    ),
   );
 
   // ViewModels - Measurements
@@ -525,6 +595,8 @@ void setupDependencyInjection() {
   getIt.registerFactory<ContactsViewModel>(
     () => ContactsViewModel(
       getIt<ContactOperationsUseCase>(),
+      getIt<IContactRepository>(),
+      getIt<AppLogger>(),
     ),
   );
 

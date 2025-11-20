@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
@@ -49,7 +50,7 @@ class ErrorDialog extends StatelessWidget {
               'Retry',
               style: TextStyle(
                 color: AppColors.gray100,
-                fontSize: 16,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -60,7 +61,7 @@ class ErrorDialog extends StatelessWidget {
             'OK',
             style: TextStyle(
               color: AppColors.primary,
-              fontSize: 16,
+              fontSize: 16.sp,
             ),
           ),
         ),

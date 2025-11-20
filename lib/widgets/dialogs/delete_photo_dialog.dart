@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
@@ -18,18 +19,18 @@ class DeletePhotoDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text(
+      title: Text(
         'Delete Photo',
         style: TextStyle(
-          fontSize: 18,
+          fontSize: 18.sp,
           fontWeight: FontWeight.bold,
           color: Colors.black87,
         ),
       ),
-      content: const Text(
+      content: Text(
         'Are you sure you want to delete this photo?',
         style: TextStyle(
-          fontSize: 16,
+          fontSize: 16.sp,
           color: Colors.black87,
         ),
       ),
@@ -40,7 +41,7 @@ class DeletePhotoDialog extends StatelessWidget {
             'Yes, delete',
             style: TextStyle(
               color: AppColors.gray100,
-              fontSize: 16,
+              fontSize: 16.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -51,7 +52,7 @@ class DeletePhotoDialog extends StatelessWidget {
             'Cancel',
             style: TextStyle(
               color: AppColors.primary,
-              fontSize: 16,
+              fontSize: 16.sp,
             ),
           ),
         ),

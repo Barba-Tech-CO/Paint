@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../config/app_colors.dart';
 
 class PaintProFAB extends StatelessWidget {
@@ -19,7 +20,7 @@ class PaintProFAB extends StatelessWidget {
       child: Icon(
         icon,
         color: AppColors.cardDefault,
-        size: 40,
+        size: 40.sp,
       ),
     );
   }

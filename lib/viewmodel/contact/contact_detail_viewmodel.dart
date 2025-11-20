@@ -42,7 +42,7 @@ class ContactDetailViewModel extends ChangeNotifier {
     // Update selected contact if it exists in the updated repository
     if (_selectedContact != null) {
       final updatedContact = _contactRepository.contacts
-          .where((c) => c.ghlId == _selectedContact!.ghlId)
+          .where((c) => c.id == _selectedContact!.id)
           .firstOrNull;
       if (updatedContact != null && updatedContact != _selectedContact) {
         _selectedContact = updatedContact;
@@ -147,7 +147,9 @@ class ContactDetailViewModel extends ChangeNotifier {
     final result = await _contactRepository.deleteContact(contactId);
 
     if (result is Ok && result.asOk.value) {
-      if (_selectedContact?.ghlId == contactId) {
+      // Check by both ghlId and id (converted to string)
+      if (_selectedContact?.ghlId == contactId ||
+          _selectedContact?.id?.toString() == contactId) {
         _selectedContact = null;
         notifyListeners();
       }
@@ -467,14 +469,14 @@ class ContactDetailViewModel extends ChangeNotifier {
   static String? Function(String?) get stateValidator =>
       Validatorless.multiple([
         Validatorless.required('State is required'),
-        Validatorless.min(3, 'State must be at least 3 characters'),
+        Validatorless.min(2, 'State must be at least 2 characters'),
       ]);
 
   /// Gets postal code validation rules
   static String? Function(String?) get postalCodeValidator =>
       Validatorless.multiple([
         Validatorless.required('Postal Code is required'),
-        Validatorless.min(3, 'Postal Code must be at least 3 characters'),
+        Validatorless.min(5, 'Postal Code must be at least 5 characters'),
       ]);
 
   /// Gets country validation rules
@@ -542,20 +544,23 @@ class ContactDetailViewModel extends ChangeNotifier {
       return;
     }
 
-    // Verificar se o contato tem um ID válido para a API
-    final contactId = contact.id;
-
     // Create custom fields for additional data
     final customFields = <Map<String, dynamic>>[];
 
-    // Determinar se deve tentar atualizar na API
-    final shouldUpdateAPI = contactId != null;
+    // Use ghlId for API operations, fallback to id as string
+    final contactIdToUse = contact.ghlId ?? contact.id?.toString() ?? '';
 
-    // Sempre tentar atualizar localmente primeiro
-    // Se tiver ID da API e estiver online, também tenta atualizar via API
-    final contactIdToUse = shouldUpdateAPI
-        ? contactId
-        : (contact.ghlId ?? contact.localId.toString());
+    if (contactIdToUse.isEmpty) {
+      if (context.mounted) {
+        SnackBarUtils.showError(
+          context,
+          message: 'Contact ID not found. Cannot update contact.',
+        );
+      }
+      return;
+    }
+
+    final shouldUpdateAPI = contact.ghlId != null;
 
     final result = await updateContact(
       contactIdToUse,

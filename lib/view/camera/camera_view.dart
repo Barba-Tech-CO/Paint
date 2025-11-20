@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../service/camera_manager.dart';
 import '../../service/camera_navigation_handler.dart';
@@ -69,14 +70,15 @@ class _CameraViewState extends State<CameraView> {
 
   Future<void> _initializeCamera() async {
     await _viewModel.initialize();
+
+    if (!mounted) return;
+
     _viewModel.setNavigationContext(context);
 
-    if (mounted) {
-      if (_viewModel.needsCameraUnavailableDialog) {
-        await _viewModel.showCameraUnavailableDialog(context);
-      }
-      setState(() {});
+    if (_viewModel.needsCameraUnavailableDialog) {
+      await _viewModel.showCameraUnavailableDialog(context);
     }
+    setState(() {});
   }
 
   Future<void> _toggleFlash() async {
@@ -128,7 +130,7 @@ class _CameraViewState extends State<CameraView> {
 
           // Photo Thumbnails Row
           Positioned(
-            bottom: 140,
+            bottom: 140.h,
             left: 0,
             right: 0,
             child: PhotoThumbnailsRow(

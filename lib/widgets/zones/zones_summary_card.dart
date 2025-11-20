@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 enum ZonesSummaryCardState { normal, noZones }
 
@@ -27,16 +28,16 @@ class ZonesSummaryCard extends StatelessWidget {
       children: [
         Container(
           width: double.infinity,
-          margin: const EdgeInsets.only(top: 24),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          margin: EdgeInsets.only(top: 24.h),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
+                blurRadius: 16.r,
+                offset: Offset(0, 4.h),
               ),
             ],
           ),
@@ -49,10 +50,10 @@ class ZonesSummaryCard extends StatelessWidget {
                       children: [
                         Text(
                           avgDimensions,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Color(0xFF1A73E8),
                             fontWeight: FontWeight.bold,
-                            fontSize: 20,
+                            fontSize: 20.sp,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -71,10 +72,10 @@ class ZonesSummaryCard extends StatelessWidget {
                       children: [
                         Text(
                           totalArea,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Color(0xFF1A73E8),
                             fontWeight: FontWeight.bold,
-                            fontSize: 20,
+                            fontSize: 20.sp,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -90,26 +91,27 @@ class ZonesSummaryCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               const Divider(),
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Total Paintable',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 16.sp,
                       ),
                     ),
                   ),
+
                   Text(
                     totalPaintable,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Color(0xFF1A73E8),
                       fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                      fontSize: 18.sp,
                     ),
                   ),
                 ],
@@ -119,28 +121,28 @@ class ZonesSummaryCard extends StatelessWidget {
         ),
         if (showAddButton)
           Positioned(
-            top: 8,
-            right: 8,
+            top: 8.h,
+            right: 8.w,
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(16.r),
                 onTap: onAdd,
                 child: Container(
-                  width: 48,
-                  height: 48,
+                  width: 48.w,
+                  height: 48.h,
                   decoration: BoxDecoration(
                     color: const Color(0xFF1A73E8),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16.r),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.10),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                        blurRadius: 8.r,
+                        offset: Offset(0, 2.h),
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.add, color: Colors.white, size: 32),
+                  child: Icon(Icons.add, color: Colors.white, size: 32.sp),
                 ),
               ),
             ),

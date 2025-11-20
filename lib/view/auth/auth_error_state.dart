@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../viewmodel/auth/auth_viewmodel.dart';
@@ -22,16 +23,16 @@ class AuthErrorState extends StatelessWidget {
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(24.w),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.error_outline,
-                size: 80,
+                size: 80.sp,
                 color: Colors.red,
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               Text(
                 'Authentication Error',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -40,7 +41,7 @@ class AuthErrorState extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               Text(
                 authViewModel.state.errorMessage ??
                     'Unable to complete authentication',
@@ -49,7 +50,7 @@ class AuthErrorState extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: 32.h),
               if (authViewModel.state.canRetry) ...[
                 ElevatedButton(
                   onPressed: () async {
@@ -58,20 +59,20 @@ class AuthErrorState extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 32.w,
+                      vertical: 16.h,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(8.r),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Try Again',
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 16.sp),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16.h),
               ],
               TextButton(
                 onPressed: () {
@@ -79,10 +80,10 @@ class AuthErrorState extends StatelessWidget {
                     context.pop();
                   }
                 },
-                child: const Text(
+                child: Text(
                   'Go Back',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 16.sp,
                     color: Colors.black54,
                   ),
                 ),

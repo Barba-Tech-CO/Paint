@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PaintProTextField extends StatelessWidget {
   final String label;
@@ -29,12 +30,13 @@ class PaintProTextField extends StatelessWidget {
       children: [
         // Label
         Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
+          padding: EdgeInsets.only(bottom: 8.h),
           child: Text(
             label,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.black87,
               fontWeight: FontWeight.w500,
+              fontSize: 14.sp,
             ),
           ),
         ),
@@ -51,46 +53,46 @@ class PaintProTextField extends StatelessWidget {
             hintText: hintText,
             hintStyle: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.grey,
+              fontSize: 14.sp,
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 16,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 12.w,
+              vertical: 16.h,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFFE0E0E0), // Cinza claro
-                width: 1.0,
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(
+                color: const Color(0xFFE0E0E0),
+                width: 1.w,
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFFE0E0E0), // Cinza claro
-                width: 1.0,
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(
+                color: const Color(0xFFE0E0E0),
+                width: 1.w,
               ),
             ),
-
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(
                 color: Colors.red,
-                width: 1.0,
+                width: 1.w,
               ),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(
                 color: Colors.red,
-                width: 2.0,
+                width: 2.w,
               ),
             ),
           ),
-          style: theme.textTheme.bodyMedium,
+          style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14.sp),
         ),
 
         // Add some bottom spacing
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
       ],
     );
   }

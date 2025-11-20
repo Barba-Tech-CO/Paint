@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../config/app_colors.dart';
 
@@ -17,20 +18,23 @@ class PaintProButton extends StatelessWidget {
   final TextStyle? textStyle;
   final ButtonState state;
 
-  const PaintProButton({
+  PaintProButton({
     super.key,
     required this.text,
     this.state = ButtonState.enabled,
     this.onPressed,
     this.backgroundColor,
     this.foregroundColor,
-    this.padding = const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-    this.minimumSize = const Size(double.infinity, 48),
-    this.borderRadius = 12,
+    EdgeInsets? padding,
+    Size? minimumSize,
+    double? borderRadius,
     this.isLoading = false,
     this.icon,
     this.textStyle,
-  });
+  }) : padding =
+           padding ?? EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.h),
+       minimumSize = minimumSize ?? Size(double.infinity, 48.h),
+       borderRadius = borderRadius ?? 12.r;
 
   bool get _isEnabled => state == ButtonState.enabled;
   bool get _isLoading => state == ButtonState.loading;
@@ -50,8 +54,8 @@ class PaintProButton extends StatelessWidget {
   TextStyle _getTextStyle(BuildContext context) {
     final base =
         textStyle ??
-        const TextStyle(
-          fontSize: 16,
+        TextStyle(
+          fontSize: 16.sp,
           fontWeight: FontWeight.bold,
         );
     return base.copyWith(
@@ -75,12 +79,12 @@ class PaintProButton extends StatelessWidget {
           elevation: _elevation,
         ),
         child: _isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
+            ? SizedBox(
+                height: 20.h,
+                width: 20.w,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  strokeWidth: 2.w,
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
             : Row(
@@ -93,7 +97,7 @@ class PaintProButton extends StatelessWidget {
                       ),
                       child: icon!,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8.w),
                   ],
                   Text(
                     text,

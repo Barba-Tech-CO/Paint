@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../config/app_colors.dart';
 
@@ -15,13 +16,13 @@ class SectionHeaderWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: EdgeInsets.only(bottom: 8.0.h),
       child: Text(
         title,
         overflow: TextOverflow.ellipsis,
         style: theme.textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w800,
-          fontSize: 18,
+          fontSize: 18.sp,
           color: AppColors.primaryDark,
         ),
       ),

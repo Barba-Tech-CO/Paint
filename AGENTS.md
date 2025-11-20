@@ -1,43 +1,24 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `lib/` — app code. Key dirs: `config` (DI, routes, theme, `AppConfig`), `view`, `viewmodel`, `service`, `use_case`, `model`, `utils`/`helpers`, `data`, `domain`. Entry: `lib/main.dart`.
-- `test/` — unit/widget tests mirroring `lib/` (e.g., `test/utils/auth/token_sanitizer_test.dart`).
-- `assets/` — images/logos declared in `pubspec.yaml`.
-- `android/`, `ios/` — platform; `docs/` — documentation.
+The Flutter app lives under `lib/`, organized by feature-centric layers: dependency injection and routing in `lib/config`, presentation in `lib/view`, stateful logic in `lib/viewmodel`, domain logic under `lib/use_case` and `lib/domain`, and integration adapters in `lib/service` and `lib/data`. Shared helpers belong to `lib/utils` or `lib/helpers`. Entry point: `lib/main.dart`. Widget/unit tests mirror this layout under `test/` (e.g., `test/utils/auth/token_sanitizer_test.dart`). Assets such as icons or logos are stored in `assets/` and must be declared in `pubspec.yaml`. Platform projects sit in `android/` and `ios/`, while additional reference docs are in `docs/`.
 
 ## Build, Test, and Development Commands
-- Install deps: `flutter pub get`
-- Analyze lints/types: `flutter analyze`
-- Format code: `dart format .` (run before committing)
-- Run tests: `flutter test` (coverage: `flutter test --coverage`)
-- Run app: `flutter run -d <device>` (e.g., `-d ios`, `-d android`)
-- Build release: `flutter build apk --release` | `flutter build ios --no-codesign`
+- `flutter pub get` — install/update Dart and Flutter dependencies.
+- `flutter analyze` — enforce lint rules and catch type issues.
+- `dart format .` — format Dart files (run before every commit).
+- `flutter test` or `flutter test --coverage` — execute unit/widget suites, optionally collecting coverage.
+- `flutter run -d <device>` — launch the app locally (`-d ios`, `-d android`).
+- Release builds: `flutter build apk --release` and `flutter build ios --no-codesign`.
 
 ## Coding Style & Naming Conventions
-- Lints: `flutter_lints` + `analysis_options.yaml` (e.g., `prefer_relative_imports`, `formatter.trailing_commas: preserve`). Use relative imports within `lib/`.
-- Indentation: 2 spaces. Files `snake_case.dart`; classes `UpperCamelCase`; methods/vars `lowerCamelCase`.
-- Organization: UI in `view/`, state in `viewmodel/`, domain in `use_case/`, adapters in `service/`, shared helpers in `utils/`/`helpers/`.
+Follow `flutter_lints` plus `analysis_options.yaml`. Use 2-space indentation, snake_case filenames (`user_profile_view.dart`), UpperCamelCase classes, and lowerCamelCase members. Prefer relative imports inside `lib/` to satisfy the `prefer_relative_imports` rule. Preserve trailing commas so `dart format` keeps multi-line layouts stable.
 
 ## Testing Guidelines
-- Place tests under `test/` mirroring `lib/`; name files `*_test.dart`. Use `group()`/`test()` from `flutter_test`.
-- Prioritize `utils`, `service`, `use_case`, and `viewmodel`. Add tests for bug fixes and new features.
-- Keep tests hermetic (no real network); mock services where needed.
+Write hermetic tests with `flutter_test`, mirroring the `lib/` structure and naming files `*_test.dart`. Prioritize coverage for utilities, services, use cases, and viewmodels. Mock network or platform integrations; never hit real endpoints. Run `flutter test --coverage` locally before feature branches merge.
 
 ## Commit & Pull Request Guidelines
-- Conventional Commits: `feat`, `fix`, `chore`, `refactor`, `docs` (optional scope: `feat(auth): ...`).
-- Branch: `type/scope-description` (e.g., `feat/auth-login`).
-- PR checklist: summary, linked issues (`Closes #123`), screenshots for UI changes, test plan; CI green (analyze/format/test).
-
-## CI & Automation
-- GitHub Actions runs on push/PR to `main`: analyze, format check, tests.
-- Workflow file: `.github/workflows/ci.yml`. Run locally: `dart format --set-exit-if-changed . && flutter analyze && flutter test`.
-
-## Release & Fastlane
-- iOS Firebase distribution workflow: `.github/workflows/app_distribution_ios.yml` (runs on `develop` and manual dispatch).
-- Fastlane lanes (iOS) live in `fastlane/Fastfile` (`ios deploy_firebase`). Plugins in `fastlane/Pluginfile`.
-- Keep credentials in GitHub Secrets (e.g., `FIREBASE_APP_ID`, `FIREBASE_TOKEN`, `MATCH_*`). Never commit keys or provisioning files.
+Commits follow Conventional Commits (e.g., `feat/auth-login`, `fix: correct token refresh`). Branch names adopt `type/scope-description`. Pull requests should summarize changes, link issues (`Closes #123`), attach screenshots for UI updates, and document the test plan. CI on GitHub Actions runs `dart format --set-exit-if-changed . && flutter analyze && flutter test`; ensure it passes before requesting review.
 
 ## Security & Configuration Tips
-- Do not commit secrets or API keys. Base URLs live in `lib/config/app_config.dart`/`app_urls.dart`; toggle with `AppConfig.isProduction`.
-- Android emulators reach host at `10.0.2.2` (handled in `AppConfig`). Keep `pubspec.yaml` assets in sync with `assets/`.
+Never commit secrets or API keys. Environment-specific URLs belong in `lib/config/app_config.dart` or `app_urls.dart`, toggled via `AppConfig.isProduction`. Android emulators reach the host backend via `10.0.2.2` (already handled in config). Keep `assets/` declarations synchronized with `pubspec.yaml`, and store Fastlane or Firebase credentials exclusively in GitHub Secrets (`FIREBASE_APP_ID`, `MATCH_*`, etc.).

@@ -4,7 +4,11 @@ import '../model/contacts/contact_model.dart';
 import '../model/projects/project_card_model.dart';
 import '../use_case/navigation/navigation_data_use_case.dart';
 import '../view/auth/auth_view.dart';
+import '../view/auth/login_screen.dart';
+import '../view/auth/signup_screen.dart';
+import '../view/auth/verify_otp_screen.dart';
 import '../view/camera/camera_view.dart';
+import '../view/settings/delete_account_view.dart';
 import '../view/contact_details/contact_details_view.dart';
 import '../view/contacts/contacts_view.dart';
 import '../view/create_project/create_project_view.dart';
@@ -22,6 +26,7 @@ import '../view/success/success_view.dart';
 import '../view/zones/zones_view.dart';
 import '../view/zones_details/zones_details_view.dart';
 import '../view/estimate/estimate_detail_view.dart';
+import '../view/connect_ghl/connect_ghl_view.dart';
 import '../widgets/loading/loading_widget.dart';
 
 final router = GoRouter(
@@ -34,6 +39,25 @@ final router = GoRouter(
     GoRoute(
       path: '/auth',
       builder: (context, state) => const AuthView(),
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/signup',
+      builder: (context, state) => const SignUpScreen(),
+    ),
+    GoRoute(
+      path: '/verify-otp',
+      builder: (context, state) {
+        final email = state.extra as String? ?? '';
+        return VerifyOtpScreen(email: email);
+      },
+    ),
+    GoRoute(
+      path: '/delete-account',
+      builder: (context, state) => const DeleteAccountView(),
     ),
     GoRoute(
       path: '/home',
@@ -198,6 +222,10 @@ final router = GoRouter(
         final projectId = state.extra as int? ?? 0;
         return EstimateDetailView(projectId: projectId);
       },
+    ),
+    GoRoute(
+      path: '/connect-ghl',
+      builder: (context, state) => const ConnectGhlView(),
     ),
   ],
 );

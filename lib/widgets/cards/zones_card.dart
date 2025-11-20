@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../config/app_colors.dart';
 import '../../utils/responsive/responsive_helper.dart';
@@ -57,21 +58,21 @@ class ZonesCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(16.r),
       child: Container(
         width: cardWidth,
         constraints: BoxConstraints(
-          minHeight: height!,
+          minHeight: height!.h,
         ),
-        margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        margin: EdgeInsets.symmetric(horizontal: 6.w, vertical: 6.h),
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: .05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+              blurRadius: 4.r,
+              offset: Offset(0, 2.h),
             ),
           ],
         ),
@@ -84,7 +85,7 @@ class ZonesCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                     child: Image.file(
                       File(firstPhotoPath),
                       fit: BoxFit.cover,
@@ -130,7 +131,7 @@ class ZonesCard extends StatelessWidget {
               right: 0,
               child: PopupMenuButton(
                 color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12.r),
                 tooltip: '',
                 icon: Icon(Icons.more_vert, color: Colors.grey[700]),
                 onSelected: (value) async {
@@ -155,32 +156,32 @@ class ZonesCard extends StatelessWidget {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'rename',
                     child: Row(
                       children: [
                         Icon(Icons.edit),
-                        SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                         Text('Rename'),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'edit',
                     child: Row(
                       children: [
                         Icon(Icons.edit),
-                        SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                         Text('Edit'),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
                         Icon(Icons.delete),
-                        SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                         Text('Delete'),
                       ],
                     ),

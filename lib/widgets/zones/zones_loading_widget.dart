@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../viewmodel/zones/zones_list_viewmodel.dart';
 
@@ -27,7 +28,7 @@ class ZonesLoadingWidget extends StatelessWidget {
               'Error: ${listViewModel.errorMessage}',
               style: const TextStyle(color: Colors.red),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             ElevatedButton(
               onPressed: () => listViewModel.refresh(),
               child: const Text('Try Again'),

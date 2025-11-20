@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class StatsCardWidget extends StatelessWidget {
   final String title;
@@ -29,38 +30,38 @@ class StatsCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: width,
-      height: height,
+      width: width.w,
+      height: height.h,
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: BorderRadius.circular(borderRadius.r),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
+            spreadRadius: 1.r,
+            blurRadius: 3.r,
+            offset: Offset(0, 1.h),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               title,
               style: TextStyle(
-                fontSize: titleFontSize,
+                fontSize: titleFontSize.sp,
                 fontWeight: FontWeight.bold,
                 color: titleColor,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4.h),
             Text(
               description,
               style: TextStyle(
-                fontSize: descriptionFontSize,
+                fontSize: descriptionFontSize.sp,
                 color: descriptionColor,
               ),
             ),

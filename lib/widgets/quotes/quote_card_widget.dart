@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../utils/date_utils.dart' as app_date_utils;
 import '../../utils/status_utils.dart';
 import '../dialogs/delete_quote_dialog.dart';
@@ -24,8 +25,8 @@ class QuoteCardWidget extends StatefulWidget {
     required this.dateUpload,
     this.status,
     this.errorMessage,
-    this.width = 336,
-    this.height = 84,
+    this.width,
+    this.height,
     this.onTap,
     this.onRename,
     this.onDelete,
@@ -85,23 +86,23 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
         }
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: 12,
-          horizontal: 16,
+        padding: EdgeInsets.symmetric(
+          vertical: 12.h,
+          horizontal: 16.w,
         ),
-        width: widget.width,
+        width: widget.width ?? 336.w,
         constraints: BoxConstraints(
-          minHeight: widget.height ?? 84,
-          minWidth: widget.width ?? 336,
+          minHeight: widget.height ?? 84.h,
+          minWidth: widget.width ?? 336.w,
         ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
               color: Colors.black26,
-              blurRadius: 1.5,
-              offset: Offset(1, 2),
+              blurRadius: 1.5.r,
+              offset: Offset(1.w, 2.h),
             ),
           ],
         ),
@@ -110,11 +111,11 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
             Row(
               children: [
                 Image(
-                  height: 60,
-                  width: 60,
+                  height: 60.h,
+                  width: 60.w,
                   image: AssetImage('assets/images/icon_pdf.png'),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: 12.w),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,12 +125,12 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                           Text(
                             'Quote #${widget.id}',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 12.sp,
                               color: Colors.grey[600],
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: 8.w),
                           if (StatusUtils.shouldShowStatus(
                             currentStatus: widget.status,
                             previousStatus: _previousStatus,
@@ -137,25 +138,25 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                           ))
                             Container(
                               padding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
+                                horizontal: 8.w,
+                                vertical: 2.h,
                               ),
                               decoration: BoxDecoration(
                                 color: StatusUtils.getStatusColor(
                                   widget.status,
                                 ).withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(12.r),
                                 border: Border.all(
                                   color: StatusUtils.getStatusColor(
                                     widget.status,
                                   ),
-                                  width: 1,
+                                  width: 1.w,
                                 ),
                               ),
                               child: Text(
                                 StatusUtils.getStatusDisplay(widget.status),
                                 style: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: 10.sp,
                                   fontWeight: FontWeight.bold,
                                   color: StatusUtils.getStatusColor(
                                     widget.status,
@@ -165,22 +166,22 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                             ),
                         ],
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Text(
                         widget.titulo,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.bold,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Text(
                         app_date_utils.DateUtils.formatUploadDateTime(
                           widget.dateUpload,
                         ),
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 12.sp,
                           color: Colors.grey[600],
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -188,11 +189,11 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                       if (widget.errorMessage != null &&
                           widget.errorMessage!.isNotEmpty)
                         Padding(
-                          padding: EdgeInsets.only(top: 4),
+                          padding: EdgeInsets.only(top: 4.h),
                           child: Text(
                             'Error: ${widget.errorMessage}',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 11.sp,
                               color: Colors.red[700],
                               fontWeight: FontWeight.w500,
                             ),
@@ -203,19 +204,19 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: 8.w),
               ],
             ),
             Positioned(
-              top: -8,
-              right: -8,
+              top: -8.h,
+              right: -8.w,
               child: PopupMenuButton(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12.r),
                 tooltip: '',
                 icon: Icon(
                   Icons.more_vert,
-                  size: 20,
+                  size: 20.sp,
                   color: Colors.grey[700],
                 ),
                 onSelected: (value) async {
@@ -241,15 +242,15 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'rename',
                     child: Row(
                       children: [
                         Icon(
                           Icons.edit,
-                          size: 18,
+                          size: 18.sp,
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                         Text('Rename'),
                       ],
                     ),
@@ -261,10 +262,10 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                       children: [
                         if (widget.isDeleting)
                           SizedBox(
-                            width: 16,
-                            height: 16,
+                            width: 16.w,
+                            height: 16.h,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                              strokeWidth: 2.w,
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 Colors.red,
                               ),
@@ -273,10 +274,10 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                         else
                           Icon(
                             Icons.delete,
-                            size: 18,
+                            size: 18.sp,
                             color: Colors.red,
                           ),
-                        SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                         Text(
                           widget.isDeleting ? 'Deleting...' : 'Delete',
                           style: TextStyle(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../buttons/paint_pro_button.dart';
 
 class EmptyStateWidget extends StatelessWidget {
@@ -23,23 +24,23 @@ class EmptyStateWidget extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 20,
+            style: TextStyle(
+              fontSize: 20.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
           Text(
             subtitle,
-            style: const TextStyle(
-              fontSize: 14,
+            style: TextStyle(
+              fontSize: 14.sp,
               fontWeight: FontWeight.w300,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           PaintProButton(
             text: buttonText,
-            minimumSize: const Size(130, 42),
-            borderRadius: 16,
+            minimumSize: Size(130.w, 42.h),
+            borderRadius: 16.r,
             onPressed: onButtonPressed,
           ),
         ],

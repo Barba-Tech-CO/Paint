@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_colors.dart';
@@ -116,9 +117,9 @@ class _CreateProjectViewState extends State<CreateProjectView> {
         onTap: _dismissKeyboard,
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: Column(
-              spacing: 12,
+              spacing: 12.h,
               children: [
                 const SizedBox.shrink(),
 
@@ -161,11 +162,11 @@ class _CreateProjectViewState extends State<CreateProjectView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(top: 8),
+                        padding: EdgeInsets.only(top: 8.h),
                         child: Text(
                           'Project Type *',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 16.sp,
                             fontWeight: FontWeight.w400,
                             color: AppColors.textPrimary,
                           ),

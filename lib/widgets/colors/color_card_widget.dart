@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ColorCardWidget extends StatelessWidget {
   final String name;
@@ -21,13 +22,13 @@ class ColorCardWidget extends StatelessWidget {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.w),
           child: Column(
             children: [
               // Color swatch
@@ -37,11 +38,11 @@ class ColorCardWidget extends StatelessWidget {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: color ?? Colors.grey[300],
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(8.r),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               // Color info
               Flexible(
                 flex: 2,
@@ -52,30 +53,30 @@ class ColorCardWidget extends StatelessWidget {
                     Flexible(
                       child: Text(
                         name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                          fontSize: 14.sp,
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2.h),
                     Text(
                       code,
                       style: TextStyle(
                         color: Colors.grey[600],
-                        fontSize: 11,
+                        fontSize: 11.sp,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2.h),
                     Text(
                       price,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.blue,
                         fontWeight: FontWeight.bold,
-                        fontSize: 13,
+                        fontSize: 13.sp,
                       ),
                     ),
                   ],

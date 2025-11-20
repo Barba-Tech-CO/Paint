@@ -224,7 +224,6 @@ class AuthViewModel extends ChangeNotifier {
                 authenticated: true,
                 needsLogin: false,
                 expiresAt: authModel.expiresAt,
-                locationId: authModel.locationId,
                 sanctumToken: hasLocalToken,
               );
               _logger.info(
@@ -380,7 +379,6 @@ class AuthViewModel extends ChangeNotifier {
               authenticated: true,
               needsLogin: false,
               expiresAt: newAuthStatus.expiresAt,
-              locationId: newAuthStatus.locationId,
               sanctumToken: authToken,
             );
 

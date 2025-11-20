@@ -18,7 +18,7 @@ class FloorDimensionsModel {
   }
 
   factory FloorDimensionsModel.fromMap(Map<String, dynamic> map) {
-    num _parseNum(dynamic v) {
+    num parseNum(dynamic v) {
       if (v is num) return v;
       if (v is String) {
         final parsed = double.tryParse(v);
@@ -28,8 +28,8 @@ class FloorDimensionsModel {
     }
 
     return FloorDimensionsModel(
-      length: _parseNum(map['length']),
-      width: _parseNum(map['width']),
+      length: parseNum(map['length']),
+      width: parseNum(map['width']),
       unit: (map['unit'] ?? 'ft').toString(),
     );
   }

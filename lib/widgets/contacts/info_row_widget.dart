@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../config/app_colors.dart';
 
@@ -17,7 +18,7 @@ class InfoRowWidget extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: EdgeInsets.only(bottom: 8.0.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -26,7 +27,7 @@ class InfoRowWidget extends StatelessWidget {
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w800,
               color: AppColors.primaryDark,
-              fontSize: 16,
+              fontSize: 16.sp,
             ),
           ),
           Text(

@@ -293,7 +293,8 @@ class EstimatesLocalService {
 
   String _adjustImageUrl(String originalUrl) {
     final baseHost = AppConfig.baseUrl.replaceAll(RegExp(r"/api/?$"), '');
-    if (originalUrl.startsWith('http://') || originalUrl.startsWith('https://')) {
+    if (originalUrl.startsWith('http://') ||
+        originalUrl.startsWith('https://')) {
       if (!AppConfig.isProduction) {
         return originalUrl.replaceAll(
           'https://paintpro.barbatech.company',

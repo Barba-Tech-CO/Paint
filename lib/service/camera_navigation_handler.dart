@@ -80,7 +80,9 @@ class CameraNavigationHandler {
       if (result != null) {
         _processRoomPlanResult(result, photos);
       } else {
-        context.pop(); // Go back to camera
+        if (context.mounted) {
+          context.pop(); // Go back to camera
+        }
       }
     } catch (e) {
       _showRoomPlanErrorDialog(e.toString());

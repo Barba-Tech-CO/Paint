@@ -44,9 +44,6 @@ class QuoteRepository implements IQuoteRepository {
 
         // Cache the newly uploaded quote for offline access
         await _quotesLocalService.saveQuote(response.quote);
-        _logger.info(
-          'QuoteRepository: Cached newly uploaded quote ${response.quote.id}',
-        );
 
         return Result.ok(response);
       }
@@ -68,17 +65,9 @@ class QuoteRepository implements IQuoteRepository {
   }) async {
     try {
       // Offline-first strategy: Try to get quotes from local storage first
-      _logger.info(
-        'QuoteRepository: Attempting to load quotes from offline storage',
-      );
-
       final offlineQuotes = await _quotesLocalService.getAllQuotes();
 
       if (offlineQuotes.isNotEmpty) {
-        _logger.info(
-          'QuoteRepository: Found ${offlineQuotes.length} quotes in offline storage',
-        );
-
         // Apply filters to offline data
         List<QuoteModel> filteredQuotes = offlineQuotes;
 
@@ -122,10 +111,6 @@ class QuoteRepository implements IQuoteRepository {
         _syncQuotesInBackground();
 
         return Result.ok(response);
-      } else {
-        _logger.info(
-          'QuoteRepository: No offline quotes found, fetching from API',
-        );
       }
 
       // If no offline data, fetch from API and cache the results
@@ -149,9 +134,6 @@ class QuoteRepository implements IQuoteRepository {
           }
         }
 
-        _logger.info(
-          'QuoteRepository: Cached ${response.quotes.length} quotes from API',
-        );
         return Result.ok(response);
       }
 
@@ -182,10 +164,6 @@ class QuoteRepository implements IQuoteRepository {
             );
           }
         }
-
-        _logger.info(
-          'QuoteRepository: Background sync completed - updated ${response.quotes.length} quotes',
-        );
       }
     } catch (e) {
       _logger.warning('QuoteRepository: Background sync failed');
@@ -196,25 +174,13 @@ class QuoteRepository implements IQuoteRepository {
   Future<Result<QuoteModel>> getQuoteStatus(int quoteId) async {
     try {
       // Offline-first strategy: Try to get quote status from local storage first
-      _logger.info(
-        'QuoteRepository: Attempting to load quote status $quoteId from offline storage',
-      );
-
       final offlineQuote = await _quotesLocalService.getQuote(quoteId);
 
       if (offlineQuote != null) {
-        _logger.info(
-          'QuoteRepository: Found quote $quoteId in offline storage',
-        );
-
         // Try to get latest status from API in background
         _updateQuoteStatusInBackground(quoteId);
 
         return Result.ok(offlineQuote);
-      } else {
-        _logger.info(
-          'QuoteRepository: Quote $quoteId not found in offline storage, fetching from API',
-        );
       }
 
       // If not found offline, try API and cache the result
@@ -225,7 +191,6 @@ class QuoteRepository implements IQuoteRepository {
 
         // Cache the quote for future offline access
         await _quotesLocalService.saveQuote(quote);
-        _logger.info('QuoteRepository: Cached quote $quoteId from API');
 
         return Result.ok(quote);
       }
@@ -247,9 +212,6 @@ class QuoteRepository implements IQuoteRepository {
       if (apiResult is Ok<QuoteModel>) {
         final updatedQuote = apiResult.asOk.value;
         await _quotesLocalService.saveQuote(updatedQuote);
-        _logger.info(
-          'QuoteRepository: Updated quote $quoteId status in background',
-        );
       }
     } catch (e) {
       _logger.warning(
@@ -278,9 +240,6 @@ class QuoteRepository implements IQuoteRepository {
       if (apiResult is Ok<bool> && apiResult.asOk.value) {
         // Remove from offline cache
         await _quotesLocalService.deleteQuote(quoteId);
-        _logger.info(
-          'QuoteRepository: Removed deleted quote $quoteId from cache',
-        );
 
         return Result.ok(true);
       }

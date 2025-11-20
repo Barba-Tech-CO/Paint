@@ -6,63 +6,56 @@ import '../model/contacts/contact_model.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/result/result.dart';
 import 'http_service.dart';
-import 'location_service.dart';
 
 class ContactService {
   final HttpService _httpService;
-  final LocationService _locationService;
   final AppLogger _logger;
   static const String _baseUrl = AppUrls.contactsBaseUrl;
 
   ContactService(
     this._httpService,
-    this._locationService,
     this._logger,
   );
 
   /// Dispara sincronização completa de contatos no backend (GHL -> DB API)
+  /// Sempre retorna sucesso: com GHL sincroniza do CRM, sem GHL retorna local
   Future<Result<Map<String, dynamic>>> syncContacts({int limit = 100}) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
+      final endpoint = '$_baseUrl/sync';
+      final requestData = {'limit': limit};
 
-      _logger.info('ContactService: Triggering /contacts/sync (limit=$limit, location=$locationId)');
       final response = await _httpService.post(
-        '$_baseUrl/sync',
-        data: {'limit': limit},
+        endpoint,
+        data: requestData,
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
+          receiveTimeout: const Duration(seconds: 30),
+          sendTimeout: const Duration(seconds: 30),
         ),
       );
 
       if (response.statusCode == 200) {
         final data = Map<String, dynamic>.from(response.data as Map);
-        final stats = data['stats'];
-        if (stats is Map) {
-          _logger.info(
-            'ContactService: Sync completed — total=${stats['total']}, created=${stats['created']}, updated=${stats['updated']}, pages=${stats['pages']}',
-          );
-        } else {
-          _logger.info('ContactService: Sync completed — no stats payload');
-        }
+
         return Result.ok(data);
       }
+
+      _logger.warning(
+        'ContactService: Sync failed with status code: ${response.statusCode}',
+      );
+      _logger.warning('ContactService: Response data: ${response.data}');
+      _logger.warning('=== SYNC CONTACTS FAILED ===');
+
       return Result.error(
         Exception('Failed to sync contacts: ${response.statusCode}'),
       );
     } on DioException catch (e) {
-      _logger.error('ContactService: Error syncing contacts', e);
       return _handleDioException(e, 'syncing contacts');
     } catch (e) {
-      _logger.error('ContactService: Error syncing contacts', e);
+      _logger.error('Error syncing contacts', e);
       return Result.error(
         Exception('Error syncing contacts'),
       );
@@ -75,61 +68,48 @@ class ContactService {
     int? offset,
   }) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final effLimit = limit ?? 100;
       final page = (offset != null && effLimit > 0)
           ? ((offset / effLimit).floor() + 1)
           : 1;
 
-      // POST sem body cai na listagem (ver controller store -> listContacts)
-      final response = await _httpService.post(
+      final response = await _httpService.get(
         _baseUrl,
-        data: const {},
         queryParameters: {
           'limit': effLimit,
           'page': page,
         },
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
-            'Content-Type': 'application/json',
           },
         ),
       );
 
       if (response.statusCode == 200) {
         try {
-          final contactListResponse = ContactListResponse.fromJson(
-            response.data,
-          );
+          final data = response.data;
+          if (data is! Map<String, dynamic>) {
+            return Result.error(
+              Exception('Unexpected response while listing contacts'),
+            );
+          }
+
+          final contactListResponse = ContactListResponse.fromJson(data);
+
           return Result.ok(contactListResponse);
         } catch (e) {
-          _logger.error('ContactService: Error parsing response: $e');
-          _logger.error(
-            'ContactService: Response data structure: ${response.data}',
-          );
+          _logger.error('Error parsing contact response', e);
           return Result.error(
             Exception('Error parsing contact response: $e'),
           );
         }
       }
 
-      final errorMessage = response.data is Map
-          ? (response.data['message'] ?? 'Unknown error')
-          : 'Unknown error';
-      _logger.error('Error listing contacts', errorMessage);
       return Result.error(
         Exception('Error listing contacts'),
       );
     } on DioException catch (e) {
-      _logger.error('Error listing contacts', e);
       return _handleDioException(e, 'listing contacts');
     } catch (e) {
       _logger.error('Error listing contacts', e);
@@ -142,22 +122,13 @@ class ContactService {
   /// Busca contatos por nome, email ou telefone
   Future<Result<ContactListResponse>> searchContacts(String query) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final response = await _httpService.post(
-        _baseUrl,
+        '$_baseUrl/search',
         data: {
-          'locationId': locationId,
           'query': query,
         },
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
@@ -166,17 +137,20 @@ class ContactService {
 
       // Handle successful response (200 OK)
       if (response.statusCode == 200) {
-        final contactListResponse = ContactListResponse.fromJson(response.data);
+        final data = response.data;
+        if (data is! Map<String, dynamic>) {
+          return Result.error(
+            Exception('Unexpected response while searching contacts'),
+          );
+        }
+        final contactListResponse = ContactListResponse.fromJson(data);
         return Result.ok(contactListResponse);
       } else {
-        final errorMessage = response.data['message'];
-        _logger.error('Error searching contacts', errorMessage);
         return Result.error(
           Exception('Error searching contacts'),
         );
       }
     } on DioException catch (e) {
-      _logger.error('Error searching contacts', e);
       return _handleDioException(e, 'searching contacts');
     } catch (e) {
       _logger.error('Error searching contacts', e);
@@ -188,7 +162,6 @@ class ContactService {
 
   /// Busca avançada de contatos
   Future<Result<ContactListResponse>> advancedSearch({
-    String? locationId,
     int? pageLimit,
     int? page,
     String? query,
@@ -196,18 +169,9 @@ class ContactService {
     List<Map<String, dynamic>>? sort,
   }) async {
     try {
-      final currentLocationId =
-          locationId ?? _locationService.currentLocationId;
-      if (currentLocationId == null || currentLocationId.isEmpty) {
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final response = await _httpService.post(
         '$_baseUrl/search',
         data: {
-          'locationId': currentLocationId,
           if (pageLimit != null) 'pageLimit': pageLimit,
           if (page != null) 'page': page,
           if (query != null) 'query': query,
@@ -216,7 +180,6 @@ class ContactService {
         },
         options: Options(
           headers: {
-            'X-GHL-Location-ID': currentLocationId,
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
@@ -228,14 +191,11 @@ class ContactService {
         final contactListResponse = ContactListResponse.fromJson(response.data);
         return Result.ok(contactListResponse);
       } else {
-        final errorMessage = response.data['message'];
-        _logger.error('Error in advanced search', errorMessage);
         return Result.error(
           Exception('Error in advanced search'),
         );
       }
     } on DioException catch (e) {
-      _logger.error('Error in advanced search', e);
       return _handleDioException(e, 'advanced search');
     } catch (e) {
       _logger.error('Error in advanced search', e);
@@ -248,21 +208,10 @@ class ContactService {
   /// Obtém um contato específico
   Future<Result<ContactModel>> getContact(String contactId) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final response = await _httpService.get(
         '$_baseUrl/$contactId',
-        queryParameters: {
-          'location_id': locationId,
-        },
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
           },
         ),
@@ -285,20 +234,16 @@ class ContactService {
           final contact = ContactModel.fromJson(response.data['data']);
           return Result.ok(contact);
         } else {
-          _logger.error('Contact data not found in response');
           return Result.error(
             Exception('Contact data not found'),
           );
         }
       } else {
-        final errorMessage = response.data['message'];
-        _logger.error('Contact not found', errorMessage);
         return Result.error(
           Exception('Contact not found'),
         );
       }
     } on DioException catch (e) {
-      _logger.error('Error getting contact', e);
       return _handleDioException(e, 'getting contact');
     } catch (e) {
       _logger.error('Error getting contact', e);
@@ -325,13 +270,6 @@ class ContactService {
     List<String>? tags,
   }) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final requestData = <String, dynamic>{};
 
       // Add name fields as expected by API
@@ -350,7 +288,7 @@ class ContactService {
 
       // Add optional fields
       if (email != null && email.trim().isNotEmpty) {
-        requestData['email'] = email.trim();
+        requestData['email'] = email.trim().toLowerCase();
       }
       if (phone != null && phone.trim().isNotEmpty) {
         requestData['phone'] = phone.trim();
@@ -359,7 +297,7 @@ class ContactService {
         requestData['companyName'] = companyName.trim();
       }
       if (address != null) {
-        requestData['address1'] = address;
+        requestData['address'] = address;
       }
       if (city != null) requestData['city'] = city;
       if (state != null) requestData['state'] = state;
@@ -373,37 +311,29 @@ class ContactService {
         requestData['tags'] = tags;
       }
       if (customFields != null && customFields.isNotEmpty) {
-        _logger.info('Adding customFields: $customFields');
         requestData['customFields'] = customFields;
       }
-
-      // Log the request data for debugging
-      _logger.info('Creating contact with data: $requestData');
-      _logger.info('Location ID: $locationId');
 
       // Use the correct endpoint for creating contacts (POST /api/contacts)
       final response = await _httpService.post(
         _baseUrl,
         data: requestData,
-        queryParameters: {
-          'location_id': locationId,
-        },
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
         ),
       );
 
-      // Handle successful response (201 Created)
-      if (response.statusCode == 201) {
+      // Handle successful response (200 OK or 201 Created)
+      if (response.statusCode == 200 || response.statusCode == 201) {
         if (response.data['success'] == true &&
             response.data['contactDetails'] != null) {
           final contact = ContactModel.fromJson(
             response.data['contactDetails'],
           );
+
           return Result.ok(contact);
         } else if (response.data['contactDetails'] != null) {
           final contact = ContactModel.fromJson(
@@ -414,24 +344,16 @@ class ContactService {
           final contact = ContactModel.fromJson(response.data['data']);
           return Result.ok(contact);
         } else {
-          _logger.error('Contact data not found in response');
           return Result.error(
             Exception('Contact data not found'),
           );
         }
       } else {
-        final errorMessage = response.data['message'];
-        final errors = response.data['errors'];
-        _logger.error('Error creating contact - Message: $errorMessage');
-        if (errors != null) {
-          _logger.error('Validation errors: $errors');
-        }
         return Result.error(
-          Exception('Validation failed. $errorMessage'),
+          Exception('Error creating contact'),
         );
       }
     } on DioException catch (e) {
-      _logger.error('Error creating contact', e);
       return _handleDioException(e, 'creating contact');
     } catch (e) {
       _logger.error('Error creating contact', e);
@@ -459,14 +381,6 @@ class ContactService {
     List<String>? tags,
   }) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        _logger.error('Location ID not available. User not authenticated.');
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final updateData = <String, dynamic>{};
 
       // Add name field as expected by API
@@ -476,7 +390,7 @@ class ContactService {
 
       // Add other fields with detailed logging
       if (email != null && email.trim().isNotEmpty) {
-        updateData['email'] = email.trim();
+        updateData['email'] = email.trim().toLowerCase();
       }
       if (phone != null && phone.trim().isNotEmpty) {
         updateData['phone'] = phone.trim();
@@ -485,7 +399,7 @@ class ContactService {
         updateData['companyName'] = companyName.trim();
       }
       if (address != null && address.trim().isNotEmpty) {
-        updateData['address1'] = address.trim();
+        updateData['address'] = address.trim();
       }
       if (city != null && city.trim().isNotEmpty) {
         updateData['city'] = city.trim();
@@ -517,7 +431,6 @@ class ContactService {
         data: updateData,
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
@@ -541,20 +454,16 @@ class ContactService {
           final contact = ContactModel.fromJson(response.data['data']);
           return Result.ok(contact);
         } else {
-          _logger.error('Contact data not found in response');
           return Result.error(
             Exception('Contact data not found in response'),
           );
         }
       } else {
-        final errorMessage = response.data['message'];
-        _logger.error('Error updating contact', errorMessage);
         return Result.error(
           Exception('Error updating contact'),
         );
       }
     } on DioException catch (e) {
-      _logger.error('Error updating contact', e);
       return _handleDioException(e, 'updating contact');
     } catch (e) {
       _logger.error('Error updating contact', e);
@@ -567,22 +476,10 @@ class ContactService {
   /// Remove um contato
   Future<Result<bool>> deleteContact(String contactId) async {
     try {
-      final locationId = _locationService.currentLocationId;
-      if (locationId == null || locationId.isEmpty) {
-        _logger.error('Location ID not available. User not authenticated.');
-        return Result.error(
-          Exception('Location ID not available. User not authenticated.'),
-        );
-      }
-
       final response = await _httpService.delete(
         '$_baseUrl/$contactId',
-        queryParameters: {
-          'location_id': locationId,
-        },
         options: Options(
           headers: {
-            'X-GHL-Location-ID': locationId,
             'Accept': 'application/json',
           },
         ),
@@ -592,14 +489,11 @@ class ContactService {
       if (response.statusCode == 200) {
         return Result.ok(true);
       } else {
-        final errorMessage = response.data['message'];
-        _logger.error('Error deleting contact', errorMessage);
         return Result.error(
           Exception('Error deleting contact'),
         );
       }
     } on DioException catch (e) {
-      _logger.error('Error deleting contact', e);
       return _handleDioException(e, 'deleting contact');
     } catch (e) {
       _logger.error('Error deleting contact', e);

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:roomplan_flutter/roomplan_flutter.dart';
 
 import '../../config/dependency_injection.dart';
@@ -62,6 +63,8 @@ class _RoomPlanViewState extends State<RoomPlanView> {
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
+      if (!mounted) return;
+
       final result = _viewModel.scanResult;
       if (result != null) {
         final roomData = _viewModel.processScanResult(
@@ -69,29 +72,36 @@ class _RoomPlanViewState extends State<RoomPlanView> {
           widget.capturedPhotos,
           widget.projectData,
         );
-        _viewModel.navigateToProcessing(
-          context,
-          roomData,
-          widget.capturedPhotos,
-          widget.projectData,
-        );
-      } else {}
+        if (mounted) {
+          _viewModel.navigateToProcessing(
+            context,
+            roomData,
+            widget.capturedPhotos,
+            widget.projectData,
+          );
+        }
+      }
     } on RoomPlanPermissionsException {
-      _viewModel.showErrorDialog(
-        context,
-        'Camera permission denied. Please grant camera access in Settings.',
-      );
-    } on ScanCancelledException {
+      if (mounted) {
+        _viewModel.showErrorDialog(
+          context,
+          'Camera permission denied. Please grant camera access in Settings.',
+        );
+      }
     } catch (e) {
+      if (!mounted) return;
+
       // Handle specific world tracking failure
       if (e.toString().contains('World tracking failure') ||
           e.toString().contains('native_error')) {
         _viewModel.showWorldTrackingErrorDialog(context, () {
-          _viewModel.navigateToProcessingWithPhotosOnly(
-            context,
-            widget.capturedPhotos,
-            widget.projectData,
-          );
+          if (mounted) {
+            _viewModel.navigateToProcessingWithPhotosOnly(
+              context,
+              widget.capturedPhotos,
+              widget.projectData,
+            );
+          }
         });
       } else {
         _viewModel.showErrorDialog(context, 'RoomPlan failed: $e');
@@ -127,14 +137,14 @@ class _RoomPlanViewState extends State<RoomPlanView> {
 
     // Se não está escaneando, mostra tela vazia
     // O scanner nativo do iOS será exibido automaticamente quando startScanning() for chamado
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
         child: Text(
           'RoomPlan Scanner',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: 18.sp,
           ),
         ),
       ),

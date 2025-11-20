@@ -27,7 +27,6 @@ class MaterialRepository implements IMaterialRepository {
 
       if (apiResult is Ok) {
         final allMaterials = apiResult.asOk.value;
-        
 
         // Apply pagination to API results
         if (limit != null) {
@@ -47,7 +46,6 @@ class MaterialRepository implements IMaterialRepository {
         // If API fails, try to get from cache
         final hasCache = await _materialService.hasMaterialsInCache();
         if (hasCache) {
-          
           return await _materialService.getMaterialsFromCache(
             limit: limit,
             offset: offset,
@@ -79,7 +77,6 @@ class MaterialRepository implements IMaterialRepository {
       if (apiResult is Ok) {
         final allMaterials = apiResult.asOk.value;
         final filteredMaterials = _applyFilters(allMaterials, filter);
-        
 
         // Apply pagination to filtered results
         if (limit != null) {
@@ -106,7 +103,6 @@ class MaterialRepository implements IMaterialRepository {
 
         if (cacheResult is Ok<List<MaterialModel>> &&
             cacheResult.value.isNotEmpty) {
-          
           return cacheResult;
         }
 
@@ -158,7 +154,6 @@ class MaterialRepository implements IMaterialRepository {
       final apiResult = await _materialService.getAllMaterialsFromApi();
 
       if (apiResult is Ok) {
-        
         // After syncing from API, get stats from cache
         return await _materialService.getMaterialStatsFromCache();
       } else {
@@ -170,7 +165,6 @@ class MaterialRepository implements IMaterialRepository {
         final cacheResult = await _materialService.getMaterialStatsFromCache();
         if (cacheResult is Ok<MaterialStatsModel> &&
             cacheResult.value.totalMaterials > 0) {
-          
           return cacheResult;
         }
 
@@ -193,7 +187,6 @@ class MaterialRepository implements IMaterialRepository {
       final apiResult = await _materialService.getAllMaterialsFromApi();
 
       if (apiResult is Ok) {
-        
         // After syncing from API, get brands from cache
         return await _materialService.getAvailableBrandsFromCache();
       } else {
@@ -205,7 +198,6 @@ class MaterialRepository implements IMaterialRepository {
         final cacheResult = await _materialService
             .getAvailableBrandsFromCache();
         if (cacheResult is Ok<List<String>> && cacheResult.value.isNotEmpty) {
-          
           return cacheResult;
         }
 

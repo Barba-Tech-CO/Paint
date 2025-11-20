@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import '../../config/app_colors.dart';
 import '../../model/contacts/contact_model.dart';
 
-class ContactDropdownWidget extends StatelessWidget {
+class ContactDropdownWidget extends StatefulWidget {
   final ContactModel? selectedContact;
   final List<ContactModel> contacts;
   final ValueChanged<ContactModel?> onChanged;
@@ -23,110 +25,168 @@ class ContactDropdownWidget extends StatelessWidget {
   });
 
   @override
+  State<ContactDropdownWidget> createState() => _ContactDropdownWidgetState();
+}
+
+class _ContactDropdownWidgetState extends State<ContactDropdownWidget> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (label != null) ...[
+        if (widget.label != null) ...[
           Text(
-            label!,
+            widget.label!,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
         ],
-        DropdownButtonFormField<ContactModel?>(
-          initialValue: selectedContact,
+        DropdownButtonFormField2<ContactModel?>(
+          isExpanded: true,
+          value: widget.selectedContact,
           decoration: InputDecoration(
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
               borderSide: const BorderSide(color: AppColors.primary),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
               borderSide: const BorderSide(color: Colors.red),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
               borderSide: const BorderSide(color: Colors.red),
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 16,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 12.w,
+              vertical: 16.h,
             ),
-            errorText: errorText,
+            errorText: widget.errorText,
           ),
-          hint: isLoading
-              ? const Row(
+          hint: widget.isLoading
+              ? Row(
                   children: [
                     SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      width: 16.w,
+                      height: 16.h,
+                      child: CircularProgressIndicator(strokeWidth: 2.w),
                     ),
-                    SizedBox(width: 8),
-                    Text('Loading contacts...'),
+                    SizedBox(width: 8.w),
+                    const Text('Loading contacts...'),
                   ],
                 )
-              : Text(label != null ? 'Select $label' : 'Select contact'),
-          items: contacts.map((contact) {
-            return DropdownMenuItem<ContactModel?>(
-              value: contact,
-              child: contact.companyName?.isNotEmpty == true
-                  ? Text(
-                      '${contact.name} - ${contact.companyName}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    )
-                  : Text(
-                      contact.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
+              : Text(
+                  widget.label != null
+                      ? 'Select ${widget.label}'
+                      : 'Select contact',
+                ),
+          items: widget.contacts
+              .where((contact) => contact.name.trim().isNotEmpty)
+              .map((contact) {
+                return DropdownMenuItem<ContactModel?>(
+                  value: contact,
+                  child: Text(
+                    contact.name,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
                     ),
-            );
-          }).toList(),
-          onChanged: isLoading ? null : onChanged,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                );
+              })
+              .toList(),
+          onChanged: widget.isLoading ? null : widget.onChanged,
+          dropdownStyleData: DropdownStyleData(
+            maxHeight: 300.h,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            offset: Offset(0, -5.h),
+            direction: DropdownDirection.textDirection,
+          ),
+          menuItemStyleData: MenuItemStyleData(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+          ),
+          dropdownSearchData: DropdownSearchData(
+            searchController: _searchController,
+            searchInnerWidgetHeight: 50.h,
+            searchInnerWidget: Container(
+              height: 50.h,
+              padding: EdgeInsets.only(
+                top: 8.h,
+                bottom: 4.h,
+                right: 8.w,
+                left: 8.w,
+              ),
+              child: TextFormField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 8.h,
+                  ),
+                  hintText: 'Search contact...',
+                  hintStyle: TextStyle(fontSize: 14.sp),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  prefixIcon: Icon(Icons.search, size: 20.sp),
+                ),
+              ),
+            ),
+            searchMatchFn: (item, searchValue) {
+              final contact = item.value;
+              if (contact == null) return false;
+              return contact.name.toLowerCase().contains(
+                searchValue.toLowerCase(),
+              );
+            },
+          ),
         ),
-        if (errorText != null && onRetry != null)
+        if (widget.errorText != null && widget.onRetry != null)
           Padding(
-            padding: const EdgeInsets.only(top: 8),
+            padding: EdgeInsets.only(top: 8.h),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
-                    errorText!,
-                    style: const TextStyle(
+                    widget.errorText!,
+                    style: TextStyle(
                       color: Colors.red,
-                      fontSize: 12,
+                      fontSize: 12.sp,
                     ),
                   ),
                 ),
                 TextButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh, size: 16),
+                  onPressed: widget.onRetry,
+                  icon: Icon(Icons.refresh, size: 16.sp),
                   label: const Text('Retry'),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    minimumSize: const Size(0, 32),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
+                    minimumSize: Size(0, 32.h),
                   ),
                 ),
               ],

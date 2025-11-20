@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../config/app_colors.dart';
 
 class ProjectTypeRowWidget extends StatelessWidget {
@@ -13,38 +14,36 @@ class ProjectTypeRowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Radio(
-          value: 'Interior',
-          groupValue: selectedType,
-          onChanged: (value) {
-            onTypeChanged(value.toString());
-          },
-          activeColor: AppColors.primary,
-        ),
-        const Text('Interior'),
-        const SizedBox(width: 16),
-        Radio(
-          value: 'Exterior',
-          groupValue: selectedType,
-          onChanged: (value) {
-            onTypeChanged(value.toString());
-          },
-          activeColor: AppColors.primary,
-        ),
-        const Text('Exterior'),
-        const SizedBox(width: 16),
-        Radio(
-          value: 'Both',
-          groupValue: selectedType,
-          onChanged: (value) {
-            onTypeChanged(value.toString());
-          },
-          activeColor: AppColors.primary,
-        ),
-        const Text('Both'),
-      ],
+    return RadioGroup<String>(
+      onChanged: (value) {
+        if (value != null) {
+          onTypeChanged(value);
+        }
+      },
+      child: Row(
+        children: [
+          Radio<String>(
+            value: 'Interior',
+            toggleable: selectedType == 'Interior',
+            activeColor: AppColors.primary,
+          ),
+          const Text('Interior'),
+          SizedBox(width: 16.w),
+          Radio<String>(
+            value: 'Exterior',
+            toggleable: selectedType == 'Exterior',
+            activeColor: AppColors.primary,
+          ),
+          const Text('Exterior'),
+          SizedBox(width: 16.w),
+          Radio<String>(
+            value: 'Both',
+            toggleable: selectedType == 'Both',
+            activeColor: AppColors.primary,
+          ),
+          const Text('Both'),
+        ],
+      ),
     );
   }
 }

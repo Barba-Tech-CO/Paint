@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ProjectCostSummaryWidget extends StatelessWidget {
   final String title;
@@ -33,7 +34,7 @@ class ProjectCostSummaryWidget extends StatelessWidget {
                 color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             Text(
               cost,
               style: TextStyle(

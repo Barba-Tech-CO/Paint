@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 enum NumberFieldKind { generic, phone, zip }
 
@@ -38,7 +39,7 @@ class PaintProNumberField extends StatelessWidget {
       children: [
         // Label
         Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
+          padding: EdgeInsets.only(bottom: 8.0.h),
           child: Text(
             label,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -65,37 +66,37 @@ class PaintProNumberField extends StatelessWidget {
             hintStyle: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.grey,
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 16,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 12.w,
+              vertical: 16.h,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFFE0E0E0), // Cinza claro
-                width: 1.0,
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(
+                color: const Color(0xFFE0E0E0), // Cinza claro
+                width: 1.0.w,
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFFE0E0E0), // Cinza claro
-                width: 1.0,
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(
+                color: const Color(0xFFE0E0E0), // Cinza claro
+                width: 1.0.w,
               ),
             ),
 
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(
                 color: Colors.red,
-                width: 1.0,
+                width: 1.0.w,
               ),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(
                 color: Colors.red,
-                width: 2.0,
+                width: 2.0.w,
               ),
             ),
           ),
@@ -103,7 +104,7 @@ class PaintProNumberField extends StatelessWidget {
         ),
 
         // Add some bottom spacing
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
       ],
     );
   }

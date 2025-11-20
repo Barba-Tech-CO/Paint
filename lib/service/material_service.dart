@@ -80,7 +80,9 @@ class MaterialService {
         error: (error) => Result.error(error),
       );
     } catch (e) {
-      _logger.error('[MaterialService] Error fetching material by ID from API: $e');
+      _logger.error(
+        '[MaterialService] Error fetching material by ID from API: $e',
+      );
       return Result.error(Exception('Failed to fetch material by ID'));
     }
   }

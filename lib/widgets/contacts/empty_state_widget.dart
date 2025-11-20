@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -16,34 +17,34 @@ class ContactsEmptyStateWidget extends StatelessWidget {
           Text(
             'No Contacts yet',
             style: GoogleFonts.albertSans(
-              fontSize: 24,
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             'Register your first Contact to get started',
             style: GoogleFonts.albertSans(
-              fontSize: 16,
+              fontSize: 16.sp,
               color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
           ElevatedButton(
             onPressed: () => context.push('/new-contact'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(16.r),
               ),
             ),
-            child: const Text(
+            child: Text(
               'Register New Contact',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.w500,
               ),
             ),

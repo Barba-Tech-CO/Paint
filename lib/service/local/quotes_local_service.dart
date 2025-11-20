@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 
 import '../../model/quotes_data/quote_model.dart';
-import '../../model/quotes_data/quote_status.dart';
+import '../../model/quotes_data/quote_status_extension.dart';
 import '../database_service.dart';
 
 class QuotesLocalService {
@@ -14,7 +14,7 @@ class QuotesLocalService {
   Future<int> saveQuote(QuoteModel quote) async {
     final db = await _dbService.database;
     await db.insert(
-      'quotes',
+      'pdf_uploads',
       _quoteToMap(quote),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -23,7 +23,11 @@ class QuotesLocalService {
 
   Future<QuoteModel?> getQuote(int id) async {
     final db = await _dbService.database;
-    final maps = await db.query('quotes', where: 'id = ?', whereArgs: [id]);
+    final maps = await db.query(
+      'pdf_uploads',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     if (maps.isNotEmpty) {
       return _mapToQuote(maps.first);
     }
@@ -32,14 +36,14 @@ class QuotesLocalService {
 
   Future<List<QuoteModel>> getAllQuotes() async {
     final db = await _dbService.database;
-    final maps = await db.query('quotes', orderBy: 'created_at DESC');
+    final maps = await db.query('pdf_uploads', orderBy: 'created_at DESC');
     return maps.map(_mapToQuote).toList();
   }
 
   Future<void> updateQuote(QuoteModel quote) async {
     final db = await _dbService.database;
     await db.update(
-      'quotes',
+      'pdf_uploads',
       _quoteToMap(quote),
       where: 'id = ?',
       whereArgs: [quote.id],
@@ -48,16 +52,14 @@ class QuotesLocalService {
 
   Future<void> deleteQuote(int id) async {
     final db = await _dbService.database;
-    await db.delete('quotes', where: 'id = ?', whereArgs: [id]);
+    await db.delete('pdf_uploads', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> markQuoteAsSynced(int id) async {
     final db = await _dbService.database;
     await db.update(
-      'quotes',
+      'pdf_uploads',
       {
-        'is_synced': 1,
-        'sync_status': 'synced',
         'updated_at': DateTime.now().toIso8601String(),
       },
       where: 'id = ?',
@@ -74,7 +76,7 @@ class QuotesLocalService {
       'file_path': quote.filePath,
       'r2_url': quote.r2Url,
       'file_hash': quote.fileHash,
-      'status': quote.status.name,
+      'status': quote.status.value,
       'materials_extracted': quote.materialsExtracted,
       'extraction_metadata': quote.extractionMetadata != null
           ? json.encode(quote.extractionMetadata)
@@ -82,8 +84,6 @@ class QuotesLocalService {
       'error_message': quote.errorMessage,
       'created_at': quote.createdAt.toIso8601String(),
       'updated_at': quote.updatedAt.toIso8601String(),
-      'is_synced': 1,
-      'sync_status': 'synced',
     };
   }
 
@@ -96,17 +96,24 @@ class QuotesLocalService {
       filePath: map['file_path'],
       r2Url: map['r2_url'],
       fileHash: map['file_hash'],
-      status: QuoteStatus.values.firstWhere(
-        (s) => s.name == map['status'],
-        orElse: () => QuoteStatus.pending,
-      ),
+      status: QuoteStatusExtension.fromString(map['status']),
       materialsExtracted: map['materials_extracted'] ?? 0,
       extractionMetadata: map['extraction_metadata'] != null
           ? json.decode(map['extraction_metadata']) as Map<String, dynamic>
           : null,
       errorMessage: map['error_message'],
-      createdAt: DateTime.parse(map['created_at']),
-      updatedAt: DateTime.parse(map['updated_at']),
+      createdAt: _parseDateTime(map['created_at']),
+      updatedAt: _parseDateTime(map['updated_at']),
     );
+  }
+
+  /// Parse DateTime from string, always converting to device local timezone
+  static DateTime _parseDateTime(String dateString) {
+    try {
+      final parsed = DateTime.parse(dateString);
+      return parsed.toLocal();
+    } catch (e) {
+      return DateTime.now();
+    }
   }
 }

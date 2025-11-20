@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../config/app_colors.dart';
 
 class LoadingOverlay extends StatelessWidget {
@@ -23,15 +24,15 @@ class LoadingOverlay extends StatelessWidget {
             color: Colors.black.withValues(alpha: 0.5),
             child: Center(
               child: Container(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(24.w),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      blurRadius: 10.r,
+                      offset: Offset(0, 4.h),
                     ),
                   ],
                 ),
@@ -39,21 +40,21 @@ class LoadingOverlay extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
-                      width: 32,
-                      height: 32,
+                      width: 32.w,
+                      height: 32.h,
                       child: CircularProgressIndicator(
-                        strokeWidth: 3,
+                        strokeWidth: 3.w,
                         valueColor: AlwaysStoppedAnimation<Color>(
                           AppColors.primary,
                         ),
                       ),
                     ),
                     if (message != null) ...[
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16.h),
                       Text(
                         message!,
-                        style: const TextStyle(
-                          fontSize: 14,
+                        style: TextStyle(
+                          fontSize: 14.sp,
                           color: AppColors.textSecondary,
                         ),
                         textAlign: TextAlign.center,

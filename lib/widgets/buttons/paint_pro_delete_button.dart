@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../utils/logger/app_logger.dart';
 import '../../viewmodel/zones/zone_detail_viewmodel.dart';
@@ -25,23 +26,21 @@ class PaintProDeleteButton extends StatelessWidget {
         }
 
         return GestureDetector(
-          onTap: viewModel.isDeleting
-              ? null
-              : () => _handleDelete(context),
+          onTap: viewModel.isDeleting ? null : () => _handleDelete(context),
           child: Container(
-            width: 48,
-            height: 48,
+            width: 48.w,
+            height: 48.h,
             alignment: Alignment.center,
             child: viewModel.isDeleting
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                ? SizedBox(
+                    width: 16.w,
+                    height: 16.h,
+                    child: CircularProgressIndicator(strokeWidth: 2.w),
                   )
                 : Image.asset(
                     'assets/icons/delete.png',
-                    width: 24,
-                    height: 24,
+                    width: 24.w,
+                    height: 24.h,
                   ),
           ),
         );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class BuildChipWidget extends StatelessWidget {
   final String text;
@@ -13,11 +14,11 @@ class BuildChipWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 12.sp,
           fontWeight: FontWeight.w500,
           color: textColor,
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class GreetingCardWidget extends StatelessWidget {
   final String greeting;
@@ -27,14 +28,14 @@ class GreetingCardWidget extends StatelessWidget {
     return Padding(
       padding: padding,
       child: Container(
-        height: height,
+        height: height.h,
         width: double.infinity,
         decoration: BoxDecoration(
           border: Border.all(
-            width: borderWidth,
+            width: borderWidth.w,
             color: borderColor,
           ),
-          borderRadius: BorderRadius.circular(borderRadius),
+          borderRadius: BorderRadius.circular(borderRadius.r),
         ),
         child: Padding(
           padding: innerPadding,
@@ -44,14 +45,14 @@ class GreetingCardWidget extends StatelessWidget {
             children: [
               Text(
                 greeting,
-                style: const TextStyle(
-                  fontSize: 12,
+                style: TextStyle(
+                  fontSize: 12.sp,
                 ),
               ),
               Text(
                 name,
-                style: const TextStyle(
-                  fontSize: 20,
+                style: TextStyle(
+                  fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
