@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -37,6 +38,10 @@ void main() async {
 
   // Configura Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+  // Configura Firebase Performance
+  final performance = FirebasePerformance.instance;
+  await performance.setPerformanceCollectionEnabled(true);
 
   // Configura injeção de dependências
   setupDependencyInjection();
