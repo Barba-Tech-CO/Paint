@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:firebase_performance/firebase_performance.dart';
 
 import '../config/app_config.dart';
 import '../utils/logger/app_logger.dart';
@@ -11,6 +12,7 @@ class HttpService implements IHttpService {
   late final AppLogger _logger;
   String? _authToken;
   late final AuthPersistenceService _authPersistenceService;
+  final FirebasePerformance _performance = FirebasePerformance.instance;
 
   // Callback for handling authentication failures
   void Function()? _onAuthFailure;
@@ -104,6 +106,69 @@ class HttpService implements IHttpService {
         },
       ),
     );
+
+    // Add Firebase Performance interceptor for HTTP metrics
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final httpMetric = _performance.newHttpMetric(
+            options.uri.toString(),
+            _mapHttpMethod(options.method),
+          );
+
+          options.extra['firebase_performance_metric'] = httpMetric;
+          await httpMetric.start();
+          handler.next(options);
+        },
+        onResponse: (response, handler) async {
+          final httpMetric =
+              response.requestOptions.extra['firebase_performance_metric']
+                  as HttpMetric?;
+
+          if (httpMetric != null) {
+            httpMetric.httpResponseCode = response.statusCode;
+            httpMetric.responseContentType = response.headers['content-type']?.first;
+            httpMetric.responsePayloadSize =
+                response.data?.toString().length ?? 0;
+            await httpMetric.stop();
+          }
+
+          handler.next(response);
+        },
+        onError: (error, handler) async {
+          final httpMetric = error.requestOptions.extra['firebase_performance_metric']
+              as HttpMetric?;
+
+          if (httpMetric != null) {
+            httpMetric.httpResponseCode = error.response?.statusCode;
+            await httpMetric.stop();
+          }
+
+          handler.next(error);
+        },
+      ),
+    );
+  }
+
+  HttpMethod _mapHttpMethod(String method) {
+    switch (method.toUpperCase()) {
+      case 'GET':
+        return HttpMethod.Get;
+      case 'POST':
+        return HttpMethod.Post;
+      case 'PUT':
+        return HttpMethod.Put;
+      case 'DELETE':
+        return HttpMethod.Delete;
+      case 'PATCH':
+        return HttpMethod.Patch;
+      case 'HEAD':
+        return HttpMethod.Head;
+      case 'OPTIONS':
+        return HttpMethod.Options;
+      default:
+        return HttpMethod.Get;
+    }
   }
 
   void setLogger(AppLogger logger) {
