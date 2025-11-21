@@ -5,18 +5,21 @@ import '../domain/repository/offline_repository.dart';
 import '../model/estimates/estimate_model.dart';
 import '../utils/logger/app_logger.dart';
 import '../utils/result/result.dart';
+import 'performance_monitoring_service.dart';
 
 class SyncService {
   final IEstimateRepository _estimateRepository;
   final IOfflineRepository _offlineRepository;
   final Connectivity _connectivity;
   final AppLogger _logger;
+  final PerformanceMonitoringService _performanceService;
 
   SyncService(
     this._estimateRepository,
     this._offlineRepository,
     this._connectivity,
     this._logger,
+    this._performanceService,
   );
 
   /// Check if device is online
@@ -33,63 +36,70 @@ class SyncService {
 
   /// Sync all unsynced estimates to the API
   Future<Result<void>> syncEstimates() async {
-    try {
-      if (!await isOnline()) {
-        return Result.ok(null);
-      }
-
-      final unsyncedResult = await _offlineRepository.getUnsyncedEstimates();
-      if (unsyncedResult is Error) {
-        return Result.error(unsyncedResult.asError.error);
-      }
-
-      final unsyncedEstimates = unsyncedResult.asOk.value;
-
-      for (final estimate in unsyncedEstimates) {
+    return await _performanceService.trace(
+      'sync_estimates',
+      () async {
         try {
-          // Try to create estimate on API
-          final createResult = await _estimateRepository
-              .createEstimateMultipart(
-                estimate,
-              );
-
-          if (createResult is Ok<EstimateModel>) {
-            final syncedEstimate = createResult.asOk.value;
-
-            // Update local estimate with API response
-            await _offlineRepository.updateEstimate(syncedEstimate);
-
-            // Mark as synced
-            await _offlineRepository.markEstimateAsSynced(syncedEstimate.id!);
-          } else {
-            _logger.error(
-              'Failed to sync estimate ${estimate.id}: ${createResult.asError.error}',
-            );
-
-            // Add to pending operations for retry
-            await _offlineRepository.addPendingOperation(
-              'create_estimate',
-              estimate.toJson(),
-            );
+          if (!await isOnline()) {
+            _performanceService.setAttribute('sync_estimates', 'skipped', 'offline');
+            return Result.ok(null);
           }
-        } catch (e) {
-          _logger.error('Error syncing estimate ${estimate.id}: $e', e);
 
-          // Add to pending operations for retry
-          await _offlineRepository.addPendingOperation(
-            'create_estimate',
-            estimate.toJson(),
+          final unsyncedResult = await _offlineRepository.getUnsyncedEstimates();
+          if (unsyncedResult is Error) {
+            return Result.error(unsyncedResult.asError.error);
+          }
+
+          final unsyncedEstimates = unsyncedResult.asOk.value;
+          _performanceService.setMetric('sync_estimates', 'unsynced_count', unsyncedEstimates.length);
+
+          for (final estimate in unsyncedEstimates) {
+            try {
+              // Try to create estimate on API
+              final createResult = await _estimateRepository
+                  .createEstimateMultipart(
+                    estimate,
+                  );
+
+              if (createResult is Ok<EstimateModel>) {
+                final syncedEstimate = createResult.asOk.value;
+
+                // Update local estimate with API response
+                await _offlineRepository.updateEstimate(syncedEstimate);
+
+                // Mark as synced
+                await _offlineRepository.markEstimateAsSynced(syncedEstimate.id!);
+              } else {
+                _logger.error(
+                  'Failed to sync estimate ${estimate.id}: ${createResult.asError.error}',
+                );
+
+                // Add to pending operations for retry
+                await _offlineRepository.addPendingOperation(
+                  'create_estimate',
+                  estimate.toJson(),
+                );
+              }
+            } catch (e) {
+              _logger.error('Error syncing estimate ${estimate.id}: $e', e);
+
+              // Add to pending operations for retry
+              await _offlineRepository.addPendingOperation(
+                'create_estimate',
+                estimate.toJson(),
+              );
+            }
+          }
+
+          return Result.ok(null);
+        } catch (e) {
+          _logger.error('Error during estimate sync: $e', e);
+          return Result.error(
+            Exception('Failed to sync estimates'),
           );
         }
-      }
-
-      return Result.ok(null);
-    } catch (e) {
-      _logger.error('Error during estimate sync: $e', e);
-      return Result.error(
-        Exception('Failed to sync estimates'),
-      );
-    }
+      },
+    );
   }
 
   /// Sync pending operations
@@ -222,30 +232,35 @@ class SyncService {
 
   /// Full sync - estimates and pending operations
   Future<Result<void>> fullSync() async {
-    try {
-      // First sync estimates
-      final estimatesResult = await syncEstimates();
-      if (estimatesResult is Error) {
-        _logger.error(
-          'Error syncing estimates: ${estimatesResult.asError.error}',
-        );
-      }
+    return await _performanceService.trace(
+      'full_sync',
+      () async {
+        try {
+          // First sync estimates
+          final estimatesResult = await syncEstimates();
+          if (estimatesResult is Error) {
+            _logger.error(
+              'Error syncing estimates: ${estimatesResult.asError.error}',
+            );
+          }
 
-      // Then sync pending operations
-      final pendingResult = await syncPendingOperations();
-      if (pendingResult is Error) {
-        _logger.error(
-          'Error syncing pending operations: ${pendingResult.asError.error}',
-        );
-      }
+          // Then sync pending operations
+          final pendingResult = await syncPendingOperations();
+          if (pendingResult is Error) {
+            _logger.error(
+              'Error syncing pending operations: ${pendingResult.asError.error}',
+            );
+          }
 
-      return Result.ok(null);
-    } catch (e) {
-      _logger.error('Error during full sync: $e', e);
-      return Result.error(
-        Exception('Failed to perform full sync'),
-      );
-    }
+          return Result.ok(null);
+        } catch (e) {
+          _logger.error('Error during full sync: $e', e);
+          return Result.error(
+            Exception('Failed to perform full sync'),
+          );
+        }
+      },
+    );
   }
 
   /// Smart sync - pulls data from API if local storage is empty, otherwise does full sync
