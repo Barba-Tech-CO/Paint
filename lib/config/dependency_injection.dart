@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_performance/firebase_performance.dart';
 
 // Data Layer
 import '../data/repository/auth_repository_impl.dart';
@@ -46,6 +47,7 @@ import '../service/location_service.dart';
 import '../service/material_service.dart';
 import '../service/material_database_service.dart';
 import '../service/paint_catalog_service.dart';
+import '../service/performance_monitoring_service.dart';
 import '../service/photo_service.dart';
 import '../service/quote_service.dart';
 import '../service/sync_service.dart';
@@ -114,6 +116,14 @@ void setupDependencyInjection() {
   // Logger Layer - Register first to avoid circular dependencies
   getIt.registerLazySingleton<AppLogger>(
     () => LoggerAppLoggerImpl(),
+  );
+
+  // Performance Monitoring Service
+  getIt.registerLazySingleton<PerformanceMonitoringService>(
+    () => PerformanceMonitoringService(
+      FirebasePerformance.instance,
+      getIt<AppLogger>(),
+    ),
   );
 
   // Serviços
@@ -345,6 +355,7 @@ void setupDependencyInjection() {
       getIt<IOfflineRepository>(),
       Connectivity(),
       getIt<AppLogger>(),
+      getIt<PerformanceMonitoringService>(),
     ),
   );
 
