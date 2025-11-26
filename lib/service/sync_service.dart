@@ -41,17 +41,26 @@ class SyncService {
       () async {
         try {
           if (!await isOnline()) {
-            _performanceService.setAttribute('sync_estimates', 'skipped', 'offline');
+            _performanceService.setAttribute(
+              'sync_estimates',
+              'skipped',
+              'offline',
+            );
             return Result.ok(null);
           }
 
-          final unsyncedResult = await _offlineRepository.getUnsyncedEstimates();
+          final unsyncedResult = await _offlineRepository
+              .getUnsyncedEstimates();
           if (unsyncedResult is Error) {
             return Result.error(unsyncedResult.asError.error);
           }
 
           final unsyncedEstimates = unsyncedResult.asOk.value;
-          _performanceService.setMetric('sync_estimates', 'unsynced_count', unsyncedEstimates.length);
+          _performanceService.setMetric(
+            'sync_estimates',
+            'unsynced_count',
+            unsyncedEstimates.length,
+          );
 
           for (final estimate in unsyncedEstimates) {
             try {
@@ -68,7 +77,9 @@ class SyncService {
                 await _offlineRepository.updateEstimate(syncedEstimate);
 
                 // Mark as synced
-                await _offlineRepository.markEstimateAsSynced(syncedEstimate.id!);
+                await _offlineRepository.markEstimateAsSynced(
+                  syncedEstimate.id!,
+                );
               } else {
                 _logger.error(
                   'Failed to sync estimate ${estimate.id}: ${createResult.asError.error}',

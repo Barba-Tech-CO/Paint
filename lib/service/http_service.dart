@@ -127,7 +127,8 @@ class HttpService implements IHttpService {
 
           if (httpMetric != null) {
             httpMetric.httpResponseCode = response.statusCode;
-            httpMetric.responseContentType = response.headers['content-type']?.first;
+            httpMetric.responseContentType =
+                response.headers['content-type']?.first;
             httpMetric.responsePayloadSize =
                 response.data?.toString().length ?? 0;
             await httpMetric.stop();
@@ -136,8 +137,9 @@ class HttpService implements IHttpService {
           handler.next(response);
         },
         onError: (error, handler) async {
-          final httpMetric = error.requestOptions.extra['firebase_performance_metric']
-              as HttpMetric?;
+          final httpMetric =
+              error.requestOptions.extra['firebase_performance_metric']
+                  as HttpMetric?;
 
           if (httpMetric != null) {
             httpMetric.httpResponseCode = error.response?.statusCode;
