@@ -7,6 +7,7 @@ import '../view/auth/auth_view.dart';
 import '../view/auth/login_screen.dart';
 import '../view/auth/signup_screen.dart';
 import '../view/auth/verify_otp_screen.dart';
+import '../view/auth/new_password_screen.dart';
 import '../view/camera/camera_view.dart';
 import '../view/settings/delete_account_view.dart';
 import '../view/contact_details/contact_details_view.dart';
@@ -54,6 +55,10 @@ final router = GoRouter(
         final email = state.extra as String? ?? '';
         return VerifyOtpScreen(email: email);
       },
+    ),
+    GoRoute(
+      path: '/new-password',
+      builder: (context, state) => const NewPasswordScreen(),
     ),
     GoRoute(
       path: '/delete-account',

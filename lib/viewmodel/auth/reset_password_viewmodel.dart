@@ -40,7 +40,7 @@ class ResetPasswordViewModel extends ChangeNotifier {
       }
 
       if (token.length != 6) {
-        _setError('Please enter a valid 6-digit code');
+        _setError('Please enter a valid 6-character code');
         return Result.error(
           Exception('Invalid token length'),
         );

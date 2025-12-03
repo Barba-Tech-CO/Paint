@@ -12,11 +12,15 @@ class VerifyOtpViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? _successMessage;
   bool _verificationSuccess = false;
+  String? _verifiedEmail;
+  String? _verifiedToken;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   String? get successMessage => _successMessage;
   bool get verificationSuccess => _verificationSuccess;
+  String? get verifiedEmail => _verifiedEmail;
+  String? get verifiedToken => _verifiedToken;
 
   VerifyOtpViewModel(
     this._httpService,
@@ -55,6 +59,8 @@ class VerifyOtpViewModel extends ChangeNotifier {
       // Processar resposta
       if (response.data['success'] == true) {
         _verificationSuccess = true;
+        _verifiedEmail = email;
+        _verifiedToken = code;
         _setLoading(false);
         return Result.ok(null);
       } else {
@@ -169,5 +175,19 @@ class VerifyOtpViewModel extends ChangeNotifier {
 
   void clearMessages() {
     _clearMessages();
+  }
+
+  void clearVerificationData() {
+    _verificationSuccess = false;
+    _verifiedEmail = null;
+    _verifiedToken = null;
+    notifyListeners();
+  }
+
+  void setVerificationData(String email, String token) {
+    _verifiedEmail = email;
+    _verifiedToken = token;
+    _verificationSuccess = true;
+    notifyListeners();
   }
 }
