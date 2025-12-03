@@ -140,11 +140,13 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                                         if (_formKey.currentState?.validate() ??
                                             false) {
                                           final email =
-                                              verifyOtpViewModel.verifiedEmail ??
-                                                  '';
+                                              verifyOtpViewModel
+                                                  .verifiedEmail ??
+                                              '';
                                           final token =
-                                              verifyOtpViewModel.verifiedToken ??
-                                                  '';
+                                              verifyOtpViewModel
+                                                  .verifiedToken ??
+                                              '';
 
                                           if (email.isEmpty || token.isEmpty) {
                                             SnackBarUtils.showError(
@@ -156,19 +158,20 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                                             return;
                                           }
 
-                                          final result =
-                                              await viewModel.resetPassword(
-                                            email,
-                                            token,
-                                            _passwordController.text,
-                                          );
+                                          final result = await viewModel
+                                              .resetPassword(
+                                                email,
+                                                token,
+                                                _passwordController.text,
+                                              );
 
                                           result.when(
                                             ok: (_) {},
                                             error: (error) {
                                               SnackBarUtils.showError(
                                                 context,
-                                                message: viewModel.errorMessage ??
+                                                message:
+                                                    viewModel.errorMessage ??
                                                     'Failed to reset password. Please try again.',
                                               );
                                             },

@@ -116,7 +116,9 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   TextButton(
-                                    onPressed: (viewModel.isLoading || _resendCountdown > 0)
+                                    onPressed:
+                                        (viewModel.isLoading ||
+                                            _resendCountdown > 0)
                                         ? null
                                         : () async {
                                             final result = await viewModel
@@ -142,7 +144,9 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                     child: Text(
                                       'Resend Code',
                                       style: TextStyle(
-                                        color: (_resendCountdown > 0 || viewModel.isLoading)
+                                        color:
+                                            (_resendCountdown > 0 ||
+                                                viewModel.isLoading)
                                             ? Colors.grey
                                             : AppColors.primary,
                                         fontSize: 14.sp,

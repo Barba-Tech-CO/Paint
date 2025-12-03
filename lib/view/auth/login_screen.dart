@@ -148,11 +148,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                     return;
                                   }
 
-                                  final verifyOtpViewModel =
-                                      context.read<VerifyOtpViewModel>();
+                                  final verifyOtpViewModel = context
+                                      .read<VerifyOtpViewModel>();
 
-                                  final result =
-                                      await verifyOtpViewModel.resendCode(email);
+                                  final result = await verifyOtpViewModel
+                                      .resendCode(email);
 
                                   result.when(
                                     ok: (_) {
