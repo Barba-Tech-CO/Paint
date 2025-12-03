@@ -107,33 +107,32 @@ class _ProjectsViewState extends State<ProjectsView> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.folder_outlined,
+                              Icons.folder_open_rounded,
                               size: 64.sp,
                               color: AppColors.textSecondary,
                             ),
                             SizedBox(height: 16.h),
                             Text(
-                              'No projects',
+                              'No Projects',
                               style: GoogleFonts.albertSans(
-                                fontSize: 24.sp,
+                                fontSize: 22.sp,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
                               ),
                             ),
-                            SizedBox(height: 8.h),
+                            SizedBox(height: 12.h),
                             Text(
                               'Your projects will appear here',
                               style: GoogleFonts.albertSans(
-                                fontSize: 16.sp,
-                                color: AppColors.textSecondary,
+                                fontSize: 14.sp,
+                                // color: AppColors.textSecondary,
                               ),
                             ),
-                            SizedBox(height: 16.h),
+                            SizedBox(height: 6.h),
                             Text(
                               'Pull down to refresh',
                               style: GoogleFonts.albertSans(
                                 fontSize: 14.sp,
-                                color: AppColors.textSecondary,
+                                // color: AppColors.textSecondary,
                               ),
                             ),
                           ],
