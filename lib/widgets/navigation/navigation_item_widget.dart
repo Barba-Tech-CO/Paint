@@ -44,7 +44,7 @@ class NavigationItemWidget extends StatelessWidget {
                 child: Text(
                   item.label,
                   style: GoogleFonts.albertSans(
-                    fontSize: 14.sp,
+                    fontSize: 12.sp,
                     color: isActive
                         ? AppColors.navigationActive
                         : AppColors.navigationInactive,
