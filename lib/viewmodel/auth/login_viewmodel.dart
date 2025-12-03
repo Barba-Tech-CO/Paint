@@ -152,4 +152,9 @@ class LoginViewModel extends ChangeNotifier {
   void clearError() {
     _clearError();
   }
+
+  void resetLoginSuccess() {
+    _loginSuccess = false;
+    notifyListeners();
+  }
 }

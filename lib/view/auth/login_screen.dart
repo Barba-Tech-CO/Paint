@@ -7,6 +7,7 @@ import 'package:validatorless/validatorless.dart';
 
 import '../../config/app_colors.dart';
 import '../../viewmodel/auth/login_viewmodel.dart';
+import '../../viewmodel/auth/verify_otp_viewmodel.dart';
 import '../../widgets/appbars/paint_pro_app_bar.dart';
 import '../../widgets/buttons/paint_pro_button.dart';
 import '../../widgets/form_field/paint_pro_password_field.dart';
@@ -38,6 +39,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Consumer<LoginViewModel>(
       builder: (context, viewModel, child) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (viewModel.loginSuccess) {
+            viewModel.resetLoginSuccess();
+            context.go('/home');
+          }
+        });
+
         return Scaffold(
           backgroundColor: Colors.white,
           appBar: PaintProAppBar(title: 'Login'),
@@ -126,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             Center(
                               child: TextButton(
-                                onPressed: () {
+                                onPressed: () async {
                                   final email = _emailController.text
                                       .trim()
                                       .toLowerCase();
@@ -140,7 +148,29 @@ class _LoginScreenState extends State<LoginScreen> {
                                     return;
                                   }
 
-                                  context.go('/verify-otp', extra: email);
+                                  final verifyOtpViewModel =
+                                      context.read<VerifyOtpViewModel>();
+
+                                  final result =
+                                      await verifyOtpViewModel.resendCode(email);
+
+                                  result.when(
+                                    ok: (_) {
+                                      SnackBarUtils.showSuccess(
+                                        context,
+                                        message:
+                                            'Password reset code sent to your email.',
+                                      );
+                                      context.go('/verify-otp', extra: email);
+                                    },
+                                    error: (error) {
+                                      SnackBarUtils.showError(
+                                        context,
+                                        message:
+                                            'Failed to send reset code. Please try again.',
+                                      );
+                                    },
+                                  );
                                 },
                                 child: Text(
                                   'Forgot Password?',
