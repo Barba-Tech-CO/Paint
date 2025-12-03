@@ -9,6 +9,7 @@ class SnackBarUtils {
     Duration duration = const Duration(seconds: 2),
   }) {
     if (context.mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
@@ -31,6 +32,7 @@ class SnackBarUtils {
     String dismissLabel = 'Dismiss',
   }) {
     if (context.mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
@@ -59,6 +61,7 @@ class SnackBarUtils {
     Duration duration = const Duration(seconds: 2),
   }) {
     if (context.mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
@@ -80,6 +83,7 @@ class SnackBarUtils {
     Duration duration = const Duration(seconds: 3),
   }) {
     if (context.mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
