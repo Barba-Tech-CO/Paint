@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// Widget reutilizável para input de código OTP (6 dígitos)
+/// Widget reutilizável para input de código OTP (6 caracteres alfanuméricos)
 class PaintProOtpField extends StatefulWidget {
   final Function(String) onCompleted;
   final Function(String)? onChanged;
@@ -103,7 +103,8 @@ class _PaintProOtpFieldState extends State<PaintProOtpField> {
               controller: _controllers[index],
               focusNode: _focusNodes[index],
               textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
+              keyboardType: TextInputType.text,
+              textCapitalization: TextCapitalization.characters,
               maxLength: 1,
               style: TextStyle(
                 fontSize: 20.sp,
@@ -135,7 +136,12 @@ class _PaintProOtpFieldState extends State<PaintProOtpField> {
                 ),
               ),
               inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
+                FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9]')),
+                TextInputFormatter.withFunction((oldValue, newValue) {
+                  return newValue.copyWith(
+                    text: newValue.text.toUpperCase(),
+                  );
+                }),
               ],
               onChanged: (value) => _onChanged(value, index),
             ),
