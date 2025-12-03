@@ -13,6 +13,7 @@ import 'service/app_services_initializer.dart';
 import 'service/location_service.dart';
 import 'viewmodel/auth/auth_viewmodel.dart';
 import 'viewmodel/auth/login_viewmodel.dart';
+import 'viewmodel/auth/reset_password_viewmodel.dart';
 import 'viewmodel/auth/signup_viewmodel.dart';
 import 'viewmodel/auth/verify_otp_viewmodel.dart';
 import 'viewmodel/contact/contact_list_viewmodel.dart';
@@ -71,6 +72,9 @@ class PaintProApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<VerifyOtpViewModel>(
           create: (_) => getIt<VerifyOtpViewModel>(),
+        ),
+        ChangeNotifierProvider<ResetPasswordViewModel>(
+          create: (_) => getIt<ResetPasswordViewModel>(),
         ),
         // Contact ViewModels
         ChangeNotifierProvider<ContactListViewModel>(
